@@ -6,7 +6,7 @@ const navItems = [
   { icon: Home, label: 'Accueil', path: '/' },
   { icon: Pizza, label: 'Menu', path: '/menu' },
   { icon: ShoppingCart, label: 'Panier', path: '/cart' },
-  { icon: MessageCircle, label: 'Contact', path: '/contact' },
+  { icon: User, label: 'Profil', path: '/profile' },
 ];
 
 export function BottomNavigation() {

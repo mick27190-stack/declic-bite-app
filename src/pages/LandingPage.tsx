@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, Sparkles } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, Sparkles, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Restaurant } from '@/types/pizza';
 import heroImage from '@/assets/declic-hero.jpeg';
 
 export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
   const { setRestaurant, selectedRestaurant } = useCart();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
 
   const handleRestaurantSelect = (restaurant: Restaurant) => {
@@ -29,6 +31,19 @@ export default function LandingPage() {
     <div className="min-h-screen flex flex-col relative overflow-hidden">
       {/* Hero Gradient Background */}
       <div className="hero-gradient absolute inset-0 pointer-events-none" />
+      
+      {/* Auth Button */}
+      <div className="absolute top-4 right-4 z-20">
+        <Button
+          variant="glass"
+          size="sm"
+          onClick={() => navigate(user ? '/profile' : '/auth')}
+          className="flex items-center gap-2"
+        >
+          <User className="w-4 h-4" />
+          {user ? (profile?.first_name || 'Profil') : 'Connexion'}
+        </Button>
+      </div>
       
       {/* Decorative Elements */}
       <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" />
