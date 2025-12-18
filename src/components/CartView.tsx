@@ -2,6 +2,7 @@ import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { Link } from 'react-router-dom';
+import { DeliveryZoneChecker } from '@/components/DeliveryZoneChecker';
 
 export function CartView() {
   const { items, removeItem, updateQuantity, totalPrice, selectedRestaurant } = useCart();
@@ -34,6 +35,9 @@ export function CartView() {
           <p className="font-display font-bold text-primary">{selectedRestaurant.name}</p>
         </div>
       )}
+
+      {/* Delivery Zone Checker */}
+      <DeliveryZoneChecker />
 
       {/* Cart Items */}
       {items.map((item, index) => {

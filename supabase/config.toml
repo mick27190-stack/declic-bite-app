@@ -1,1 +1,4 @@
 project_id = "tzamsbbpygevsdvugdbv"
+
+[functions.check-delivery-zone]
+verify_jwt = false

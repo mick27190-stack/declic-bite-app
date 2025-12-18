@@ -1,0 +1,110 @@
+import { useState } from 'react';
+import { MapPin, Truck, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useDeliveryZone } from '@/hooks/useDeliveryZone';
+import { useCart } from '@/contexts/CartContext';
+
+interface DeliveryZoneCheckerProps {
+  onValidAddress?: (address: string, coordinates: { lat: number; lng: number }) => void;
+}
+
+export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps) {
+  const [address, setAddress] = useState('');
+  const { checkDeliveryZone, isChecking, result } = useDeliveryZone();
+  const { selectedRestaurant } = useCart();
+
+  const handleCheck = async () => {
+    if (!address.trim() || !selectedRestaurant) return;
+    
+    const checkResult = await checkDeliveryZone(address, selectedRestaurant.id);
+    
+    if (checkResult.isInZone && checkResult.coordinates && onValidAddress) {
+      onValidAddress(checkResult.addressFormatted || address, checkResult.coordinates);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 text-foreground">
+        <Truck className="w-5 h-5 text-primary" />
+        <h3 className="font-display font-semibold">Vérifier la zone de livraison</h3>
+      </div>
+
+      {!selectedRestaurant && (
+        <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 text-sm flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>Veuillez d'abord sélectionner un restaurant</span>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Entrez votre adresse complète"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="pl-10"
+            disabled={!selectedRestaurant || isChecking}
+            onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
+          />
+        </div>
+        <Button
+          onClick={handleCheck}
+          disabled={!address.trim() || !selectedRestaurant || isChecking}
+        >
+          {isChecking ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            'Vérifier'
+          )}
+        </Button>
+      </div>
+
+      {result && (
+        <div className={`p-4 rounded-lg border ${
+          result.isInZone 
+            ? 'bg-green-500/10 border-green-500/20' 
+            : 'bg-red-500/10 border-red-500/20'
+        }`}>
+          <div className="flex items-start gap-3">
+            {result.isInZone ? (
+              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            )}
+            <div className="flex-1">
+              <p className={`font-semibold ${result.isInZone ? 'text-green-600' : 'text-red-600'}`}>
+                {result.isInZone 
+                  ? 'Livraison disponible !' 
+                  : 'Vous êtes hors zone de livraison'}
+              </p>
+              {result.error ? (
+                <p className="text-sm text-muted-foreground mt-1">{result.error}</p>
+              ) : (
+                <div className="text-sm text-muted-foreground mt-1 space-y-1">
+                  {result.addressFormatted && (
+                    <p>{result.addressFormatted}</p>
+                  )}
+                  {result.distanceKm !== null && (
+                    <p>Distance: {result.distanceText || `${result.distanceKm} km`}</p>
+                  )}
+                  {result.durationText && result.isInZone && (
+                    <p>Temps de livraison estimé: {result.durationText}</p>
+                  )}
+                  {!result.isInZone && result.distanceKm !== null && (
+                    <p className="text-xs mt-2">
+                      Zone de livraison: 12 km maximum depuis le restaurant
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
