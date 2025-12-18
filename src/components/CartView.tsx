@@ -1,11 +1,33 @@
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { Link } from 'react-router-dom';
 import { DeliveryZoneChecker } from '@/components/DeliveryZoneChecker';
+import { OrderTypeSelector } from '@/components/OrderTypeSelector';
+import { PickupTimeSelector } from '@/components/PickupTimeSelector';
 
 export function CartView() {
-  const { items, removeItem, updateQuantity, totalPrice, selectedRestaurant } = useCart();
+  const { 
+    items, 
+    removeItem, 
+    updateQuantity, 
+    totalPrice, 
+    selectedRestaurant,
+    orderType,
+    setOrderType,
+    pickupTime,
+    setPickupTime,
+    deliveryAddress,
+    setDeliveryAddress
+  } = useCart();
+
+  const canCheckout = () => {
+    if (items.length === 0) return false;
+    if (!selectedRestaurant) return false;
+    if (orderType === 'emporter' && !pickupTime) return false;
+    if (orderType === 'livraison' && !deliveryAddress) return false;
+    return true;
+  };
 
   if (items.length === 0) {
     return (
@@ -30,79 +52,117 @@ export function CartView() {
     <div className="space-y-4 pb-32">
       {/* Restaurant info */}
       {selectedRestaurant && (
-        <div className="glass-card p-4 mb-6">
+        <div className="glass-card p-4 mb-2">
           <p className="text-sm text-muted-foreground">Commande pour</p>
           <p className="font-display font-bold text-primary">{selectedRestaurant.name}</p>
         </div>
       )}
 
-      {/* Delivery Zone Checker */}
-      <DeliveryZoneChecker />
+      {/* Order Type Selection */}
+      <div className="glass-card p-4">
+        <OrderTypeSelector 
+          value={orderType} 
+          onChange={setOrderType}
+        />
+      </div>
+
+      {/* Delivery Flow */}
+      {orderType === 'livraison' && (
+        <div className="glass-card p-4">
+          <DeliveryZoneChecker 
+            onValidAddress={(address, coordinates) => {
+              setDeliveryAddress({ address, coordinates });
+            }}
+          />
+          {deliveryAddress && (
+            <div className="mt-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 flex items-start gap-2">
+              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-green-600">Adresse de livraison</p>
+                <p className="text-sm text-muted-foreground">{deliveryAddress.address}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Pickup Flow */}
+      {orderType === 'emporter' && (
+        <div className="glass-card p-4">
+          <PickupTimeSelector 
+            value={pickupTime}
+            onChange={setPickupTime}
+          />
+        </div>
+      )}
 
       {/* Cart Items */}
-      {items.map((item, index) => {
-        const itemTotal =
-          (item.pizza.basePrice +
-            item.size.price +
-            item.supplements.reduce((sum, s) => sum + s.price, 0)) *
-          item.quantity;
+      <div className="pt-2">
+        <h3 className="font-display font-semibold text-foreground mb-3">Votre commande</h3>
+        {items.map((item, index) => {
+          const itemTotal =
+            (item.pizza.basePrice +
+              item.size.price +
+              item.supplements.reduce((sum, s) => sum + s.price, 0)) *
+            item.quantity;
 
-        return (
-          <div key={index} className="glass-card p-4 flex gap-4">
-            <img
-              src={item.pizza.image}
-              alt={item.pizza.name}
-              className="w-20 h-20 object-cover rounded-xl"
-            />
-            
-            <div className="flex-1 min-w-0">
-              <h3 className="font-display font-bold text-foreground truncate">
-                {item.pizza.name}
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {item.size.name} • Base {item.base}
-              </p>
-              {item.supplements.length > 0 && (
-                <p className="text-xs text-primary">
-                  + {item.supplements.map((s) => s.name).join(', ')}
-                </p>
-              )}
+          return (
+            <div key={index} className="glass-card p-4 flex gap-4 mb-3">
+              <img
+                src={item.pizza.image}
+                alt={item.pizza.name}
+                className="w-20 h-20 object-cover rounded-xl"
+              />
               
-              <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => updateQuantity(index, item.quantity - 1)}
-                    className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground hover:bg-muted/80"
-                  >
-                    <Minus className="w-4 h-4" />
-                  </button>
-                  <span className="font-bold text-foreground w-6 text-center">
-                    {item.quantity}
-                  </span>
-                  <button
-                    onClick={() => updateQuantity(index, item.quantity + 1)}
-                    className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </button>
-                </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-display font-bold text-foreground truncate">
+                  {item.pizza.name}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {item.size.name} • Base {item.base}
+                </p>
+                {item.supplements.length > 0 && (
+                  <p className="text-xs text-primary">
+                    + {item.supplements.map((s) => s.name).join(', ')}
+                  </p>
+                )}
                 
-                <div className="flex items-center gap-3">
-                  <span className="font-display font-bold text-primary">
-                    {itemTotal.toFixed(2)}€
-                  </span>
-                  <button
-                    onClick={() => removeItem(index)}
-                    className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div className="flex items-center justify-between mt-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateQuantity(index, item.quantity - 1)}
+                      className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground hover:bg-muted/80"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="font-bold text-foreground w-6 text-center">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => updateQuantity(index, item.quantity + 1)}
+                      className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <span className="font-display font-bold text-primary">
+                      {itemTotal.toFixed(2)}€
+                    </span>
+                    <button
+                      onClick={() => removeItem(index)}
+                      className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
       {/* Fixed bottom checkout */}
       <div className="fixed bottom-16 left-0 right-0 p-4 bg-card/95 backdrop-blur-xl border-t border-border">
@@ -113,8 +173,17 @@ export function CartView() {
               {totalPrice.toFixed(2)}€
             </span>
           </div>
-          <Button variant="hero" size="lg" className="w-full">
-            Commander maintenant
+          <Button 
+            variant="hero" 
+            size="lg" 
+            className="w-full"
+            disabled={!canCheckout()}
+          >
+            {orderType === 'livraison' && !deliveryAddress 
+              ? 'Vérifiez votre adresse'
+              : orderType === 'emporter' && !pickupTime
+                ? 'Choisissez une heure'
+                : 'Commander maintenant'}
           </Button>
         </div>
       </div>

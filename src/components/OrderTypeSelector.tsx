@@ -1,0 +1,64 @@
+import { Truck, ShoppingBag } from 'lucide-react';
+import { OrderType } from '@/types/pizza';
+
+interface OrderTypeSelectorProps {
+  value: OrderType;
+  onChange: (type: OrderType) => void;
+  deliveryDisabled?: boolean;
+}
+
+export function OrderTypeSelector({ value, onChange, deliveryDisabled }: OrderTypeSelectorProps) {
+  return (
+    <div className="space-y-3">
+      <h3 className="font-display font-semibold text-foreground">Type de commande</h3>
+      <div className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={() => onChange('emporter')}
+          className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+            value === 'emporter'
+              ? 'border-primary bg-primary/10 shadow-glow'
+              : 'border-border hover:border-primary/50 bg-card'
+          }`}
+        >
+          <ShoppingBag className={`w-6 h-6 mx-auto mb-2 ${
+            value === 'emporter' ? 'text-primary' : 'text-muted-foreground'
+          }`} />
+          <span className={`block font-semibold ${
+            value === 'emporter' ? 'text-primary' : 'text-foreground'
+          }`}>
+            À Emporter
+          </span>
+          <span className="text-xs text-muted-foreground">
+            Récupérez au restaurant
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => !deliveryDisabled && onChange('livraison')}
+          disabled={deliveryDisabled}
+          className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+            deliveryDisabled 
+              ? 'opacity-50 cursor-not-allowed border-border bg-muted'
+              : value === 'livraison'
+                ? 'border-primary bg-primary/10 shadow-glow'
+                : 'border-border hover:border-primary/50 bg-card'
+          }`}
+        >
+          <Truck className={`w-6 h-6 mx-auto mb-2 ${
+            value === 'livraison' && !deliveryDisabled ? 'text-primary' : 'text-muted-foreground'
+          }`} />
+          <span className={`block font-semibold ${
+            value === 'livraison' && !deliveryDisabled ? 'text-primary' : 'text-foreground'
+          }`}>
+            Livraison
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {deliveryDisabled ? 'Non disponible' : 'Chez vous en ~30 min'}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+}
