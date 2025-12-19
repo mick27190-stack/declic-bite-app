@@ -12,9 +12,12 @@ interface RestaurantCoordinates {
   beaumont: { lat: number; lng: number };
 }
 
+// Adresses de référence:
+// Conches: 1 place Carnot, 27190 Conches-en-Ouche
+// Beaumont: 66 rue Saint Nicolas, 27170 Beaumont-le-Roger
 const RESTAURANT_COORDS: RestaurantCoordinates = {
-  conches: { lat: 48.9597, lng: 1.0006 },
-  beaumont: { lat: 49.0789, lng: 0.7847 },
+  conches: { lat: 48.9592, lng: 0.9416 },
+  beaumont: { lat: 49.0825, lng: 0.7769 },
 };
 
 serve(async (req) => {
