@@ -1,23 +1,26 @@
-import { Home, Pizza, ShoppingCart, User, MessageCircle } from 'lucide-react';
+import { Home, Pizza, ShoppingCart, User, Shield } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCart } from '@/contexts/CartContext';
-
-const navItems = [
-  { icon: Home, label: 'Accueil', path: '/' },
-  { icon: Pizza, label: 'Menu', path: '/menu' },
-  { icon: ShoppingCart, label: 'Panier', path: '/cart' },
-  { icon: User, label: 'Profil', path: '/profile' },
-];
+import { useAdmin } from '@/contexts/AdminContext';
 
 export function BottomNavigation() {
   const location = useLocation();
   const { totalItems } = useCart();
+  const { isAnyAdmin } = useAdmin();
+
+  const navItems = [
+    { icon: Home, label: 'Accueil', path: '/' },
+    { icon: Pizza, label: 'Menu', path: '/menu' },
+    { icon: ShoppingCart, label: 'Panier', path: '/cart' },
+    ...(isAnyAdmin ? [{ icon: Shield, label: 'Admin', path: '/admin' }] : []),
+    { icon: User, label: 'Profil', path: '/profile' },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/90 backdrop-blur-xl border-t border-border/50 safe-area-inset-bottom">
       <div className="flex items-center justify-around h-16 max-w-md mx-auto px-4">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           const Icon = item.icon;
           const isCart = item.path === '/cart';
 

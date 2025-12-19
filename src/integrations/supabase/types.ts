@@ -59,6 +59,33 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_phones: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          phone: string
+          role: Database["public"]["Enums"]["app_role"]
+          site: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          phone: string
+          role: Database["public"]["Enums"]["app_role"]
+          site?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          phone?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          site?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -97,16 +124,22 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          assigned_by: string | null
+          created_at: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          assigned_by?: string | null
+          created_at?: string
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          assigned_by?: string | null
+          created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -118,6 +151,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_roles: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"][]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -125,9 +162,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_any_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role:
+        | "super_admin"
+        | "site_admin_conches"
+        | "site_admin_beaumont"
+        | "secondary_admin_conches"
+        | "secondary_admin_beaumont"
+        | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -255,7 +299,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: [
+        "super_admin",
+        "site_admin_conches",
+        "site_admin_beaumont",
+        "secondary_admin_conches",
+        "secondary_admin_beaumont",
+        "user",
+      ],
     },
   },
 } as const

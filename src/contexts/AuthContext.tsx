@@ -124,11 +124,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const verifyOtp = async (phone: string, token: string) => {
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       phone,
       token,
       type: 'sms'
     });
+    
+    // If successful, try to assign admin role based on phone
+    if (!error && data.user) {
+      try {
+        await supabase.functions.invoke('assign-admin-role', {
+          body: { user_id: data.user.id, phone }
+        });
+      } catch (e) {
+        console.error('Error checking admin role:', e);
+      }
+    }
+    
     return { error };
   };
 
