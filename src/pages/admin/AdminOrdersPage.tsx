@@ -1,85 +1,23 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, Phone, User } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEffect } from 'react';
-
-interface Order {
-  id: string;
-  customerName: string;
-  phone: string;
-  items: { name: string; size: string; quantity: number; price: number }[];
-  total: number;
-  status: 'pending' | 'preparing' | 'ready' | 'delivered' | 'cancelled';
-  orderType: 'delivery' | 'pickup';
-  address?: string;
-  pickupTime?: string;
-  createdAt: string;
-  site: 'conches' | 'beaumont';
-}
-
-// Mock data for demonstration
-const mockOrders: Order[] = [
-  {
-    id: '1',
-    customerName: 'Jean Dupont',
-    phone: '+33612345678',
-    items: [
-      { name: 'Margherita', size: 'Méga', quantity: 2, price: 40 },
-      { name: 'Carnivore', size: 'Senior', quantity: 1, price: 13 }
-    ],
-    total: 53,
-    status: 'pending',
-    orderType: 'delivery',
-    address: '12 rue de la Paix, 27190 Conches-en-Ouche',
-    createdAt: new Date().toISOString(),
-    site: 'conches'
-  },
-  {
-    id: '2',
-    customerName: 'Marie Martin',
-    phone: '+33698765432',
-    items: [
-      { name: 'Végétarienne', size: 'Super Méga', quantity: 1, price: 28 }
-    ],
-    total: 28,
-    status: 'preparing',
-    orderType: 'pickup',
-    pickupTime: '19:30',
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-    site: 'beaumont'
-  }
-];
-
-const statusLabels: Record<Order['status'], string> = {
-  pending: 'En attente',
-  preparing: 'En préparation',
-  ready: 'Prête',
-  delivered: 'Livrée',
-  cancelled: 'Annulée'
-};
-
-const statusColors: Record<Order['status'], string> = {
-  pending: 'bg-yellow-500',
-  preparing: 'bg-blue-500',
-  ready: 'bg-green-500',
-  delivered: 'bg-gray-500',
-  cancelled: 'bg-red-500'
-};
+import { useEffect, useState } from 'react';
+import { OrderStatus, statusLabels, statusColors } from '@/types/order';
 
 export default function AdminOrdersPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { canManageOrders, isSiteAdminConches, isSiteAdminBeaumont, isSuperAdmin, loading: adminLoading } = useAdmin();
+  const { orders, loading: ordersLoading, updateOrderStatus, refetch } = useOrders();
   
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
-  const [filterStatus, setFilterStatus] = useState<'all' | Order['status']>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -89,25 +27,31 @@ export default function AdminOrdersPage() {
         navigate('/admin');
       }
     }
-  }, [user, canManageOrders, authLoading, adminLoading]);
+  }, [user, canManageOrders, authLoading, adminLoading, navigate]);
+
+  const getSiteFromRestaurant = (restaurant: string): 'conches' | 'beaumont' => {
+    if (restaurant.toLowerCase().includes('conches')) return 'conches';
+    if (restaurant.toLowerCase().includes('beaumont')) return 'beaumont';
+    return 'conches'; // default
+  };
 
   const filteredOrders = orders.filter(order => {
-    if (filterSite !== 'all' && order.site !== filterSite) return false;
+    const site = getSiteFromRestaurant(order.restaurant);
+    
+    if (filterSite !== 'all' && site !== filterSite) return false;
     if (filterStatus !== 'all' && order.status !== filterStatus) return false;
     
     // Filter by site if not super admin
     if (!isSuperAdmin) {
-      if (isSiteAdminConches && order.site !== 'conches') return false;
-      if (isSiteAdminBeaumont && order.site !== 'beaumont') return false;
+      if (isSiteAdminConches && site !== 'conches') return false;
+      if (isSiteAdminBeaumont && site !== 'beaumont') return false;
     }
     
     return true;
   });
 
-  const updateOrderStatus = (orderId: string, newStatus: Order['status']) => {
-    setOrders(prev => prev.map(o => 
-      o.id === orderId ? { ...o, status: newStatus } : o
-    ));
+  const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+    await updateOrderStatus(orderId, newStatus);
   };
 
   if (authLoading || adminLoading) {
@@ -125,10 +69,15 @@ export default function AdminOrdersPage() {
           <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-xl font-bold text-primary">Gestion des Commandes</h1>
-            <p className="text-sm text-muted-foreground">Suivre et gérer les commandes</p>
+            <p className="text-sm text-muted-foreground">
+              {filteredOrders.length} commande(s) • Temps réel activé
+            </p>
           </div>
+          <Button variant="outline" size="icon" onClick={refetch} disabled={ordersLoading}>
+            <RefreshCw className={`h-4 w-4 ${ordersLoading ? 'animate-spin' : ''}`} />
+          </Button>
         </div>
       </header>
 
@@ -153,6 +102,7 @@ export default function AdminOrdersPage() {
             <SelectContent>
               <SelectItem value="all">Tous les statuts</SelectItem>
               <SelectItem value="pending">En attente</SelectItem>
+              <SelectItem value="confirmed">Confirmée</SelectItem>
               <SelectItem value="preparing">En préparation</SelectItem>
               <SelectItem value="ready">Prête</SelectItem>
               <SelectItem value="delivered">Livrée</SelectItem>
@@ -161,88 +111,105 @@ export default function AdminOrdersPage() {
           </Select>
         </div>
 
-        <div className="space-y-4">
-          {filteredOrders.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center text-muted-foreground">
-                Aucune commande trouvée
-              </CardContent>
-            </Card>
-          ) : (
-            filteredOrders.map((order) => (
-              <Card key={order.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <CardTitle className="text-lg">Commande #{order.id}</CardTitle>
-                      <Badge className={statusColors[order.status]}>
-                        {statusLabels[order.status]}
-                      </Badge>
-                      <Badge variant="outline" className="capitalize">
-                        {order.site}
-                      </Badge>
-                    </div>
-                    <Select 
-                      value={order.status} 
-                      onValueChange={(v) => updateOrderStatus(order.id, v as Order['status'])}
-                    >
-                      <SelectTrigger className="w-[160px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">En attente</SelectItem>
-                        <SelectItem value="preparing">En préparation</SelectItem>
-                        <SelectItem value="ready">Prête</SelectItem>
-                        <SelectItem value="delivered">Livrée</SelectItem>
-                        <SelectItem value="cancelled">Annulée</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <CardDescription className="flex flex-wrap gap-4 mt-2">
-                    <span className="flex items-center gap-1">
-                      <User className="h-4 w-4" />
-                      {order.customerName}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Phone className="h-4 w-4" />
-                      {order.phone}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {new Date(order.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    {order.orderType === 'delivery' && order.address && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {order.address}
-                      </span>
-                    )}
-                    {order.orderType === 'pickup' && order.pickupTime && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        Retrait à {order.pickupTime}
-                      </span>
-                    )}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {order.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between text-sm">
-                        <span>{item.quantity}x {item.name} ({item.size})</span>
-                        <span className="font-medium">{item.price}€</span>
-                      </div>
-                    ))}
-                    <div className="border-t pt-2 mt-2 flex justify-between font-bold">
-                      <span>Total</span>
-                      <span>{order.total}€</span>
-                    </div>
-                  </div>
+        {ordersLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredOrders.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">Aucune commande trouvée</p>
                 </CardContent>
               </Card>
-            ))
-          )}
-        </div>
+            ) : (
+              filteredOrders.map((order) => (
+                <Card key={order.id} className="overflow-hidden">
+                  <CardHeader className="pb-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <CardTitle className="text-lg">#{order.id.slice(0, 8)}</CardTitle>
+                        <Badge className={statusColors[order.status]}>
+                          {statusLabels[order.status]}
+                        </Badge>
+                        <Badge variant="outline" className="capitalize">
+                          {getSiteFromRestaurant(order.restaurant)}
+                        </Badge>
+                        <Badge variant="secondary">
+                          {order.order_type === 'livraison' ? '🚗 Livraison' : '🏪 À emporter'}
+                        </Badge>
+                      </div>
+                      <Select 
+                        value={order.status} 
+                        onValueChange={(v) => handleStatusChange(order.id, v as OrderStatus)}
+                      >
+                        <SelectTrigger className="w-[160px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">En attente</SelectItem>
+                          <SelectItem value="confirmed">Confirmée</SelectItem>
+                          <SelectItem value="preparing">En préparation</SelectItem>
+                          <SelectItem value="ready">Prête</SelectItem>
+                          <SelectItem value="delivered">Livrée</SelectItem>
+                          <SelectItem value="cancelled">Annulée</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <CardDescription className="flex flex-wrap gap-4 mt-2">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {new Date(order.created_at).toLocaleString('fr-FR', { 
+                          day: '2-digit',
+                          month: '2-digit',
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </span>
+                      {order.order_type === 'livraison' && order.delivery_address && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          {order.delivery_address.address}
+                        </span>
+                      )}
+                      {order.order_type === 'emporter' && order.pickup_time && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-4 w-4" />
+                          Retrait à {order.pickup_time}
+                        </span>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {order.items.map((item, idx) => (
+                        <div key={idx} className="flex justify-between text-sm">
+                          <span>
+                            {item.quantity}x {item.pizza.name} ({item.size.name})
+                            {item.supplements.length > 0 && (
+                              <span className="text-muted-foreground">
+                                {' '}+ {item.supplements.map(s => s.name).join(', ')}
+                              </span>
+                            )}
+                          </span>
+                          <span className="font-medium">
+                            {((item.pizza.basePrice + item.size.price + item.supplements.reduce((s, sup) => s + sup.price, 0)) * item.quantity).toFixed(2)}€
+                          </span>
+                        </div>
+                      ))}
+                      <div className="border-t pt-2 mt-2 flex justify-between font-bold">
+                        <span>Total</span>
+                        <span className="text-primary">{order.total_price.toFixed(2)}€</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        )}
       </main>
     </div>
   );

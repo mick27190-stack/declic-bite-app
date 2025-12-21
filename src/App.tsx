@@ -18,6 +18,7 @@ import AdminMenuPage from "./pages/admin/AdminMenuPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminChatPage from "./pages/admin/AdminChatPage";
 import AdminSMSPage from "./pages/admin/AdminSMSPage";
+import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/menu" element={<MenuPage />} />
                 <Route path="/cart" element={<CartPage />} />
+                <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
