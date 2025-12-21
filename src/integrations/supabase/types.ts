@@ -86,6 +86,51 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          created_at: string
+          delivery_address: Json | null
+          id: string
+          items: Json
+          notes: string | null
+          order_type: string
+          pickup_time: string | null
+          restaurant: string
+          status: Database["public"]["Enums"]["order_status"]
+          total_price: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_address?: Json | null
+          id?: string
+          items: Json
+          notes?: string | null
+          order_type: string
+          pickup_time?: string | null
+          restaurant: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total_price: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery_address?: Json | null
+          id?: string
+          items?: Json
+          notes?: string | null
+          order_type?: string
+          pickup_time?: string | null
+          restaurant?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          total_price?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -172,6 +217,13 @@ export type Database = {
         | "secondary_admin_conches"
         | "secondary_admin_beaumont"
         | "user"
+      order_status:
+        | "pending"
+        | "confirmed"
+        | "preparing"
+        | "ready"
+        | "delivered"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -306,6 +358,14 @@ export const Constants = {
         "secondary_admin_conches",
         "secondary_admin_beaumont",
         "user",
+      ],
+      order_status: [
+        "pending",
+        "confirmed",
+        "preparing",
+        "ready",
+        "delivered",
+        "cancelled",
       ],
     },
   },

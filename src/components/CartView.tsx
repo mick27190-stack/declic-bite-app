@@ -1,12 +1,22 @@
-import { Minus, Plus, Trash2, ShoppingBag, CheckCircle } from 'lucide-react';
+import { useState } from 'react';
+import { Minus, Plus, Trash2, ShoppingBag, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
-import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
 import { DeliveryZoneChecker } from '@/components/DeliveryZoneChecker';
 import { OrderTypeSelector } from '@/components/OrderTypeSelector';
 import { PickupTimeSelector } from '@/components/PickupTimeSelector';
+import { useOrders } from '@/hooks/useOrders';
+import { useToast } from '@/hooks/use-toast';
 
 export function CartView() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { createOrder } = useOrders();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const { 
     items, 
     removeItem, 
@@ -18,7 +28,8 @@ export function CartView() {
     pickupTime,
     setPickupTime,
     deliveryAddress,
-    setDeliveryAddress
+    setDeliveryAddress,
+    clearCart
   } = useCart();
 
   const canCheckout = () => {
@@ -27,6 +38,39 @@ export function CartView() {
     if (orderType === 'emporter' && !pickupTime) return false;
     if (orderType === 'livraison' && !deliveryAddress) return false;
     return true;
+  };
+
+  const handleSubmitOrder = async () => {
+    if (!user) {
+      toast({
+        title: 'Connexion requise',
+        description: 'Veuillez vous connecter pour passer commande',
+        variant: 'destructive'
+      });
+      navigate('/auth');
+      return;
+    }
+
+    if (!canCheckout() || !selectedRestaurant) return;
+
+    setIsSubmitting(true);
+    try {
+      const order = await createOrder({
+        restaurant: selectedRestaurant.name,
+        order_type: orderType,
+        items: items,
+        total_price: totalPrice,
+        pickup_time: pickupTime,
+        delivery_address: deliveryAddress,
+      });
+
+      clearCart();
+      navigate(`/order-confirmation?id=${order.id}`);
+    } catch (error) {
+      console.error('Error submitting order:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (items.length === 0) {
@@ -177,13 +221,23 @@ export function CartView() {
             variant="hero" 
             size="lg" 
             className="w-full"
-            disabled={!canCheckout()}
+            disabled={!canCheckout() || isSubmitting}
+            onClick={handleSubmitOrder}
           >
-            {orderType === 'livraison' && !deliveryAddress 
-              ? 'Vérifiez votre adresse'
-              : orderType === 'emporter' && !pickupTime
-                ? 'Choisissez une heure'
-                : 'Commander maintenant'}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Envoi en cours...
+              </>
+            ) : !user ? (
+              'Se connecter pour commander'
+            ) : orderType === 'livraison' && !deliveryAddress ? (
+              'Vérifiez votre adresse'
+            ) : orderType === 'emporter' && !pickupTime ? (
+              'Choisissez une heure'
+            ) : (
+              'Commander maintenant'
+            )}
           </Button>
         </div>
       </div>
