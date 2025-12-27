@@ -189,14 +189,14 @@ export default function AuthPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary via-primary-dark to-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-white" />
+      <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-primary-dark to-background flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-background flex flex-col">
       {/* Header */}
       <div className="p-4">
         <Button

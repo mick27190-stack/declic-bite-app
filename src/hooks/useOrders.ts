@@ -142,10 +142,6 @@ export function useOrders() {
             } as Order;
             setOrders(prev => [newOrder, ...prev]);
             
-            // Play notification sound for new orders
-            const audio = new Audio('/notification.mp3');
-            audio.play().catch(() => {});
-            
             toast({
               title: '🔔 Nouvelle commande !',
               description: `Commande de ${newOrder.total_price.toFixed(2)}€`,
