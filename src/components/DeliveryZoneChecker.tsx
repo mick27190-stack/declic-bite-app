@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { MapPin, Truck, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { MapPin, Truck, AlertCircle, CheckCircle, Loader2, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useDeliveryZone } from '@/hooks/useDeliveryZone';
 import { useCart } from '@/contexts/CartContext';
+import { DeliveryZoneMap } from '@/components/DeliveryZoneMap';
 
 interface DeliveryZoneCheckerProps {
   onValidAddress?: (address: string, coordinates: { lat: number; lng: number }) => void;
@@ -11,6 +12,8 @@ interface DeliveryZoneCheckerProps {
 
 export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps) {
   const [address, setAddress] = useState('');
+  const [showMap, setShowMap] = useState(true);
+  const [customerCoords, setCustomerCoords] = useState<{ lat: number; lng: number } | null>(null);
   const { checkDeliveryZone, isChecking, result } = useDeliveryZone();
   const { selectedRestaurant } = useCart();
 
@@ -19,6 +22,10 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
     
     const checkResult = await checkDeliveryZone(address, selectedRestaurant.id);
     
+    if (checkResult.coordinates) {
+      setCustomerCoords(checkResult.coordinates);
+    }
+    
     if (checkResult.isInZone && checkResult.coordinates && onValidAddress) {
       onValidAddress(checkResult.addressFormatted || address, checkResult.coordinates);
     }
@@ -26,9 +33,22 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 text-foreground">
-        <Truck className="w-5 h-5 text-primary" />
-        <h3 className="font-display font-semibold">Vérifier la zone de livraison</h3>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 text-foreground">
+          <Truck className="w-5 h-5 text-primary" />
+          <h3 className="font-display font-semibold">Vérifier la zone de livraison</h3>
+        </div>
+        {selectedRestaurant && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowMap(!showMap)}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <Map className="w-4 h-4 mr-1" />
+            {showMap ? 'Masquer' : 'Afficher'} la carte
+          </Button>
+        )}
       </div>
 
       {!selectedRestaurant && (
@@ -36,6 +56,15 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>Veuillez d'abord sélectionner un restaurant</span>
         </div>
+      )}
+
+      {/* Interactive Map */}
+      {selectedRestaurant && showMap && (
+        <DeliveryZoneMap
+          restaurantId={selectedRestaurant.id}
+          customerCoordinates={customerCoords}
+          className="h-[300px] rounded-lg overflow-hidden border border-border"
+        />
       )}
 
       <div className="flex gap-2">
