@@ -57,46 +57,19 @@ serve(async (req) => {
       );
     }
 
-    // First, geocode the address with region bias for France
-    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address + ', France')}&region=fr&language=fr&key=${apiKey}`;
+    // First, geocode the address
+    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
     console.log(`Geocoding address: ${address}`);
     
     const geocodeResponse = await fetch(geocodeUrl);
     const geocodeData = await geocodeResponse.json();
 
-    console.log(`Geocode response status: ${geocodeData.status}`);
-    
-    if (geocodeData.status === 'REQUEST_DENIED') {
-      console.error(`API Key error: ${geocodeData.error_message || 'REQUEST_DENIED'}`);
-      return new Response(
-        JSON.stringify({ 
-          isInZone: false, 
-          error: 'Erreur de configuration API Google Maps. Vérifiez que les APIs Geocoding et Distance Matrix sont activées.',
-          distanceKm: null,
-          debugInfo: geocodeData.error_message
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (geocodeData.status === 'ZERO_RESULTS' || !geocodeData.results?.length) {
-      console.error(`Address not found: ${address}`);
-      return new Response(
-        JSON.stringify({ 
-          isInZone: false, 
-          error: 'Adresse non trouvée. Veuillez entrer une adresse complète (rue, code postal, ville).',
-          distanceKm: null 
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    if (geocodeData.status !== 'OK') {
+    if (geocodeData.status !== 'OK' || !geocodeData.results?.length) {
       console.error(`Geocoding failed: ${geocodeData.status}`);
       return new Response(
         JSON.stringify({ 
           isInZone: false, 
-          error: `Erreur de géocodage: ${geocodeData.status}`,
+          error: 'Adresse non trouvée',
           distanceKm: null 
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
