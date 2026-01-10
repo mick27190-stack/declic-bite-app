@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { MapPin, Truck, AlertCircle, CheckCircle, Loader2, Map } from 'lucide-react';
+import { Truck, AlertCircle, CheckCircle, Loader2, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useDeliveryZone } from '@/hooks/useDeliveryZone';
 import { useCart } from '@/contexts/CartContext';
 import { DeliveryZoneMap } from '@/components/DeliveryZoneMap';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 interface DeliveryZoneCheckerProps {
   onValidAddress?: (address: string, coordinates: { lat: number; lng: number }) => void;
@@ -14,6 +14,7 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
   const [address, setAddress] = useState('');
   const [showMap, setShowMap] = useState(true);
   const [customerCoords, setCustomerCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedFromAutocomplete, setSelectedFromAutocomplete] = useState(false);
   const { checkDeliveryZone, isChecking, result } = useDeliveryZone();
   const { selectedRestaurant } = useCart();
 
@@ -29,6 +30,26 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
     if (checkResult.isInZone && checkResult.coordinates && onValidAddress) {
       onValidAddress(checkResult.addressFormatted || address, checkResult.coordinates);
     }
+  };
+
+  const handlePlaceSelect = async (place: { address: string; coordinates: { lat: number; lng: number } }) => {
+    setAddress(place.address);
+    setCustomerCoords(place.coordinates);
+    setSelectedFromAutocomplete(true);
+    
+    // Auto-check when place is selected from autocomplete
+    if (selectedRestaurant) {
+      const checkResult = await checkDeliveryZone(place.address, selectedRestaurant.id);
+      
+      if (checkResult.isInZone && checkResult.coordinates && onValidAddress) {
+        onValidAddress(checkResult.addressFormatted || place.address, checkResult.coordinates);
+      }
+    }
+  };
+
+  const handleAddressChange = (newAddress: string) => {
+    setAddress(newAddress);
+    setSelectedFromAutocomplete(false);
   };
 
   return (
@@ -68,18 +89,14 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
       )}
 
       <div className="flex gap-2">
-        <div className="relative flex-1">
-          <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Entrez votre adresse complète"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="pl-10"
-            disabled={!selectedRestaurant || isChecking}
-            onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
-          />
-        </div>
+        <AddressAutocomplete
+          value={address}
+          onChange={handleAddressChange}
+          onPlaceSelect={handlePlaceSelect}
+          placeholder="Entrez votre adresse complète"
+          disabled={!selectedRestaurant || isChecking}
+          className="flex-1"
+        />
         <Button
           onClick={handleCheck}
           disabled={!address.trim() || !selectedRestaurant || isChecking}
@@ -91,6 +108,12 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
           )}
         </Button>
       </div>
+
+      {selectedFromAutocomplete && !result && !isChecking && (
+        <p className="text-xs text-muted-foreground">
+          ✨ Adresse sélectionnée - vérification automatique en cours...
+        </p>
+      )}
 
       {result && (
         <div className={`p-4 rounded-lg border ${
