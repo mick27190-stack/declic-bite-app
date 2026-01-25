@@ -31,10 +31,8 @@ interface AuthContextType {
   profile: Profile | null;
   addresses: Address[];
   loading: boolean;
-  signInWithOtp: (phone: string) => Promise<{ error: Error | null }>;
-  verifyOtp: (phone: string, token: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, firstName: string, lastName: string, phone: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUpWithPhone: (phone: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null }>;
+  signInWithPhone: (phone: string, password: string) => Promise<{ error: Error | null; isAdmin?: boolean }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
   addAddress: (address: Omit<Address, 'id' | 'user_id'>) => Promise<{ error: Error | null }>;
@@ -118,23 +116,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithOtp = async (phone: string) => {
-    const { error } = await supabase.auth.signInWithOtp({ phone });
-    return { error };
-  };
-
-  const verifyOtp = async (phone: string, token: string) => {
-    const { data, error } = await supabase.auth.verifyOtp({
-      phone,
-      token,
-      type: 'sms'
+  const signUpWithPhone = async (phone: string, password: string, firstName: string, lastName: string) => {
+    const formattedPhone = phone.startsWith('0') ? `+33${phone.slice(1)}` : phone;
+    const { data, error } = await supabase.auth.signUp({
+      phone: formattedPhone,
+      password,
+      options: {
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          phone: formattedPhone
+        }
+      }
     });
     
     // If successful, try to assign admin role based on phone
     if (!error && data.user) {
       try {
         await supabase.functions.invoke('assign-admin-role', {
-          body: { user_id: data.user.id, phone }
+          body: { user_id: data.user.id, phone: formattedPhone }
         });
       } catch (e) {
         console.error('Error checking admin role:', e);
@@ -144,29 +144,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string, firstName: string, lastName: string, phone: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          phone: phone
-        }
-      }
-    });
-    return { error };
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
+  const signInWithPhone = async (phone: string, password: string) => {
+    const formattedPhone = phone.startsWith('0') ? `+33${phone.slice(1)}` : phone;
+    const { data, error } = await supabase.auth.signInWithPassword({
+      phone: formattedPhone,
       password
     });
-    return { error };
+    
+    // If successful, try to assign admin role based on phone
+    let isAdmin = false;
+    if (!error && data.user) {
+      try {
+        const result = await supabase.functions.invoke('assign-admin-role', {
+          body: { user_id: data.user.id, phone: formattedPhone }
+        });
+        if (result.data?.role) {
+          isAdmin = true;
+        }
+      } catch (e) {
+        console.error('Error checking admin role:', e);
+      }
+    }
+    
+    return { error, isAdmin };
   };
 
   const signOut = async () => {
@@ -271,10 +271,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profile,
       addresses,
       loading,
-      signInWithOtp,
-      verifyOtp,
-      signUp,
-      signIn,
+      signUpWithPhone,
+      signInWithPhone,
       signOut,
       updateProfile,
       addAddress,
