@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import NotificationBell from '@/components/admin/NotificationBell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useOrders } from '@/hooks/useOrders';
@@ -75,9 +76,12 @@ export default function AdminOrdersPage() {
               {filteredOrders.length} commande(s) • Temps réel activé
             </p>
           </div>
-          <Button variant="outline" size="icon" onClick={refetch} disabled={ordersLoading}>
-            <RefreshCw className={`h-4 w-4 ${ordersLoading ? 'animate-spin' : ''}`} />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="icon" onClick={refetch} disabled={ordersLoading}>
+              <RefreshCw className={`h-4 w-4 ${ordersLoading ? 'animate-spin' : ''}`} />
+            </Button>
+            <NotificationBell />
+          </div>
         </div>
       </header>
 
