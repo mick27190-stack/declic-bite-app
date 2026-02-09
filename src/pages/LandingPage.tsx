@@ -123,6 +123,22 @@ export default function LandingPage() {
               ← Retour
             </button>
             <RestaurantSelector onSelect={handleRestaurantSelect} />
+            
+            <div className="mt-8 w-full max-w-md mx-auto">
+              <a
+                href="https://application.smart-machine.fr/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full glass-card p-5 text-center block transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 border border-border/50"
+              >
+                <h3 className="text-lg font-display font-bold text-primary">
+                  🍕 Commander dans notre distributeur Déclic Pizza
+                </h3>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Disponible 24h/24
+                </p>
+              </a>
+            </div>
           </div>
         )}
       </main>
