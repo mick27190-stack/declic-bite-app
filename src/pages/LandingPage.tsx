@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, Sparkles, User } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, Sparkles, User, ExternalLink, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
 import { useCart } from '@/contexts/CartContext';
@@ -129,14 +129,20 @@ export default function LandingPage() {
                 href="https://application.smart-machine.fr/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full glass-card p-5 text-center block transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 border border-border/50"
+                className="w-full glass-card p-5 flex items-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 border border-border/50 group"
               >
-                <h3 className="text-lg font-display font-bold text-primary">
-                  🍕 Commander dans notre distributeur Déclic Pizza
-                </h3>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Disponible 24h/24
-                </p>
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0 shadow-glow group-hover:scale-110 transition-transform duration-300">
+                  <Store className="w-7 h-7 text-primary-foreground" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="text-lg font-display font-bold text-primary">
+                    Distributeur Déclic Pizza
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Disponible 24h/24 • Commandez en ligne
+                  </p>
+                </div>
+                <ExternalLink className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
               </a>
             </div>
           </div>
