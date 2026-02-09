@@ -32,10 +32,14 @@ export function CartView() {
     clearCart
   } = useCart();
 
-  const isMonday = new Date().getDay() === 1;
+  const now = new Date();
+  const isMonday = now.getDay() === 1;
+  const currentHour = now.getHours();
+  const isOutsideHours = currentHour < 18 || currentHour >= 22;
+  const isClosed = isMonday || isOutsideHours;
 
   const canCheckout = () => {
-    if (isMonday) return false;
+    if (isClosed) return false;
     if (items.length === 0) return false;
     if (!selectedRestaurant) return false;
     if (orderType === 'emporter' && !pickupTime) return false;
@@ -97,7 +101,7 @@ export function CartView() {
 
   return (
     <div className="space-y-4 pb-32">
-      {/* Monday closed alert */}
+      {/* Closed alerts */}
       {isMonday && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
@@ -105,6 +109,17 @@ export function CartView() {
             <p className="font-semibold text-destructive text-sm">Fermé le lundi</p>
             <p className="text-sm text-muted-foreground mt-1">
               Nos pizzerias sont fermées le lundi. Revenez dès demain mardi pour passer votre commande ! 🍕
+            </p>
+          </div>
+        </div>
+      )}
+      {!isMonday && isOutsideHours && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-destructive text-sm">Hors horaires d'ouverture</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Nos pizzerias sont ouvertes de <strong className="text-primary">18h à 22h</strong>. Revenez pendant nos horaires d'ouverture pour commander ! 🕐
             </p>
           </div>
         </div>
@@ -245,6 +260,8 @@ export function CartView() {
               </>
             ) : isMonday ? (
               'Fermé le lundi'
+            ) : isOutsideHours ? (
+              'Ouvert de 18h à 22h'
             ) : !user ? (
               'Se connecter pour commander'
             ) : orderType === 'livraison' && !deliveryAddress ? (
