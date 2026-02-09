@@ -1,4 +1,5 @@
 import { Pizza } from '@/types/pizza';
+import { isPromoDay } from '@/lib/promo';
 
 interface PizzaCardProps {
   pizza: Pizza;
@@ -21,7 +22,14 @@ export function PizzaCard({ pizza, onClick }: PizzaCardProps) {
         
         {/* Price Badge */}
         <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1.5 rounded-full font-display font-bold text-sm shadow-glow">
-          {pizza.basePrice}€
+          {isPromoDay() ? (
+            <span className="flex items-center gap-1">
+              <span className="line-through opacity-70 text-xs">{pizza.basePrice}€</span>
+              <span>10€</span>
+            </span>
+          ) : (
+            <>{pizza.basePrice}€</>
+          )}
         </div>
       </div>
       

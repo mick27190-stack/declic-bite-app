@@ -10,6 +10,7 @@ import { PickupTimeSelector } from '@/components/PickupTimeSelector';
 import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
+import { getEffectiveBasePrice } from '@/lib/promo';
 
 export function CartView() {
   const navigate = useNavigate();
@@ -192,7 +193,7 @@ export function CartView() {
         <h3 className="font-display font-semibold text-foreground mb-3">Votre commande</h3>
         {items.map((item, index) => {
           const itemTotal =
-            (item.pizza.basePrice +
+            (getEffectiveBasePrice(item.pizza.basePrice, item.size.id) +
               item.size.price +
               item.supplements.reduce((sum, s) => sum + s.price, 0)) *
             item.quantity;
