@@ -10,6 +10,24 @@ import pizzaChampignons from '@/assets/pizza-champignons.jpg';
 import pizzaCalzone from '@/assets/pizza-calzone.jpg';
 import pizzaFruitsDeMer from '@/assets/pizza-fruits-de-mer.jpg';
 import pizzaKebab from '@/assets/pizza-kebab.jpg';
+import pizzaQuatreFromages from '@/assets/pizza-quatre-fromages.jpg';
+import pizzaFondante from '@/assets/pizza-fondante.jpg';
+import pizzaOrientale from '@/assets/pizza-orientale.jpg';
+import pizzaChef from '@/assets/pizza-chef.jpg';
+import pizzaAuvergnate from '@/assets/pizza-auvergnate.jpg';
+import pizzaSavoyarde from '@/assets/pizza-savoyarde.jpg';
+import pizzaRaclette from '@/assets/pizza-raclette.jpg';
+import pizzaBurger from '@/assets/pizza-burger.jpg';
+import pizzaMalyson from '@/assets/pizza-malyson.jpg';
+import pizzaJuju from '@/assets/pizza-juju.jpg';
+import pizzaBolognaise from '@/assets/pizza-bolognaise.jpg';
+import pizzaDelice from '@/assets/pizza-delice.jpg';
+import pizzaExtravagante from '@/assets/pizza-extravagante.jpg';
+import pizzaPaysanne from '@/assets/pizza-paysanne.jpg';
+import pizzaThonata from '@/assets/pizza-thonata.jpg';
+import pizzaAntillaise from '@/assets/pizza-antillaise.jpg';
+import pizzaForestiere from '@/assets/pizza-forestiere.jpg';
+import pizzaNapolitaine from '@/assets/pizza-napolitaine.jpg';
 
 export const pizzas: Pizza[] = [
   // Classiques
@@ -38,7 +56,7 @@ export const pizzas: Pizza[] = [
     name: 'Quatre Fromages',
     description: 'Pour les amateurs de fromage',
     ingredients: ['Tomate', 'Mozzarella', 'Chèvre', 'Camembert', 'Bleu', 'Crème fraîche'],
-    image: pizzaChevreMiel,
+    image: pizzaQuatreFromages,
     basePrice: 13,
     category: 'classiques',
     isAvailable: true,
@@ -48,7 +66,7 @@ export const pizzas: Pizza[] = [
     name: 'Napolitaine',
     description: 'Saveurs méditerranéennes authentiques',
     ingredients: ['Tomate', 'Mozzarella', 'Anchois', 'Câpres', 'Olives noires'],
-    image: pizzaFruitsDeMer,
+    image: pizzaNapolitaine,
     basePrice: 13,
     category: 'classiques',
     isAvailable: true,
@@ -72,7 +90,7 @@ export const pizzas: Pizza[] = [
     name: 'Paysanne',
     description: 'Généreuse et rustique',
     ingredients: ['Tomate', 'Mozzarella', 'Pommes de terre', 'Jambon', 'Crème fraîche', 'Œuf'],
-    image: pizzaCarnivore,
+    image: pizzaPaysanne,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -92,7 +110,7 @@ export const pizzas: Pizza[] = [
     name: 'Orientale',
     description: 'Épices et saveurs du Maghreb',
     ingredients: ['Tomate', 'Mozzarella', 'Merguez', 'Chorizo', 'Poivrons', 'Œuf', 'Crème fraîche'],
-    image: pizzaCarnivore,
+    image: pizzaOrientale,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -102,7 +120,7 @@ export const pizzas: Pizza[] = [
     name: 'Chef',
     description: 'La préférée du chef',
     ingredients: ['Tomate', 'Mozzarella', 'Jambon', 'Lardons', 'Œuf', 'Champignons'],
-    image: pizzaCarnivore,
+    image: pizzaChef,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -112,7 +130,7 @@ export const pizzas: Pizza[] = [
     name: "L'Auvergnate",
     description: 'Spécialité montagnarde',
     ingredients: ['Tomate', 'Mozzarella', 'Bacon', 'Pommes de terre', 'Bleu', 'Œuf', 'Crème fraîche'],
-    image: pizzaCarnivore,
+    image: pizzaAuvergnate,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -122,7 +140,7 @@ export const pizzas: Pizza[] = [
     name: 'Savoyarde',
     description: 'Inspirée de la tartiflette',
     ingredients: ['Tomate', 'Mozzarella', 'Tartiflette', 'Pommes de terre', 'Lardons', 'Oignons', 'Crème fraîche'],
-    image: pizzaCarnivore,
+    image: pizzaSavoyarde,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -142,7 +160,7 @@ export const pizzas: Pizza[] = [
     name: 'La Raclette',
     description: 'Gourmandise savoyarde',
     ingredients: ['Tomate', 'Mozzarella', 'Bacon', 'Fromage à raclette', 'Oignons', 'Lardons', 'Pommes de terre'],
-    image: pizzaCarnivore,
+    image: pizzaRaclette,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -162,7 +180,7 @@ export const pizzas: Pizza[] = [
     name: 'La Fondante',
     description: 'Fondante et savoureuse',
     ingredients: ['Tomate', 'Mozzarella', 'Boursin', 'Jambon', 'Crème fraîche', 'Olives'],
-    image: pizzaChevreMiel,
+    image: pizzaFondante,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -172,7 +190,7 @@ export const pizzas: Pizza[] = [
     name: 'La Thonata',
     description: 'Pour les amateurs de thon',
     ingredients: ['Tomate', 'Mozzarella', 'Thon', 'Anchois', 'Olives', 'Crème fraîche'],
-    image: pizzaSaumon,
+    image: pizzaThonata,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -182,7 +200,7 @@ export const pizzas: Pizza[] = [
     name: 'La Forestière',
     description: 'Saveurs de la forêt',
     ingredients: ['Tomate', 'Mozzarella', 'Champignons', 'Jambon', 'Œuf', 'Crème'],
-    image: pizzaChampignons,
+    image: pizzaForestiere,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -192,7 +210,7 @@ export const pizzas: Pizza[] = [
     name: "L'Antillaise",
     description: 'Exotique et sucrée-salée',
     ingredients: ['Tomate', 'Mozzarella', 'Poulet', 'Ananas', 'Miel'],
-    image: pizzaPoulet,
+    image: pizzaAntillaise,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -204,7 +222,7 @@ export const pizzas: Pizza[] = [
     name: 'La Burger',
     description: 'Tous les goûts du burger sur une pizza',
     ingredients: ['Tomate', 'Mozzarella', 'Oignons', 'Bacon', 'Cheddar', 'Viande hachée', 'Sauce burger'],
-    image: pizzaCarnivore,
+    image: pizzaBurger,
     basePrice: 13,
     category: 'gourmandes',
     isAvailable: true,
@@ -214,7 +232,7 @@ export const pizzas: Pizza[] = [
     name: 'La Malyson',
     description: 'Généreuse et gourmande',
     ingredients: ['Tomate', 'Mozzarella', 'Bacon', 'Camembert', 'Tartiflette', 'Lardons', 'Crème fraîche'],
-    image: pizzaCarnivore,
+    image: pizzaMalyson,
     basePrice: 13,
     category: 'gourmandes',
     isAvailable: true,
@@ -224,7 +242,7 @@ export const pizzas: Pizza[] = [
     name: 'La Juju',
     description: 'Poulet barbecue irrésistible',
     ingredients: ['Tomate', 'Mozzarella', 'Poulet', 'Oignons', 'Bacon', 'Crème fraîche', 'Sauce barbecue'],
-    image: pizzaCarnivore,
+    image: pizzaJuju,
     basePrice: 13,
     category: 'gourmandes',
     isAvailable: true,
@@ -244,7 +262,7 @@ export const pizzas: Pizza[] = [
     name: 'La Bolognaise',
     description: 'Viande hachée à l\'italienne',
     ingredients: ['Tomate', 'Mozzarella', 'Viande hachée', 'Œuf', 'Oignons'],
-    image: pizzaCarnivore,
+    image: pizzaBolognaise,
     basePrice: 13,
     category: 'gourmandes',
     isAvailable: true,
@@ -254,7 +272,7 @@ export const pizzas: Pizza[] = [
     name: 'La Délice',
     description: 'Un délice normand',
     ingredients: ['Tomate', 'Mozzarella', 'Andouille', 'Camembert', 'Crème fraîche'],
-    image: pizzaCarnivore,
+    image: pizzaDelice,
     basePrice: 13,
     category: 'gourmandes',
     isAvailable: true,
@@ -264,7 +282,7 @@ export const pizzas: Pizza[] = [
     name: "L'Extravagante",
     description: 'Pour les grandes faims',
     ingredients: ['Tomate', 'Mozzarella', 'Viande hachée', 'Merguez', 'Chèvre', 'Œuf'],
-    image: pizzaCalzone,
+    image: pizzaExtravagante,
     basePrice: 13,
     category: 'gourmandes',
     isAvailable: true,
@@ -274,7 +292,7 @@ export const pizzas: Pizza[] = [
     name: 'La Calzone',
     description: 'Pizza pliée et garnie',
     ingredients: ['Tomate', 'Mozzarella', 'Jambon', 'Œuf', 'Crème fraîche', 'Champignons'],
-    image: pizzaKebab,
+    image: pizzaCalzone,
     basePrice: 13,
     category: 'gourmandes',
     isAvailable: true,
@@ -284,7 +302,7 @@ export const pizzas: Pizza[] = [
     name: 'Kébab',
     description: 'Saveurs orientales',
     ingredients: ['Tomate', 'Mozzarella', 'Viande à kébab', 'Oignons'],
-    image: pizzaCarnivore,
+    image: pizzaKebab,
     basePrice: 13,
     category: 'gourmandes',
     isAvailable: true,
