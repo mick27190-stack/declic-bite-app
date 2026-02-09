@@ -9,6 +9,7 @@ import { OrderTypeSelector } from '@/components/OrderTypeSelector';
 import { PickupTimeSelector } from '@/components/PickupTimeSelector';
 import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
+import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 
 export function CartView() {
   const navigate = useNavigate();
@@ -32,11 +33,14 @@ export function CartView() {
     clearCart
   } = useCart();
 
+  const { getClosureForSite } = useActiveClosures();
+
   const now = new Date();
   const isMonday = now.getDay() === 1;
   const currentHour = now.getHours();
   const isOutsideHours = currentHour < 18 || currentHour >= 22;
-  const isClosed = isMonday || isOutsideHours;
+  const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
+  const isClosed = isMonday || isOutsideHours || !!manualClosure;
 
   const canCheckout = () => {
     if (isClosed) return false;
@@ -102,7 +106,21 @@ export function CartView() {
   return (
     <div className="space-y-4 pb-32">
       {/* Closed alerts */}
-      {isMonday && (
+      {manualClosure && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-destructive text-sm">Commandes bloquées</p>
+            <p className="text-sm text-muted-foreground mt-1">{manualClosure.reason}</p>
+            {manualClosure.end_at && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Jusqu'au {new Date(manualClosure.end_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+      {!manualClosure && isMonday && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
@@ -113,7 +131,7 @@ export function CartView() {
           </div>
         </div>
       )}
-      {!isMonday && isOutsideHours && (
+      {!manualClosure && !isMonday && isOutsideHours && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
@@ -258,6 +276,8 @@ export function CartView() {
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Envoi en cours...
               </>
+            ) : manualClosure ? (
+              'Commandes bloquées'
             ) : isMonday ? (
               'Fermé le lundi'
             ) : isOutsideHours ? (

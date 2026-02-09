@@ -266,6 +266,39 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurant_closures: {
+        Row: {
+          created_at: string
+          created_by: string
+          end_at: string | null
+          id: string
+          is_active: boolean
+          reason: string
+          site: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          end_at?: string | null
+          id?: string
+          is_active?: boolean
+          reason?: string
+          site: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          end_at?: string | null
+          id?: string
+          is_active?: boolean
+          reason?: string
+          site?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           assigned_by: string | null
