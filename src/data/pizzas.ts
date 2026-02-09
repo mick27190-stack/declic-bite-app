@@ -4,6 +4,12 @@ import pizzaMargherita from '@/assets/pizza-margherita.jpg';
 import pizzaChevreMiel from '@/assets/pizza-chevre-miel.jpg';
 import pizzaVegetarienne from '@/assets/pizza-vegetarienne.jpg';
 import pizzaCarnivore from '@/assets/pizza-carnivore.jpg';
+import pizzaSaumon from '@/assets/pizza-saumon.jpg';
+import pizzaPoulet from '@/assets/pizza-poulet.jpg';
+import pizzaChampignons from '@/assets/pizza-champignons.jpg';
+import pizzaCalzone from '@/assets/pizza-calzone.jpg';
+import pizzaFruitsDeMer from '@/assets/pizza-fruits-de-mer.jpg';
+import pizzaKebab from '@/assets/pizza-kebab.jpg';
 
 export const pizzas: Pizza[] = [
   // Classiques
@@ -22,7 +28,7 @@ export const pizzas: Pizza[] = [
     name: 'Reine',
     description: 'Un grand classique avec jambon et champignons',
     ingredients: ['Tomate', 'Mozzarella', 'Jambon', 'Champignons'],
-    image: pizzaCarnivore,
+    image: pizzaChampignons,
     basePrice: 13,
     category: 'classiques',
     isAvailable: true,
@@ -42,7 +48,7 @@ export const pizzas: Pizza[] = [
     name: 'Napolitaine',
     description: 'Saveurs méditerranéennes authentiques',
     ingredients: ['Tomate', 'Mozzarella', 'Anchois', 'Câpres', 'Olives noires'],
-    image: pizzaVegetarienne,
+    image: pizzaFruitsDeMer,
     basePrice: 13,
     category: 'classiques',
     isAvailable: true,
@@ -76,7 +82,7 @@ export const pizzas: Pizza[] = [
     name: 'Nordique',
     description: 'Saveurs de la mer avec saumon fumé',
     ingredients: ['Tomate', 'Mozzarella', 'Saumon fumé', 'Crème fraîche'],
-    image: pizzaChevreMiel,
+    image: pizzaSaumon,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -126,7 +132,7 @@ export const pizzas: Pizza[] = [
     name: 'La Spéciale',
     description: 'Une création originale au curry',
     ingredients: ['Tomate', 'Mozzarella', 'Poulet', 'Pommes de terre', 'Curry', 'Crème fraîche'],
-    image: pizzaChevreMiel,
+    image: pizzaPoulet,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -146,7 +152,7 @@ export const pizzas: Pizza[] = [
     name: 'La Méditerranéenne',
     description: 'Fruits de mer et saveurs du sud',
     ingredients: ['Tomate', 'Mozzarella', 'Cocktail de fruits de mer', 'Beurre d\'escargots', 'Crème fraîche'],
-    image: pizzaChevreMiel,
+    image: pizzaFruitsDeMer,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -166,7 +172,7 @@ export const pizzas: Pizza[] = [
     name: 'La Thonata',
     description: 'Pour les amateurs de thon',
     ingredients: ['Tomate', 'Mozzarella', 'Thon', 'Anchois', 'Olives', 'Crème fraîche'],
-    image: pizzaVegetarienne,
+    image: pizzaSaumon,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -176,7 +182,7 @@ export const pizzas: Pizza[] = [
     name: 'La Forestière',
     description: 'Saveurs de la forêt',
     ingredients: ['Tomate', 'Mozzarella', 'Champignons', 'Jambon', 'Œuf', 'Crème'],
-    image: pizzaCarnivore,
+    image: pizzaChampignons,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -186,7 +192,7 @@ export const pizzas: Pizza[] = [
     name: "L'Antillaise",
     description: 'Exotique et sucrée-salée',
     ingredients: ['Tomate', 'Mozzarella', 'Poulet', 'Ananas', 'Miel'],
-    image: pizzaChevreMiel,
+    image: pizzaPoulet,
     basePrice: 13,
     category: 'speciales',
     isAvailable: true,
@@ -258,7 +264,7 @@ export const pizzas: Pizza[] = [
     name: "L'Extravagante",
     description: 'Pour les grandes faims',
     ingredients: ['Tomate', 'Mozzarella', 'Viande hachée', 'Merguez', 'Chèvre', 'Œuf'],
-    image: pizzaCarnivore,
+    image: pizzaCalzone,
     basePrice: 13,
     category: 'gourmandes',
     isAvailable: true,
@@ -268,7 +274,7 @@ export const pizzas: Pizza[] = [
     name: 'La Calzone',
     description: 'Pizza pliée et garnie',
     ingredients: ['Tomate', 'Mozzarella', 'Jambon', 'Œuf', 'Crème fraîche', 'Champignons'],
-    image: pizzaCarnivore,
+    image: pizzaKebab,
     basePrice: 13,
     category: 'gourmandes',
     isAvailable: true,
