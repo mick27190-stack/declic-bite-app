@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCustomerChat } from '@/hooks/useCustomerChat';
+import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,6 +35,7 @@ export default function CustomerChat() {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages, loading, sendMessage } = useCustomerChat();
+  const { isOnline } = useAdminPresenceWatch();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -70,7 +72,15 @@ export default function CustomerChat() {
           <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground rounded-t-2xl">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
-              <span className="font-semibold text-sm">Chat Déclic Pizza</span>
+              <div>
+                <span className="font-semibold text-sm">Chat Déclic Pizza</span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400 animate-pulse' : 'bg-primary-foreground/40'}`} />
+                  <span className="text-[10px] text-primary-foreground/80">
+                    {isOnline ? 'En ligne' : 'Hors ligne'}
+                  </span>
+                </div>
+              </div>
             </div>
             <button onClick={() => setOpen(false)} className="hover:opacity-70 transition-opacity">
               <X className="h-5 w-5" />

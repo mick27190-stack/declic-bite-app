@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useChat, type ChatConversation, type ChatMessage } from '@/hooks/useChat';
+import { useAdminPresenceBroadcast } from '@/hooks/useAdminPresence';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,6 +82,7 @@ export default function AdminChatPage() {
   const { canManageChat, isSuperAdmin, isSiteAdminConches, isSiteAdminBeaumont, loading: adminLoading } = useAdmin();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [newMessage, setNewMessage] = useState('');
+  useAdminPresenceBroadcast();
 
   // Determine site filter based on admin role
   const siteFilter = isSuperAdmin ? 'all' : isSiteAdminConches ? 'conches' : isSiteAdminBeaumont ? 'beaumont' : 'all';
