@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { restaurants } from '@/data/pizzas';
+import CustomerChat from '@/components/CustomerChat';
 
 export default function ContactPage() {
   const navigate = useNavigate();
@@ -112,6 +113,9 @@ export default function ContactPage() {
           </p>
         </div>
       </main>
+
+      {/* Customer Chat */}
+      <CustomerChat />
 
       {/* Bottom Navigation */}
       <BottomNavigation />
