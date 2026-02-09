@@ -7,6 +7,7 @@ import { BottomNavigation } from '@/components/BottomNavigation';
 import { pizzas, categories } from '@/data/pizzas';
 import { Pizza } from '@/types/pizza';
 import { useCart } from '@/contexts/CartContext';
+import { isPromoDay, PROMO_LABEL } from '@/lib/promo';
 
 export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -91,6 +92,11 @@ export default function MenuPage() {
 
       {/* Pizza Grid */}
       <main className="max-w-md mx-auto px-4 py-6">
+        {isPromoDay() && (
+          <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-center">
+            <p className="text-sm font-bold text-green-600">🎉 {PROMO_LABEL}</p>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           {filteredPizzas.map((pizza, index) => (
             <div

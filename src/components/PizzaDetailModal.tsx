@@ -5,6 +5,7 @@ import { Pizza, PizzaSize, Supplement, CartItem } from '@/types/pizza';
 import { pizzaSizes, supplements } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
+import { getEffectiveBasePrice, isPromoDay } from '@/lib/promo';
 
 interface PizzaDetailModalProps {
   pizza: Pizza;
@@ -29,7 +30,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   };
 
   const calculateTotal = () => {
-    const base = pizza.basePrice + selectedSize.price;
+    const base = getEffectiveBasePrice(pizza.basePrice, selectedSize.id) + selectedSize.price;
     const supps = selectedSupplements.reduce((sum, s) => sum + s.price, 0);
     return (base + supps) * quantity;
   };
@@ -126,9 +127,18 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                     <p className="font-semibold text-foreground">{size.name}</p>
                     <p className="text-xs text-muted-foreground">{size.description}</p>
                   </div>
-                  <span className="font-display font-bold text-primary">
-                    {pizza.basePrice + size.price}€
-                  </span>
+                  <div className="text-right">
+                    {size.id === 'senior' && isPromoDay() ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground line-through">{pizza.basePrice + size.price}€</span>
+                        <span className="font-display font-bold text-green-500">{getEffectiveBasePrice(pizza.basePrice, size.id) + size.price}€</span>
+                      </div>
+                    ) : (
+                      <span className="font-display font-bold text-primary">
+                        {pizza.basePrice + size.price}€
+                      </span>
+                    )}
+                  </div>
                 </button>
               ))}
             </div>
