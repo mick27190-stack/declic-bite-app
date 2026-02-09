@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Minus, Plus, Trash2, ShoppingBag, CheckCircle, Loader2 } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,7 +32,10 @@ export function CartView() {
     clearCart
   } = useCart();
 
+  const isMonday = new Date().getDay() === 1;
+
   const canCheckout = () => {
+    if (isMonday) return false;
     if (items.length === 0) return false;
     if (!selectedRestaurant) return false;
     if (orderType === 'emporter' && !pickupTime) return false;
@@ -94,7 +97,18 @@ export function CartView() {
 
   return (
     <div className="space-y-4 pb-32">
-      {/* Restaurant info */}
+      {/* Monday closed alert */}
+      {isMonday && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-destructive text-sm">Fermé le lundi</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Nos pizzerias sont fermées le lundi. Revenez dès demain mardi pour passer votre commande ! 🍕
+            </p>
+          </div>
+        </div>
+      )}
       {selectedRestaurant && (
         <div className="glass-card p-4 mb-2">
           <p className="text-sm text-muted-foreground">Commande pour</p>
@@ -229,6 +243,8 @@ export function CartView() {
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Envoi en cours...
               </>
+            ) : isMonday ? (
+              'Fermé le lundi'
             ) : !user ? (
               'Se connecter pour commander'
             ) : orderType === 'livraison' && !deliveryAddress ? (
