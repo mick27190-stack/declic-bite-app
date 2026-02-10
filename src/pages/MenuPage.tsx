@@ -99,8 +99,8 @@ export default function MenuPage() {
         )}
         <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-start gap-2">
           <Truck className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-foreground">
-            <strong>Livraison hors Conches &amp; Beaumont</strong> : minimum de commande de 20€ (2 pizzas Senior ou 1 pizza Méga).
+          <p className="text-xs text-muted-foreground">
+            <strong className="text-foreground">Livraison hors Conches &amp; Beaumont</strong> : minimum de commande de 20€ (2 pizzas Senior ou 1 pizza Méga).
           </p>
         </div>
         <div className="grid grid-cols-2 gap-4">
