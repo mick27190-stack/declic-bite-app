@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronLeft } from 'lucide-react';
+import { Search, ChevronLeft, Truck } from 'lucide-react';
 import { PizzaCard } from '@/components/PizzaCard';
 import { PizzaDetailModal } from '@/components/PizzaDetailModal';
 import { BottomNavigation } from '@/components/BottomNavigation';
@@ -97,6 +97,12 @@ export default function MenuPage() {
             <p className="text-sm font-bold text-green-600">🎉 {PROMO_LABEL}</p>
           </div>
         )}
+        <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-start gap-2">
+          <Truck className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground">
+            <strong className="text-foreground">Livraison hors Conches &amp; Beaumont</strong> : minimum de commande de 20€ (2 pizzas Senior ou 1 pizza Méga).
+          </p>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           {filteredPizzas.map((pizza, index) => (
             <div
