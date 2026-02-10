@@ -115,6 +115,13 @@ serve(async (req) => {
 
     console.log(`Distance: ${distanceKm.toFixed(2)}km, In zone: ${isInZone}`);
 
+    // Extract postal code from geocode result
+    const postalCodeComponent = geocodeData.results[0].address_components?.find(
+      (c: any) => c.types?.includes('postal_code')
+    );
+    const postalCode = postalCodeComponent?.long_name || null;
+    console.log(`Postal code: ${postalCode}`);
+
     return new Response(
       JSON.stringify({ 
         isInZone, 
@@ -122,7 +129,8 @@ serve(async (req) => {
         distanceText: element.distance.text,
         durationText: element.duration.text,
         addressFormatted: geocodeData.results[0].formatted_address,
-        coordinates: addressLocation
+        coordinates: addressLocation,
+        postalCode
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

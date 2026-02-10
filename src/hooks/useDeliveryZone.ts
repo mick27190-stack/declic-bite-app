@@ -8,6 +8,7 @@ interface DeliveryZoneResult {
   durationText?: string;
   addressFormatted?: string;
   coordinates?: { lat: number; lng: number };
+  postalCode?: string | null;
   error?: string;
 }
 

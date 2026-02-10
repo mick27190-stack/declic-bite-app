@@ -2,9 +2,10 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { CartItem, Restaurant, OrderType } from '@/types/pizza';
 import { getEffectiveBasePrice } from '@/lib/promo';
 
-interface DeliveryAddress {
+export interface DeliveryAddress {
   address: string;
   coordinates: { lat: number; lng: number };
+  postalCode?: string | null;
 }
 
 interface CartContextType {

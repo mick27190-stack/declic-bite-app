@@ -43,12 +43,20 @@ export function CartView() {
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const isClosed = isMonday || isOutsideHours || !!manualClosure;
 
+  // Minimum order check for delivery outside restaurant cities
+  const LOCAL_POSTAL_CODES = ['27190', '27170'];
+  const DELIVERY_MINIMUM = 20;
+  const isLocalDelivery = deliveryAddress?.postalCode && LOCAL_POSTAL_CODES.includes(deliveryAddress.postalCode);
+  const needsMinimum = orderType === 'livraison' && deliveryAddress && !isLocalDelivery;
+  const belowMinimum = needsMinimum && totalPrice < DELIVERY_MINIMUM;
+
   const canCheckout = () => {
     if (isClosed) return false;
     if (items.length === 0) return false;
     if (!selectedRestaurant) return false;
     if (orderType === 'emporter' && !pickupTime) return false;
     if (orderType === 'livraison' && !deliveryAddress) return false;
+    if (belowMinimum) return false;
     return true;
   };
 
@@ -162,8 +170,8 @@ export function CartView() {
       {orderType === 'livraison' && (
         <div className="glass-card p-4">
           <DeliveryZoneChecker 
-            onValidAddress={(address, coordinates) => {
-              setDeliveryAddress({ address, coordinates });
+            onValidAddress={(address, coordinates, postalCode) => {
+              setDeliveryAddress({ address, coordinates, postalCode });
             }}
           />
           {deliveryAddress && (
@@ -175,6 +183,22 @@ export function CartView() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Minimum order alert for delivery outside local cities */}
+      {belowMinimum && (
+        <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-yellow-700 text-sm">Minimum de commande requis</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Pour les livraisons hors Conches-en-Ouche et Beaumont-le-Roger, le minimum de commande est de <strong className="text-primary">{DELIVERY_MINIMUM}€</strong> (2 pizzas Senior ou 1 pizza Méga).
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Total actuel : {totalPrice.toFixed(2)}€ — il manque {(DELIVERY_MINIMUM - totalPrice).toFixed(2)}€
+            </p>
+          </div>
         </div>
       )}
 
@@ -289,6 +313,8 @@ export function CartView() {
               'Se connecter pour commander'
             ) : orderType === 'livraison' && !deliveryAddress ? (
               'Vérifiez votre adresse'
+            ) : belowMinimum ? (
+              `Minimum ${DELIVERY_MINIMUM}€ pour la livraison`
             ) : orderType === 'emporter' && !pickupTime ? (
               'Choisissez une heure'
             ) : (
