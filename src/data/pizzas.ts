@@ -28,6 +28,13 @@ import pizzaThonata from '@/assets/pizza-thonata.jpg';
 import pizzaAntillaise from '@/assets/pizza-antillaise.jpg';
 import pizzaForestiere from '@/assets/pizza-forestiere.jpg';
 import pizzaNapolitaine from '@/assets/pizza-napolitaine.jpg';
+import menuBambino from '@/assets/menu-bambino.jpg';
+import paniniQuatreFromages from '@/assets/panini-quatre-fromages.jpg';
+import paniniJambon from '@/assets/panini-jambon.jpg';
+import paniniSavoyard from '@/assets/panini-savoyard.jpg';
+import paniniRaclette from '@/assets/panini-raclette.jpg';
+import boissonCoca from '@/assets/boisson-coca.jpg';
+import boissonRose from '@/assets/boisson-rose.jpg';
 
 export const pizzas: Pizza[] = [
   // Classiques
@@ -307,6 +314,102 @@ export const pizzas: Pizza[] = [
     category: 'gourmandes',
     isAvailable: true,
   },
+  // Bambino
+  {
+    id: 'bambino',
+    name: 'Menu Bambino',
+    description: 'Pizza au choix + boisson + bonbon',
+    ingredients: ['Pizza au choix', 'Boisson', 'Bonbon'],
+    image: menuBambino,
+    basePrice: 7,
+    category: 'bambino',
+    isAvailable: true,
+    hasSize: false,
+    hasBase: false,
+    hasSupplements: false,
+  },
+
+  // Paninis
+  {
+    id: 'panini-4fromages',
+    name: 'Panini 4 Fromages',
+    description: 'Panini garni de 4 fromages fondants',
+    ingredients: ['Mozzarella', 'Chèvre', 'Camembert', 'Bleu'],
+    image: paniniQuatreFromages,
+    basePrice: 6,
+    category: 'paninis',
+    isAvailable: true,
+    hasSize: true,
+    hasBase: false,
+    hasSupplements: false,
+  },
+  {
+    id: 'panini-jambon',
+    name: 'Panini Jambon',
+    description: 'Panini au jambon et fromage',
+    ingredients: ['Jambon', 'Mozzarella'],
+    image: paniniJambon,
+    basePrice: 6,
+    category: 'paninis',
+    isAvailable: true,
+    hasSize: true,
+    hasBase: false,
+    hasSupplements: false,
+  },
+  {
+    id: 'panini-savoyard',
+    name: 'Panini Savoyard',
+    description: 'Panini aux saveurs de montagne',
+    ingredients: ['Fromage à raclette', 'Pommes de terre', 'Lardons'],
+    image: paniniSavoyard,
+    basePrice: 6,
+    category: 'paninis',
+    isAvailable: true,
+    hasSize: true,
+    hasBase: false,
+    hasSupplements: false,
+  },
+  {
+    id: 'panini-raclette',
+    name: 'Panini Raclette',
+    description: 'Panini au fromage à raclette fondant',
+    ingredients: ['Fromage à raclette', 'Pommes de terre', 'Oignons'],
+    image: paniniRaclette,
+    basePrice: 6,
+    category: 'paninis',
+    isAvailable: true,
+    hasSize: true,
+    hasBase: false,
+    hasSupplements: false,
+  },
+
+  // Boissons
+  {
+    id: 'coca-cola-1-5l',
+    name: 'Coca-Cola 1,5L',
+    description: 'Bouteille de Coca-Cola 1,5L',
+    ingredients: [],
+    image: boissonCoca,
+    basePrice: 3,
+    category: 'boissons',
+    isAvailable: true,
+    hasSize: false,
+    hasBase: false,
+    hasSupplements: false,
+  },
+  {
+    id: 'rose-bouteille',
+    name: 'Bouteille de Rosé',
+    description: 'Bouteille de vin rosé',
+    ingredients: [],
+    image: boissonRose,
+    basePrice: 7,
+    category: 'boissons',
+    isAvailable: true,
+    hasSize: false,
+    hasBase: false,
+    hasSupplements: false,
+  },
 ];
 
 export const pizzaSizes: PizzaSize[] = [
@@ -327,6 +430,21 @@ export const pizzaSizes: PizzaSize[] = [
     name: 'Super Méga',
     price: 15,
     description: 'Pour les grandes faims (28€)',
+  },
+];
+
+export const paniniSizes: PizzaSize[] = [
+  {
+    id: 'senior',
+    name: 'Simple',
+    price: 0,
+    description: 'Panini simple (6€)',
+  },
+  {
+    id: 'mega',
+    name: 'Double',
+    price: 3,
+    description: 'Panini double (9€)',
   },
 ];
 
@@ -365,4 +483,7 @@ export const categories = [
   { id: 'speciales', name: 'Spéciales', emoji: '⭐' },
   { id: 'vegetariennes', name: 'Végétariennes', emoji: '🥗' },
   { id: 'gourmandes', name: 'Gourmandes', emoji: '🔥' },
+  { id: 'bambino', name: 'Bambino', emoji: '👶' },
+  { id: 'paninis', name: 'Paninis', emoji: '🥖' },
+  { id: 'boissons', name: 'Boissons', emoji: '🥤' },
 ];
