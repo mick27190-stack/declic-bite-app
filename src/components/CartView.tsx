@@ -193,7 +193,7 @@ export function CartView() {
         <h3 className="font-display font-semibold text-foreground mb-3">Votre commande</h3>
         {items.map((item, index) => {
           const itemTotal =
-            (getEffectiveBasePrice(item.pizza.basePrice, item.size.id) +
+            (getEffectiveBasePrice(item.pizza.basePrice, item.size.id, new Date(), item.pizza.category) +
               item.size.price +
               item.supplements.reduce((sum, s) => sum + s.price, 0)) *
             item.quantity;
