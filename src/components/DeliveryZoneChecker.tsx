@@ -7,7 +7,7 @@ import { DeliveryZoneMap } from '@/components/DeliveryZoneMap';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 interface DeliveryZoneCheckerProps {
-  onValidAddress?: (address: string, coordinates: { lat: number; lng: number }) => void;
+  onValidAddress?: (address: string, coordinates: { lat: number; lng: number }, postalCode?: string | null) => void;
 }
 
 export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps) {
@@ -28,7 +28,7 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
     }
     
     if (checkResult.isInZone && checkResult.coordinates && onValidAddress) {
-      onValidAddress(checkResult.addressFormatted || address, checkResult.coordinates);
+      onValidAddress(checkResult.addressFormatted || address, checkResult.coordinates, checkResult.postalCode);
     }
   };
 
@@ -42,7 +42,7 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
       const checkResult = await checkDeliveryZone(place.address, selectedRestaurant.id);
       
       if (checkResult.isInZone && checkResult.coordinates && onValidAddress) {
-        onValidAddress(checkResult.addressFormatted || place.address, checkResult.coordinates);
+        onValidAddress(checkResult.addressFormatted || place.address, checkResult.coordinates, checkResult.postalCode);
       }
     }
   };
