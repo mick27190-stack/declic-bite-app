@@ -188,18 +188,18 @@ export default function AdminOrdersPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {order.items.map((item, idx) => (
+                      {(Array.isArray(order.items) ? order.items : []).map((item: any, idx: number) => (
                         <div key={idx} className="flex justify-between text-sm">
                           <span>
-                            {item.quantity}x {item.pizza.name} ({item.size.name})
-                            {item.supplements.length > 0 && (
+                            {item?.quantity ?? 1}x {item?.pizza?.name ?? 'Produit'} ({item?.size?.name ?? '-'})
+                            {item?.supplements?.length > 0 && (
                               <span className="text-muted-foreground">
-                                {' '}+ {item.supplements.map(s => s.name).join(', ')}
+                                {' '}+ {item.supplements.map((s: any) => s.name).join(', ')}
                               </span>
                             )}
                           </span>
                           <span className="font-medium">
-                            {((item.pizza.basePrice + item.size.price + item.supplements.reduce((s, sup) => s + sup.price, 0)) * item.quantity).toFixed(2)}€
+                            {(((item?.pizza?.basePrice ?? 0) + (item?.size?.price ?? 0) + (item?.supplements ?? []).reduce((s: number, sup: any) => s + (sup.price ?? 0), 0)) * (item?.quantity ?? 1)).toFixed(2)}€
                           </span>
                         </div>
                       ))}
