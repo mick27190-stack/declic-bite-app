@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { playOrderSound, playChatSound } from '@/lib/notificationSounds';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface Notification {
@@ -88,11 +89,13 @@ export function useNotifications() {
           setNotifications(prev => [newNotif, ...prev]);
           setUnreadCount(prev => prev + 1);
 
-          // Play notification sound
+          // Play distinct notification sound based on type
           try {
-            const audio = new Audio('/notification.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(() => {}); // Ignore autoplay restrictions
+            if (newNotif.type === 'new_order') {
+              playOrderSound();
+            } else {
+              playChatSound();
+            }
           } catch {}
         }
       )
