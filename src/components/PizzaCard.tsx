@@ -6,7 +6,12 @@ interface PizzaCardProps {
   onClick: () => void;
 }
 
+const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
+
 export function PizzaCard({ pizza, onClick }: PizzaCardProps) {
+  const isPizza = PIZZA_CATEGORIES.includes(pizza.category);
+  const showPromo = isPizza && isPromoDay();
+
   return (
     <button
       onClick={onClick}
@@ -22,7 +27,7 @@ export function PizzaCard({ pizza, onClick }: PizzaCardProps) {
         
         {/* Price Badge */}
         <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1.5 rounded-full font-display font-bold text-sm shadow-glow">
-          {isPromoDay() ? (
+          {showPromo ? (
             <span className="flex items-center gap-1">
               <span className="line-through opacity-70 text-xs">{pizza.basePrice}€</span>
               <span>10€</span>
