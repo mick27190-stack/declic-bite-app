@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Plus, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Pizza, PizzaSize, Supplement, CartItem } from '@/types/pizza';
-import { pizzaSizes, supplements } from '@/data/pizzas';
+import { pizzaSizes, paniniSizes, supplements } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { getEffectiveBasePrice, isPromoDay } from '@/lib/promo';
@@ -13,7 +13,14 @@ interface PizzaDetailModalProps {
 }
 
 export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
-  const [selectedSize, setSelectedSize] = useState<PizzaSize>(pizzaSizes[0]);
+  const isPizza = !['bambino', 'paninis', 'boissons'].includes(pizza.category);
+  const isPanini = pizza.category === 'paninis';
+  const availableSizes = isPanini ? paniniSizes : pizzaSizes;
+  const showSize = pizza.hasSize !== false;
+  const showBase = pizza.hasBase !== false;
+  const showSupplements = pizza.hasSupplements !== false;
+
+  const [selectedSize, setSelectedSize] = useState<PizzaSize>(availableSizes[0]);
   const [selectedBase, setSelectedBase] = useState<'tomate' | 'creme'>('tomate');
   const [selectedSupplements, setSelectedSupplements] = useState<Supplement[]>([]);
   const [quantity, setQuantity] = useState(1);
@@ -30,7 +37,10 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   };
 
   const calculateTotal = () => {
-    const base = getEffectiveBasePrice(pizza.basePrice, selectedSize.id) + selectedSize.price;
+    if (!showSize) {
+      return pizza.basePrice * quantity;
+    }
+    const base = isPizza ? getEffectiveBasePrice(pizza.basePrice, selectedSize.id) + selectedSize.price : pizza.basePrice + selectedSize.price;
     const supps = selectedSupplements.reduce((sum, s) => sum + s.price, 0);
     return (base + supps) * quantity;
   };
@@ -38,30 +48,27 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   const handleAddToCart = () => {
     const item: CartItem = {
       pizza,
-      size: selectedSize,
-      base: selectedBase,
+      size: showSize ? selectedSize : availableSizes[0],
+      base: showBase ? selectedBase : 'tomate',
       supplements: selectedSupplements,
       quantity,
     };
     addItem(item);
     toast({
-      title: "Ajouté au panier ! 🍕",
-      description: `${quantity}x ${pizza.name} (${selectedSize.name})`,
+      title: "Ajouté au panier ! 🛒",
+      description: `${quantity}x ${pizza.name}${showSize ? ` (${selectedSize.name})` : ''}`,
     });
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-background/80 backdrop-blur-sm"
         onClick={onClose}
       />
       
-      {/* Modal */}
       <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-card border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl animate-slide-up">
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-muted/80 backdrop-blur-sm text-foreground hover:bg-muted transition-colors"
@@ -69,7 +76,6 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
           <X className="w-5 h-5" />
         </button>
 
-        {/* Image */}
         <div className="relative aspect-video">
           <img
             src={pizza.image}
@@ -80,93 +86,102 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Header */}
           <div>
             <h2 className="text-2xl font-display font-bold text-foreground">{pizza.name}</h2>
             <p className="text-muted-foreground mt-1">{pizza.description}</p>
-            <p className="text-sm text-primary mt-2">
-              {pizza.ingredients.join(' • ')}
-            </p>
+            {pizza.ingredients.length > 0 && (
+              <p className="text-sm text-primary mt-2">
+                {pizza.ingredients.join(' • ')}
+              </p>
+            )}
           </div>
 
-          {/* Base Selection */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Base</h3>
-            <div className="flex gap-3">
-              {(['tomate', 'creme'] as const).map((base) => (
-                <button
-                  key={base}
-                  onClick={() => setSelectedBase(base)}
-                  className={`flex-1 py-3 px-4 rounded-xl border-2 font-medium transition-all ${
-                    selectedBase === base
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border bg-muted/50 text-foreground hover:border-primary/50'
-                  }`}
-                >
-                  {base === 'tomate' ? '🍅 Tomate' : '🥛 Crème'}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Size Selection */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Taille</h3>
-            <div className="space-y-2">
-              {pizzaSizes.map((size) => (
-                <button
-                  key={size.id}
-                  onClick={() => setSelectedSize(size)}
-                  className={`w-full flex items-center justify-between py-3 px-4 rounded-xl border-2 transition-all ${
-                    selectedSize.id === size.id
-                      ? 'border-primary bg-primary/10'
-                      : 'border-border bg-muted/50 hover:border-primary/50'
-                  }`}
-                >
-                  <div className="text-left">
-                    <p className="font-semibold text-foreground">{size.name}</p>
-                    <p className="text-xs text-muted-foreground">{size.description}</p>
-                  </div>
-                  <div className="text-right">
-                    {size.id === 'senior' && isPromoDay() ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground line-through">{pizza.basePrice + size.price}€</span>
-                        <span className="font-display font-bold text-green-500">{getEffectiveBasePrice(pizza.basePrice, size.id) + size.price}€</span>
-                      </div>
-                    ) : (
-                      <span className="font-display font-bold text-primary">
-                        {pizza.basePrice + size.price}€
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Supplements */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Suppléments</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {supplements.map((supplement) => {
-                const isSelected = selectedSupplements.find((s) => s.id === supplement.id);
-                return (
+          {/* Base Selection - only for pizzas */}
+          {showBase && (
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Base</h3>
+              <div className="flex gap-3">
+                {(['tomate', 'creme'] as const).map((base) => (
                   <button
-                    key={supplement.id}
-                    onClick={() => toggleSupplement(supplement)}
-                    className={`flex items-center justify-between py-2 px-3 rounded-lg border-2 text-sm transition-all ${
-                      isSelected
+                    key={base}
+                    onClick={() => setSelectedBase(base)}
+                    className={`flex-1 py-3 px-4 rounded-xl border-2 font-medium transition-all ${
+                      selectedBase === base
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border bg-muted/50 text-foreground hover:border-primary/50'
                     }`}
                   >
-                    <span>{supplement.name}</span>
-                    <span className="font-semibold">+{supplement.price}€</span>
+                    {base === 'tomate' ? '🍅 Tomate' : '🥛 Crème'}
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* Size Selection */}
+          {showSize && (
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">
+                {isPanini ? 'Format' : 'Taille'}
+              </h3>
+              <div className="space-y-2">
+                {availableSizes.map((size) => (
+                  <button
+                    key={size.id}
+                    onClick={() => setSelectedSize(size)}
+                    className={`w-full flex items-center justify-between py-3 px-4 rounded-xl border-2 transition-all ${
+                      selectedSize.id === size.id
+                        ? 'border-primary bg-primary/10'
+                        : 'border-border bg-muted/50 hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-foreground">{size.name}</p>
+                      <p className="text-xs text-muted-foreground">{size.description}</p>
+                    </div>
+                    <div className="text-right">
+                      {isPizza && size.id === 'senior' && isPromoDay() ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground line-through">{pizza.basePrice + size.price}€</span>
+                          <span className="font-display font-bold text-green-500">{getEffectiveBasePrice(pizza.basePrice, size.id) + size.price}€</span>
+                        </div>
+                      ) : (
+                        <span className="font-display font-bold text-primary">
+                          {pizza.basePrice + size.price}€
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Supplements - only for pizzas */}
+          {showSupplements && (
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Suppléments</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {supplements.map((supplement) => {
+                  const isSelected = selectedSupplements.find((s) => s.id === supplement.id);
+                  return (
+                    <button
+                      key={supplement.id}
+                      onClick={() => toggleSupplement(supplement)}
+                      className={`flex items-center justify-between py-2 px-3 rounded-lg border-2 text-sm transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/10 text-primary'
+                          : 'border-border bg-muted/50 text-foreground hover:border-primary/50'
+                      }`}
+                    >
+                      <span>{supplement.name}</span>
+                      <span className="font-semibold">+{supplement.price}€</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Quantity */}
           <div className="flex items-center justify-between">
@@ -190,7 +205,6 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             </div>
           </div>
 
-          {/* Add to Cart */}
           <Button
             variant="hero"
             size="xl"

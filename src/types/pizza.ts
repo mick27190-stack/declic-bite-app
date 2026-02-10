@@ -1,3 +1,5 @@
+export type ProductCategory = 'classiques' | 'speciales' | 'vegetariennes' | 'gourmandes' | 'bambino' | 'paninis' | 'boissons';
+
 export interface Pizza {
   id: string;
   name: string;
@@ -5,8 +7,11 @@ export interface Pizza {
   ingredients: string[];
   image: string;
   basePrice: number;
-  category: 'classiques' | 'speciales' | 'vegetariennes' | 'gourmandes';
+  category: ProductCategory;
   isAvailable: boolean;
+  hasSize?: boolean;
+  hasBase?: boolean;
+  hasSupplements?: boolean;
 }
 
 export interface PizzaSize {
