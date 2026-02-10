@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { X, Plus, Minus } from 'lucide-react';
+import { X, Plus, Minus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Pizza, PizzaSize, Supplement, CartItem } from '@/types/pizza';
-import { pizzaSizes, paniniSizes, supplements } from '@/data/pizzas';
+import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import { getEffectiveBasePrice, isPromoDay } from '@/lib/promo';
+
+const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
 interface PizzaDetailModalProps {
   pizza: Pizza;
@@ -13,17 +15,21 @@ interface PizzaDetailModalProps {
 }
 
 export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
-  const isPizza = !['bambino', 'paninis', 'boissons'].includes(pizza.category);
+  const isPizza = PIZZA_CATEGORIES.includes(pizza.category);
   const isPanini = pizza.category === 'paninis';
+  const isBambino = pizza.category === 'bambino';
   const availableSizes = isPanini ? paniniSizes : pizzaSizes;
   const showSize = pizza.hasSize !== false;
   const showBase = pizza.hasBase !== false;
   const showSupplements = pizza.hasSupplements !== false;
 
+  const allPizzas = pizzas.filter((p) => PIZZA_CATEGORIES.includes(p.category) && p.isAvailable);
+
   const [selectedSize, setSelectedSize] = useState<PizzaSize>(availableSizes[0]);
   const [selectedBase, setSelectedBase] = useState<'tomate' | 'creme'>('tomate');
   const [selectedSupplements, setSelectedSupplements] = useState<Supplement[]>([]);
   const [quantity, setQuantity] = useState(1);
+  const [selectedBambinoPizza, setSelectedBambinoPizza] = useState<Pizza | null>(null);
   
   const { addItem } = useCart();
   const { toast } = useToast();
@@ -46,8 +52,11 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   };
 
   const handleAddToCart = () => {
+    const cartPizza = isBambino && selectedBambinoPizza
+      ? { ...pizza, description: `Menu Bambino - ${selectedBambinoPizza.name}` }
+      : pizza;
     const item: CartItem = {
-      pizza,
+      pizza: cartPizza,
       size: showSize ? selectedSize : availableSizes[0],
       base: showBase ? selectedBase : 'tomate',
       supplements: selectedSupplements,
@@ -56,7 +65,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
     addItem(item);
     toast({
       title: "Ajouté au panier ! 🛒",
-      description: `${quantity}x ${pizza.name}${showSize ? ` (${selectedSize.name})` : ''}`,
+      description: `${quantity}x ${pizza.name}${isBambino && selectedBambinoPizza ? ` (${selectedBambinoPizza.name})` : ''}${showSize ? ` (${selectedSize.name})` : ''}`,
     });
     onClose();
   };
@@ -96,7 +105,29 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             )}
           </div>
 
-          {/* Base Selection - only for pizzas */}
+          {/* Bambino Pizza Choice */}
+          {isBambino && (
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Choix de la pizza</h3>
+              <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
+                {allPizzas.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setSelectedBambinoPizza(p)}
+                    className={`flex items-center gap-2 py-2 px-3 rounded-lg border-2 text-sm transition-all text-left ${
+                      selectedBambinoPizza?.id === p.id
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-muted/50 text-foreground hover:border-primary/50'
+                    }`}
+                  >
+                    <img src={p.image} alt={p.name} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+                    <span className="truncate font-medium">{p.name}</span>
+                    {selectedBambinoPizza?.id === p.id && <Check className="w-4 h-4 flex-shrink-0 ml-auto" />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {showBase && (
             <div>
               <h3 className="text-sm font-semibold text-foreground mb-3">Base</h3>
@@ -210,6 +241,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             size="xl"
             className="w-full"
             onClick={handleAddToCart}
+            disabled={isBambino && !selectedBambinoPizza}
           >
             Ajouter au panier • {calculateTotal().toFixed(2)}€
           </Button>
