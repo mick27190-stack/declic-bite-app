@@ -85,7 +85,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const totalPrice = items.reduce((sum, item) => {
-    const baseTotal = getEffectiveBasePrice(item.pizza.basePrice, item.size.id) + item.size.price;
+    const baseTotal = getEffectiveBasePrice(item.pizza.basePrice, item.size.id, new Date(), item.pizza.category) + item.size.price;
     const supplementsTotal = item.supplements.reduce((s, sup) => s + sup.price, 0);
     return sum + (baseTotal + supplementsTotal) * item.quantity;
   }, 0);
