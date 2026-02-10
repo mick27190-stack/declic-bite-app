@@ -283,6 +283,8 @@ export function CartView() {
               'Fermé le lundi'
             ) : isOutsideHours ? (
               'Ouvert de 18h à 22h'
+            ) : !selectedRestaurant ? (
+              'Choisissez un restaurant'
             ) : !user ? (
               'Se connecter pour commander'
             ) : orderType === 'livraison' && !deliveryAddress ? (
