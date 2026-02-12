@@ -19,6 +19,7 @@ import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminChatPage from "./pages/admin/AdminChatPage";
 import AdminSMSPage from "./pages/admin/AdminSMSPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
+import AdminSalesPage from "./pages/admin/AdminSalesPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import NotFound from "./pages/NotFound";
 
@@ -48,6 +49,7 @@ const App = () => (
                 <Route path="/admin/chat" element={<AdminChatPage />} />
                 <Route path="/admin/sms" element={<AdminSMSPage />} />
                 <Route path="/admin/settings" element={<AdminSettingsPage />} />
+                <Route path="/admin/sales" element={<AdminSalesPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
