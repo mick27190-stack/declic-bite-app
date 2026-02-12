@@ -11,7 +11,8 @@ import {
   Send, 
   ShoppingBag,
   Settings,
-  ArrowLeft
+  ArrowLeft,
+  TrendingUp
 } from 'lucide-react';
 import NotificationBell from '@/components/admin/NotificationBell';
 
@@ -57,6 +58,13 @@ export default function AdminDashboard() {
       description: 'Gérer les commandes en cours',
       icon: ShoppingBag,
       href: '/admin/orders',
+      show: canManageOrders
+    },
+    {
+      title: 'Suivi des Ventes',
+      description: 'Statistiques pizzas & chiffre d\'affaires',
+      icon: TrendingUp,
+      href: '/admin/sales',
       show: canManageOrders
     },
     {
