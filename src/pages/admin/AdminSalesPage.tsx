@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, TrendingUp, Pizza, Euro, CalendarDays } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Pizza, Euro, CalendarDays, Trophy } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import NotificationBell from '@/components/admin/NotificationBell';
 
@@ -110,6 +110,22 @@ export default function AdminSalesPage() {
       revenue: Math.round(d.revenue * 100) / 100,
     }));
   }, [dailyStats]);
+
+  const topPizzas = useMemo(() => {
+    const map = new Map<string, number>();
+    filteredOrders.forEach(order => {
+      const items = Array.isArray(order.items) ? order.items : [];
+      items.forEach((item: any) => {
+        const name = item?.pizza?.name || item?.name || 'Inconnu';
+        const qty = item?.quantity ?? 1;
+        map.set(name, (map.get(name) || 0) + qty);
+      });
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count], i) => ({ rank: i + 1, name, count }));
+  }, [filteredOrders]);
 
   if (authLoading || adminLoading) {
     return (
@@ -253,6 +269,33 @@ export default function AdminSalesPage() {
                   <Bar dataKey="pizzas" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Top 5 Pizzas */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-primary" />
+              Top 5 des pizzas les plus vendues
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {topPizzas.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Aucune donnée sur la période.</p>
+            ) : (
+              <div className="space-y-3">
+                {topPizzas.map(p => (
+                  <div key={p.name} className="flex items-center gap-3">
+                    <span className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${p.rank === 1 ? 'bg-yellow-500 text-yellow-950' : p.rank === 2 ? 'bg-gray-300 text-gray-800' : p.rank === 3 ? 'bg-amber-600 text-amber-50' : 'bg-muted text-muted-foreground'}`}>
+                      {p.rank}
+                    </span>
+                    <span className="flex-1 font-medium text-foreground">{p.name}</span>
+                    <span className="text-sm font-semibold text-primary">{p.count}</span>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
