@@ -1,9 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const MAX_ADDRESS_LENGTH = 200;
+const VALID_RESTAURANT_IDS = ['conches', 'beaumont'];
 
 const DELIVERY_RADIUS_KM = 12;
 
@@ -27,26 +31,57 @@ serve(async (req) => {
   }
 
   try {
+    // Require a valid authenticated session to prevent paid-API abuse.
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const authClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+    const { data: userData, error: userError } = await authClient.auth.getUser();
+    if (userError || !userData?.user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { address, restaurantId } = await req.json();
-    
-    console.log(`Checking delivery zone for address: ${address}, restaurant: ${restaurantId}`);
-    
-    if (!address || !restaurantId) {
-      console.error('Missing required parameters');
+
+    // Validate inputs
+    if (!address || typeof address !== 'string' || !restaurantId || typeof restaurantId !== 'string') {
       return new Response(
         JSON.stringify({ error: 'Address and restaurantId are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const restaurantCoords = RESTAURANT_COORDS[restaurantId as keyof RestaurantCoordinates];
-    if (!restaurantCoords) {
+    const trimmedAddress = address.trim();
+    if (trimmedAddress.length === 0 || trimmedAddress.length > MAX_ADDRESS_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid address length' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!VALID_RESTAURANT_IDS.includes(restaurantId)) {
       console.error(`Invalid restaurant ID: ${restaurantId}`);
       return new Response(
         JSON.stringify({ error: 'Invalid restaurant ID' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`Checking delivery zone for restaurant: ${restaurantId}`);
+
+    const restaurantCoords = RESTAURANT_COORDS[restaurantId as keyof RestaurantCoordinates];
 
     const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
     if (!apiKey) {
@@ -58,8 +93,8 @@ serve(async (req) => {
     }
 
     // First, geocode the address
-    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
-    console.log(`Geocoding address: ${address}`);
+    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(trimmedAddress)}&key=${apiKey}`;
+    console.log('Geocoding address');
     
     const geocodeResponse = await fetch(geocodeUrl);
     const geocodeData = await geocodeResponse.json();
