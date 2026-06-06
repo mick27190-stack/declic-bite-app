@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { supabase } from '@/integrations/supabase/client';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, AlertTriangle, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Restaurant coordinates
 const RESTAURANT_COORDS = {
@@ -17,6 +18,24 @@ interface DeliveryZoneMapProps {
 
 let apiKeySet = false;
 
+const DELIVERY_RADIUS_METERS = 12000; // 12 km
+
+// Haversine distance in meters
+function distanceMeters(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number }
+): number {
+  const R = 6371000;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const lat1 = (a.lat * Math.PI) / 180;
+  const lat2 = (b.lat * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
 export function DeliveryZoneMap({ 
   restaurantId, 
   customerCoordinates,
@@ -30,9 +49,23 @@ export function DeliveryZoneMap({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   const restaurantCoords = RESTAURANT_COORDS[restaurantId];
-  const DELIVERY_RADIUS_METERS = 12000; // 12 km
+
+  // Compute in/out of zone status for the badge
+  const customerDistance = customerCoordinates
+    ? distanceMeters(restaurantCoords, customerCoordinates)
+    : null;
+  const isInZone =
+    customerDistance !== null ? customerDistance <= DELIVERY_RADIUS_METERS : null;
+
+  const handleRetry = () => {
+    setError(null);
+    setIsLoading(true);
+    setMapLoaded(false);
+    setRetryCount((c) => c + 1);
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -74,16 +107,17 @@ export function DeliveryZoneMap({
           fullscreenControl: false,
         });
 
-        // Add delivery zone circle
+        // Add highlighted delivery zone circle
         circleRef.current = new google.maps.Circle({
           map: googleMapRef.current,
           center: restaurantCoords,
           radius: DELIVERY_RADIUS_METERS,
           fillColor: '#22c55e',
-          fillOpacity: 0.15,
-          strokeColor: '#22c55e',
-          strokeOpacity: 0.8,
-          strokeWeight: 2,
+          fillOpacity: 0.18,
+          strokeColor: '#16a34a',
+          strokeOpacity: 0.9,
+          strokeWeight: 3,
+          clickable: false,
         });
 
         // Create restaurant marker element
@@ -127,7 +161,7 @@ export function DeliveryZoneMap({
     return () => {
       isMounted = false;
     };
-  }, [restaurantId]);
+  }, [restaurantId, retryCount]);
 
   // Update customer marker when coordinates change
   useEffect(() => {
@@ -199,10 +233,17 @@ export function DeliveryZoneMap({
 
   if (error) {
     return (
-      <div className={`flex items-center justify-center bg-muted/50 rounded-lg ${className}`}>
-        <div className="text-center text-muted-foreground p-4">
-          <MapPin className="w-8 h-8 mx-auto mb-2 opacity-50" />
-          <p className="text-sm">{error}</p>
+      <div className={`flex items-center justify-center bg-muted/50 rounded-lg ${className}`} style={{ minHeight: '300px' }}>
+        <div className="text-center text-muted-foreground p-6 max-w-xs">
+          <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-destructive/10 flex items-center justify-center">
+            <AlertTriangle className="w-6 h-6 text-destructive" />
+          </div>
+          <p className="text-sm font-medium text-foreground mb-1">Carte indisponible</p>
+          <p className="text-xs mb-4">{error}</p>
+          <Button size="sm" variant="outline" onClick={handleRetry} className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Réessayer
+          </Button>
         </div>
       </div>
     );
@@ -211,13 +252,43 @@ export function DeliveryZoneMap({
   return (
     <div className={`relative ${className}`}>
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 rounded-lg z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/60 backdrop-blur-sm rounded-lg z-10 animate-in fade-in">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Chargement de la carte...</p>
+            <div className="relative w-12 h-12 mx-auto mb-3">
+              <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+              <span className="absolute inset-0 flex items-center justify-center">
+                <Loader2 className="w-7 h-7 animate-spin text-primary" />
+              </span>
+            </div>
+            <p className="text-sm font-medium text-foreground">Chargement de la carte…</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Préparation de la zone de livraison</p>
           </div>
         </div>
       )}
+
+      {/* In/out of delivery zone status badge */}
+      {mapLoaded && customerCoordinates && isInZone !== null && (
+        <div
+          className={`absolute top-3 right-3 z-10 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-top-2 ${
+            isInZone
+              ? 'bg-green-500/90 text-white'
+              : 'bg-destructive/90 text-destructive-foreground'
+          }`}
+        >
+          {isInZone ? (
+            <>
+              <CheckCircle2 className="w-4 h-4" />
+              Dans la zone de livraison
+            </>
+          ) : (
+            <>
+              <XCircle className="w-4 h-4" />
+              Hors zone ({(customerDistance! / 1000).toFixed(1)} km)
+            </>
+          )}
+        </div>
+      )}
+
       <div 
         ref={mapRef} 
         className="w-full h-full rounded-lg"
@@ -236,7 +307,7 @@ export function DeliveryZoneMap({
           </div>
         )}
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-green-500/30 border-2 border-green-500" />
+          <div className="w-5 h-5 rounded-full bg-green-500/30 border-2 border-green-600" />
           <span>Zone de livraison (12 km)</span>
         </div>
       </div>
