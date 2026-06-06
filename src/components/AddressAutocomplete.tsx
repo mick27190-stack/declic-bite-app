@@ -2,8 +2,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 import { supabase } from '@/integrations/supabase/client';
-import { MapPin, Loader2 } from 'lucide-react';
+import { MapPin, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface AddressAutocompleteProps {
   value: string;
@@ -31,6 +32,15 @@ export function AddressAutocomplete({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isReady, setIsReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+  const handleRetry = useCallback(() => {
+    setError(null);
+    setIsLoading(true);
+    setIsReady(false);
+    setRetryCount((c) => c + 1);
+  }, []);
 
   const initAutocomplete = useCallback(async () => {
     if (!inputRef.current) return;
@@ -40,9 +50,7 @@ export function AddressAutocomplete({
       const { data, error: fetchError } = await supabase.functions.invoke('get-maps-api-key');
       
       if (fetchError || !data?.apiKey) {
-        console.error('Failed to get API key');
-        setIsLoading(false);
-        return;
+        throw new Error('Impossible de récupérer la clé API Google Maps');
       }
 
       // Set API key only once
@@ -84,45 +92,83 @@ export function AddressAutocomplete({
 
       setIsReady(true);
       setIsLoading(false);
+      setError(null);
     } catch (err) {
       console.error('Error initializing autocomplete:', err);
       setIsLoading(false);
+      setError(err instanceof Error ? err.message : 'Erreur lors du chargement de l\'autocomplétion');
     }
   }, [onChange, onPlaceSelect]);
 
   useEffect(() => {
     initAutocomplete();
-  }, [initAutocomplete]);
+  }, [initAutocomplete, retryCount]);
 
   return (
     <div className={`relative ${className}`}>
-      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-      <Input
-        ref={inputRef}
-        type="text"
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="pl-10 pr-10"
-        disabled={disabled}
-      />
+      <div className="relative">
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+        <Input
+          ref={inputRef}
+          type="text"
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="pl-10 pr-10"
+          disabled={disabled}
+        />
+        {isLoading && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          </div>
+        )}
+        {isReady && !isLoading && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <svg 
+              className="w-4 h-4 text-muted-foreground" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2"
+            >
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          </div>
+        )}
+      </div>
+
+      {/* Loading message */}
       {isLoading && (
-        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+        <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary/60" />
+          </span>
+          Chargement de l&apos;autocomplétion d&apos;adresse…
+        </p>
       )}
-      {isReady && !isLoading && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-          <svg 
-            className="w-4 h-4 text-muted-foreground" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="2"
+
+      {/* Error state with retry */}
+      {error && (
+        <div className="mt-2 flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-2.5 animate-in fade-in slide-in-from-top-1">
+          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-destructive">Autocomplétion indisponible</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{error}</p>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRetry}
+            className="h-7 px-2 gap-1 text-xs shrink-0"
           >
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
+            <RefreshCw className="w-3 h-3" />
+            Réessayer
+          </Button>
         </div>
       )}
     </div>
   );
 }
+
