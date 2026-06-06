@@ -430,18 +430,18 @@ export const pizzaSizes: PizzaSize[] = [
     id: 'senior',
     name: 'Senior',
     price: 0,
-    description: 'Idéale pour 1 personne (13€)',
+    description: 'Idéale pour 1 personne (13,50€)',
   },
   {
     id: 'mega',
     name: 'Méga',
-    price: 7,
+    price: 6.5,
     description: 'Parfaite à partager (20€)',
   },
   {
     id: 'super-mega',
     name: 'Super Méga',
-    price: 15,
+    price: 14.5,
     description: 'Pour les grandes faims (28€)',
   },
 ];
