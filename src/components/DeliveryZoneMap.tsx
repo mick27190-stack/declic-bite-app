@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
-import { supabase } from '@/integrations/supabase/client';
+
 import { MapPin, Loader2, AlertTriangle, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -74,17 +74,16 @@ export function DeliveryZoneMap({
       if (!mapRef.current) return;
 
       try {
-        // Fetch API key from edge function
-        const { data, error: fetchError } = await supabase.functions.invoke('get-maps-api-key');
-        
-        if (fetchError || !data?.apiKey) {
+        const apiKey = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
+
+        if (!apiKey) {
           throw new Error('Impossible de charger la carte');
         }
 
         // Set API key only once
         if (!apiKeySet) {
           setOptions({
-            key: data.apiKey,
+            key: apiKey,
             v: 'weekly',
           });
           apiKeySet = true;
