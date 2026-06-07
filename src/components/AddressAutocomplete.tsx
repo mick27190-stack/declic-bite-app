@@ -1,7 +1,7 @@
 /// <reference types="google.maps" />
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
-import { supabase } from '@/integrations/supabase/client';
+
 import { MapPin, Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
