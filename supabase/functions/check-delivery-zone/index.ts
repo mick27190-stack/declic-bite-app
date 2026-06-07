@@ -8,8 +8,9 @@ const corsHeaders = {
 
 const MAX_ADDRESS_LENGTH = 200;
 const VALID_RESTAURANT_IDS = ['conches', 'beaumont'];
-
 const DELIVERY_RADIUS_KM = 12;
+
+const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_maps';
 
 interface RestaurantCoordinates {
   conches: { lat: number; lng: number };
@@ -23,6 +24,23 @@ const RESTAURANT_COORDS: RestaurantCoordinates = {
   conches: { lat: 48.9592, lng: 0.9416 },
   beaumont: { lat: 49.0825, lng: 0.7769 },
 };
+
+// Format distance (meters) to a readable French string
+function formatDistance(meters: number): string {
+  if (meters < 1000) return `${meters} m`;
+  return `${(meters / 1000).toFixed(1)} km`.replace('.', ',');
+}
+
+// Format duration (seconds string like "275s") to a readable French string
+function formatDuration(duration: string): string {
+  const seconds = parseInt(String(duration).replace('s', ''), 10);
+  if (isNaN(seconds)) return '';
+  const mins = Math.round(seconds / 60);
+  if (mins < 60) return `${mins} min`;
+  const hours = Math.floor(mins / 60);
+  const rem = mins % 60;
+  return rem > 0 ? `${hours} h ${rem} min` : `${hours} h`;
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -79,34 +97,42 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Checking delivery zone for restaurant: ${restaurantId}`);
-
-    const restaurantCoords = RESTAURANT_COORDS[restaurantId as keyof RestaurantCoordinates];
-
-    const apiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
-    if (!apiKey) {
-      console.error('Google Maps API key not configured');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    const connectionKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
+    if (!lovableApiKey || !connectionKey) {
+      console.error('Google Maps connector credentials not configured');
       return new Response(
-        JSON.stringify({ error: 'Google Maps API key not configured' }),
+        JSON.stringify({ error: 'Service de cartographie non configuré' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // First, geocode the address
-    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(trimmedAddress)}&key=${apiKey}`;
-    console.log('Geocoding address');
-    
-    const geocodeResponse = await fetch(geocodeUrl);
-    const geocodeData = await geocodeResponse.json();
+    const gatewayHeaders = {
+      'Authorization': `Bearer ${lovableApiKey}`,
+      'X-Connection-Api-Key': connectionKey,
+    };
 
+    const restaurantCoords = RESTAURANT_COORDS[restaurantId as keyof RestaurantCoordinates];
+
+    console.log(`Checking delivery zone for restaurant: ${restaurantId}`);
+
+    // Step 1: Geocode the customer address via the gateway
+    const geocodeUrl = `${GATEWAY_URL}/maps/api/geocode/json?address=${encodeURIComponent(trimmedAddress)}&region=fr`;
+    const geocodeResponse = await fetch(geocodeUrl, { headers: gatewayHeaders });
+
+    if (!geocodeResponse.ok) {
+      console.error(`Geocoding gateway error: ${geocodeResponse.status} ${await geocodeResponse.text()}`);
+      return new Response(
+        JSON.stringify({ isInZone: false, error: 'Service de cartographie indisponible', distanceKm: null }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const geocodeData = await geocodeResponse.json();
     if (geocodeData.status !== 'OK' || !geocodeData.results?.length) {
       console.error(`Geocoding failed: ${geocodeData.status}`);
       return new Response(
-        JSON.stringify({ 
-          isInZone: false, 
-          error: 'Adresse non trouvée',
-          distanceKm: null 
-        }),
+        JSON.stringify({ isInZone: false, error: 'Adresse non trouvée', distanceKm: null }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -114,38 +140,46 @@ serve(async (req) => {
     const addressLocation = geocodeData.results[0].geometry.location;
     console.log(`Address coordinates: ${addressLocation.lat}, ${addressLocation.lng}`);
 
-    // Calculate distance using Distance Matrix API
-    const distanceUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${restaurantCoords.lat},${restaurantCoords.lng}&destinations=${addressLocation.lat},${addressLocation.lng}&key=${apiKey}`;
-    
-    const distanceResponse = await fetch(distanceUrl);
-    const distanceData = await distanceResponse.json();
+    // Step 2: Compute driving distance via Routes API (computeRouteMatrix)
+    const matrixResponse = await fetch(`${GATEWAY_URL}/routes/distanceMatrix/v2:computeRouteMatrix`, {
+      method: 'POST',
+      headers: {
+        ...gatewayHeaders,
+        'Content-Type': 'application/json',
+        'X-Goog-FieldMask': 'originIndex,destinationIndex,distanceMeters,duration,condition',
+      },
+      body: JSON.stringify({
+        origins: [{
+          waypoint: { location: { latLng: { latitude: restaurantCoords.lat, longitude: restaurantCoords.lng } } },
+        }],
+        destinations: [{
+          waypoint: { location: { latLng: { latitude: addressLocation.lat, longitude: addressLocation.lng } } },
+        }],
+        travelMode: 'DRIVE',
+      }),
+    });
 
-    if (distanceData.status !== 'OK' || !distanceData.rows?.[0]?.elements?.[0]) {
-      console.error(`Distance calculation failed: ${distanceData.status}`);
+    if (!matrixResponse.ok) {
+      console.error(`Routes gateway error: ${matrixResponse.status} ${await matrixResponse.text()}`);
       return new Response(
-        JSON.stringify({ 
-          isInZone: false, 
-          error: 'Impossible de calculer la distance',
-          distanceKm: null 
-        }),
+        JSON.stringify({ isInZone: false, error: 'Impossible de calculer la distance', distanceKm: null }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const element = distanceData.rows[0].elements[0];
-    if (element.status !== 'OK') {
-      console.error(`Distance element status: ${element.status}`);
+    const matrixData = await matrixResponse.json();
+    const element = Array.isArray(matrixData) ? matrixData[0] : matrixData;
+
+    if (!element || element.condition !== 'ROUTE_EXISTS' || typeof element.distanceMeters !== 'number') {
+      console.error(`No route found: ${JSON.stringify(element)}`);
       return new Response(
-        JSON.stringify({ 
-          isInZone: false, 
-          error: 'Route non trouvée',
-          distanceKm: null 
-        }),
+        JSON.stringify({ isInZone: false, error: 'Itinéraire non trouvé', distanceKm: null }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const distanceKm = element.distance.value / 1000;
+    const distanceMeters = element.distanceMeters;
+    const distanceKm = distanceMeters / 1000;
     const isInZone = distanceKm <= DELIVERY_RADIUS_KM;
 
     console.log(`Distance: ${distanceKm.toFixed(2)}km, In zone: ${isInZone}`);
@@ -155,17 +189,16 @@ serve(async (req) => {
       (c: any) => c.types?.includes('postal_code')
     );
     const postalCode = postalCodeComponent?.long_name || null;
-    console.log(`Postal code: ${postalCode}`);
 
     return new Response(
-      JSON.stringify({ 
-        isInZone, 
+      JSON.stringify({
+        isInZone,
         distanceKm: Math.round(distanceKm * 10) / 10,
-        distanceText: element.distance.text,
-        durationText: element.duration.text,
+        distanceText: formatDistance(distanceMeters),
+        durationText: formatDuration(element.duration),
         addressFormatted: geocodeData.results[0].formatted_address,
         coordinates: addressLocation,
-        postalCode
+        postalCode,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
