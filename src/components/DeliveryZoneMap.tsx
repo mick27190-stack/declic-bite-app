@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
-import { supabase } from '@/integrations/supabase/client';
+
 import { MapPin, Loader2, AlertTriangle, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
