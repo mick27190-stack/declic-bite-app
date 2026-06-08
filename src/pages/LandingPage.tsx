@@ -60,9 +60,6 @@ export default function LandingPage() {
                 alt="Déclic Pizza"
                 className="w-full h-auto rounded-3xl shadow-2xl shadow-primary/20"
               />
-              <div className="absolute -bottom-4 -right-4 w-20 h-20 bg-primary rounded-full flex items-center justify-center shadow-glow animate-bounce-soft">
-                <Sparkles className="w-10 h-10 text-primary-foreground" />
-              </div>
             </div>
 
             {/* Welcome Text */}
