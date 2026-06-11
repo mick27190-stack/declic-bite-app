@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { requestNotificationPermission, showWebNotification } from '@/lib/webNotifications';
+import { playChatSound } from '@/lib/notificationSounds';
 import type { ChatMessage } from './useChat';
 
 export function useCustomerChat() {
