@@ -47,11 +47,23 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
-  const [orderType, setOrderTypeState] = useState<OrderType>('emporter');
-  const [pickupTime, setPickupTimeState] = useState<string | null>(null);
-  const [deliveryAddress, setDeliveryAddressState] = useState<DeliveryAddress | null>(null);
+  const persisted = loadPersistedState();
+  const [items, setItems] = useState<CartItem[]>(persisted?.items ?? []);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(persisted?.selectedRestaurant ?? null);
+  const [orderType, setOrderTypeState] = useState<OrderType>(persisted?.orderType ?? 'emporter');
+  const [pickupTime, setPickupTimeState] = useState<string | null>(persisted?.pickupTime ?? null);
+  const [deliveryAddress, setDeliveryAddressState] = useState<DeliveryAddress | null>(persisted?.deliveryAddress ?? null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ items, selectedRestaurant, orderType, pickupTime, deliveryAddress })
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [items, selectedRestaurant, orderType, pickupTime, deliveryAddress]);
 
   const addItem = (item: CartItem) => {
     setItems((prev) => [...prev, item]);
