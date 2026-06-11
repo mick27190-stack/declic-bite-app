@@ -1,6 +1,24 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, Restaurant, OrderType } from '@/types/pizza';
 import { getEffectiveBasePrice } from '@/lib/promo';
+
+const STORAGE_KEY = 'declic-cart-state';
+
+function loadPersistedState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as {
+      items?: CartItem[];
+      selectedRestaurant?: Restaurant | null;
+      orderType?: OrderType;
+      pickupTime?: string | null;
+      deliveryAddress?: DeliveryAddress | null;
+    };
+  } catch {
+    return null;
+  }
+}
 
 export interface DeliveryAddress {
   address: string;
@@ -29,11 +47,23 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
-  const [orderType, setOrderTypeState] = useState<OrderType>('emporter');
-  const [pickupTime, setPickupTimeState] = useState<string | null>(null);
-  const [deliveryAddress, setDeliveryAddressState] = useState<DeliveryAddress | null>(null);
+  const persisted = loadPersistedState();
+  const [items, setItems] = useState<CartItem[]>(persisted?.items ?? []);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(persisted?.selectedRestaurant ?? null);
+  const [orderType, setOrderTypeState] = useState<OrderType>(persisted?.orderType ?? 'emporter');
+  const [pickupTime, setPickupTimeState] = useState<string | null>(persisted?.pickupTime ?? null);
+  const [deliveryAddress, setDeliveryAddressState] = useState<DeliveryAddress | null>(persisted?.deliveryAddress ?? null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ items, selectedRestaurant, orderType, pickupTime, deliveryAddress })
+      );
+    } catch {
+      // ignore write errors
+    }
+  }, [items, selectedRestaurant, orderType, pickupTime, deliveryAddress]);
 
   const addItem = (item: CartItem) => {
     setItems((prev) => [...prev, item]);
