@@ -1,6 +1,24 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, Restaurant, OrderType } from '@/types/pizza';
 import { getEffectiveBasePrice } from '@/lib/promo';
+
+const STORAGE_KEY = 'declic-cart-state';
+
+function loadPersistedState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as {
+      items?: CartItem[];
+      selectedRestaurant?: Restaurant | null;
+      orderType?: OrderType;
+      pickupTime?: string | null;
+      deliveryAddress?: DeliveryAddress | null;
+    };
+  } catch {
+    return null;
+  }
+}
 
 export interface DeliveryAddress {
   address: string;
