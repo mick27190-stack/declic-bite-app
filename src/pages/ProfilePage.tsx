@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { 
   User, 
@@ -18,9 +19,13 @@ import {
   Loader2,
   Edit2,
   Check,
-  X
+  X,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { useCustomerChat } from '@/hooks/useCustomerChat';
+import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 
 interface AddressForm {
   label: string;
@@ -31,6 +36,94 @@ interface AddressForm {
   is_default: boolean;
   latitude: number | null;
   longitude: number | null;
+}
+
+function ProfileChat() {
+  const { profile } = useAuth();
+  const [input, setInput] = useState('');
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { messages, loading, sendMessage } = useCustomerChat();
+  const { isOnline } = useAdminPresenceWatch();
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const handleSend = async () => {
+    if (!input.trim()) return;
+    const msg = input.trim();
+    setInput('');
+    await sendMessage(msg);
+  };
+
+  const siteName = profile?.preferred_restaurant || 'votre restaurant';
+
+  return (
+    <div className="glass-card p-4 rounded-xl">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-semibold flex items-center gap-2">
+          <MessageSquare className="w-5 h-5 text-primary" />
+          Chat avec {siteName}
+        </h3>
+        <div className="flex items-center gap-1.5">
+          <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-muted-foreground/40'}`} />
+          <span className="text-[10px] text-muted-foreground">{isOnline ? 'En ligne' : 'Hors ligne'}</span>
+        </div>
+      </div>
+
+      <ScrollArea className="h-64 rounded-lg border border-border p-3 mb-3" ref={scrollRef}>
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full gap-2 py-8 text-center">
+            <MessageSquare className="h-8 w-8 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">
+              Envoyez un message à votre restaurant, nous vous répondrons au plus vite !
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {messages.map((msg) => {
+              const isCustomer = msg.sender_type === 'customer';
+              return (
+                <div key={msg.id} className={`flex ${isCustomer ? 'justify-end' : 'justify-start'}`}>
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
+                      isCustomer
+                        ? 'bg-primary text-primary-foreground rounded-br-sm'
+                        : 'bg-muted text-foreground rounded-bl-sm'
+                    }`}
+                  >
+                    <p className="text-sm">{msg.content}</p>
+                    <p className={`text-[10px] mt-1 ${isCustomer ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                      {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </ScrollArea>
+
+      <div className="flex gap-2">
+        <Input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Votre message..."
+          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          className="text-sm"
+        />
+        <Button size="icon" onClick={handleSend} disabled={!input.trim()}>
+          <Send className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export default function ProfilePage() {
@@ -335,7 +428,22 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Add Address Modal */}
+        {/* Chat Section */}
+        {profile?.preferred_restaurant ? (
+          <ProfileChat />
+        ) : (
+          <div className="glass-card p-4 rounded-xl">
+            <h3 className="font-semibold flex items-center gap-2 mb-2">
+              <MessageSquare className="w-5 h-5 text-primary" />
+              Chat avec votre restaurant
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Sélectionnez d'abord votre restaurant préféré pour discuter avec l'équipe.
+            </p>
+          </div>
+        )}
+
+
         {showAddAddress && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
             <div className="glass-card w-full max-w-md p-6 rounded-t-2xl sm:rounded-2xl max-h-[80vh] overflow-y-auto">
