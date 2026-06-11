@@ -428,7 +428,22 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Add Address Modal */}
+        {/* Chat Section */}
+        {profile?.preferred_restaurant ? (
+          <ProfileChat />
+        ) : (
+          <div className="glass-card p-4 rounded-xl">
+            <h3 className="font-semibold flex items-center gap-2 mb-2">
+              <MessageSquare className="w-5 h-5 text-primary" />
+              Chat avec votre restaurant
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Sélectionnez d'abord votre restaurant préféré pour discuter avec l'équipe.
+            </p>
+          </div>
+        )}
+
+
         {showAddAddress && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
             <div className="glass-card w-full max-w-md p-6 rounded-t-2xl sm:rounded-2xl max-h-[80vh] overflow-y-auto">
