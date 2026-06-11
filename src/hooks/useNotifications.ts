@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { playOrderSound, playChatSound } from '@/lib/notificationSounds';
+import { requestNotificationPermission, showWebNotification } from '@/lib/webNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface Notification {
