@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { playOrderSound, playChatSound } from '@/lib/notificationSounds';
+import { requestNotificationPermission, showWebNotification } from '@/lib/webNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface Notification {
@@ -73,6 +74,9 @@ export function useNotifications() {
 
     fetchNotifications();
 
+    // Ask for browser push permission so we can show system notifications
+    requestNotificationPermission();
+
     // Subscribe to realtime notifications
     const channel = supabase
       .channel('notifications-realtime')
@@ -96,6 +100,11 @@ export function useNotifications() {
             } else {
               playChatSound();
             }
+          } catch {}
+
+          // Show a browser push notification (works while the app is open)
+          try {
+            showWebNotification(newNotif.title, newNotif.body, newNotif.id);
           } catch {}
         }
       )
