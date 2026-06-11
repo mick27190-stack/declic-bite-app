@@ -74,6 +74,9 @@ export function useNotifications() {
 
     fetchNotifications();
 
+    // Ask for browser push permission so we can show system notifications
+    requestNotificationPermission();
+
     // Subscribe to realtime notifications
     const channel = supabase
       .channel('notifications-realtime')
@@ -97,6 +100,11 @@ export function useNotifications() {
             } else {
               playChatSound();
             }
+          } catch {}
+
+          // Show a browser push notification (works while the app is open)
+          try {
+            showWebNotification(newNotif.title, newNotif.body, newNotif.id);
           } catch {}
         }
       )
