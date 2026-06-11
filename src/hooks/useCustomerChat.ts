@@ -115,6 +115,9 @@ export function useCustomerChat() {
   useEffect(() => {
     if (!conversationId) return;
 
+    // Ask for browser push permission so we can notify on admin replies
+    requestNotificationPermission();
+
     const channel = supabase
       .channel(`customer-chat-${conversationId}`)
       .on(
@@ -131,6 +134,14 @@ export function useCustomerChat() {
             if (prev.some(m => m.id === msg.id)) return prev;
             return [...prev, msg];
           });
+
+          // Notify only when the restaurant (admin) replies
+          if (msg.sender_type === 'admin') {
+            try { playChatSound(); } catch {}
+            try {
+              showWebNotification('Nouveau message', msg.content, msg.id);
+            } catch {}
+          }
         }
       )
       .subscribe();
