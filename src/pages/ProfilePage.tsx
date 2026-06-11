@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { 
   User, 
@@ -18,9 +19,13 @@ import {
   Loader2,
   Edit2,
   Check,
-  X
+  X,
+  MessageSquare,
+  Send
 } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { useCustomerChat } from '@/hooks/useCustomerChat';
+import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 
 interface AddressForm {
   label: string;
