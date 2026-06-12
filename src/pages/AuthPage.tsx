@@ -329,6 +329,7 @@ export default function AuthPage() {
                     placeholder="Dupont"
                   />
                   {errors.lastName && <p className="text-destructive text-sm mt-1">{errors.lastName}</p>}
+                </div>
               </div>
 
               <div>
@@ -346,7 +347,8 @@ export default function AuthPage() {
                 </div>
                 {errors.email && <p className="text-destructive text-sm mt-1">{errors.email}</p>}
               </div>
-              </div>
+
+
 
               
               <div>
