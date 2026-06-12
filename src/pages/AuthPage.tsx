@@ -80,6 +80,13 @@ export default function AuthPage() {
     } catch (e) {
       if (e instanceof z.ZodError) newErrors.phone = e.errors[0].message;
     }
+
+    try {
+      emailSchema.parse(email);
+    } catch (e) {
+      if (e instanceof z.ZodError) newErrors.email = e.errors[0].message;
+    }
+    
     
     try {
       passwordSchema.parse(password);
