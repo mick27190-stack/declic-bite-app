@@ -140,6 +140,31 @@ export default function AuthPage() {
     }
   };
 
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+    try {
+      emailSchema.parse(email);
+    } catch (err) {
+      if (err instanceof z.ZodError) newErrors.email = err.errors[0].message;
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    setLoading(true);
+    const { error } = await resetPasswordForEmail(email);
+    setLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.');
+      setMode('login');
+    }
+  };
+
+
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-background flex items-center justify-center">
