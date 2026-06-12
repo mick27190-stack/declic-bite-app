@@ -31,7 +31,7 @@ interface AuthContextType {
   profile: Profile | null;
   addresses: Address[];
   loading: boolean;
-  signUpWithPhone: (phone: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null }>;
+  signUpWithPhone: (phone: string, password: string, firstName: string, lastName: string, email?: string) => Promise<{ error: Error | null }>;
   signInWithPhone: (phone: string, password: string) => Promise<{ error: Error | null; isAdmin?: boolean }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUpWithPhone = async (phone: string, password: string, firstName: string, lastName: string) => {
+  const signUpWithPhone = async (phone: string, password: string, firstName: string, lastName: string, email?: string) => {
     const formattedPhone = phone.startsWith('0') ? `+33${phone.slice(1)}` : phone;
     const { data, error } = await supabase.auth.signUp({
       phone: formattedPhone,
@@ -127,10 +127,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         data: {
           first_name: firstName,
           last_name: lastName,
-          phone: formattedPhone
+          phone: formattedPhone,
+          email: email || null
         }
       }
     });
+
+    // Attach an email to the account so password reset by email works
+    if (!error && data.user && email) {
+      try {
+        await supabase.auth.updateUser({ email });
+      } catch (e) {
+        console.error('Error attaching email:', e);
+      }
+      try {
+        await supabase.from('profiles').update({ email }).eq('user_id', data.user.id);
+      } catch (e) {
+        console.error('Error saving email to profile:', e);
+      }
+    }
+
     
     // If successful, try to assign admin role based on phone
     if (!error && data.user) {
