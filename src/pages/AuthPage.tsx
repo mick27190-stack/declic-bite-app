@@ -170,6 +170,7 @@ export default function AuthPage() {
           <p className="text-white/70">
             {mode === 'login' && 'Connectez-vous à votre compte'}
             {mode === 'signup' && 'Créez votre compte'}
+            {mode === 'forgot' && 'Réinitialisez votre mot de passe'}
           </p>
         </div>
 
