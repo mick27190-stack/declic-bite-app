@@ -132,7 +132,7 @@ export default function AuthPage() {
     if (!validateSignup()) return;
     
     setLoading(true);
-    const { error } = await signUpWithPhone(phone, password, firstName, lastName);
+    const { error } = await signUpWithPhone(phone, password, firstName, lastName, email);
     setLoading(false);
     
     if (error) {
