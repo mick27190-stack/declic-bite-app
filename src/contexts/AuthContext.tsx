@@ -295,7 +295,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateAddress,
       deleteAddress,
       setDefaultAddress,
-      refreshProfile
+      refreshProfile,
+      resetPasswordForEmail,
+      updatePassword
+
     }}>
       {children}
     </AuthContext.Provider>
