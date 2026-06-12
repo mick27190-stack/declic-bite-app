@@ -6,18 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Phone, Lock, User, ArrowLeft, Loader2 } from 'lucide-react';
+import { Phone, Lock, User, ArrowLeft, Loader2, Mail } from 'lucide-react';
 import { z } from 'zod';
 
 const passwordSchema = z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères');
 const phoneSchema = z.string().regex(/^(\+33|0)[1-9](\d{2}){4}$/, 'Numéro de téléphone invalide');
 const nameSchema = z.string().trim().min(2, 'Minimum 2 caractères');
 
-type AuthMode = 'login' | 'signup';
+type AuthMode = 'login' | 'signup' | 'forgot';
+
+const emailSchema = z.string().trim().email('Adresse email invalide');
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { user, signInWithPhone, signUpWithPhone, loading: authLoading } = useAuth();
+  const { user, signInWithPhone, signUpWithPhone, resetPasswordForEmail, loading: authLoading } = useAuth();
   const { refreshRoles, isAnyAdmin } = useAdmin();
   
   const [mode, setMode] = useState<AuthMode>('login');
@@ -28,6 +30,7 @@ export default function AuthPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   
   // Errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -137,6 +140,31 @@ export default function AuthPage() {
     }
   };
 
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+    try {
+      emailSchema.parse(email);
+    } catch (err) {
+      if (err instanceof z.ZodError) newErrors.email = err.errors[0].message;
+    }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
+    setLoading(true);
+    const { error } = await resetPasswordForEmail(email);
+    setLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.');
+      setMode('login');
+    }
+  };
+
+
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-background flex items-center justify-center">
@@ -167,6 +195,7 @@ export default function AuthPage() {
           <p className="text-white/70">
             {mode === 'login' && 'Connectez-vous à votre compte'}
             {mode === 'signup' && 'Créez votre compte'}
+            {mode === 'forgot' && 'Réinitialisez votre mot de passe'}
           </p>
         </div>
 
@@ -209,6 +238,16 @@ export default function AuthPage() {
               <Button type="submit" className="w-full" variant="warm" disabled={loading}>
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Se connecter'}
               </Button>
+
+              <p className="text-center text-sm mt-2">
+                <button
+                  type="button"
+                  onClick={() => { setErrors({}); setMode('forgot'); }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Mot de passe oublié ?
+                </button>
+              </p>
               
               <p className="text-center text-sm text-muted-foreground mt-4">
                 Pas encore de compte ?{' '}
@@ -218,6 +257,43 @@ export default function AuthPage() {
                   className="text-primary hover:underline font-medium"
                 >
                   Créer un compte
+                </button>
+              </p>
+            </form>
+          )}
+
+          {mode === 'forgot' && (
+            <form onSubmit={handleForgot} className="space-y-4">
+              <div>
+                <Label htmlFor="emailReset" className="text-foreground">Adresse email</Label>
+                <div className="relative mt-1">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="emailReset"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    placeholder="vous@exemple.com"
+                  />
+                </div>
+                {errors.email && <p className="text-destructive text-sm mt-1">{errors.email}</p>}
+                <p className="text-muted-foreground text-xs mt-2">
+                  Nous vous enverrons un lien de réinitialisation à l'adresse email associée à votre compte.
+                </p>
+              </div>
+
+              <Button type="submit" className="w-full" variant="warm" disabled={loading}>
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Envoyer le lien'}
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                <button
+                  type="button"
+                  onClick={() => { setErrors({}); setMode('login'); }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Retour à la connexion
                 </button>
               </p>
             </form>

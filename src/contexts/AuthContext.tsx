@@ -40,6 +40,8 @@ interface AuthContextType {
   deleteAddress: (id: string) => Promise<{ error: Error | null }>;
   setDefaultAddress: (id: string) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
+  resetPasswordForEmail: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (password: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -169,6 +171,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error, isAdmin };
   };
 
+  const resetPasswordForEmail = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    });
+    return { error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error };
+  };
+
+
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -279,7 +295,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       updateAddress,
       deleteAddress,
       setDefaultAddress,
-      refreshProfile
+      refreshProfile,
+      resetPasswordForEmail,
+      updatePassword
+
     }}>
       {children}
     </AuthContext.Provider>
