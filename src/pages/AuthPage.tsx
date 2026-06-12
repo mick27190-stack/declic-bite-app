@@ -13,7 +13,9 @@ const passwordSchema = z.string().min(6, 'Le mot de passe doit contenir au moins
 const phoneSchema = z.string().regex(/^(\+33|0)[1-9](\d{2}){4}$/, 'Numéro de téléphone invalide');
 const nameSchema = z.string().trim().min(2, 'Minimum 2 caractères');
 
-type AuthMode = 'login' | 'signup';
+type AuthMode = 'login' | 'signup' | 'forgot';
+
+const emailSchema = z.string().trim().email('Adresse email invalide');
 
 export default function AuthPage() {
   const navigate = useNavigate();
