@@ -213,6 +213,16 @@ export default function AuthPage() {
               <Button type="submit" className="w-full" variant="warm" disabled={loading}>
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Se connecter'}
               </Button>
+
+              <p className="text-center text-sm mt-2">
+                <button
+                  type="button"
+                  onClick={() => { setErrors({}); setMode('forgot'); }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Mot de passe oublié ?
+                </button>
+              </p>
               
               <p className="text-center text-sm text-muted-foreground mt-4">
                 Pas encore de compte ?{' '}
@@ -222,6 +232,43 @@ export default function AuthPage() {
                   className="text-primary hover:underline font-medium"
                 >
                   Créer un compte
+                </button>
+              </p>
+            </form>
+          )}
+
+          {mode === 'forgot' && (
+            <form onSubmit={handleForgot} className="space-y-4">
+              <div>
+                <Label htmlFor="emailReset" className="text-foreground">Adresse email</Label>
+                <div className="relative mt-1">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="emailReset"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    placeholder="vous@exemple.com"
+                  />
+                </div>
+                {errors.email && <p className="text-destructive text-sm mt-1">{errors.email}</p>}
+                <p className="text-muted-foreground text-xs mt-2">
+                  Nous vous enverrons un lien de réinitialisation à l'adresse email associée à votre compte.
+                </p>
+              </div>
+
+              <Button type="submit" className="w-full" variant="warm" disabled={loading}>
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Envoyer le lien'}
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground mt-4">
+                <button
+                  type="button"
+                  onClick={() => { setErrors({}); setMode('login'); }}
+                  className="text-primary hover:underline font-medium"
+                >
+                  Retour à la connexion
                 </button>
               </p>
             </form>
