@@ -40,6 +40,8 @@ interface AuthContextType {
   deleteAddress: (id: string) => Promise<{ error: Error | null }>;
   setDefaultAddress: (id: string) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
+  resetPasswordForEmail: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (password: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
