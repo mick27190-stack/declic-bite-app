@@ -31,7 +31,7 @@ interface AuthContextType {
   profile: Profile | null;
   addresses: Address[];
   loading: boolean;
-  signUpWithPhone: (phone: string, password: string, firstName: string, lastName: string) => Promise<{ error: Error | null }>;
+  signUpWithPhone: (phone: string, password: string, firstName: string, lastName: string, email?: string) => Promise<{ error: Error | null }>;
   signInWithPhone: (phone: string, password: string) => Promise<{ error: Error | null; isAdmin?: boolean }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
