@@ -329,8 +329,25 @@ export default function AuthPage() {
                     placeholder="Dupont"
                   />
                   {errors.lastName && <p className="text-destructive text-sm mt-1">{errors.lastName}</p>}
-                </div>
               </div>
+
+              <div>
+                <Label htmlFor="emailSignup" className="text-foreground">Email</Label>
+                <div className="relative mt-1">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="emailSignup"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10"
+                    placeholder="vous@exemple.com"
+                  />
+                </div>
+                {errors.email && <p className="text-destructive text-sm mt-1">{errors.email}</p>}
+              </div>
+              </div>
+
               
               <div>
                 <Label htmlFor="phoneSignup" className="text-foreground">Numéro de téléphone</Label>
