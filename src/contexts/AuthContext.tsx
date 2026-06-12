@@ -171,6 +171,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error, isAdmin };
   };
 
+  const resetPasswordForEmail = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    });
+    return { error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error };
+  };
+
+
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
