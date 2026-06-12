@@ -19,7 +19,7 @@ const emailSchema = z.string().trim().email('Adresse email invalide');
 
 export default function AuthPage() {
   const navigate = useNavigate();
-  const { user, signInWithPhone, signUpWithPhone, loading: authLoading } = useAuth();
+  const { user, signInWithPhone, signUpWithPhone, resetPasswordForEmail, loading: authLoading } = useAuth();
   const { refreshRoles, isAnyAdmin } = useAdmin();
   
   const [mode, setMode] = useState<AuthMode>('login');
@@ -30,6 +30,7 @@ export default function AuthPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   
   // Errors
   const [errors, setErrors] = useState<Record<string, string>>({});
