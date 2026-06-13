@@ -463,7 +463,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Mail className="w-4 h-4 text-muted-foreground" />
-                <span>{user.email}</span>
+                <span>{profile?.email || user?.email || 'Non renseigné'}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="w-4 h-4 text-muted-foreground" />
