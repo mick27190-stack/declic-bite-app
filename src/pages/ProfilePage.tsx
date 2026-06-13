@@ -441,6 +441,19 @@ export default function ProfilePage() {
                   placeholder="06 12 34 56 78"
                 />
               </div>
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="mt-1"
+                  placeholder="votre@email.com"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Nécessaire pour réinitialiser votre mot de passe
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
