@@ -22,6 +22,7 @@ export function useOrders() {
       const transformedOrders: Order[] = (data || []).map(order => ({
         ...order,
         order_type: order.order_type as 'emporter' | 'livraison',
+        delivery_response: order.delivery_response as Order['delivery_response'],
         items: order.items as unknown as CartItem[],
         delivery_address: order.delivery_address as Order['delivery_address'],
       }));
@@ -117,6 +118,33 @@ export function useOrders() {
     }
   };
 
+  const setDeliveryEstimate = async (orderId: string, estimate: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ delivery_estimate: estimate, delivery_response: null })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.map(o =>
+        o.id === orderId ? { ...o, delivery_estimate: estimate, delivery_response: null } : o
+      ));
+
+      toast({
+        title: 'Horaire envoyé',
+        description: `Horaire de livraison proposé : ${estimate}`,
+      });
+    } catch (error) {
+      console.error('Error setting delivery estimate:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible d'envoyer l'horaire de livraison",
+        variant: 'destructive'
+      });
+    }
+  };
+
   // Subscribe to real-time updates
   useEffect(() => {
     fetchOrders();
@@ -173,6 +201,7 @@ export function useOrders() {
     loading,
     createOrder,
     updateOrderStatus,
+    setDeliveryEstimate,
     refetch: fetchOrders
   };
 }
@@ -202,6 +231,7 @@ export function useUserOrders() {
         const transformedOrders: Order[] = (data || []).map(order => ({
           ...order,
           order_type: order.order_type as 'emporter' | 'livraison',
+          delivery_response: order.delivery_response as Order['delivery_response'],
           items: order.items as unknown as CartItem[],
           delivery_address: order.delivery_address as Order['delivery_address'],
         }));
@@ -254,5 +284,37 @@ export function useUserOrders() {
     };
   }, [toast]);
 
-  return { orders, loading };
+  const respondToOrder = async (orderId: string, response: 'accepted' | 'refused') => {
+    try {
+      const newStatus = response === 'refused' ? 'cancelled' : undefined;
+      const { error } = await supabase
+        .from('orders')
+        .update(newStatus ? { delivery_response: response, status: newStatus } : { delivery_response: response })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.map(o =>
+        o.id === orderId
+          ? { ...o, delivery_response: response, ...(newStatus ? { status: newStatus as Order['status'] } : {}) }
+          : o
+      ));
+
+      toast({
+        title: response === 'accepted' ? 'Horaire accepté' : 'Commande refusée',
+        description: response === 'accepted'
+          ? 'Merci ! Votre commande est confirmée.'
+          : 'Votre commande a été annulée.',
+      });
+    } catch (error) {
+      console.error('Error responding to order:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'enregistrer votre réponse',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  return { orders, loading, respondToOrder };
 }

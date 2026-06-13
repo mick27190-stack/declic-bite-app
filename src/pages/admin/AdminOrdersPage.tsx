@@ -8,14 +8,53 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, MapPin, RefreshCw, Package } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
-import { OrderStatus, statusLabels, statusColors } from '@/types/order';
+import { Order, OrderStatus, statusLabels, statusColors } from '@/types/order';
+
+function DeliveryEstimateControl({ order, onSubmit }: { order: Order; onSubmit: (value: string) => void }) {
+  const [value, setValue] = useState(order.delivery_estimate ?? '');
+
+  const responseLabel = order.delivery_response === 'accepted'
+    ? '✅ Accepté par le client'
+    : order.delivery_response === 'refused'
+      ? '❌ Refusé par le client'
+      : order.delivery_estimate
+        ? '⏳ En attente de réponse du client'
+        : null;
+
+  return (
+    <div className="mt-4 border-t pt-3 space-y-2">
+      <p className="text-sm font-medium flex items-center gap-1">
+        <Clock className="h-4 w-4" /> Horaire de livraison estimé
+      </p>
+      <div className="flex gap-2">
+        <Input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Ex : 45 min ou 20h30"
+          className="h-9"
+        />
+        <Button
+          size="sm"
+          onClick={() => value.trim() && onSubmit(value.trim())}
+          disabled={!value.trim()}
+        >
+          Envoyer
+        </Button>
+      </div>
+      {responseLabel && (
+        <p className="text-xs text-muted-foreground">{responseLabel}</p>
+      )}
+    </div>
+  );
+}
 
 export default function AdminOrdersPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { canManageOrders, isSiteAdminConches, isSiteAdminBeaumont, isSuperAdmin, loading: adminLoading } = useAdmin();
-  const { orders, loading: ordersLoading, updateOrderStatus, refetch } = useOrders();
+  const { orders, loading: ordersLoading, updateOrderStatus, setDeliveryEstimate, refetch } = useOrders();
   
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
@@ -208,6 +247,13 @@ export default function AdminOrdersPage() {
                         <span className="text-primary">{order.total_price.toFixed(2)}€</span>
                       </div>
                     </div>
+
+                    {order.order_type === 'livraison' && (
+                      <DeliveryEstimateControl
+                        order={order}
+                        onSubmit={(value) => setDeliveryEstimate(order.id, value)}
+                      />
+                    )}
                   </CardContent>
                 </Card>
               ))
