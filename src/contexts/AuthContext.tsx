@@ -212,6 +212,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error('Not authenticated') };
     
+    // If email is being updated, also update it on the auth account
+    if (updates.email) {
+      const { error: authError } = await supabase.auth.updateUser({ email: updates.email });
+      if (authError) {
+        return { error: authError };
+      }
+    }
+    
     const { error } = await supabase
       .from('profiles')
       .update(updates)
