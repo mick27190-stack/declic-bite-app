@@ -372,6 +372,9 @@ export default function ProfilePage() {
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Current Orders Section */}
+        <CurrentOrders />
+
         {/* Profile Section */}
         <div className="glass-card p-4 rounded-xl">
           <div className="flex items-center justify-between mb-4">
