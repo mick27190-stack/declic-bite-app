@@ -118,6 +118,33 @@ export function useOrders() {
     }
   };
 
+  const setDeliveryEstimate = async (orderId: string, estimate: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({ delivery_estimate: estimate, delivery_response: null })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.map(o =>
+        o.id === orderId ? { ...o, delivery_estimate: estimate, delivery_response: null } : o
+      ));
+
+      toast({
+        title: 'Horaire envoyé',
+        description: `Horaire de livraison proposé : ${estimate}`,
+      });
+    } catch (error) {
+      console.error('Error setting delivery estimate:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible d'envoyer l'horaire de livraison",
+        variant: 'destructive'
+      });
+    }
+  };
+
   // Subscribe to real-time updates
   useEffect(() => {
     fetchOrders();
