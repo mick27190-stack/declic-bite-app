@@ -15,7 +15,7 @@ export default function AdminOrdersPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { canManageOrders, isSiteAdminConches, isSiteAdminBeaumont, isSuperAdmin, loading: adminLoading } = useAdmin();
-  const { orders, loading: ordersLoading, updateOrderStatus, refetch } = useOrders();
+  const { orders, loading: ordersLoading, updateOrderStatus, setDeliveryEstimate, refetch } = useOrders();
   
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
