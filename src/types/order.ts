@@ -16,6 +16,8 @@ export interface Order {
     coordinates: { lat: number; lng: number };
   } | null;
   notes: string | null;
+  delivery_estimate: string | null;
+  delivery_response: 'accepted' | 'refused' | null;
   created_at: string;
   updated_at: string;
   // Joined data from profiles
