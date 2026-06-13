@@ -251,10 +251,12 @@ export default function ProfilePage() {
       setProfileForm({
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
-        phone: profile.phone || ''
+        phone: profile.phone || '',
+        email: profile.email || user?.email || ''
       });
     }
-  }, [profile]);
+  }, [profile, user]);
+
 
   const handleUpdateProfile = async () => {
     setSavingProfile(true);
