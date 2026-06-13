@@ -208,6 +208,13 @@ export default function AdminOrdersPage() {
                         <span className="text-primary">{order.total_price.toFixed(2)}€</span>
                       </div>
                     </div>
+
+                    {order.order_type === 'livraison' && (
+                      <DeliveryEstimateControl
+                        order={order}
+                        onSubmit={(value) => setDeliveryEstimate(order.id, value)}
+                      />
+                    )}
                   </CardContent>
                 </Card>
               ))
