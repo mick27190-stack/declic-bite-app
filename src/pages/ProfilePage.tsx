@@ -228,7 +228,8 @@ export default function ProfilePage() {
   const [profileForm, setProfileForm] = useState({
     first_name: profile?.first_name || '',
     last_name: profile?.last_name || '',
-    phone: profile?.phone || ''
+    phone: profile?.phone || '',
+    email: profile?.email || user?.email || ''
   });
   
   const [showAddAddress, setShowAddAddress] = useState(false);
@@ -250,10 +251,12 @@ export default function ProfilePage() {
       setProfileForm({
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
-        phone: profile.phone || ''
+        phone: profile.phone || '',
+        email: profile.email || user?.email || ''
       });
     }
-  }, [profile]);
+  }, [profile, user]);
+
 
   const handleUpdateProfile = async () => {
     setSavingProfile(true);
@@ -438,6 +441,19 @@ export default function ProfilePage() {
                   placeholder="06 12 34 56 78"
                 />
               </div>
+              <div>
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                  className="mt-1"
+                  placeholder="votre@email.com"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Nécessaire pour réinitialiser votre mot de passe
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -447,7 +463,7 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Mail className="w-4 h-4 text-muted-foreground" />
-                <span>{user.email}</span>
+                <span>{profile?.email || user?.email || 'Non renseigné'}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="w-4 h-4 text-muted-foreground" />
