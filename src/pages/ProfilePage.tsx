@@ -228,7 +228,8 @@ export default function ProfilePage() {
   const [profileForm, setProfileForm] = useState({
     first_name: profile?.first_name || '',
     last_name: profile?.last_name || '',
-    phone: profile?.phone || ''
+    phone: profile?.phone || '',
+    email: profile?.email || user?.email || ''
   });
   
   const [showAddAddress, setShowAddAddress] = useState(false);
