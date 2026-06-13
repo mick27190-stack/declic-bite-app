@@ -284,5 +284,37 @@ export function useUserOrders() {
     };
   }, [toast]);
 
-  return { orders, loading };
+  const respondToOrder = async (orderId: string, response: 'accepted' | 'refused') => {
+    try {
+      const newStatus = response === 'refused' ? 'cancelled' : undefined;
+      const { error } = await supabase
+        .from('orders')
+        .update(newStatus ? { delivery_response: response, status: newStatus } : { delivery_response: response })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setOrders(prev => prev.map(o =>
+        o.id === orderId
+          ? { ...o, delivery_response: response, ...(newStatus ? { status: newStatus as Order['status'] } : {}) }
+          : o
+      ));
+
+      toast({
+        title: response === 'accepted' ? 'Horaire accepté' : 'Commande refusée',
+        description: response === 'accepted'
+          ? 'Merci ! Votre commande est confirmée.'
+          : 'Votre commande a été annulée.',
+      });
+    } catch (error) {
+      console.error('Error responding to order:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible d\'enregistrer votre réponse',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  return { orders, loading, respondToOrder };
 }
