@@ -26,6 +26,100 @@ import {
 import { BottomNavigation } from '@/components/BottomNavigation';
 import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
+import { useUserOrders } from '@/hooks/useOrders';
+import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
+import { statusLabels, statusColors } from '@/types/order';
+
+function CurrentOrders() {
+  const { orders, loading, respondToOrder } = useUserOrders();
+
+  const activeOrders = orders.filter(
+    (o) => o.status !== 'delivered' && o.status !== 'cancelled'
+  );
+
+  return (
+    <div className="glass-card p-4 rounded-xl">
+      <h3 className="font-semibold flex items-center gap-2 mb-4">
+        <Package className="w-5 h-5 text-primary" />
+        Mes commandes en cours
+      </h3>
+
+      {loading ? (
+        <div className="flex justify-center py-6">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : activeOrders.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          Aucune commande en cours
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {activeOrders.map((order) => {
+            const awaitingResponse =
+              order.order_type === 'livraison' &&
+              !!order.delivery_estimate &&
+              !order.delivery_response;
+
+            return (
+              <div key={order.id} className="p-3 rounded-lg border border-border">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium text-sm">#{order.id.slice(0, 8)}</span>
+                  <span className={`text-xs text-white px-2 py-0.5 rounded-full ${statusColors[order.status]}`}>
+                    {statusLabels[order.status]}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-1 text-sm text-muted-foreground">
+                  <span>{order.order_type === 'livraison' ? '🚗 Livraison' : '🏪 À emporter'}</span>
+                  <span className="font-semibold text-primary">{order.total_price.toFixed(2)}€</span>
+                </div>
+
+                {order.order_type === 'livraison' && order.delivery_estimate && (
+                  <div className="mt-2 p-2 rounded-md bg-primary/5 border border-primary/20">
+                    <p className="text-sm flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-primary" />
+                      Horaire de livraison estimé : <strong>{order.delivery_estimate}</strong>
+                    </p>
+
+                    {awaitingResponse && (
+                      <>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Cet horaire vous convient-il ?
+                        </p>
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => respondToOrder(order.id, 'accepted')}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Accepter
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 text-destructive"
+                            onClick={() => respondToOrder(order.id, 'refused')}
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Refuser
+                          </Button>
+                        </div>
+                      </>
+                    )}
+
+                    {order.delivery_response === 'accepted' && (
+                      <p className="text-xs text-green-600 mt-1">✅ Vous avez accepté cet horaire</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface AddressForm {
   label: string;
