@@ -35,6 +35,7 @@ export default function OrderConfirmationPage() {
       setOrder({
         ...data,
         order_type: data.order_type as 'emporter' | 'livraison',
+        delivery_response: data.delivery_response as Order['delivery_response'],
         items: data.items as unknown as CartItem[],
         delivery_address: data.delivery_address as Order['delivery_address'],
       });

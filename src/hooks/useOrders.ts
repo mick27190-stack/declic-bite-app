@@ -22,6 +22,7 @@ export function useOrders() {
       const transformedOrders: Order[] = (data || []).map(order => ({
         ...order,
         order_type: order.order_type as 'emporter' | 'livraison',
+        delivery_response: order.delivery_response as Order['delivery_response'],
         items: order.items as unknown as CartItem[],
         delivery_address: order.delivery_address as Order['delivery_address'],
       }));
@@ -202,6 +203,7 @@ export function useUserOrders() {
         const transformedOrders: Order[] = (data || []).map(order => ({
           ...order,
           order_type: order.order_type as 'emporter' | 'livraison',
+          delivery_response: order.delivery_response as Order['delivery_response'],
           items: order.items as unknown as CartItem[],
           delivery_address: order.delivery_address as Order['delivery_address'],
         }));
