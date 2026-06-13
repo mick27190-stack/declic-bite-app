@@ -201,6 +201,7 @@ export function useOrders() {
     loading,
     createOrder,
     updateOrderStatus,
+    setDeliveryEstimate,
     refetch: fetchOrders
   };
 }
