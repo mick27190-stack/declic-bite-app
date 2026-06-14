@@ -112,45 +112,63 @@ export default function ResetPasswordPage() {
         </div>
 
         <div className="w-full max-w-md glass-card p-6 rounded-2xl">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="newPassword" className="text-foreground">Nouveau mot de passe</Label>
-              <div className="relative mt-1">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="newPassword"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                  placeholder="••••••••"
-                />
-              </div>
-              {errors.password && <p className="text-destructive text-sm mt-1">{errors.password}</p>}
+          {checking ? (
+            <div className="flex flex-col items-center justify-center py-8 gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <p className="text-muted-foreground text-sm">Vérification du lien...</p>
             </div>
-
-            <div>
-              <Label htmlFor="confirmPassword" className="text-foreground">Confirmer le mot de passe</Label>
-              <div className="relative mt-1">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  className="pl-10"
-                  placeholder="••••••••"
-                />
-              </div>
-              {errors.confirm && <p className="text-destructive text-sm mt-1">{errors.confirm}</p>}
+          ) : !ready ? (
+            <div className="text-center py-6 space-y-4">
+              <p className="text-foreground font-medium">Lien invalide ou expiré</p>
+              <p className="text-muted-foreground text-sm">
+                Le lien de réinitialisation n'est plus valide. Veuillez en demander un nouveau.
+              </p>
+              <Button className="w-full" variant="warm" onClick={() => navigate('/auth')}>
+                Demander un nouveau lien
+              </Button>
             </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="newPassword" className="text-foreground">Nouveau mot de passe</Label>
+                <div className="relative mt-1">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10"
+                    placeholder="••••••••"
+                  />
+                </div>
+                {errors.password && <p className="text-destructive text-sm mt-1">{errors.password}</p>}
+              </div>
 
-            <Button type="submit" className="w-full" variant="warm" disabled={loading || !ready}>
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Mettre à jour le mot de passe'}
-            </Button>
-          </form>
+              <div>
+                <Label htmlFor="confirmPassword" className="text-foreground">Confirmer le mot de passe</Label>
+                <div className="relative mt-1">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    className="pl-10"
+                    placeholder="••••••••"
+                  />
+                </div>
+                {errors.confirm && <p className="text-destructive text-sm mt-1">{errors.confirm}</p>}
+              </div>
+
+              <Button type="submit" className="w-full" variant="warm" disabled={loading || !ready}>
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Mettre à jour le mot de passe'}
+              </Button>
+            </form>
+          )}
         </div>
       </div>
+
     </div>
   );
 }
