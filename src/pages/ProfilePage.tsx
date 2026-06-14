@@ -264,7 +264,7 @@ export default function ProfilePage() {
     setSavingProfile(false);
     
     if (error) {
-      toast.error('Erreur lors de la mise à jour du profil');
+      toast.error(error.message || 'Erreur lors de la mise à jour du profil');
     } else {
       toast.success('Profil mis à jour !');
       setEditingProfile(false);
