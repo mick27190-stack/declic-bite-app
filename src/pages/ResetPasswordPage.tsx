@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,21 +16,54 @@ export default function ResetPasswordPage() {
   const { updatePassword } = useAuth();
 
   const [ready, setReady] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // Supabase recovery links open the app with a recovery session.
-    // Detect the recovery flow either via the URL hash or an active session.
-    const hash = window.location.hash;
-    if (hash.includes('type=recovery') || hash.includes('access_token')) {
-      setReady(true);
-    } else {
-      setReady(true);
-    }
+    // Recovery links can arrive in several formats. Establish a valid
+    // recovery session before allowing the password to be updated.
+    const establishSession = async () => {
+      try {
+        const url = new URL(window.location.href);
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+        const code = url.searchParams.get('code');
+        const tokenHash = url.searchParams.get('token_hash') || url.searchParams.get('token');
+        const type = url.searchParams.get('type') || hashParams.get('type');
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+
+        if (code) {
+          // PKCE flow: exchange the code for a session
+          await supabase.auth.exchangeCodeForSession(code);
+        } else if (accessToken && refreshToken) {
+          // Implicit flow: tokens are in the URL hash
+          await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+        } else if (tokenHash) {
+          // Token hash flow: verify the OTP to create a session
+          await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery',
+          });
+        }
+      } catch (e) {
+        console.error('Recovery session error:', e);
+      }
+
+      const { data } = await supabase.auth.getSession();
+      setReady(!!data.session);
+      setChecking(false);
+    };
+
+    establishSession();
   }, []);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
