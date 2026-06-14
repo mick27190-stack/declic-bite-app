@@ -212,23 +212,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error('Not authenticated') };
     
-    // If email is being updated, also update it on the auth account
-    if (updates.email) {
-      const { error: authError } = await supabase.auth.updateUser({ email: updates.email });
-      if (authError) {
-        return { error: authError };
-      }
-    }
-    
+    // Save all fields (including email) to the profile first
     const { error } = await supabase
       .from('profiles')
       .update(updates)
       .eq('user_id', user.id);
-    
-    if (!error) {
-      await fetchProfile(user.id);
+
+    if (error) {
+      return { error };
     }
-    return { error };
+
+    // If the email changed, also update it on the auth account so password
+    // reset by email works. This sends a confirmation email to the new address.
+    if (updates.email && updates.email !== user.email) {
+      const { error: authError } = await supabase.auth.updateUser({
+        email: updates.email,
+      });
+      if (authError) {
+        await fetchProfile(user.id);
+        return {
+          error: new Error(
+            "Adresse enregistrée, mais l'email de confirmation n'a pas pu être envoyé : " +
+              authError.message
+          ),
+        };
+      }
+    }
+
+    await fetchProfile(user.id);
+    return { error: null };
   };
 
   const addAddress = async (address: Omit<Address, 'id' | 'user_id'>) => {
