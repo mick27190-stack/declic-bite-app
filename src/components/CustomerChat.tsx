@@ -52,7 +52,7 @@ export default function CustomerChat() {
     await sendMessage(msg);
   };
 
-  const needsRestaurant = user && profile && !profile.preferred_restaurant;
+  const needsRestaurant = user && profile && !selectedRestaurant && !profile.preferred_restaurant;
 
   return (
     <>
