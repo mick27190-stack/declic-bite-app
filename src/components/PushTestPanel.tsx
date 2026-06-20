@@ -5,23 +5,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { setupPushNotifications } from '@/lib/pushNotifications';
 import { toast } from 'sonner';
 
+const PUSH_CONFIGURED_KEY = 'push_notifications_configured';
+
 /**
  * Push notification test panel.
  * Lets the signed-in user register their current device and fire a real FCM
  * push to themselves to verify background delivery on iOS / Android.
+ *
+ * Once the user has both enabled push on their device AND successfully sent a
+ * test push, the panel hides itself for future visits/orders.
  */
 export default function PushTestPanel() {
   const [registering, setRegistering] = useState(false);
   const [sending, setSending] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+  const [configured, setConfigured] = useState(
+    () => localStorage.getItem(PUSH_CONFIGURED_KEY) === 'true'
+  );
   const [lastResult, setLastResult] = useState<
     { ok: boolean; message: string } | null
   >(null);
+
+  // Once enabled + tested successfully, never show this message again.
+  if (configured) return null;
 
   const handleEnable = async () => {
     setRegistering(true);
     try {
       const token = await setupPushNotifications();
       if (token) {
+        setEnabled(true);
         toast.success('Appareil enregistré pour les notifications push');
       } else {
         toast.error(
@@ -46,6 +59,12 @@ export default function PushTestPanel() {
       setLastResult({ ok: !!data?.ok, message: data?.message ?? '' });
       if (data?.ok) {
         toast.success('Push de test envoyé !');
+        // Mark as fully configured once the device is enabled and the test
+        // push has been sent successfully, then hide the panel.
+        if (enabled) {
+          localStorage.setItem(PUSH_CONFIGURED_KEY, 'true');
+          setConfigured(true);
+        }
       } else {
         toast.warning(data?.message ?? 'Aucun appareil enregistré');
       }
