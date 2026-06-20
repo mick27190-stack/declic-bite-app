@@ -35,8 +35,23 @@ const App = () => {
     const unlock = () => initNotificationSounds();
     const events: (keyof DocumentEventMap)[] = ["click", "touchstart", "keydown"];
     events.forEach((e) => document.addEventListener(e, unlock, { once: false }));
-    return () => events.forEach((e) => document.removeEventListener(e, unlock));
+
+    // iOS/Android suspend the AudioContext when the app goes to the background.
+    // Re-resume it as soon as the app is visible/focused again so foreground
+    // notification sounds keep working after returning from the background.
+    const resumeOnForeground = () => {
+      if (document.visibilityState === "visible") initNotificationSounds();
+    };
+    document.addEventListener("visibilitychange", resumeOnForeground);
+    window.addEventListener("focus", resumeOnForeground);
+
+    return () => {
+      events.forEach((e) => document.removeEventListener(e, unlock));
+      document.removeEventListener("visibilitychange", resumeOnForeground);
+      window.removeEventListener("focus", resumeOnForeground);
+    };
   }, []);
+
 
   return (
   <QueryClientProvider client={queryClient}>
