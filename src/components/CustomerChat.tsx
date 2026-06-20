@@ -31,6 +31,7 @@ function MessageBubble({ message }: { message: { sender_type: string; content: s
 
 export default function CustomerChat() {
   const { user, profile } = useAuth();
+  const { selectedRestaurant } = useCart();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
