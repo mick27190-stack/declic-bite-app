@@ -23,10 +23,22 @@ import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import AdminSalesPage from "./pages/admin/AdminSalesPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import NotFound from "./pages/NotFound";
+import { useEffect } from "react";
+import { initNotificationSounds } from "@/lib/notificationSounds";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  useEffect(() => {
+    // Unlock the Web Audio API on the first user interaction so notification
+    // sounds can play later, even when triggered by realtime events.
+    const unlock = () => initNotificationSounds();
+    const events: (keyof DocumentEventMap)[] = ["click", "touchstart", "keydown"];
+    events.forEach((e) => document.addEventListener(e, unlock, { once: false }));
+    return () => events.forEach((e) => document.removeEventListener(e, unlock));
+  }, []);
+
+  return (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <AdminProvider>
@@ -60,6 +72,7 @@ const App = () => (
       </AdminProvider>
     </AuthProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
