@@ -1,19 +1,45 @@
 /**
  * Generates notification sounds using the Web Audio API.
  * Two distinct sounds: one for orders (urgent chime) and one for chat messages (soft ping).
+ *
+ * Browsers create AudioContexts in a "suspended" state until a user gesture
+ * resumes them. We therefore keep a single shared context and unlock it on the
+ * first user interaction (see initNotificationSounds()).
  */
 
-function createAudioContext(): AudioContext | null {
+let sharedCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  if (sharedCtx) return sharedCtx;
   try {
-    return new (window.AudioContext || (window as any).webkitAudioContext)();
+    sharedCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    return sharedCtx;
   } catch {
     return null;
   }
 }
 
-function playTone(frequencies: number[], durations: number[], volume = 0.3, type: OscillatorType = 'sine') {
-  const ctx = createAudioContext();
+/**
+ * Must be called once from a user gesture (click / touch / keydown) so the
+ * browser allows audio playback later, even when it's triggered asynchronously
+ * (e.g. from a realtime event).
+ */
+export function initNotificationSounds() {
+  const ctx = getAudioContext();
   if (!ctx) return;
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
+}
+
+function playTone(frequencies: number[], durations: number[], volume = 0.3, type: OscillatorType = 'sine') {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  // Make sure the context is running (it can get suspended again on mobile).
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
+  }
 
   const gainNode = ctx.createGain();
   gainNode.connect(ctx.destination);
@@ -35,8 +61,8 @@ function playTone(frequencies: number[], durations: number[], volume = 0.3, type
     startTime += dur * 0.8;
   });
 
-  // Cleanup
-  setTimeout(() => ctx.close(), 2000);
+  // Note: we deliberately do NOT close the shared context so subsequent
+  // notifications can reuse it.
 }
 
 /** Urgent double chime for new orders */
