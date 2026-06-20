@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { playOrderSound, playChatSound } from '@/lib/notificationSounds';
 import { requestNotificationPermission, showWebNotification } from '@/lib/webNotifications';
+import { setupPushNotifications } from '@/lib/pushNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface Notification {
@@ -76,6 +77,9 @@ export function useNotifications() {
 
     // Ask for browser push permission so we can show system notifications
     requestNotificationPermission();
+
+    // Register Web Push (FCM) so notifications can arrive in the background.
+    setupPushNotifications();
 
     // Subscribe to realtime notifications
     const channel = supabase
