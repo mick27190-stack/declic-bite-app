@@ -427,6 +427,7 @@ export type Database = {
         | "secondary_admin_conches"
         | "secondary_admin_beaumont"
         | "user"
+        | "secondary_super_admin"
       order_status:
         | "pending"
         | "confirmed"
@@ -568,6 +569,7 @@ export const Constants = {
         "secondary_admin_conches",
         "secondary_admin_beaumont",
         "user",
+        "secondary_super_admin",
       ],
       order_status: [
         "pending",
