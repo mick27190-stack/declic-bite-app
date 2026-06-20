@@ -380,6 +380,9 @@ export default function ProfilePage() {
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Push notification test */}
+        <PushTestPanel />
+
         {/* Current Orders Section */}
         <CurrentOrders />
 
