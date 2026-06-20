@@ -195,6 +195,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          dedupe_key: string | null
           id: string
           is_read: boolean
           reference_id: string | null
@@ -206,6 +207,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          dedupe_key?: string | null
           id?: string
           is_read?: boolean
           reference_id?: string | null
@@ -217,6 +219,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          dedupe_key?: string | null
           id?: string
           is_read?: boolean
           reference_id?: string | null
