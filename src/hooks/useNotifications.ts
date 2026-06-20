@@ -78,6 +78,9 @@ export function useNotifications() {
     // Ask for browser push permission so we can show system notifications
     requestNotificationPermission();
 
+    // Register Web Push (FCM) so notifications can arrive in the background.
+    setupPushNotifications();
+
     // Subscribe to realtime notifications
     const channel = supabase
       .channel('notifications-realtime')
