@@ -44,14 +44,14 @@ export function useCustomerChat() {
     }
 
     // Create new conversation
-    const customerName = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || 'Client';
+    const customerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Client';
     const { data: newConv, error } = await supabase
       .from('chat_conversations')
       .insert({
         customer_id: user.id,
         site,
         customer_name: customerName,
-        customer_phone: profile.phone,
+        customer_phone: profile?.phone,
       })
       .select()
       .single();
