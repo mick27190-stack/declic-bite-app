@@ -98,23 +98,44 @@ export default function AdminSMSPage() {
 
     setIsSending(true);
 
-    // Simulate sending
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const sites: string[] = [];
+    if (targetConches) sites.push('conches');
+    if (targetBeaumont) sites.push('beaumont');
 
-    const site = targetConches && targetBeaumont ? 'all' : targetConches ? 'conches' : 'beaumont';
-    const newCampaign: SMSCampaign = {
-      id: Date.now().toString(),
-      message,
-      recipientCount: Math.floor(Math.random() * 100) + 50,
-      sentAt: new Date().toISOString(),
-      site
-    };
+    try {
+      const { data, error } = await supabase.functions.invoke('send-promo-sms', {
+        body: { message, sites },
+      });
 
-    setCampaigns(prev => [newCampaign, ...prev]);
-    setMessage('');
-    setIsSending(false);
-    toast.success('SMS envoyés avec succès !');
+      if (error) throw error;
+
+      if (data?.error === 'sms_not_configured') {
+        toast.warning(
+          `Messagerie SMS non configurée. ${data.recipientCount} client(s) ciblé(s) dans le fichier client.`
+        );
+      } else if (data?.error) {
+        toast.error(data.message || 'Erreur lors de l\'envoi');
+        return;
+      } else {
+        const site = targetConches && targetBeaumont ? 'all' : targetConches ? 'conches' : 'beaumont';
+        const newCampaign: SMSCampaign = {
+          id: Date.now().toString(),
+          message,
+          recipientCount: data?.sent ?? data?.recipientCount ?? 0,
+          sentAt: new Date().toISOString(),
+          site,
+        };
+        setCampaigns(prev => [newCampaign, ...prev]);
+        setMessage('');
+        toast.success(`SMS envoyés à ${data?.sent ?? 0} client(s) !`);
+      }
+    } catch (e) {
+      toast.error('Erreur lors de l\'envoi des SMS');
+    } finally {
+      setIsSending(false);
+    }
   };
+
 
   if (authLoading || adminLoading) {
     return (
