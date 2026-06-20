@@ -418,7 +418,12 @@ export type Database = {
         Returns: boolean
       }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_pizzeria_open: { Args: never; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      should_receive_site_notification: {
+        Args: { _site: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
