@@ -149,6 +149,48 @@ export type Database = {
         }
         Relationships: []
       }
+      customers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          site: string | null
+          source: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          site?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          site?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
