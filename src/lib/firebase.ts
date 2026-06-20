@@ -21,7 +21,7 @@ export const firebaseConfig = {
 };
 
 // VAPID public key (Web Push certificate) from the Firebase console.
-export const VAPID_KEY = "REPLACE_WITH_VAPID_KEY";
+export const VAPID_KEY = "BE8rDxpcd5vCFPRh4KyIfzDH6MqhcMyZQvcGBgICQEytzdmighZ3Gm5SToOGYEKkqH3QSMP-mRiTkiPD6s8o-XU";
 
 let app: FirebaseApp | null = null;
 let messaging: Messaging | null = null;
