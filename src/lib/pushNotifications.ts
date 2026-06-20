@@ -70,14 +70,28 @@ export async function setupPushNotifications(
       );
     }
 
-    // Foreground messages: still surface a notification while the app is open.
+    // Foreground messages: surface a single notification while the app is open.
+    // We display it through the service worker registration using the same `tag`
+    // as the background handler so the same event can never show twice.
     if (foregroundUnsub) foregroundUnsub();
-    foregroundUnsub = onMessage(messaging, (payload) => {
+    foregroundUnsub = onMessage(messaging, async (payload) => {
       const title =
         payload.notification?.title || payload.data?.title || "Déclic Pizza";
       const body = payload.notification?.body || payload.data?.body || "";
+      const tag = payload.data?.reference_id || undefined;
       try {
-        new Notification(title, { body, icon: "/favicon.ico" });
+        const reg =
+          (await navigator.serviceWorker.getRegistration()) ?? registration;
+        if (reg) {
+          await reg.showNotification(title, {
+            body,
+            icon: "/favicon.ico",
+            badge: "/favicon.ico",
+            tag,
+          });
+        } else {
+          new Notification(title, { body, tag });
+        }
       } catch {
         // ignore — foreground sound is handled elsewhere
       }
