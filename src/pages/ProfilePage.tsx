@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import CustomerNotificationBell from '@/components/CustomerNotificationBell';
+import PushTestPanel from '@/components/PushTestPanel';
 import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useUserOrders } from '@/hooks/useOrders';
