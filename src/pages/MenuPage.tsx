@@ -4,6 +4,7 @@ import { Search, ChevronLeft, Truck } from 'lucide-react';
 import { PizzaCard } from '@/components/PizzaCard';
 import { PizzaDetailModal } from '@/components/PizzaDetailModal';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import CustomerNotificationBell from '@/components/CustomerNotificationBell';
 import { pizzas, categories } from '@/data/pizzas';
 import { Pizza } from '@/types/pizza';
 import { useCart } from '@/contexts/CartContext';
@@ -37,11 +38,14 @@ export default function MenuPage() {
               <ChevronLeft className="w-5 h-5" />
               <span className="text-sm">Retour</span>
             </button>
-            {selectedRestaurant && (
-              <span className="text-sm font-medium text-primary">
-                {selectedRestaurant.name.replace('Déclic Pizza ', '')}
-              </span>
-            )}
+            <div className="flex items-center gap-1">
+              {selectedRestaurant && (
+                <span className="text-sm font-medium text-primary">
+                  {selectedRestaurant.name.replace('Déclic Pizza ', '')}
+                </span>
+              )}
+              <CustomerNotificationBell />
+            </div>
           </div>
 
           {/* Title */}

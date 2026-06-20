@@ -24,6 +24,7 @@ import {
   Send
 } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import CustomerNotificationBell from '@/components/CustomerNotificationBell';
 import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useUserOrders } from '@/hooks/useOrders';
@@ -356,7 +357,10 @@ export default function ProfilePage() {
           >
             <ArrowLeft className="w-6 h-6" />
           </Button>
-          <h1 className="font-display text-2xl text-white">Mon Profil</h1>
+          <h1 className="font-display text-2xl text-white flex-1">Mon Profil</h1>
+          <div className="text-white">
+            <CustomerNotificationBell />
+          </div>
         </div>
         
         <div className="glass-card p-4 rounded-xl">
