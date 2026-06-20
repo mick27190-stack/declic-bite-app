@@ -11,46 +11,34 @@ export function PickupTimeSelector({ value, onChange }: PickupTimeSelectorProps)
   const [selectedTime, setSelectedTime] = useState<string | null>(value);
 
   const availableTimes = useMemo(() => {
-    const times: string[] = [];
+    // Pickup slots: first at 18:30, last at 21:45, every 15 minutes.
+    const FIRST_SLOT_MINUTES = 18 * 60 + 30; // 18:30
+    const LAST_SLOT_MINUTES = 21 * 60 + 45; // 21:45
+
     const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinutes = now.getMinutes();
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+    // Earliest slot that respects a 20 min prep time when the shop is open.
+    const earliestAllowed = nowMinutes + 20;
 
-    // Restaurant hours: 18h-22h
-    const openHour = 18;
-    const closeHour = 22;
-
-    // Start from current time rounded up to next 15 minutes, or opening time
-    let startHour = Math.max(currentHour, openHour);
-    let startMinutes = 0;
-
-    if (currentHour >= openHour && currentHour < closeHour) {
-      // Round up to next 15-minute slot + 20 min prep time
-      const totalMinutes = currentMinutes + 20;
-      startMinutes = Math.ceil(totalMinutes / 15) * 15;
-      if (startMinutes >= 60) {
-        startHour += Math.floor(startMinutes / 60);
-        startMinutes = startMinutes % 60;
-      }
+    const times: string[] = [];
+    for (let m = FIRST_SLOT_MINUTES; m <= LAST_SLOT_MINUTES; m += 15) {
+      // Skip slots already in the past (plus prep time) for the current evening.
+      if (earliestAllowed > FIRST_SLOT_MINUTES && m < earliestAllowed) continue;
+      const hour = Math.floor(m / 60);
+      const minutes = m % 60;
+      times.push(
+        `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
+      );
     }
 
-    // Generate time slots until closing
-    for (let hour = startHour; hour < closeHour; hour++) {
-      for (let minutes = hour === startHour ? startMinutes : 0; minutes < 60; minutes += 15) {
-        if (hour === closeHour - 1 && minutes > 45) break;
-        const timeStr = `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        times.push(timeStr);
-      }
-    }
-
-    // If restaurant is closed, show times for next open day
-    if (times.length === 0 || currentHour >= closeHour || currentHour < openHour) {
-      for (let hour = openHour; hour < closeHour; hour++) {
-        for (let minutes = 0; minutes < 60; minutes += 15) {
-          if (hour === closeHour - 1 && minutes > 45) break;
-          const timeStr = `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-          times.push(timeStr);
-        }
+    // Outside service hours, fall back to the full slot list for the next service.
+    if (times.length === 0) {
+      for (let m = FIRST_SLOT_MINUTES; m <= LAST_SLOT_MINUTES; m += 15) {
+        const hour = Math.floor(m / 60);
+        const minutes = m % 60;
+        times.push(
+          `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
+        );
       }
     }
 
