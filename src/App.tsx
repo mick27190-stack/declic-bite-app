@@ -15,6 +15,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
+import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
 import AdminMenuPage from "./pages/admin/AdminMenuPage";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage";
 import AdminChatPage from "./pages/admin/AdminChatPage";
@@ -73,6 +74,7 @@ const App = () => {
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<AdminUsersPage />} />
+                <Route path="/admin/customers" element={<AdminCustomersPage />} />
                 <Route path="/admin/menu" element={<AdminMenuPage />} />
                 <Route path="/admin/orders" element={<AdminOrdersPage />} />
                 <Route path="/admin/chat" element={<AdminChatPage />} />
