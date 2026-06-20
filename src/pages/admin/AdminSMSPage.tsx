@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ArrowLeft, Send, History } from 'lucide-react';
+import { ArrowLeft, Send, History, Users } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
@@ -49,6 +49,23 @@ export default function AdminSMSPage() {
   const [targetConches, setTargetConches] = useState(true);
   const [targetBeaumont, setTargetBeaumont] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [recipientCount, setRecipientCount] = useState<number | null>(null);
+
+  const refreshRecipientCount = useCallback(async () => {
+    let query = supabase.from('customers').select('id', { count: 'exact', head: true }).not('phone', 'is', null);
+    const selected: string[] = [];
+    if (targetConches) selected.push('conches');
+    if (targetBeaumont) selected.push('beaumont');
+    if (selected.length === 1) {
+      query = query.or(`site.eq.${selected[0]},site.is.null`);
+    }
+    const { count } = await query;
+    setRecipientCount(count ?? 0);
+  }, [targetConches, targetBeaumont]);
+
+  useEffect(() => {
+    if (canSendSMS) refreshRecipientCount();
+  }, [canSendSMS, refreshRecipientCount]);
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -81,23 +98,44 @@ export default function AdminSMSPage() {
 
     setIsSending(true);
 
-    // Simulate sending
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const sites: string[] = [];
+    if (targetConches) sites.push('conches');
+    if (targetBeaumont) sites.push('beaumont');
 
-    const site = targetConches && targetBeaumont ? 'all' : targetConches ? 'conches' : 'beaumont';
-    const newCampaign: SMSCampaign = {
-      id: Date.now().toString(),
-      message,
-      recipientCount: Math.floor(Math.random() * 100) + 50,
-      sentAt: new Date().toISOString(),
-      site
-    };
+    try {
+      const { data, error } = await supabase.functions.invoke('send-promo-sms', {
+        body: { message, sites },
+      });
 
-    setCampaigns(prev => [newCampaign, ...prev]);
-    setMessage('');
-    setIsSending(false);
-    toast.success('SMS envoyés avec succès !');
+      if (error) throw error;
+
+      if (data?.error === 'sms_not_configured') {
+        toast.warning(
+          `Messagerie SMS non configurée. ${data.recipientCount} client(s) ciblé(s) dans le fichier client.`
+        );
+      } else if (data?.error) {
+        toast.error(data.message || 'Erreur lors de l\'envoi');
+        return;
+      } else {
+        const site = targetConches && targetBeaumont ? 'all' : targetConches ? 'conches' : 'beaumont';
+        const newCampaign: SMSCampaign = {
+          id: Date.now().toString(),
+          message,
+          recipientCount: data?.sent ?? data?.recipientCount ?? 0,
+          sentAt: new Date().toISOString(),
+          site,
+        };
+        setCampaigns(prev => [newCampaign, ...prev]);
+        setMessage('');
+        toast.success(`SMS envoyés à ${data?.sent ?? 0} client(s) !`);
+      }
+    } catch (e) {
+      toast.error('Erreur lors de l\'envoi des SMS');
+    } finally {
+      setIsSending(false);
+    }
   };
+
 
   if (authLoading || adminLoading) {
     return (
@@ -179,6 +217,12 @@ export default function AdminSMSPage() {
                   </div>
                 )}
               </div>
+              {recipientCount !== null && (
+                <p className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
+                  <Users className="h-4 w-4" />
+                  {recipientCount} client(s) du fichier client seront contactés
+                </p>
+              )}
             </div>
 
             <Button 
