@@ -106,10 +106,9 @@ export function useNotifications() {
             }
           } catch {}
 
-          // Show a browser push notification (works while the app is open)
-          try {
-            showWebNotification(newNotif.title, newNotif.body, newNotif.id);
-          } catch {}
+          // Note: the visible push notification is handled exclusively by FCM
+          // (foreground onMessage / background service worker) to avoid showing
+          // duplicate system notifications for the same event.
         }
       )
       .subscribe();
