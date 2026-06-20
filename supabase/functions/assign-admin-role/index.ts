@@ -51,14 +51,13 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Check if phone is in admin_phones
-    const { data: adminPhone, error: fetchError } = await supabase
+    // A phone may have several roles (e.g. secondary super admin + site admin).
+    const { data: adminPhones, error: fetchError } = await supabase
       .from("admin_phones")
       .select("*")
-      .eq("phone", phone)
-      .single();
+      .eq("phone", phone);
 
-    if (fetchError && fetchError.code !== "PGRST116") {
+    if (fetchError) {
       console.error("Error fetching admin phone:", fetchError);
       return new Response(
         JSON.stringify({ error: "Error checking admin status" }),
@@ -66,48 +65,42 @@ serve(async (req) => {
       );
     }
 
-    if (adminPhone) {
-      // Check if role already assigned
-      const { data: existingRole } = await supabase
+    if (adminPhones && adminPhones.length > 0) {
+      // Roles already assigned to this user.
+      const { data: existingRoles } = await supabase
         .from("user_roles")
-        .select("*")
-        .eq("user_id", user_id)
-        .eq("role", adminPhone.role)
-        .single();
+        .select("role")
+        .eq("user_id", user_id);
 
-      if (!existingRole) {
-        // Assign the role
+      const existing = new Set((existingRoles ?? []).map((r) => r.role));
+
+      const toInsert = adminPhones
+        .filter((ap) => !existing.has(ap.role))
+        .map((ap) => ({
+          user_id,
+          role: ap.role,
+          assigned_by: ap.created_by,
+        }));
+
+      if (toInsert.length > 0) {
         const { error: insertError } = await supabase
           .from("user_roles")
-          .insert({
-            user_id,
-            role: adminPhone.role,
-            assigned_by: adminPhone.created_by
-          });
+          .insert(toInsert);
 
         if (insertError) {
-          console.error("Error assigning role:", insertError);
+          console.error("Error assigning roles:", insertError);
           return new Response(
             JSON.stringify({ error: "Error assigning role" }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
-
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            message: "Role assigned successfully",
-            role: adminPhone.role 
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
       }
 
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: "Role already assigned",
-          role: adminPhone.role 
+        JSON.stringify({
+          success: true,
+          message: toInsert.length > 0 ? "Roles assigned successfully" : "Roles already assigned",
+          roles: adminPhones.map((ap) => ap.role),
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -117,6 +110,7 @@ serve(async (req) => {
       JSON.stringify({ success: true, message: "No admin role for this phone" }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
 
   } catch (error) {
     console.error("Error:", error);
