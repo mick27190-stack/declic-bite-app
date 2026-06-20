@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Order, OrderStatus } from '@/types/order';
+import { Order, OrderStatus, statusLabels } from '@/types/order';
 import { CartItem } from '@/types/pizza';
 import { useToast } from '@/hooks/use-toast';
 
