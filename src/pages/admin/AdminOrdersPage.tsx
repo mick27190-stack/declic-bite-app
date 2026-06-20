@@ -196,7 +196,9 @@ export default function AdminOrdersPage() {
                           <SelectItem value="confirmed">Confirmée</SelectItem>
                           <SelectItem value="preparing">En préparation</SelectItem>
                           <SelectItem value="ready">Prête</SelectItem>
-                          <SelectItem value="delivered">Livrée</SelectItem>
+                          {order.order_type === 'livraison' && (
+                            <SelectItem value="delivered">Livrée</SelectItem>
+                          )}
                           <SelectItem value="cancelled">Annulée</SelectItem>
                         </SelectContent>
                       </Select>
