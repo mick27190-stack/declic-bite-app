@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Order, OrderStatus } from '@/types/order';
+import { Order, OrderStatus, statusLabels } from '@/types/order';
 import { CartItem } from '@/types/pizza';
 import { useToast } from '@/hooks/use-toast';
 
@@ -247,40 +247,62 @@ export function useUserOrders() {
     fetchUserOrders();
 
     // Subscribe to user's order updates
-    const channel = supabase
-      .channel('user-orders-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'orders'
-        },
-        (payload) => {
-          const updatedOrder = {
-            ...payload.new,
-            order_type: payload.new.order_type as 'emporter' | 'livraison',
-            items: payload.new.items as unknown as CartItem[],
-            delivery_address: payload.new.delivery_address as Order['delivery_address'],
-          } as Order;
-          
-          setOrders(prev => {
-            const exists = prev.find(o => o.id === updatedOrder.id);
-            if (exists) {
-              toast({
-                title: 'Commande mise à jour',
-                description: `Votre commande est maintenant "${updatedOrder.status}"`,
+    let channel: ReturnType<typeof supabase.channel>;
+
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+
+      channel = supabase
+        .channel('user-orders-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'orders',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            const newRecord = payload.new as Record<string, any>;
+            const updatedOrder = {
+              ...newRecord,
+              order_type: newRecord.order_type as 'emporter' | 'livraison',
+              items: newRecord.items as unknown as CartItem[],
+              delivery_address: newRecord.delivery_address as Order['delivery_address'],
+            } as Order;
+
+            if (payload.eventType === 'INSERT') {
+              setOrders(prev => {
+                // Avoid duplicates
+                if (prev.find(o => o.id === updatedOrder.id)) return prev;
+                return [updatedOrder, ...prev];
               });
-              return prev.map(o => o.id === updatedOrder.id ? updatedOrder : o);
+              toast({
+                title: 'Nouvelle commande',
+                description: `Votre commande #${updatedOrder.id.slice(0, 8)} a été créée`,
+              });
+            } else if (payload.eventType === 'UPDATE') {
+              setOrders(prev => {
+                const exists = prev.find(o => o.id === updatedOrder.id);
+                if (exists) {
+                  toast({
+                    title: 'Commande mise à jour',
+                    description: `Votre commande est maintenant "${statusLabels[updatedOrder.status]}"`,
+                  });
+                  return prev.map(o => o.id === updatedOrder.id ? updatedOrder : o);
+                }
+                return prev;
+              });
+            } else if (payload.eventType === 'DELETE') {
+              setOrders(prev => prev.filter(o => o.id !== payload.old.id));
             }
-            return prev;
-          });
-        }
-      )
-      .subscribe();
+          }
+        )
+        .subscribe();
+    });
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [toast]);
 
