@@ -1,22 +1,34 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 import { requestNotificationPermission, showWebNotification } from '@/lib/webNotifications';
 import { playChatSound } from '@/lib/notificationSounds';
 import type { ChatMessage } from './useChat';
 
 export function useCustomerChat() {
   const { user, profile } = useAuth();
+  const { selectedRestaurant } = useCart();
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
+  // Active site: the restaurant selected for ordering takes priority,
+  // then fall back to the customer's preferred restaurant from their profile.
+  const resolveSite = useCallback((): 'conches' | 'beaumont' | null => {
+    const source = selectedRestaurant?.id ?? selectedRestaurant?.name ?? profile?.preferred_restaurant;
+    if (!source) return null;
+    return source.toLowerCase().includes('beaumont') ? 'beaumont' : 'conches';
+  }, [selectedRestaurant, profile?.preferred_restaurant]);
+
   // Get or create conversation for current user
   const getOrCreateConversation = useCallback(async () => {
-    if (!user || !profile?.preferred_restaurant) return null;
+    if (!user) return null;
 
-    const site = profile.preferred_restaurant.toLowerCase().includes('conches') ? 'conches' : 'beaumont';
+    const site = resolveSite();
+    if (!site) return null;
+
 
     // Try to find existing conversation
     const { data: existing } = await supabase
