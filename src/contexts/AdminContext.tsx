@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 
-type AppRole = 'super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont' | 'user';
+type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont' | 'user';
 
 interface AdminContextType {
   roles: AppRole[];
@@ -60,7 +60,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  const isSuperAdmin = roles.includes('super_admin');
+  // A secondary super admin has the exact same rights as the super admin.
+  const isSuperAdmin = roles.includes('super_admin') || roles.includes('secondary_super_admin');
   const isSiteAdminConches = roles.includes('site_admin_conches');
   const isSiteAdminBeaumont = roles.includes('site_admin_beaumont');
   const isSecondaryAdminConches = roles.includes('secondary_admin_conches');

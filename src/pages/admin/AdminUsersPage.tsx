@@ -13,7 +13,7 @@ import { ArrowLeft, Plus, Trash2, UserPlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
-type AppRole = 'super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont';
+type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont';
 
 interface AdminPhone {
   id: string;
@@ -25,6 +25,7 @@ interface AdminPhone {
 
 const roleLabels: Record<AppRole, string> = {
   super_admin: 'Super Admin',
+  secondary_super_admin: 'Super Admin Secondaire',
   site_admin_conches: 'Admin Conches',
   site_admin_beaumont: 'Admin Beaumont',
   secondary_admin_conches: 'Admin Secondaire Conches',
@@ -33,6 +34,7 @@ const roleLabels: Record<AppRole, string> = {
 
 const roleBadgeColors: Record<AppRole, string> = {
   super_admin: 'bg-red-500',
+  secondary_super_admin: 'bg-red-400',
   site_admin_conches: 'bg-blue-500',
   site_admin_beaumont: 'bg-green-500',
   secondary_admin_conches: 'bg-blue-300',
@@ -84,6 +86,7 @@ export default function AdminUsersPage() {
     if (isSuperAdmin) {
       return [
         { value: 'super_admin', label: 'Super Admin' },
+        { value: 'secondary_super_admin', label: 'Super Admin Secondaire' },
         { value: 'site_admin_conches', label: 'Admin Site Conches' },
         { value: 'site_admin_beaumont', label: 'Admin Site Beaumont' },
         { value: 'secondary_admin_conches', label: 'Admin Secondaire Conches' },

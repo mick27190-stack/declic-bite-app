@@ -418,6 +418,7 @@ export type Database = {
         Returns: boolean
       }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role:
@@ -427,6 +428,7 @@ export type Database = {
         | "secondary_admin_conches"
         | "secondary_admin_beaumont"
         | "user"
+        | "secondary_super_admin"
       order_status:
         | "pending"
         | "confirmed"
@@ -568,6 +570,7 @@ export const Constants = {
         "secondary_admin_conches",
         "secondary_admin_beaumont",
         "user",
+        "secondary_super_admin",
       ],
       order_status: [
         "pending",
