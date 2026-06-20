@@ -49,6 +49,23 @@ export default function AdminSMSPage() {
   const [targetConches, setTargetConches] = useState(true);
   const [targetBeaumont, setTargetBeaumont] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [recipientCount, setRecipientCount] = useState<number | null>(null);
+
+  const refreshRecipientCount = useCallback(async () => {
+    let query = supabase.from('customers').select('id', { count: 'exact', head: true }).not('phone', 'is', null);
+    const selected: string[] = [];
+    if (targetConches) selected.push('conches');
+    if (targetBeaumont) selected.push('beaumont');
+    if (selected.length === 1) {
+      query = query.or(`site.eq.${selected[0]},site.is.null`);
+    }
+    const { count } = await query;
+    setRecipientCount(count ?? 0);
+  }, [targetConches, targetBeaumont]);
+
+  useEffect(() => {
+    if (canSendSMS) refreshRecipientCount();
+  }, [canSendSMS, refreshRecipientCount]);
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
