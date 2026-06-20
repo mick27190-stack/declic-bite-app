@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/contexts/CartContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -135,10 +136,9 @@ interface AddressForm {
 }
 
 function ProfileChat() {
-  const { profile } = useAuth();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, loading, sendMessage } = useCustomerChat();
+  const { messages, loading, sendMessage, site } = useCustomerChat();
   const { isOnline } = useAdminPresenceWatch();
 
   useEffect(() => {
@@ -154,7 +154,10 @@ function ProfileChat() {
     await sendMessage(msg);
   };
 
-  const siteName = profile?.preferred_restaurant || 'votre restaurant';
+  const siteName = site
+    ? `Déclic Pizza ${site.charAt(0).toUpperCase()}${site.slice(1)}`
+    : 'votre restaurant';
+
 
   return (
     <div className="glass-card p-4 rounded-xl">
@@ -225,6 +228,7 @@ function ProfileChat() {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, profile, addresses, signOut, updateProfile, addAddress, deleteAddress, setDefaultAddress, loading } = useAuth();
+  const { selectedRestaurant } = useCart();
   
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -550,7 +554,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Chat Section */}
-        {profile?.preferred_restaurant ? (
+        {(selectedRestaurant || profile?.preferred_restaurant) ? (
           <ProfileChat />
         ) : (
           <div className="glass-card p-4 rounded-xl">
