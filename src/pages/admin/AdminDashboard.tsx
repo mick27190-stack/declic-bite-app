@@ -12,7 +12,8 @@ import {
   ShoppingBag,
   Settings,
   ArrowLeft,
-  TrendingUp
+  TrendingUp,
+  Contact
 } from 'lucide-react';
 import NotificationBell from '@/components/admin/NotificationBell';
 
@@ -80,6 +81,13 @@ export default function AdminDashboard() {
       icon: MessageSquare,
       href: '/admin/chat',
       show: canManageChat
+    },
+    {
+      title: 'Fichier Client',
+      description: 'Consulter et ajouter des clients',
+      icon: Contact,
+      href: '/admin/customers',
+      show: isAnyAdmin
     },
     {
       title: 'SMS Promotionnels',
