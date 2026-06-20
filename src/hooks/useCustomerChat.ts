@@ -61,7 +61,7 @@ export function useCustomerChat() {
       return newConv.id;
     }
     return null;
-  }, [user, profile]);
+  }, [user, profile, resolveSite]);
 
   // Fetch messages
   const fetchMessages = useCallback(async (convId: string) => {
