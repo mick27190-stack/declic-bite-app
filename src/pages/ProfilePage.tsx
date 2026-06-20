@@ -135,10 +135,9 @@ interface AddressForm {
 }
 
 function ProfileChat() {
-  const { profile } = useAuth();
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, loading, sendMessage } = useCustomerChat();
+  const { messages, loading, sendMessage, site } = useCustomerChat();
   const { isOnline } = useAdminPresenceWatch();
 
   useEffect(() => {
@@ -154,7 +153,10 @@ function ProfileChat() {
     await sendMessage(msg);
   };
 
-  const siteName = profile?.preferred_restaurant || 'votre restaurant';
+  const siteName = site
+    ? `Déclic Pizza ${site.charAt(0).toUpperCase()}${site.slice(1)}`
+    : 'votre restaurant';
+
 
   return (
     <div className="glass-card p-4 rounded-xl">
