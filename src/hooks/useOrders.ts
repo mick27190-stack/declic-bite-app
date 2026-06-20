@@ -263,11 +263,12 @@ export function useUserOrders() {
             filter: `user_id=eq.${user.id}`
           },
           (payload) => {
+            const newRecord = payload.new as Record<string, any>;
             const updatedOrder = {
-              ...payload.new,
-              order_type: payload.new.order_type as 'emporter' | 'livraison',
-              items: payload.new.items as unknown as CartItem[],
-              delivery_address: payload.new.delivery_address as Order['delivery_address'],
+              ...newRecord,
+              order_type: newRecord.order_type as 'emporter' | 'livraison',
+              items: newRecord.items as unknown as CartItem[],
+              delivery_address: newRecord.delivery_address as Order['delivery_address'],
             } as Order;
 
             if (payload.eventType === 'INSERT') {
