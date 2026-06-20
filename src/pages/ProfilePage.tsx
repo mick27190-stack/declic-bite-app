@@ -228,6 +228,7 @@ function ProfileChat() {
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, profile, addresses, signOut, updateProfile, addAddress, deleteAddress, setDefaultAddress, loading } = useAuth();
+  const { selectedRestaurant } = useCart();
   
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
