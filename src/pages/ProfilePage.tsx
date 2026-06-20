@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import CustomerNotificationBell from '@/components/CustomerNotificationBell';
+import PushTestPanel from '@/components/PushTestPanel';
 import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useUserOrders } from '@/hooks/useOrders';
@@ -379,6 +380,9 @@ export default function ProfilePage() {
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Push notification test */}
+        <PushTestPanel />
+
         {/* Current Orders Section */}
         <CurrentOrders />
 
