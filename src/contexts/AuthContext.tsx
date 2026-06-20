@@ -89,7 +89,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
+
+        // A recovery (password reset) link establishes a temporary session.
+        // No matter where the email link redirected (often the site root),
+        // always send the user to the reset-password screen so they can pick
+        // a new password.
+        if (event === 'PASSWORD_RECOVERY') {
+          if (window.location.pathname !== '/reset-password') {
+            window.location.assign('/reset-password');
+            return;
+          }
+        }
+
         // Defer data fetching with setTimeout to avoid deadlock
         if (session?.user) {
           setTimeout(() => {
