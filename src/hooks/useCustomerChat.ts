@@ -171,5 +171,5 @@ export function useCustomerChat() {
     };
   }, [conversationId]);
 
-  return { messages, loading, sendMessage, conversationId };
+  return { messages, loading, sendMessage, conversationId, site: resolveSite() };
 }
