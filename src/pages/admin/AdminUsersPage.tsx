@@ -86,6 +86,7 @@ export default function AdminUsersPage() {
     if (isSuperAdmin) {
       return [
         { value: 'super_admin', label: 'Super Admin' },
+        { value: 'secondary_super_admin', label: 'Super Admin Secondaire' },
         { value: 'site_admin_conches', label: 'Admin Site Conches' },
         { value: 'site_admin_beaumont', label: 'Admin Site Beaumont' },
         { value: 'secondary_admin_conches', label: 'Admin Secondaire Conches' },
