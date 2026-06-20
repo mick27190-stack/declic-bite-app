@@ -286,17 +286,16 @@ export function useUserOrders() {
 
   const respondToOrder = async (orderId: string, response: 'accepted' | 'refused') => {
     try {
-      const newStatus = response === 'refused' ? 'cancelled' : undefined;
       const { error } = await supabase
         .from('orders')
-        .update(newStatus ? { delivery_response: response, status: newStatus } : { delivery_response: response })
+        .update({ delivery_response: response })
         .eq('id', orderId);
 
       if (error) throw error;
 
       setOrders(prev => prev.map(o =>
         o.id === orderId
-          ? { ...o, delivery_response: response, ...(newStatus ? { status: newStatus as Order['status'] } : {}) }
+          ? { ...o, delivery_response: response }
           : o
       ));
 
