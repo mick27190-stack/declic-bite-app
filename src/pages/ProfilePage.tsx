@@ -554,7 +554,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Chat Section */}
-        {profile?.preferred_restaurant ? (
+        {(selectedRestaurant || profile?.preferred_restaurant) ? (
           <ProfileChat />
         ) : (
           <div className="glass-card p-4 rounded-xl">
