@@ -224,6 +224,74 @@ export default function AdminSMSPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 space-y-8">
+        {/* Add customer */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Ajouter un client
+            </CardTitle>
+            <CardDescription>
+              Enregistrez un nouveau client dans le fichier client pour l'inclure dans les prochaines campagnes SMS.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="new-firstname">Prénom (facultatif)</Label>
+                <Input
+                  id="new-firstname"
+                  value={newFirstName}
+                  onChange={(e) => setNewFirstName(e.target.value)}
+                  placeholder="Jean"
+                  maxLength={100}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-phone">Téléphone</Label>
+                <Input
+                  id="new-phone"
+                  type="tel"
+                  value={newPhone}
+                  onChange={(e) => setNewPhone(e.target.value)}
+                  placeholder="06 12 34 56 78"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-site">Site</Label>
+                <select
+                  id="new-site"
+                  value={newSite}
+                  onChange={(e) => setNewSite(e.target.value as 'conches' | 'beaumont')}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {SITE_OPTIONS.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <Button
+              onClick={handleAddCustomer}
+              disabled={isAddingCustomer || !newPhone.trim()}
+              variant="secondary"
+              className="w-full md:w-auto"
+            >
+              {isAddingCustomer ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  Ajout en cours...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Ajouter au fichier client
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Compose SMS */}
         <Card>
           <CardHeader>
