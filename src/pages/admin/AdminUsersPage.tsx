@@ -253,6 +253,7 @@ export default function AdminUsersPage() {
                     <TableHead>Téléphone</TableHead>
                     <TableHead>Rôle</TableHead>
                     <TableHead>Site</TableHead>
+                    <TableHead>Actif</TableHead>
                     <TableHead>Date d'ajout</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
