@@ -434,6 +434,10 @@ export type Database = {
         Args: { _restaurant: string; _user_id: string }
         Returns: boolean
       }
+      can_admin_access_site: {
+        Args: { _site: string; _user_id: string }
+        Returns: boolean
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
