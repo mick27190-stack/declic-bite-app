@@ -11,41 +11,8 @@ interface PickupTimeSelectorProps {
 export function PickupTimeSelector({ value, onChange }: PickupTimeSelectorProps) {
   const [selectedTime, setSelectedTime] = useState<string | null>(value);
 
-  const availableTimes = useMemo(() => {
-    // Pickup slots: first at 18:30, last at 21:45, every 15 minutes.
-    const FIRST_SLOT_MINUTES = 18 * 60 + 30; // 18:30
-    const LAST_SLOT_MINUTES = 21 * 60 + 45; // 21:45
+  const availableTimes = useMemo(() => computePickupSlots(new Date()), []);
 
-    const now = new Date();
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-    // Earliest slot must be at least 15 min from now, rounded up to the next
-    // 15-minute slot. Ex: à 21h13 -> 21h28 -> arrondi au créneau 21h30.
-    const earliestAllowed = Math.ceil((nowMinutes + 15) / 15) * 15;
-
-    const times: string[] = [];
-    for (let m = FIRST_SLOT_MINUTES; m <= LAST_SLOT_MINUTES; m += 15) {
-      // Skip slots already in the past (plus prep time) for the current evening.
-      if (earliestAllowed > FIRST_SLOT_MINUTES && m < earliestAllowed) continue;
-      const hour = Math.floor(m / 60);
-      const minutes = m % 60;
-      times.push(
-        `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
-      );
-    }
-
-    // Outside service hours, fall back to the full slot list for the next service.
-    if (times.length === 0) {
-      for (let m = FIRST_SLOT_MINUTES; m <= LAST_SLOT_MINUTES; m += 15) {
-        const hour = Math.floor(m / 60);
-        const minutes = m % 60;
-        times.push(
-          `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
-        );
-      }
-    }
-
-    return times;
-  }, []);
 
   const handleSelect = (time: string) => {
     setSelectedTime(time);
