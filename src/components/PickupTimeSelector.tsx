@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { computePickupSlots } from '@/lib/pickupSlots';
 
 interface PickupTimeSelectorProps {
   value: string | null;
