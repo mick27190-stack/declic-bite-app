@@ -12,6 +12,22 @@ import { toast } from 'sonner';
 import { ArrowLeft, Send, History, Users } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { UserPlus } from 'lucide-react';
+
+const SITE_OPTIONS = [
+  { value: 'conches', label: 'Conches-en-Ouche' },
+  { value: 'beaumont', label: 'Beaumont-le-Roger' },
+] as const;
+
+// Format a French phone number to the +33 international format.
+const formatFrenchPhone = (raw: string): string | null => {
+  const digits = raw.replace(/[^\d+]/g, '');
+  if (/^\+33\d{9}$/.test(digits)) return digits;
+  if (/^0\d{9}$/.test(digits)) return '+33' + digits.slice(1);
+  if (/^33\d{9}$/.test(digits)) return '+' + digits;
+  return null;
+};
 
 interface SMSCampaign {
   id: string;
