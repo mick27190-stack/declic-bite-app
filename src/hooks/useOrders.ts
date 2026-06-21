@@ -224,7 +224,8 @@ export function useUserOrders() {
           .from('orders')
           .select('*')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(10);
 
         if (error) throw error;
 
@@ -245,6 +246,13 @@ export function useUserOrders() {
     };
 
     fetchUserOrders();
+
+    // Keeps only the 10 most recent orders in local state.
+    const trimOrders = (list: Order[]) => {
+      return list
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 10);
+    };
 
     // Subscribe to user's order updates
     let channel: ReturnType<typeof supabase.channel>;
@@ -273,9 +281,9 @@ export function useUserOrders() {
 
             if (payload.eventType === 'INSERT') {
               setOrders(prev => {
-                // Avoid duplicates
+                // Avoid duplicates and keep only the 10 most recent orders
                 if (prev.find(o => o.id === updatedOrder.id)) return prev;
-                return [updatedOrder, ...prev];
+                return trimOrders([updatedOrder, ...prev]);
               });
               toast({
                 title: 'Nouvelle commande',
@@ -289,12 +297,12 @@ export function useUserOrders() {
                     title: 'Commande mise à jour',
                     description: `Votre commande est maintenant "${statusLabels[updatedOrder.status]}"`,
                   });
-                  return prev.map(o => o.id === updatedOrder.id ? updatedOrder : o);
+                  return trimOrders(prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
                 }
                 return prev;
               });
             } else if (payload.eventType === 'DELETE') {
-              setOrders(prev => prev.filter(o => o.id !== payload.old.id));
+              setOrders(prev => trimOrders(prev.filter(o => o.id !== payload.old.id)));
             }
           }
         )
