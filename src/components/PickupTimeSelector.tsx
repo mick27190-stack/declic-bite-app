@@ -17,8 +17,9 @@ export function PickupTimeSelector({ value, onChange }: PickupTimeSelectorProps)
 
     const now = new Date();
     const nowMinutes = now.getHours() * 60 + now.getMinutes();
-    // Earliest slot that respects a 20 min prep time when the shop is open.
-    const earliestAllowed = nowMinutes + 20;
+    // Earliest slot must be at least 15 min from now, rounded up to the next
+    // 15-minute slot. Ex: à 21h13 -> 21h28 -> arrondi au créneau 21h30.
+    const earliestAllowed = Math.ceil((nowMinutes + 15) / 15) * 15;
 
     const times: string[] = [];
     for (let m = FIRST_SLOT_MINUTES; m <= LAST_SLOT_MINUTES; m += 15) {
