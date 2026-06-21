@@ -21,6 +21,7 @@ interface AdminContextType {
   refreshRoles: () => Promise<void>;
   assignRole: (phone: string, role: AppRole, site?: string) => Promise<{ error: Error | null }>;
   removeRole: (phone: string, role: AppRole) => Promise<{ error: Error | null }>;
+  toggleAdminActive: (id: string, active: boolean) => Promise<{ error: Error | null }>;
   getAdminPhones: () => Promise<{ data: any[]; error: Error | null }>;
 }
 
@@ -78,6 +79,22 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const assignRole = async (phone: string, role: AppRole, site?: string) => {
     try {
+      // Enforce limits: a single super admin and at most 2 secondary super admins.
+      if (role === 'super_admin' || role === 'secondary_super_admin') {
+        const { count } = await supabase
+          .from('admin_phones')
+          .select('id', { count: 'exact', head: true })
+          .eq('role', role);
+        const limit = role === 'super_admin' ? 1 : 2;
+        if ((count ?? 0) >= limit) {
+          throw new Error(
+            role === 'super_admin'
+              ? "Il ne peut y avoir qu'un seul Super Admin"
+              : "On ne peut définir que 2 Super Admin secondaires"
+          );
+        }
+      }
+
       // Add to admin_phones table
       const { error } = await supabase
         .from('admin_phones')
@@ -109,6 +126,51 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       return { error: error as Error };
     }
   };
+
+  // Enable/disable an admin entry. When disabled, the matching user_roles
+  // entries are removed so the access is revoked immediately; when re-enabled
+  // the role is granted back to any matching account.
+  const toggleAdminActive = async (id: string, active: boolean) => {
+    try {
+      const { data: row, error: updateError } = await supabase
+        .from('admin_phones')
+        .update({ active })
+        .eq('id', id)
+        .select('phone, role')
+        .single();
+
+      if (updateError) throw updateError;
+      if (!row) return { error: null };
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('phone', row.phone)
+        .maybeSingle();
+
+      if (profile?.user_id) {
+        if (active) {
+          await supabase
+            .from('user_roles')
+            .upsert(
+              { user_id: profile.user_id, role: row.role as AppRole },
+              { onConflict: 'user_id,role' }
+            );
+        } else {
+          await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', profile.user_id)
+            .eq('role', row.role as AppRole);
+        }
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
 
   const getAdminPhones = async () => {
     try {
@@ -142,6 +204,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       refreshRoles,
       assignRole,
       removeRole,
+      toggleAdminActive,
       getAdminPhones
     }}>
       {children}

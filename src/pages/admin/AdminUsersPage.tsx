@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2, UserPlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont';
 
@@ -20,6 +21,7 @@ interface AdminPhone {
   phone: string;
   role: AppRole;
   site: string | null;
+  active: boolean;
   created_at: string;
 }
 
@@ -52,6 +54,7 @@ export default function AdminUsersPage() {
     loading: adminLoading,
     assignRole,
     removeRole,
+    toggleAdminActive,
     getAdminPhones
   } = useAdmin();
 
@@ -133,6 +136,19 @@ export default function AdminUsersPage() {
       toast.error('Erreur lors de la suppression: ' + error.message);
     } else {
       toast.success('Administrateur supprimé');
+      fetchAdminPhones();
+    }
+  };
+
+  const isSiteAdminRole = (role: AppRole) =>
+    role.startsWith('site_admin_') || role.startsWith('secondary_admin_');
+
+  const handleToggleActive = async (admin: AdminPhone, active: boolean) => {
+    const { error } = await toggleAdminActive(admin.id, active);
+    if (error) {
+      toast.error('Erreur: ' + error.message);
+    } else {
+      toast.success(active ? 'Admin activé' : 'Admin désactivé');
       fetchAdminPhones();
     }
   };
@@ -237,6 +253,7 @@ export default function AdminUsersPage() {
                     <TableHead>Téléphone</TableHead>
                     <TableHead>Rôle</TableHead>
                     <TableHead>Site</TableHead>
+                    <TableHead>Actif</TableHead>
                     <TableHead>Date d'ajout</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -251,6 +268,18 @@ export default function AdminUsersPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="capitalize">{admin.site || '-'}</TableCell>
+                      <TableCell>
+                        {isSiteAdminRole(admin.role) ? (
+                          <Switch
+                            checked={admin.active}
+                            onCheckedChange={(checked) => handleToggleActive(admin, checked)}
+                          />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            {admin.active ? 'Actif' : 'Inactif'}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {new Date(admin.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>

@@ -52,10 +52,12 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // A phone may have several roles (e.g. secondary super admin + site admin).
+    // Only active entries grant a role.
     const { data: adminPhones, error: fetchError } = await supabase
       .from("admin_phones")
       .select("*")
-      .eq("phone", phone);
+      .eq("phone", phone)
+      .eq("active", true);
 
     if (fetchError) {
       console.error("Error fetching admin phone:", fetchError);

@@ -61,6 +61,7 @@ export type Database = {
       }
       admin_phones: {
         Row: {
+          active: boolean
           created_at: string
           created_by: string | null
           id: string
@@ -69,6 +70,7 @@ export type Database = {
           site: string | null
         }
         Insert: {
+          active?: boolean
           created_at?: string
           created_by?: string | null
           id?: string
@@ -77,6 +79,7 @@ export type Database = {
           site?: string | null
         }
         Update: {
+          active?: boolean
           created_at?: string
           created_by?: string | null
           id?: string
