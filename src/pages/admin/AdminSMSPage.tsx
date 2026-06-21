@@ -67,6 +67,12 @@ export default function AdminSMSPage() {
   const [isSending, setIsSending] = useState(false);
   const [recipientCount, setRecipientCount] = useState<number | null>(null);
 
+  // New customer form
+  const [newFirstName, setNewFirstName] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newSite, setNewSite] = useState<'conches' | 'beaumont'>('conches');
+  const [isAddingCustomer, setIsAddingCustomer] = useState(false);
+
   const refreshRecipientCount = useCallback(async () => {
     let query = supabase.from('customers').select('id', { count: 'exact', head: true }).not('phone', 'is', null);
     const selected: string[] = [];
