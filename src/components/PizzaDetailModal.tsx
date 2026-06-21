@@ -63,6 +63,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
       base: showBase ? selectedBase : 'tomate',
       supplements: selectedSupplements,
       quantity,
+      notes: itemNotes.trim() || undefined,
     };
     addItem(item);
     toast({
