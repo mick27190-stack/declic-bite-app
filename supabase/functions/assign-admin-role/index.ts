@@ -6,6 +6,10 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function normalizePhone(value: string | null | undefined): string {
+  return (value ?? "").replace(/\D/g, "");
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -41,6 +45,7 @@ serve(async (req) => {
     // Identity comes ONLY from the verified JWT, never from the request body.
     const user_id = userData.user.id;
     const phone = userData.user.phone ? `+${userData.user.phone.replace(/^\+/, "")}` : null;
+    const normalizedPhone = normalizePhone(phone);
 
     if (!phone) {
       return new Response(
@@ -52,11 +57,10 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // A phone may have several roles (e.g. secondary super admin + site admin).
-    // Only active entries grant a role.
-    const { data: adminPhones, error: fetchError } = await supabase
+    // Only active entries grant a role. Match numbers with or without leading `+`.
+    const { data: allActiveAdminPhones, error: fetchError } = await supabase
       .from("admin_phones")
       .select("*")
-      .eq("phone", phone)
       .eq("active", true);
 
     if (fetchError) {
@@ -67,7 +71,11 @@ serve(async (req) => {
       );
     }
 
-    if (adminPhones && adminPhones.length > 0) {
+    const adminPhones = (allActiveAdminPhones ?? []).filter(
+      (ap) => normalizePhone(ap.phone) === normalizedPhone,
+    );
+
+    if (adminPhones.length > 0) {
       // Roles already assigned to this user.
       const { data: existingRoles } = await supabase
         .from("user_roles")
@@ -102,6 +110,7 @@ serve(async (req) => {
         JSON.stringify({
           success: true,
           message: toInsert.length > 0 ? "Roles assigned successfully" : "Roles already assigned",
+          role: adminPhones[0]?.role,
           roles: adminPhones.map((ap) => ap.role),
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
