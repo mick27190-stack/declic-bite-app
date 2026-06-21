@@ -217,6 +217,18 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             </div>
           )}
 
+          {/* Item notes for the pizzeria */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Message pour la pizzeria</h3>
+            <Textarea
+              value={itemNotes}
+              onChange={(e) => setItemNotes(e.target.value)}
+              placeholder="Ex : pizza à couper, sans origan, allergique au lactose..."
+              className="bg-muted/50 border-border resize-none"
+              rows={3}
+            />
+          </div>
+
           {/* Quantity */}
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">Quantité</h3>
