@@ -54,6 +54,7 @@ export default function AdminUsersPage() {
     loading: adminLoading,
     assignRole,
     removeRole,
+    toggleAdminActive,
     getAdminPhones
   } = useAdmin();
 
