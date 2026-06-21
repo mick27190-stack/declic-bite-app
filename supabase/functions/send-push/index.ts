@@ -71,6 +71,28 @@ Deno.serve(async (req) => {
     if (!saRaw) throw new Error("FIREBASE_SERVICE_ACCOUNT not configured");
     const sa: ServiceAccount = JSON.parse(saRaw);
 
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    // --- Authentication: only the database webhook (which knows the shared
+    // secret stored in app_config) may invoke this function. ---
+    const providedSecret = req.headers.get("x-webhook-secret") ?? "";
+    const { data: secretRow } = await supabase
+      .from("app_config")
+      .select("value")
+      .eq("key", "send_push_secret")
+      .maybeSingle();
+    const expectedSecret = secretRow?.value ?? "";
+
+    if (!expectedSecret || providedSecret !== expectedSecret) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const payload = await req.json();
     // Support both direct calls and Supabase DB webhook payloads.
     const record = payload.record ?? payload;
