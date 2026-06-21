@@ -424,7 +424,7 @@ export type Database = {
       is_pizzeria_open: { Args: never; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       should_receive_site_notification: {
-        Args: { _site: string; _user_id: string }
+        Args: { _category?: string; _site: string; _user_id: string }
         Returns: boolean
       }
     }
