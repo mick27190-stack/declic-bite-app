@@ -107,6 +107,48 @@ export default function AdminSMSPage() {
     }
   }, [isSuperAdmin, isSiteAdminConches, isSiteAdminBeaumont]);
 
+  const handleAddCustomer = async () => {
+    const formattedPhone = formatFrenchPhone(newPhone);
+    if (!formattedPhone) {
+      toast.error('Numéro de téléphone invalide (ex : 06 12 34 56 78)');
+      return;
+    }
+
+    setIsAddingCustomer(true);
+    try {
+      // Avoid duplicates by phone number.
+      const { data: existing } = await supabase
+        .from('customers')
+        .select('id')
+        .eq('phone', formattedPhone)
+        .maybeSingle();
+
+      if (existing) {
+        toast.warning('Ce client est déjà dans le fichier client');
+        return;
+      }
+
+      const { error } = await supabase.from('customers').insert({
+        phone: formattedPhone,
+        first_name: newFirstName.trim() || null,
+        site: newSite,
+        source: 'manual',
+        created_by: user?.id,
+      });
+
+      if (error) throw error;
+
+      toast.success('Client ajouté au fichier client !');
+      setNewFirstName('');
+      setNewPhone('');
+      refreshRecipientCount();
+    } catch (e) {
+      toast.error("Erreur lors de l'ajout du client");
+    } finally {
+      setIsAddingCustomer(false);
+    }
+  };
+
   const handleSendSMS = async () => {
     if (!message.trim()) {
       toast.error('Veuillez entrer un message');
