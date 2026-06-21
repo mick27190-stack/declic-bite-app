@@ -269,6 +269,18 @@ export default function AdminUsersPage() {
                       </TableCell>
                       <TableCell className="capitalize">{admin.site || '-'}</TableCell>
                       <TableCell>
+                        {isSiteAdminRole(admin.role) ? (
+                          <Switch
+                            checked={admin.active}
+                            onCheckedChange={(checked) => handleToggleActive(admin, checked)}
+                          />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            {admin.active ? 'Actif' : 'Inactif'}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         {new Date(admin.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell className="text-right">
