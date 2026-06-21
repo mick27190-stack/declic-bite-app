@@ -21,6 +21,7 @@ interface AdminPhone {
   phone: string;
   role: AppRole;
   site: string | null;
+  active: boolean;
   created_at: string;
 }
 
