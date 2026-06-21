@@ -21,6 +21,7 @@ interface AdminContextType {
   refreshRoles: () => Promise<void>;
   assignRole: (phone: string, role: AppRole, site?: string) => Promise<{ error: Error | null }>;
   removeRole: (phone: string, role: AppRole) => Promise<{ error: Error | null }>;
+  toggleAdminActive: (id: string, active: boolean) => Promise<{ error: Error | null }>;
   getAdminPhones: () => Promise<{ data: any[]; error: Error | null }>;
 }
 
