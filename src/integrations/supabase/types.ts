@@ -89,6 +89,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_config: {
+        Row: {
+          created_at: string
+          key: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       chat_conversations: {
         Row: {
           created_at: string
@@ -412,6 +430,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_admin_access_order: {
+        Args: { _restaurant: string; _user_id: string }
+        Returns: boolean
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -426,6 +448,7 @@ export type Database = {
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
       is_pizzeria_open: { Args: never; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      restaurant_to_site: { Args: { _restaurant: string }; Returns: string }
       should_receive_site_notification: {
         Args: { _category?: string; _site: string; _user_id: string }
         Returns: boolean
