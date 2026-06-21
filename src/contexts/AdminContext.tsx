@@ -79,6 +79,22 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const assignRole = async (phone: string, role: AppRole, site?: string) => {
     try {
+      // Enforce limits: a single super admin and at most 2 secondary super admins.
+      if (role === 'super_admin' || role === 'secondary_super_admin') {
+        const { count } = await supabase
+          .from('admin_phones')
+          .select('id', { count: 'exact', head: true })
+          .eq('role', role);
+        const limit = role === 'super_admin' ? 1 : 2;
+        if ((count ?? 0) >= limit) {
+          throw new Error(
+            role === 'super_admin'
+              ? "Il ne peut y avoir qu'un seul Super Admin"
+              : "On ne peut définir que 2 Super Admin secondaires"
+          );
+        }
+      }
+
       // Add to admin_phones table
       const { error } = await supabase
         .from('admin_phones')
