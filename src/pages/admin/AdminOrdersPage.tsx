@@ -238,6 +238,11 @@ export default function AdminOrdersPage() {
                                 {' '}+ {item.supplements.map((s: any) => s.name).join(', ')}
                               </span>
                             )}
+                            {item?.notes && (
+                              <span className="block text-xs text-muted-foreground mt-0.5 italic">
+                                📝 {item.notes}
+                              </span>
+                            )}
                           </span>
                           <span className="font-medium">
                             {(((item?.pizza?.basePrice ?? 0) + (item?.size?.price ?? 0) + (item?.supplements ?? []).reduce((s: number, sup: any) => s + (sup.price ?? 0), 0)) * (item?.quantity ?? 1)).toFixed(2)}€
