@@ -33,6 +33,7 @@ export interface CartItem {
   base: 'tomate' | 'creme';
   supplements: Supplement[];
   quantity: number;
+  notes?: string;
 }
 
 export interface Restaurant {

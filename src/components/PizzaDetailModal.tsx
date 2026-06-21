@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { X, Plus, Minus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Pizza, PizzaSize, Supplement, CartItem } from '@/types/pizza';
 import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
@@ -30,6 +31,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   const [selectedSupplements, setSelectedSupplements] = useState<Supplement[]>([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedBambinoPizza, setSelectedBambinoPizza] = useState<Pizza | null>(null);
+  const [itemNotes, setItemNotes] = useState('');
   
   const { addItem } = useCart();
   const { toast } = useToast();
@@ -61,6 +63,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
       base: showBase ? selectedBase : 'tomate',
       supplements: selectedSupplements,
       quantity,
+      notes: itemNotes.trim() || undefined,
     };
     addItem(item);
     toast({
@@ -213,6 +216,18 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
               </div>
             </div>
           )}
+
+          {/* Item notes for the pizzeria */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground mb-3">Message pour la pizzeria</h3>
+            <Textarea
+              value={itemNotes}
+              onChange={(e) => setItemNotes(e.target.value)}
+              placeholder="Ex : pizza à couper, sans origan, allergique au lactose..."
+              className="bg-muted/50 border-border resize-none"
+              rows={3}
+            />
+          </div>
 
           {/* Quantity */}
           <div className="flex items-center justify-between">

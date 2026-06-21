@@ -142,6 +142,12 @@ export default function OrderConfirmationPage() {
               <div key={index} className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   {item.quantity}x {item.pizza.name} ({item.size.name})
+                  {item.supplements.length > 0 && (
+                    <span className="text-muted-foreground"> + {item.supplements.map((s) => s.name).join(', ')}</span>
+                  )}
+                  {item.notes && (
+                    <span className="block text-xs italic mt-0.5">📝 {item.notes}</span>
+                  )}
                 </span>
                 <span className="font-medium text-foreground">
                   {((item.pizza.basePrice + item.size.price + item.supplements.reduce((s, sup) => s + sup.price, 0)) * item.quantity).toFixed(2)}€
