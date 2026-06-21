@@ -242,6 +242,11 @@ export function CartView() {
                     + {item.supplements.map((s) => s.name).join(', ')}
                   </p>
                 )}
+                {item.notes && (
+                  <p className="text-xs text-muted-foreground mt-1 italic">
+                    📝 {item.notes}
+                  </p>
+                )}
                 
                 <div className="flex items-center justify-between mt-3">
                   <div className="flex items-center gap-2">
