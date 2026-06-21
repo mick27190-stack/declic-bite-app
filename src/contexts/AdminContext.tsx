@@ -111,6 +111,51 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Enable/disable an admin entry. When disabled, the matching user_roles
+  // entries are removed so the access is revoked immediately; when re-enabled
+  // the role is granted back to any matching account.
+  const toggleAdminActive = async (id: string, active: boolean) => {
+    try {
+      const { data: row, error: updateError } = await supabase
+        .from('admin_phones')
+        .update({ active })
+        .eq('id', id)
+        .select('phone, role')
+        .single();
+
+      if (updateError) throw updateError;
+      if (!row) return { error: null };
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('phone', row.phone)
+        .maybeSingle();
+
+      if (profile?.user_id) {
+        if (active) {
+          await supabase
+            .from('user_roles')
+            .upsert(
+              { user_id: profile.user_id, role: row.role as AppRole },
+              { onConflict: 'user_id,role' }
+            );
+        } else {
+          await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', profile.user_id)
+            .eq('role', row.role as AppRole);
+        }
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
+    }
+  };
+
+
   const getAdminPhones = async () => {
     try {
       const { data, error } = await supabase
