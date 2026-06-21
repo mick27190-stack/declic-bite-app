@@ -188,6 +188,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       refreshRoles,
       assignRole,
       removeRole,
+      toggleAdminActive,
       getAdminPhones
     }}>
       {children}
