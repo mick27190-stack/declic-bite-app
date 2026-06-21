@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Plus, Minus } from 'lucide-react';
+import { X, Plus, Minus, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Pizza, PizzaSize, Supplement, CartItem } from '@/types/pizza';
