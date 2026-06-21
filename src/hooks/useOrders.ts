@@ -224,7 +224,8 @@ export function useUserOrders() {
           .from('orders')
           .select('*')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(10);
 
         if (error) throw error;
 
@@ -245,6 +246,13 @@ export function useUserOrders() {
     };
 
     fetchUserOrders();
+
+    // Keeps only the 10 most recent orders in local state.
+    const trimOrders = (list: Order[]) => {
+      return list
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 10);
+    };
 
     // Subscribe to user's order updates
     let channel: ReturnType<typeof supabase.channel>;
