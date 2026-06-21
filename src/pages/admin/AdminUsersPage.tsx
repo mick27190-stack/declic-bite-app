@@ -140,6 +140,19 @@ export default function AdminUsersPage() {
     }
   };
 
+  const isSiteAdminRole = (role: AppRole) =>
+    role.startsWith('site_admin_') || role.startsWith('secondary_admin_');
+
+  const handleToggleActive = async (admin: AdminPhone, active: boolean) => {
+    const { error } = await toggleAdminActive(admin.id, active);
+    if (error) {
+      toast.error('Erreur: ' + error.message);
+    } else {
+      toast.success(active ? 'Admin activé' : 'Admin désactivé');
+      fetchAdminPhones();
+    }
+  };
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
