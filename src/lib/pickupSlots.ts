@@ -46,8 +46,7 @@ export function parisMinutes(now: Date = new Date()): number {
  * The current time is always interpreted in the restaurant's timezone
  * (Europe/Paris) so the proposed slots stay coherent on any device.
  */
-export function computePickupSlots(now: Date = new Date()): string[] {
-  const nowMinutes = parisMinutes(now);
+export function computePickupSlotsFromMinutes(nowMinutes: number): string[] {
   const earliestAllowed = earliestAllowedMinutes(nowMinutes);
 
   const times: string[] = [];
@@ -65,4 +64,8 @@ export function computePickupSlots(now: Date = new Date()): string[] {
   }
 
   return times;
+}
+
+export function computePickupSlots(now: Date = new Date()): string[] {
+  return computePickupSlotsFromMinutes(parisMinutes(now));
 }
