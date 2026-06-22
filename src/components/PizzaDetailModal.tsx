@@ -223,7 +223,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             <Textarea
               value={itemNotes}
               onChange={(e) => setItemNotes(e.target.value)}
-              placeholder="Ex : pizza à couper, sans origan, allergique au lactose..."
+              placeholder="Ex : sans origan"
               className="bg-muted/50 border-border resize-none"
               rows={3}
             />
