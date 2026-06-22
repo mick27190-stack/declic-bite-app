@@ -6,9 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, TrendingUp, Pizza, Euro, CalendarDays, Trophy } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Pizza, Euro, CalendarDays, Trophy, FileDown, FileText } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import NotificationBell from '@/components/admin/NotificationBell';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface OrderRow {
   created_at: string;
@@ -126,6 +128,75 @@ export default function AdminSalesPage() {
       .slice(0, 5)
       .map(([name, count], i) => ({ rank: i + 1, name, count }));
   }, [filteredOrders]);
+
+  // Group daily stats by month for monthly exports
+  const monthlyGroups = useMemo(() => {
+    const map = new Map<string, { month: string; days: typeof dailyStats; pizzas: number; revenue: number }>();
+    dailyStats.forEach(d => {
+      const monthKey = d.date.slice(0, 7); // YYYY-MM
+      const entry = map.get(monthKey) || { month: monthKey, days: [], pizzas: 0, revenue: 0 };
+      entry.days.push(d);
+      entry.pizzas += d.pizzas;
+      entry.revenue += d.revenue;
+      map.set(monthKey, entry);
+    });
+    return Array.from(map.values()).sort((a, b) => b.month.localeCompare(a.month));
+  }, [dailyStats]);
+
+  const monthLabel = (key: string) =>
+    new Date(key + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+  const exportCSV = () => {
+    const lines: string[] = ['Date;Pizzas;Chiffre d\'affaires (€)'];
+    monthlyGroups.forEach(m => {
+      lines.push('');
+      lines.push(`${monthLabel(m.month).toUpperCase()}`);
+      [...m.days].reverse().forEach(d => {
+        const label = new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+        lines.push(`${label};${d.pizzas};${d.revenue.toFixed(2)}`);
+      });
+      lines.push(`TOTAL ${monthLabel(m.month).toUpperCase()};${m.pizzas};${m.revenue.toFixed(2)}`);
+    });
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text('Suivi des ventes — Détail mensuel', 14, 18);
+    let startY = 26;
+    monthlyGroups.forEach(m => {
+      const body = [...m.days].reverse().map(d => [
+        new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }),
+        String(d.pizzas),
+        `${d.revenue.toFixed(2)} €`,
+      ]);
+      body.push([`TOTAL ${monthLabel(m.month)}`, String(m.pizzas), `${m.revenue.toFixed(2)} €`]);
+      autoTable(doc, {
+        head: [[monthLabel(m.month).toUpperCase(), 'Pizzas', 'CA']],
+        body,
+        startY,
+        theme: 'striped',
+        headStyles: { fillColor: [234, 88, 12] },
+        didParseCell: (data) => {
+          if (data.row.index === body.length - 1 && data.section === 'body') {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [255, 237, 213];
+          }
+        },
+      });
+      startY = (doc as any).lastAutoTable.finalY + 10;
+    });
+    doc.save(`ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+
 
   if (authLoading || adminLoading) {
     return (
@@ -303,11 +374,24 @@ export default function AdminSalesPage() {
         {/* Daily Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" />
-              Détail par jour
-            </CardTitle>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                Détail par jour
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={exportCSV} disabled={dailyStats.length === 0}>
+                  <FileDown className="h-4 w-4" />
+                  CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportPDF} disabled={dailyStats.length === 0}>
+                  <FileText className="h-4 w-4" />
+                  PDF
+                </Button>
+              </div>
+            </div>
           </CardHeader>
+
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
