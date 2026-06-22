@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { computePickupSlots } from '@/lib/pickupSlots';
@@ -11,7 +11,16 @@ interface PickupTimeSelectorProps {
 export function PickupTimeSelector({ value, onChange }: PickupTimeSelectorProps) {
   const [selectedTime, setSelectedTime] = useState<string | null>(value);
 
-  const availableTimes = useMemo(() => computePickupSlots(new Date()), []);
+  // Recompute slots from the real current time (in the restaurant timezone)
+  // and refresh every minute so the proposed times stay coherent.
+  const [availableTimes, setAvailableTimes] = useState<string[]>(() => computePickupSlots(new Date()));
+
+  useEffect(() => {
+    const refresh = () => setAvailableTimes(computePickupSlots(new Date()));
+    refresh();
+    const id = setInterval(refresh, 60_000);
+    return () => clearInterval(id);
+  }, []);
 
 
   const handleSelect = (time: string) => {

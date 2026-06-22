@@ -22,13 +22,31 @@ export function earliestAllowedMinutes(nowMinutes: number): number {
 }
 
 /**
+ * Minutes since midnight for the given instant, expressed in the
+ * restaurant's timezone (Europe/Paris) regardless of the device timezone.
+ */
+export function parisMinutes(now: Date = new Date()): number {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(now);
+  const hour = Number(parts.find((p) => p.type === 'hour')?.value ?? '0');
+  const minute = Number(parts.find((p) => p.type === 'minute')?.value ?? '0');
+  return hour * 60 + minute;
+}
+
+/**
  * Compute the list of selectable pickup time labels for a given moment.
  * - During service, all slots strictly before the earliest allowed time are blocked.
  * - Outside service (or after the last slot is no longer reachable), the full
  *   slot list for the next service is returned.
+ *
+ * The current time is always interpreted in the restaurant's timezone
+ * (Europe/Paris) so the proposed slots stay coherent on any device.
  */
-export function computePickupSlots(now: Date = new Date()): string[] {
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+export function computePickupSlotsFromMinutes(nowMinutes: number): string[] {
   const earliestAllowed = earliestAllowedMinutes(nowMinutes);
 
   const times: string[] = [];
@@ -46,4 +64,8 @@ export function computePickupSlots(now: Date = new Date()): string[] {
   }
 
   return times;
+}
+
+export function computePickupSlots(now: Date = new Date()): string[] {
+  return computePickupSlotsFromMinutes(parisMinutes(now));
 }
