@@ -374,11 +374,24 @@ export default function AdminSalesPage() {
         {/* Daily Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 text-primary" />
-              Détail par jour
-            </CardTitle>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                Détail par jour
+              </CardTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={exportCSV} disabled={dailyStats.length === 0}>
+                  <FileDown className="h-4 w-4" />
+                  CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={exportPDF} disabled={dailyStats.length === 0}>
+                  <FileText className="h-4 w-4" />
+                  PDF
+                </Button>
+              </div>
+            </div>
           </CardHeader>
+
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
