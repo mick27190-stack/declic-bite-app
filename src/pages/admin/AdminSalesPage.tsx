@@ -146,6 +146,28 @@ export default function AdminSalesPage() {
   const monthLabel = (key: string) =>
     new Date(key + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
+  // Robust download that works in sandboxed preview iframes and on mobile:
+  // the anchor MUST be attached to the DOM before clicking, and we fall back
+  // to opening the blob in a new tab if the download attribute is blocked.
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try {
+        document.body.removeChild(a);
+      } catch {
+        /* noop */
+      }
+      URL.revokeObjectURL(url);
+    }, 1500);
+  };
+
   const exportCSV = () => {
     const lines: string[] = ['Date;Pizzas;Chiffre d\'affaires (€)'];
     monthlyGroups.forEach(m => {
@@ -158,12 +180,7 @@ export default function AdminSalesPage() {
       lines.push(`TOTAL ${monthLabel(m.month).toUpperCase()};${m.pizzas};${m.revenue.toFixed(2)}`);
     });
     const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
   const exportPDF = () => {
@@ -193,7 +210,7 @@ export default function AdminSalesPage() {
       });
       startY = (doc as any).lastAutoTable.finalY + 10;
     });
-    doc.save(`ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.pdf`);
+    downloadBlob(doc.output('blob'), `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   // Per-site totals over the selected period
@@ -275,7 +292,7 @@ export default function AdminSalesPage() {
       startY = (doc as any).lastAutoTable.finalY + 10;
     });
 
-    doc.save(`ventes-detail-complet-${new Date().toISOString().slice(0, 10)}.pdf`);
+    downloadBlob(doc.output('blob'), `ventes-detail-complet-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   if (authLoading || adminLoading) {
@@ -459,16 +476,16 @@ export default function AdminSalesPage() {
                 <CalendarDays className="h-5 w-5 text-primary" />
                 Détail par jour
               </CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={exportCSV} disabled={dailyStats.length === 0}>
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={exportCSV} disabled={dailyStats.length === 0}>
                   <FileDown className="h-4 w-4" />
                   CSV
                 </Button>
-                <Button variant="outline" size="sm" onClick={exportPDF} disabled={dailyStats.length === 0}>
+                <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={exportPDF} disabled={dailyStats.length === 0}>
                   <FileText className="h-4 w-4" />
                   PDF
                 </Button>
-                <Button variant="default" size="sm" onClick={exportFullPDF} disabled={dailyStats.length === 0}>
+                <Button variant="default" size="sm" className="flex-1 sm:flex-none" onClick={exportFullPDF} disabled={dailyStats.length === 0}>
                   <FileText className="h-4 w-4" />
                   Détail complet
                 </Button>
