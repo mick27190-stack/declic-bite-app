@@ -210,7 +210,7 @@ export default function AdminSalesPage() {
       });
       startY = (doc as any).lastAutoTable.finalY + 10;
     });
-    doc.save(`ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.pdf`);
+    downloadBlob(doc.output('blob'), `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   // Per-site totals over the selected period
