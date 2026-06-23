@@ -468,6 +468,10 @@ export default function AdminSalesPage() {
                   <FileText className="h-4 w-4" />
                   PDF
                 </Button>
+                <Button variant="default" size="sm" onClick={exportFullPDF} disabled={dailyStats.length === 0}>
+                  <FileText className="h-4 w-4" />
+                  Détail complet
+                </Button>
               </div>
             </div>
           </CardHeader>
