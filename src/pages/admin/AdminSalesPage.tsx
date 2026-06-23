@@ -196,7 +196,87 @@ export default function AdminSalesPage() {
     doc.save(`ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
+  // Per-site totals over the selected period
+  const siteTotals = useMemo(() => {
+    const map = new Map<string, { site: string; pizzas: number; revenue: number; orders: number }>();
+    filteredOrders.forEach(order => {
+      const site = order.restaurant.toLowerCase().includes('conches') ? 'Conches' : 'Beaumont';
+      const entry = map.get(site) || { site, pizzas: 0, revenue: 0, orders: 0 };
+      const items = Array.isArray(order.items) ? order.items : [];
+      entry.pizzas += items.reduce((sum: number, item: any) => sum + (item?.quantity ?? 1), 0);
+      entry.revenue += order.total_price;
+      entry.orders += 1;
+      map.set(site, entry);
+    });
+    return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue);
+  }, [filteredOrders]);
 
+  const exportFullPDF = () => {
+    const doc = new jsPDF();
+    const periodLabel = `${period} derniers jours`;
+    const generatedAt = new Date().toLocaleString('fr-FR');
+
+    doc.setFontSize(18);
+    doc.text('Suivi des ventes — Détail complet', 14, 18);
+    doc.setFontSize(11);
+    doc.setTextColor(120);
+    doc.text(`Période : ${periodLabel}  •  Généré le ${generatedAt}`, 14, 26);
+    doc.setTextColor(0);
+
+    // 1. Résumé global
+    autoTable(doc, {
+      head: [['Résumé global sur la période', '']],
+      body: [
+        ['Chiffre d\'affaires total', `${totals.revenue.toFixed(2)} €`],
+        ['Pizzas vendues', String(totals.pizzas)],
+        ['Commandes', String(filteredOrders.length)],
+        ['Panier moyen', `${filteredOrders.length ? (totals.revenue / filteredOrders.length).toFixed(2) : '0.00'} €`],
+      ],
+      startY: 32,
+      theme: 'grid',
+      headStyles: { fillColor: [234, 88, 12] },
+    });
+    let startY = (doc as any).lastAutoTable.finalY + 8;
+
+    // 2. Totaux par site
+    autoTable(doc, {
+      head: [['Site', 'Commandes', 'Pizzas', 'CA']],
+      body: siteTotals.map(s => [s.site, String(s.orders), String(s.pizzas), `${s.revenue.toFixed(2)} €`]),
+      startY,
+      theme: 'striped',
+      headStyles: { fillColor: [234, 88, 12] },
+    });
+    startY = (doc as any).lastAutoTable.finalY + 10;
+
+    // 3. Détail mensuel
+    doc.setFontSize(13);
+    doc.text('Détail par mois', 14, startY);
+    startY += 6;
+    monthlyGroups.forEach(m => {
+      const body = [...m.days].reverse().map(d => [
+        new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }),
+        String(d.pizzas),
+        `${d.revenue.toFixed(2)} €`,
+      ]);
+      body.push([`TOTAL ${monthLabel(m.month)}`, String(m.pizzas), `${m.revenue.toFixed(2)} €`]);
+      autoTable(doc, {
+        head: [[monthLabel(m.month).toUpperCase(), 'Pizzas', 'CA']],
+        body,
+        startY,
+        theme: 'striped',
+        headStyles: { fillColor: [234, 88, 12] },
+        didParseCell: (data) => {
+          if (data.row.index === body.length - 1 && data.section === 'body') {
+            data.cell.styles.fontStyle = 'bold';
+            data.cell.styles.fillColor = [255, 237, 213];
+          }
+        },
+      });
+      startY = (doc as any).lastAutoTable.finalY + 10;
+    });
+
+    doc.save(`ventes-detail-complet-${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
 
   if (authLoading || adminLoading) {
     return (
@@ -387,6 +467,10 @@ export default function AdminSalesPage() {
                 <Button variant="outline" size="sm" onClick={exportPDF} disabled={dailyStats.length === 0}>
                   <FileText className="h-4 w-4" />
                   PDF
+                </Button>
+                <Button variant="default" size="sm" onClick={exportFullPDF} disabled={dailyStats.length === 0}>
+                  <FileText className="h-4 w-4" />
+                  Détail complet
                 </Button>
               </div>
             </div>
