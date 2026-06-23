@@ -476,16 +476,16 @@ export default function AdminSalesPage() {
                 <CalendarDays className="h-5 w-5 text-primary" />
                 Détail par jour
               </CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={exportCSV} disabled={dailyStats.length === 0}>
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={exportCSV} disabled={dailyStats.length === 0}>
                   <FileDown className="h-4 w-4" />
                   CSV
                 </Button>
-                <Button variant="outline" size="sm" onClick={exportPDF} disabled={dailyStats.length === 0}>
+                <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={exportPDF} disabled={dailyStats.length === 0}>
                   <FileText className="h-4 w-4" />
                   PDF
                 </Button>
-                <Button variant="default" size="sm" onClick={exportFullPDF} disabled={dailyStats.length === 0}>
+                <Button variant="default" size="sm" className="flex-1 sm:flex-none" onClick={exportFullPDF} disabled={dailyStats.length === 0}>
                   <FileText className="h-4 w-4" />
                   Détail complet
                 </Button>
