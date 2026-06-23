@@ -292,7 +292,7 @@ export default function AdminSalesPage() {
       startY = (doc as any).lastAutoTable.finalY + 10;
     });
 
-    doc.save(`ventes-detail-complet-${new Date().toISOString().slice(0, 10)}.pdf`);
+    downloadBlob(doc.output('blob'), `ventes-detail-complet-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   if (authLoading || adminLoading) {
