@@ -146,6 +146,28 @@ export default function AdminSalesPage() {
   const monthLabel = (key: string) =>
     new Date(key + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
+  // Robust download that works in sandboxed preview iframes and on mobile:
+  // the anchor MUST be attached to the DOM before clicking, and we fall back
+  // to opening the blob in a new tab if the download attribute is blocked.
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try {
+        document.body.removeChild(a);
+      } catch {
+        /* noop */
+      }
+      URL.revokeObjectURL(url);
+    }, 1500);
+  };
+
   const exportCSV = () => {
     const lines: string[] = ['Date;Pizzas;Chiffre d\'affaires (€)'];
     monthlyGroups.forEach(m => {
