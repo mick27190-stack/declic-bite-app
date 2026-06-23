@@ -180,12 +180,7 @@ export default function AdminSalesPage() {
       lines.push(`TOTAL ${monthLabel(m.month).toUpperCase()};${m.pizzas};${m.revenue.toFixed(2)}`);
     });
     const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
   const exportPDF = () => {
