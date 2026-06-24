@@ -101,14 +101,10 @@ export default function AdminSalesPage() {
   const dailyStats = useMemo(() => {
     const map = new Map<string, { date: string; pizzas: number; revenue: number }>();
 
-    // Pre-fill all days in the period
-    const days = parseInt(period);
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
+    // Pre-fill all days in the selected range
+    enumerateDayKeys(startDate, endDate).forEach(key => {
       map.set(key, { date: key, pizzas: 0, revenue: 0 });
-    }
+    });
 
     filteredOrders.forEach(order => {
       const day = order.created_at.slice(0, 10);
