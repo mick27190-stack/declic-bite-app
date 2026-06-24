@@ -28,6 +28,7 @@ export default function AdminSalesPage() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<'7' | '14' | '30'>('7');
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
+  const [fullExportSite, setFullExportSite] = useState<'all' | 'conches' | 'beaumont'>('all');
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
