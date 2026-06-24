@@ -274,13 +274,9 @@ export default function AdminSalesPage() {
 
     // Daily stats for the export subset
     const dayMap = new Map<string, { date: string; pizzas: number; revenue: number }>();
-    const days = parseInt(period);
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
+    enumerateDayKeys(startDate, endDate).forEach(key => {
       dayMap.set(key, { date: key, pizzas: 0, revenue: 0 });
-    }
+    });
     exportOrders.forEach(order => {
       const day = order.created_at.slice(0, 10);
       const entry = dayMap.get(day) || { date: day, pizzas: 0, revenue: 0 };
