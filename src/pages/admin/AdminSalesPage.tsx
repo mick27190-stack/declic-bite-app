@@ -31,9 +31,27 @@ export default function AdminSalesPage() {
   const { isAnyAdmin, isSuperAdmin, isSiteAdminConches, isSiteAdminBeaumont, loading: adminLoading } = useAdmin();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<'7' | '14' | '30'>('7');
+  const [startDate, setStartDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 6);
+    return d;
+  });
+  const [endDate, setEndDate] = useState<Date>(() => new Date());
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [fullExportSite, setFullExportSite] = useState<'all' | 'conches' | 'beaumont'>('all');
+
+  // Helpers for day-range handling (UTC keys to match order.created_at slicing)
+  const dayKey = (d: Date) => d.toISOString().slice(0, 10);
+  const enumerateDayKeys = (start: Date, end: Date) => {
+    const keys: string[] = [];
+    const cur = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate()));
+    const last = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()));
+    while (cur <= last) {
+      keys.push(cur.toISOString().slice(0, 10));
+      cur.setUTCDate(cur.getUTCDate() + 1);
+    }
+    return keys;
+  };
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
