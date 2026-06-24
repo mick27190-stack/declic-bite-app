@@ -214,20 +214,6 @@ export default function AdminSalesPage() {
     downloadBlob(doc.output('blob'), `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
-  // Per-site totals over the selected period
-  const siteTotals = useMemo(() => {
-    const map = new Map<string, { site: string; pizzas: number; revenue: number; orders: number }>();
-    filteredOrders.forEach(order => {
-      const site = order.restaurant.toLowerCase().includes('conches') ? 'Conches' : 'Beaumont';
-      const entry = map.get(site) || { site, pizzas: 0, revenue: 0, orders: 0 };
-      const items = Array.isArray(order.items) ? order.items : [];
-      entry.pizzas += items.reduce((sum: number, item: any) => sum + (item?.quantity ?? 1), 0);
-      entry.revenue += order.total_price;
-      entry.orders += 1;
-      map.set(site, entry);
-    });
-    return Array.from(map.values()).sort((a, b) => b.revenue - a.revenue);
-  }, [filteredOrders]);
 
   const exportFullPDF = () => {
     const doc = new jsPDF();
