@@ -388,17 +388,57 @@ export default function AdminSalesPage() {
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Filters */}
-        <div className="flex flex-wrap gap-3">
-          <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">7 derniers jours</SelectItem>
-              <SelectItem value="14">14 derniers jours</SelectItem>
-              <SelectItem value="30">30 derniers jours</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Du</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn('w-[150px] justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, 'dd/MM/yyyy', { locale: fr }) : <span>Date début</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={(d) => d && setStartDate(d)}
+                  disabled={(d) => d > endDate || d > new Date()}
+                  initialFocus
+                  locale={fr}
+                  className={cn('p-3 pointer-events-auto')}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Au</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn('w-[150px] justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, 'dd/MM/yyyy', { locale: fr }) : <span>Date fin</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={(d) => d && setEndDate(d)}
+                  disabled={(d) => d < startDate || d > new Date()}
+                  initialFocus
+                  locale={fr}
+                  className={cn('p-3 pointer-events-auto')}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           {isSuperAdmin && (
             <Select value={filterSite} onValueChange={(v) => setFilterSite(v as any)}>
               <SelectTrigger className="w-[160px]">
