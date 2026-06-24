@@ -535,10 +535,22 @@ export default function AdminSalesPage() {
                   <FileText className="h-4 w-4" />
                   PDF
                 </Button>
-                <Button variant="default" size="sm" className="flex-1 sm:flex-none" onClick={exportFullPDF} disabled={dailyStats.length === 0}>
-                  <FileText className="h-4 w-4" />
-                  Détail complet
-                </Button>
+                <div className="flex w-full sm:w-auto items-center gap-2">
+                  <Select value={fullExportSite} onValueChange={(v) => setFullExportSite(v as any)}>
+                    <SelectTrigger className="h-9 w-[130px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Les 2 sites</SelectItem>
+                      <SelectItem value="conches">Conches</SelectItem>
+                      <SelectItem value="beaumont">Beaumont</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="default" size="sm" className="flex-1 sm:flex-none" onClick={exportFullPDF} disabled={dailyStats.length === 0}>
+                    <FileText className="h-4 w-4" />
+                    Détail complet
+                  </Button>
+                </div>
               </div>
             </div>
           </CardHeader>
