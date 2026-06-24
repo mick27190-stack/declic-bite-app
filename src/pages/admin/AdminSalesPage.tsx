@@ -6,9 +6,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, TrendingUp, Pizza, Euro, CalendarDays, Trophy, FileDown, FileText } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowLeft, TrendingUp, Pizza, Euro, CalendarDays, Trophy, FileDown, FileText, CalendarIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import NotificationBell from '@/components/admin/NotificationBell';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
