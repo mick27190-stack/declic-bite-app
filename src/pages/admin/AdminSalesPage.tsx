@@ -239,7 +239,7 @@ export default function AdminSalesPage() {
 
   const exportFullPDF = () => {
     const doc = new jsPDF();
-    const periodLabel = `${period} derniers jours`;
+    const periodLabel = `${format(startDate, 'dd/MM/yyyy', { locale: fr })} au ${format(endDate, 'dd/MM/yyyy', { locale: fr })}`;
     const generatedAt = new Date().toLocaleString('fr-FR');
 
     // Filter orders for the chosen site of the full export
