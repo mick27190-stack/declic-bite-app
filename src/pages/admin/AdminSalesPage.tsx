@@ -65,13 +65,16 @@ export default function AdminSalesPage() {
 
     const fetchOrders = async () => {
       setLoading(true);
-      const since = new Date();
-      since.setDate(since.getDate() - parseInt(period));
+      const since = new Date(startDate);
+      since.setHours(0, 0, 0, 0);
+      const until = new Date(endDate);
+      until.setHours(23, 59, 59, 999);
 
       const { data, error } = await supabase
         .from('orders')
         .select('created_at, total_price, items, restaurant, status')
         .gte('created_at', since.toISOString())
+        .lte('created_at', until.toISOString())
         .neq('status', 'cancelled')
         .order('created_at', { ascending: true });
 
@@ -80,7 +83,7 @@ export default function AdminSalesPage() {
     };
 
     fetchOrders();
-  }, [user, isAnyAdmin, period]);
+  }, [user, isAnyAdmin, startDate, endDate]);
 
   const filteredOrders = useMemo(() => {
     if (filterSite === 'all' && isSuperAdmin) return orders;
