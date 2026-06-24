@@ -234,23 +234,85 @@ export default function AdminSalesPage() {
     const periodLabel = `${period} derniers jours`;
     const generatedAt = new Date().toLocaleString('fr-FR');
 
+    // Filter orders for the chosen site of the full export
+    const exportOrders = fullExportSite === 'all'
+      ? filteredOrders
+      : filteredOrders.filter(o =>
+          (o.restaurant.toLowerCase().includes('conches') ? 'conches' : 'beaumont') === fullExportSite
+        );
+
+    const siteFilterLabel =
+      fullExportSite === 'conches' ? 'Conches' : fullExportSite === 'beaumont' ? 'Beaumont' : 'Tous les sites';
+
+    // Recompute totals for the export subset
+    const exportTotalRevenue = exportOrders.reduce((sum, o) => sum + o.total_price, 0);
+    const exportTotalPizzas = exportOrders.reduce((sum, o) => {
+      const items = Array.isArray(o.items) ? o.items : [];
+      return sum + items.reduce((s: number, item: any) => s + (item?.quantity ?? 1), 0);
+    }, 0);
+
+    // Per-site totals for the export subset
+    const siteMap = new Map<string, { site: string; pizzas: number; revenue: number; orders: number }>();
+    exportOrders.forEach(order => {
+      const site = order.restaurant.toLowerCase().includes('conches') ? 'Conches' : 'Beaumont';
+      const entry = siteMap.get(site) || { site, pizzas: 0, revenue: 0, orders: 0 };
+      const items = Array.isArray(order.items) ? order.items : [];
+      entry.pizzas += items.reduce((sum: number, item: any) => sum + (item?.quantity ?? 1), 0);
+      entry.revenue += order.total_price;
+      entry.orders += 1;
+      siteMap.set(site, entry);
+    });
+    const exportSiteTotals = Array.from(siteMap.values()).sort((a, b) => b.revenue - a.revenue);
+
+    // Daily stats for the export subset
+    const dayMap = new Map<string, { date: string; pizzas: number; revenue: number }>();
+    const days = parseInt(period);
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      dayMap.set(key, { date: key, pizzas: 0, revenue: 0 });
+    }
+    exportOrders.forEach(order => {
+      const day = order.created_at.slice(0, 10);
+      const entry = dayMap.get(day) || { date: day, pizzas: 0, revenue: 0 };
+      const items = Array.isArray(order.items) ? order.items : [];
+      entry.pizzas += items.reduce((sum: number, item: any) => sum + (item?.quantity ?? 1), 0);
+      entry.revenue += order.total_price;
+      dayMap.set(day, entry);
+    });
+    const exportDailyStats = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+
+    // Group export daily stats by month
+    const monthMap = new Map<string, { month: string; days: typeof exportDailyStats; pizzas: number; revenue: number }>();
+    exportDailyStats.forEach(d => {
+      const monthKey = d.date.slice(0, 7);
+      const entry = monthMap.get(monthKey) || { month: monthKey, days: [], pizzas: 0, revenue: 0 };
+      entry.days.push(d);
+      entry.pizzas += d.pizzas;
+      entry.revenue += d.revenue;
+      monthMap.set(monthKey, entry);
+    });
+    const exportMonthlyGroups = Array.from(monthMap.values()).sort((a, b) => b.month.localeCompare(a.month));
+
     doc.setFontSize(18);
     doc.text('Suivi des ventes — Détail complet', 14, 18);
     doc.setFontSize(11);
     doc.setTextColor(120);
-    doc.text(`Période : ${periodLabel}  •  Généré le ${generatedAt}`, 14, 26);
+    doc.text(`Site : ${siteFilterLabel}  •  Période : ${periodLabel}`, 14, 26);
+    doc.text(`Généré le ${generatedAt}`, 14, 32);
     doc.setTextColor(0);
 
     // 1. Résumé global
     autoTable(doc, {
       head: [['Résumé global sur la période', '']],
       body: [
-        ['Chiffre d\'affaires total', `${totals.revenue.toFixed(2)} €`],
-        ['Pizzas vendues', String(totals.pizzas)],
-        ['Commandes', String(filteredOrders.length)],
-        ['Panier moyen', `${filteredOrders.length ? (totals.revenue / filteredOrders.length).toFixed(2) : '0.00'} €`],
+        ['Chiffre d\'affaires total', `${exportTotalRevenue.toFixed(2)} €`],
+        ['Pizzas vendues', String(exportTotalPizzas)],
+        ['Commandes', String(exportOrders.length)],
+        ['Panier moyen', `${exportOrders.length ? (exportTotalRevenue / exportOrders.length).toFixed(2) : '0.00'} €`],
       ],
-      startY: 32,
+      startY: 38,
       theme: 'grid',
       headStyles: { fillColor: [234, 88, 12] },
     });
@@ -259,7 +321,7 @@ export default function AdminSalesPage() {
     // 2. Totaux par site
     autoTable(doc, {
       head: [['Site', 'Commandes', 'Pizzas', 'CA']],
-      body: siteTotals.map(s => [s.site, String(s.orders), String(s.pizzas), `${s.revenue.toFixed(2)} €`]),
+      body: exportSiteTotals.map(s => [s.site, String(s.orders), String(s.pizzas), `${s.revenue.toFixed(2)} €`]),
       startY,
       theme: 'striped',
       headStyles: { fillColor: [234, 88, 12] },
@@ -270,7 +332,7 @@ export default function AdminSalesPage() {
     doc.setFontSize(13);
     doc.text('Détail par mois', 14, startY);
     startY += 6;
-    monthlyGroups.forEach(m => {
+    exportMonthlyGroups.forEach(m => {
       const body = [...m.days].reverse().map(d => [
         new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }),
         String(d.pizzas),
@@ -293,7 +355,8 @@ export default function AdminSalesPage() {
       startY = (doc as any).lastAutoTable.finalY + 10;
     });
 
-    downloadBlob(doc.output('blob'), `ventes-detail-complet-${new Date().toISOString().slice(0, 10)}.pdf`);
+    const siteSuffix = fullExportSite === 'all' ? 'tous-sites' : fullExportSite;
+    downloadBlob(doc.output('blob'), `ventes-detail-complet-${siteSuffix}-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
 
   if (authLoading || adminLoading) {
