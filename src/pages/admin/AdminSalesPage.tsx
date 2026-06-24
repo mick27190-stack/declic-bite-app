@@ -6,9 +6,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, TrendingUp, Pizza, Euro, CalendarDays, Trophy, FileDown, FileText } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowLeft, TrendingUp, Pizza, Euro, CalendarDays, Trophy, FileDown, FileText, CalendarIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import NotificationBell from '@/components/admin/NotificationBell';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -26,9 +31,27 @@ export default function AdminSalesPage() {
   const { isAnyAdmin, isSuperAdmin, isSiteAdminConches, isSiteAdminBeaumont, loading: adminLoading } = useAdmin();
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [period, setPeriod] = useState<'7' | '14' | '30'>('7');
+  const [startDate, setStartDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 6);
+    return d;
+  });
+  const [endDate, setEndDate] = useState<Date>(() => new Date());
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [fullExportSite, setFullExportSite] = useState<'all' | 'conches' | 'beaumont'>('all');
+
+  // Helpers for day-range handling (UTC keys to match order.created_at slicing)
+  const dayKey = (d: Date) => d.toISOString().slice(0, 10);
+  const enumerateDayKeys = (start: Date, end: Date) => {
+    const keys: string[] = [];
+    const cur = new Date(Date.UTC(start.getFullYear(), start.getMonth(), start.getDate()));
+    const last = new Date(Date.UTC(end.getFullYear(), end.getMonth(), end.getDate()));
+    while (cur <= last) {
+      keys.push(cur.toISOString().slice(0, 10));
+      cur.setUTCDate(cur.getUTCDate() + 1);
+    }
+    return keys;
+  };
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -42,13 +65,16 @@ export default function AdminSalesPage() {
 
     const fetchOrders = async () => {
       setLoading(true);
-      const since = new Date();
-      since.setDate(since.getDate() - parseInt(period));
+      const since = new Date(startDate);
+      since.setHours(0, 0, 0, 0);
+      const until = new Date(endDate);
+      until.setHours(23, 59, 59, 999);
 
       const { data, error } = await supabase
         .from('orders')
         .select('created_at, total_price, items, restaurant, status')
         .gte('created_at', since.toISOString())
+        .lte('created_at', until.toISOString())
         .neq('status', 'cancelled')
         .order('created_at', { ascending: true });
 
@@ -57,7 +83,7 @@ export default function AdminSalesPage() {
     };
 
     fetchOrders();
-  }, [user, isAnyAdmin, period]);
+  }, [user, isAnyAdmin, startDate, endDate]);
 
   const filteredOrders = useMemo(() => {
     if (filterSite === 'all' && isSuperAdmin) return orders;
@@ -75,14 +101,10 @@ export default function AdminSalesPage() {
   const dailyStats = useMemo(() => {
     const map = new Map<string, { date: string; pizzas: number; revenue: number }>();
 
-    // Pre-fill all days in the period
-    const days = parseInt(period);
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
+    // Pre-fill all days in the selected range
+    enumerateDayKeys(startDate, endDate).forEach(key => {
       map.set(key, { date: key, pizzas: 0, revenue: 0 });
-    }
+    });
 
     filteredOrders.forEach(order => {
       const day = order.created_at.slice(0, 10);
@@ -97,7 +119,7 @@ export default function AdminSalesPage() {
     });
 
     return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredOrders, period]);
+  }, [filteredOrders, startDate, endDate]);
 
   const totals = useMemo(() => {
     return dailyStats.reduce(
@@ -217,7 +239,7 @@ export default function AdminSalesPage() {
 
   const exportFullPDF = () => {
     const doc = new jsPDF();
-    const periodLabel = `${period} derniers jours`;
+    const periodLabel = `${format(startDate, 'dd/MM/yyyy', { locale: fr })} au ${format(endDate, 'dd/MM/yyyy', { locale: fr })}`;
     const generatedAt = new Date().toLocaleString('fr-FR');
 
     // Filter orders for the chosen site of the full export
@@ -252,13 +274,9 @@ export default function AdminSalesPage() {
 
     // Daily stats for the export subset
     const dayMap = new Map<string, { date: string; pizzas: number; revenue: number }>();
-    const days = parseInt(period);
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
+    enumerateDayKeys(startDate, endDate).forEach(key => {
       dayMap.set(key, { date: key, pizzas: 0, revenue: 0 });
-    }
+    });
     exportOrders.forEach(order => {
       const day = order.created_at.slice(0, 10);
       const entry = dayMap.get(day) || { date: day, pizzas: 0, revenue: 0 };
@@ -370,17 +388,57 @@ export default function AdminSalesPage() {
 
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Filters */}
-        <div className="flex flex-wrap gap-3">
-          <Select value={period} onValueChange={(v) => setPeriod(v as any)}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">7 derniers jours</SelectItem>
-              <SelectItem value="14">14 derniers jours</SelectItem>
-              <SelectItem value="30">30 derniers jours</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Du</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn('w-[150px] justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {startDate ? format(startDate, 'dd/MM/yyyy', { locale: fr }) : <span>Date début</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={startDate}
+                  onSelect={(d) => d && setStartDate(d)}
+                  disabled={(d) => d > endDate || d > new Date()}
+                  initialFocus
+                  locale={fr}
+                  className={cn('p-3 pointer-events-auto')}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">Au</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn('w-[150px] justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {endDate ? format(endDate, 'dd/MM/yyyy', { locale: fr }) : <span>Date fin</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={endDate}
+                  onSelect={(d) => d && setEndDate(d)}
+                  disabled={(d) => d < startDate || d > new Date()}
+                  initialFocus
+                  locale={fr}
+                  className={cn('p-3 pointer-events-auto')}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
           {isSuperAdmin && (
             <Select value={filterSite} onValueChange={(v) => setFilterSite(v as any)}>
               <SelectTrigger className="w-[160px]">
