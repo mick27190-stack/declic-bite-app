@@ -145,7 +145,7 @@ export function CartView() {
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
             <p className="font-semibold text-destructive text-sm">Hors horaires d'ouverture</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-foreground mt-1">
               Nos pizzerias sont ouvertes de <strong className="text-primary">18h à 22h</strong>. Revenez pendant nos horaires d'ouverture pour commander ! 🕐
             </p>
           </div>
