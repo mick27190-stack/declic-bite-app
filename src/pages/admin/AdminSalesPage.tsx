@@ -119,7 +119,7 @@ export default function AdminSalesPage() {
     });
 
     return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
-  }, [filteredOrders, period]);
+  }, [filteredOrders, startDate, endDate]);
 
   const totals = useMemo(() => {
     return dailyStats.reduce(
