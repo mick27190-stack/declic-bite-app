@@ -14,6 +14,7 @@ export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
   const { setRestaurant, selectedRestaurant } = useCart();
   const { user, profile } = useAuth();
+  const { isAnyLivreur } = useAdmin();
   const navigate = useNavigate();
 
   const handleRestaurantSelect = (restaurant: Restaurant) => {
