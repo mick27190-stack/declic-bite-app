@@ -71,7 +71,16 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const isSiteAdminBeaumont = roles.includes('site_admin_beaumont');
   const isSecondaryAdminConches = roles.includes('secondary_admin_conches');
   const isSecondaryAdminBeaumont = roles.includes('secondary_admin_beaumont');
-  
+
+  const isLivreurConches = roles.includes('livreur_conches');
+  const isLivreurBeaumont = roles.includes('livreur_beaumont');
+  const isAnyLivreur = isLivreurConches || isLivreurBeaumont;
+  const livreurSite: 'conches' | 'beaumont' | null = isLivreurConches
+    ? 'conches'
+    : isLivreurBeaumont
+      ? 'beaumont'
+      : null;
+
   const isAnyAdmin = isSuperAdmin || isSiteAdminConches || isSiteAdminBeaumont || isSecondaryAdminConches || isSecondaryAdminBeaumont;
 
   // Permissions based on roles
