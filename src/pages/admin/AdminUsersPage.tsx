@@ -13,6 +13,7 @@ import { ArrowLeft, Plus, Trash2, UserPlus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/integrations/supabase/client';
 
 type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont';
 
@@ -23,6 +24,7 @@ interface AdminPhone {
   site: string | null;
   active: boolean;
   created_at: string;
+  first_name?: string | null;
 }
 
 const roleLabels: Record<AppRole, string> = {
@@ -68,7 +70,19 @@ export default function AdminUsersPage() {
     setIsLoading(true);
     const { data, error } = await getAdminPhones();
     if (!error) {
-      setAdminPhones(data as AdminPhone[]);
+      const admins = data as AdminPhone[];
+      // Récupère les prénoms depuis les profils en fonction du numéro de téléphone
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('phone, first_name');
+      const normalize = (p?: string | null) => (p || '').replace(/\D/g, '');
+      const phoneToName = new Map<string, string | null>();
+      (profiles || []).forEach((pr) => {
+        if (pr.phone) phoneToName.set(normalize(pr.phone), pr.first_name);
+      });
+      setAdminPhones(
+        admins.map((a) => ({ ...a, first_name: phoneToName.get(normalize(a.phone)) ?? null }))
+      );
     }
     setIsLoading(false);
   };
@@ -250,6 +264,7 @@ export default function AdminUsersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Prénom</TableHead>
                     <TableHead>Téléphone</TableHead>
                     <TableHead>Rôle</TableHead>
                     <TableHead>Site</TableHead>
@@ -261,6 +276,9 @@ export default function AdminUsersPage() {
                 <TableBody>
                   {adminPhones.map((admin) => (
                     <TableRow key={admin.id}>
+                      <TableCell className="font-medium">
+                        {admin.first_name || <span className="text-muted-foreground">—</span>}
+                      </TableCell>
                       <TableCell className="font-mono">{admin.phone}</TableCell>
                       <TableCell>
                         <Badge className={roleBadgeColors[admin.role]}>
