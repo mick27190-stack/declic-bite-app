@@ -23,6 +23,7 @@ interface AdminPhone {
   site: string | null;
   active: boolean;
   created_at: string;
+  first_name?: string | null;
 }
 
 const roleLabels: Record<AppRole, string> = {
