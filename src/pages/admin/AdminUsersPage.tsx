@@ -70,7 +70,19 @@ export default function AdminUsersPage() {
     setIsLoading(true);
     const { data, error } = await getAdminPhones();
     if (!error) {
-      setAdminPhones(data as AdminPhone[]);
+      const admins = data as AdminPhone[];
+      // Récupère les prénoms depuis les profils en fonction du numéro de téléphone
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('phone, first_name');
+      const normalize = (p?: string | null) => (p || '').replace(/\D/g, '');
+      const phoneToName = new Map<string, string | null>();
+      (profiles || []).forEach((pr) => {
+        if (pr.phone) phoneToName.set(normalize(pr.phone), pr.first_name);
+      });
+      setAdminPhones(
+        admins.map((a) => ({ ...a, first_name: phoneToName.get(normalize(a.phone)) ?? null }))
+      );
     }
     setIsLoading(false);
   };
