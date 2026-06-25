@@ -159,7 +159,7 @@ export default function AdminUsersPage() {
   };
 
   const isSiteAdminRole = (role: AppRole) =>
-    role.startsWith('site_admin_') || role.startsWith('secondary_admin_');
+    role.startsWith('site_admin_') || role.startsWith('secondary_admin_') || role.startsWith('livreur_');
 
   const handleToggleActive = async (admin: AdminPhone, active: boolean) => {
     const { error } = await toggleAdminActive(admin.id, active);
