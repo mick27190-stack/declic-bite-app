@@ -438,6 +438,10 @@ export type Database = {
         Args: { _site: string; _user_id: string }
         Returns: boolean
       }
+      can_livreur_access_order: {
+        Args: { _restaurant: string; _user_id: string }
+        Returns: boolean
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -450,6 +454,10 @@ export type Database = {
         Returns: boolean
       }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_livreur: {
+        Args: { _site: string; _user_id: string }
+        Returns: boolean
+      }
       is_pizzeria_open: { Args: never; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       normalize_phone: { Args: { _phone: string }; Returns: string }
@@ -468,6 +476,8 @@ export type Database = {
         | "secondary_admin_beaumont"
         | "user"
         | "secondary_super_admin"
+        | "livreur_conches"
+        | "livreur_beaumont"
       order_status:
         | "pending"
         | "confirmed"
@@ -610,6 +620,8 @@ export const Constants = {
         "secondary_admin_beaumont",
         "user",
         "secondary_super_admin",
+        "livreur_conches",
+        "livreur_beaumont",
       ],
       order_status: [
         "pending",

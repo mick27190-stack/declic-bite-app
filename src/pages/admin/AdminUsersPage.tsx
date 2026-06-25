@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 
-type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont';
+type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont' | 'livreur_conches' | 'livreur_beaumont';
 
 interface AdminPhone {
   id: string;
@@ -33,7 +33,9 @@ const roleLabels: Record<AppRole, string> = {
   site_admin_conches: 'Admin Conches',
   site_admin_beaumont: 'Admin Beaumont',
   secondary_admin_conches: 'Admin Secondaire Conches',
-  secondary_admin_beaumont: 'Admin Secondaire Beaumont'
+  secondary_admin_beaumont: 'Admin Secondaire Beaumont',
+  livreur_conches: 'Livreur Conches',
+  livreur_beaumont: 'Livreur Beaumont'
 };
 
 const roleBadgeColors: Record<AppRole, string> = {
@@ -42,7 +44,9 @@ const roleBadgeColors: Record<AppRole, string> = {
   site_admin_conches: 'bg-blue-500',
   site_admin_beaumont: 'bg-green-500',
   secondary_admin_conches: 'bg-blue-300',
-  secondary_admin_beaumont: 'bg-green-300'
+  secondary_admin_beaumont: 'bg-green-300',
+  livreur_conches: 'bg-amber-500',
+  livreur_beaumont: 'bg-amber-600'
 };
 
 export default function AdminUsersPage() {
@@ -107,14 +111,22 @@ export default function AdminUsersPage() {
         { value: 'site_admin_conches', label: 'Admin Site Conches' },
         { value: 'site_admin_beaumont', label: 'Admin Site Beaumont' },
         { value: 'secondary_admin_conches', label: 'Admin Secondaire Conches' },
-        { value: 'secondary_admin_beaumont', label: 'Admin Secondaire Beaumont' }
+        { value: 'secondary_admin_beaumont', label: 'Admin Secondaire Beaumont' },
+        { value: 'livreur_conches', label: 'Livreur Conches' },
+        { value: 'livreur_beaumont', label: 'Livreur Beaumont' }
       ];
     }
     if (isSiteAdminConches) {
-      return [{ value: 'secondary_admin_conches', label: 'Admin Secondaire Conches' }];
+      return [
+        { value: 'secondary_admin_conches', label: 'Admin Secondaire Conches' },
+        { value: 'livreur_conches', label: 'Livreur Conches' }
+      ];
     }
     if (isSiteAdminBeaumont) {
-      return [{ value: 'secondary_admin_beaumont', label: 'Admin Secondaire Beaumont' }];
+      return [
+        { value: 'secondary_admin_beaumont', label: 'Admin Secondaire Beaumont' },
+        { value: 'livreur_beaumont', label: 'Livreur Beaumont' }
+      ];
     }
     return [];
   };
@@ -155,7 +167,7 @@ export default function AdminUsersPage() {
   };
 
   const isSiteAdminRole = (role: AppRole) =>
-    role.startsWith('site_admin_') || role.startsWith('secondary_admin_');
+    role.startsWith('site_admin_') || role.startsWith('secondary_admin_') || role.startsWith('livreur_');
 
   const handleToggleActive = async (admin: AdminPhone, active: boolean) => {
     const { error } = await toggleAdminActive(admin.id, active);

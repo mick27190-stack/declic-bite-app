@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './AuthContext';
 
-type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont' | 'user';
+type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont' | 'livreur_conches' | 'livreur_beaumont' | 'user';
 
 interface AdminContextType {
   roles: AppRole[];
@@ -11,6 +11,10 @@ interface AdminContextType {
   isSiteAdminBeaumont: boolean;
   isSecondaryAdminConches: boolean;
   isSecondaryAdminBeaumont: boolean;
+  isLivreurConches: boolean;
+  isLivreurBeaumont: boolean;
+  isAnyLivreur: boolean;
+  livreurSite: 'conches' | 'beaumont' | null;
   isAnyAdmin: boolean;
   canManageMenu: boolean;
   canManageOrders: boolean;
@@ -67,7 +71,16 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const isSiteAdminBeaumont = roles.includes('site_admin_beaumont');
   const isSecondaryAdminConches = roles.includes('secondary_admin_conches');
   const isSecondaryAdminBeaumont = roles.includes('secondary_admin_beaumont');
-  
+
+  const isLivreurConches = roles.includes('livreur_conches');
+  const isLivreurBeaumont = roles.includes('livreur_beaumont');
+  const isAnyLivreur = isLivreurConches || isLivreurBeaumont;
+  const livreurSite: 'conches' | 'beaumont' | null = isLivreurConches
+    ? 'conches'
+    : isLivreurBeaumont
+      ? 'beaumont'
+      : null;
+
   const isAnyAdmin = isSuperAdmin || isSiteAdminConches || isSiteAdminBeaumont || isSecondaryAdminConches || isSecondaryAdminBeaumont;
 
   // Permissions based on roles
@@ -194,6 +207,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       isSiteAdminBeaumont,
       isSecondaryAdminConches,
       isSecondaryAdminBeaumont,
+      isLivreurConches,
+      isLivreurBeaumont,
+      isAnyLivreur,
+      livreurSite,
       isAnyAdmin,
       canManageMenu,
       canManageOrders,

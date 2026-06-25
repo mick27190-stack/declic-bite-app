@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, User, ExternalLink, Store } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/contexts/AdminContext';
 import { Restaurant } from '@/types/pizza';
 import heroImage from '@/assets/declic-hero.jpeg';
 
@@ -12,6 +14,7 @@ export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
   const { setRestaurant, selectedRestaurant } = useCart();
   const { user, profile } = useAuth();
+  const { isAnyLivreur } = useAdmin();
   const navigate = useNavigate();
 
   const handleRestaurantSelect = (restaurant: Restaurant) => {
@@ -33,7 +36,13 @@ export default function LandingPage() {
       <div className="hero-gradient absolute inset-0 pointer-events-none" />
       
       {/* Auth Button */}
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        {isAnyLivreur && (
+          <Badge className="bg-amber-500 hover:bg-amber-500 text-white flex items-center gap-1 px-3 py-1.5 shadow-lg">
+            <Bike className="w-4 h-4" />
+            Livreur
+          </Badge>
+        )}
         <Button
           variant="glass"
           size="sm"
@@ -44,6 +53,7 @@ export default function LandingPage() {
           {user ? (profile?.first_name || 'Profil') : 'Connexion'}
         </Button>
       </div>
+
       
       {/* Decorative Elements */}
       <div className="absolute top-20 left-10 w-32 h-32 bg-primary/10 rounded-full blur-3xl animate-pulse" />

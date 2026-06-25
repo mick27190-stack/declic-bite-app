@@ -23,6 +23,7 @@ import AdminSMSPage from "./pages/admin/AdminSMSPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import AdminSalesPage from "./pages/admin/AdminSalesPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
+import LivreurOrdersPage from "./pages/LivreurOrdersPage";
 import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { initNotificationSounds } from "@/lib/notificationSounds";
@@ -72,6 +73,7 @@ const App = () => {
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/livreur" element={<LivreurOrdersPage />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<AdminUsersPage />} />
                 <Route path="/admin/customers" element={<AdminCustomersPage />} />

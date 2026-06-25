@@ -1,18 +1,42 @@
-import { Home, Pizza, ShoppingCart, User, Shield } from 'lucide-react';
+import { Home, Pizza, ShoppingCart, User, Shield, Bike } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useAdmin } from '@/contexts/AdminContext';
+
+// Le livreur n'a accès à son espace que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
+function isLivreurWindowOpen(): boolean {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+  const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
+  const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
+  const minutes = hour * 60 + minute;
+  return minutes >= 18 * 60 && minutes <= 23 * 60 + 30;
+}
 
 export function BottomNavigation() {
   const location = useLocation();
   const { totalItems } = useCart();
-  const { isAnyAdmin } = useAdmin();
+  const { isAnyAdmin, isAnyLivreur } = useAdmin();
+
+  const [livreurOpen, setLivreurOpen] = useState(isLivreurWindowOpen());
+
+  useEffect(() => {
+    if (!isAnyLivreur) return;
+    const interval = setInterval(() => setLivreurOpen(isLivreurWindowOpen()), 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isAnyLivreur]);
 
   const navItems = [
     { icon: Home, label: 'Accueil', path: '/' },
     { icon: Pizza, label: 'Menu', path: '/menu' },
     { icon: ShoppingCart, label: 'Panier', path: '/cart' },
     ...(isAnyAdmin ? [{ icon: Shield, label: 'Admin', path: '/admin' }] : []),
+    ...(isAnyLivreur && livreurOpen ? [{ icon: Bike, label: 'Livreur', path: '/livreur' }] : []),
     { icon: User, label: 'Profil', path: '/profile' },
   ];
 
