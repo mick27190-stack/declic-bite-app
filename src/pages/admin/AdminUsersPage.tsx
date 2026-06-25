@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 
-type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont';
+type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont' | 'livreur_conches' | 'livreur_beaumont';
 
 interface AdminPhone {
   id: string;
