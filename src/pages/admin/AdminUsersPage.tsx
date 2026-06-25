@@ -111,14 +111,22 @@ export default function AdminUsersPage() {
         { value: 'site_admin_conches', label: 'Admin Site Conches' },
         { value: 'site_admin_beaumont', label: 'Admin Site Beaumont' },
         { value: 'secondary_admin_conches', label: 'Admin Secondaire Conches' },
-        { value: 'secondary_admin_beaumont', label: 'Admin Secondaire Beaumont' }
+        { value: 'secondary_admin_beaumont', label: 'Admin Secondaire Beaumont' },
+        { value: 'livreur_conches', label: 'Livreur Conches' },
+        { value: 'livreur_beaumont', label: 'Livreur Beaumont' }
       ];
     }
     if (isSiteAdminConches) {
-      return [{ value: 'secondary_admin_conches', label: 'Admin Secondaire Conches' }];
+      return [
+        { value: 'secondary_admin_conches', label: 'Admin Secondaire Conches' },
+        { value: 'livreur_conches', label: 'Livreur Conches' }
+      ];
     }
     if (isSiteAdminBeaumont) {
-      return [{ value: 'secondary_admin_beaumont', label: 'Admin Secondaire Beaumont' }];
+      return [
+        { value: 'secondary_admin_beaumont', label: 'Admin Secondaire Beaumont' },
+        { value: 'livreur_beaumont', label: 'Livreur Beaumont' }
+      ];
     }
     return [];
   };
