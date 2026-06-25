@@ -276,6 +276,9 @@ export default function AdminUsersPage() {
                 <TableBody>
                   {adminPhones.map((admin) => (
                     <TableRow key={admin.id}>
+                      <TableCell className="font-medium">
+                        {admin.first_name || <span className="text-muted-foreground">—</span>}
+                      </TableCell>
                       <TableCell className="font-mono">{admin.phone}</TableCell>
                       <TableCell>
                         <Badge className={roleBadgeColors[admin.role]}>
