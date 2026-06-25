@@ -264,6 +264,7 @@ export default function AdminUsersPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Prénom</TableHead>
                     <TableHead>Téléphone</TableHead>
                     <TableHead>Rôle</TableHead>
                     <TableHead>Site</TableHead>
