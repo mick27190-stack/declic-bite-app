@@ -33,7 +33,9 @@ const roleLabels: Record<AppRole, string> = {
   site_admin_conches: 'Admin Conches',
   site_admin_beaumont: 'Admin Beaumont',
   secondary_admin_conches: 'Admin Secondaire Conches',
-  secondary_admin_beaumont: 'Admin Secondaire Beaumont'
+  secondary_admin_beaumont: 'Admin Secondaire Beaumont',
+  livreur_conches: 'Livreur Conches',
+  livreur_beaumont: 'Livreur Beaumont'
 };
 
 const roleBadgeColors: Record<AppRole, string> = {
@@ -42,7 +44,9 @@ const roleBadgeColors: Record<AppRole, string> = {
   site_admin_conches: 'bg-blue-500',
   site_admin_beaumont: 'bg-green-500',
   secondary_admin_conches: 'bg-blue-300',
-  secondary_admin_beaumont: 'bg-green-300'
+  secondary_admin_beaumont: 'bg-green-300',
+  livreur_conches: 'bg-amber-500',
+  livreur_beaumont: 'bg-amber-600'
 };
 
 export default function AdminUsersPage() {
