@@ -156,6 +156,15 @@ export default function LivreurOrdersPage() {
                         {order.delivery_address.address}
                       </span>
                     )}
+                    {phones[order.user_id] && (
+                      <a
+                        href={`tel:${phones[order.user_id].replace(/\s/g, '')}`}
+                        className="flex items-center gap-1 text-primary font-medium underline underline-offset-2"
+                      >
+                        <Phone className="h-4 w-4" />
+                        {phones[order.user_id]}
+                      </a>
+                    )}
                     {order.delivery_estimate && (
                       <span className="text-xs">Horaire proposé : {order.delivery_estimate}</span>
                     )}
