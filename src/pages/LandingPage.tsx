@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,34 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { Restaurant } from '@/types/pizza';
 import heroImage from '@/assets/declic-hero.jpeg';
 
+// La badge "Livreur" n'est visible que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
+function isLivreurWindowOpen(): boolean {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+  const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
+  const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
+  const minutes = hour * 60 + minute;
+  return minutes >= 18 * 60 && minutes <= 23 * 60 + 30;
+}
+
 export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
   const { setRestaurant, selectedRestaurant } = useCart();
   const { user, profile } = useAuth();
   const { isAnyLivreur } = useAdmin();
   const navigate = useNavigate();
+
+  const [livreurOpen, setLivreurOpen] = useState(isLivreurWindowOpen());
+
+  useEffect(() => {
+    if (!isAnyLivreur) return;
+    const interval = setInterval(() => setLivreurOpen(isLivreurWindowOpen()), 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isAnyLivreur]);
 
   const handleRestaurantSelect = (restaurant: Restaurant) => {
     setRestaurant(restaurant);
@@ -37,7 +59,7 @@ export default function LandingPage() {
       
       {/* Auth Button */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-        {isAnyLivreur && (
+        {isAnyLivreur && livreurOpen && (
           <Badge className="bg-amber-500 hover:bg-amber-500 text-white flex items-center gap-1 px-3 py-1.5 shadow-lg">
             <Bike className="w-4 h-4" />
             Livreur
