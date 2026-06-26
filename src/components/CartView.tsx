@@ -198,10 +198,10 @@ export function CartView() {
           <div>
             <p className="font-semibold text-yellow-700 text-sm">Minimum de commande requis</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Pour les livraisons hors Conches-en-Ouche et Beaumont-le-Roger, le minimum de commande est de <strong className="text-primary">{DELIVERY_MINIMUM}€</strong> (2 pizzas Senior ou 1 pizza Méga).
+              Pour les livraisons hors Conches-en-Ouche et Beaumont-le-Roger, le minimum de commande est de <strong className="text-primary">2 pizzas Senior ou 1 pizza Méga</strong>.
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Total actuel : {totalPrice.toFixed(2)}€ — il manque {(DELIVERY_MINIMUM - totalPrice).toFixed(2)}€
+              Ajoutez des pizzas à votre panier pour atteindre le minimum requis.
             </p>
           </div>
         </div>
