@@ -43,12 +43,17 @@ export function CartView() {
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const isClosed = isMonday || isOutsideHours || !!manualClosure;
 
-  // Minimum order check for delivery outside restaurant cities
+  // Minimum order check for delivery outside restaurant cities:
+  // 2 pizzas Senior OU 1 pizza Méga (ou plus) requis.
   const LOCAL_POSTAL_CODES = ['27190', '27170'];
-  const DELIVERY_MINIMUM = 20;
   const isLocalDelivery = deliveryAddress?.postalCode && LOCAL_POSTAL_CODES.includes(deliveryAddress.postalCode);
   const needsMinimum = orderType === 'livraison' && deliveryAddress && !isLocalDelivery;
-  const belowMinimum = needsMinimum && totalPrice < DELIVERY_MINIMUM;
+  // Pizza size equivalents: senior = 1, mega/super-mega = 2 (1 méga = 2 seniors)
+  const pizzaEquivalents = items.reduce((sum, item) => {
+    const unit = item.size.id === 'senior' ? 1 : 2;
+    return sum + unit * item.quantity;
+  }, 0);
+  const belowMinimum = needsMinimum && pizzaEquivalents < 2;
 
   const canCheckout = () => {
     if (isClosed) return false;
@@ -193,10 +198,10 @@ export function CartView() {
           <div>
             <p className="font-semibold text-yellow-700 text-sm">Minimum de commande requis</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Pour les livraisons hors Conches-en-Ouche et Beaumont-le-Roger, le minimum de commande est de <strong className="text-primary">{DELIVERY_MINIMUM}€</strong> (2 pizzas Senior ou 1 pizza Méga).
+              Pour les livraisons hors Conches-en-Ouche et Beaumont-le-Roger, le minimum de commande est de <strong className="text-primary">2 pizzas Senior ou 1 pizza Méga</strong>.
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Total actuel : {totalPrice.toFixed(2)}€ — il manque {(DELIVERY_MINIMUM - totalPrice).toFixed(2)}€
+              Ajoutez des pizzas à votre panier pour atteindre le minimum requis.
             </p>
           </div>
         </div>
@@ -319,7 +324,7 @@ export function CartView() {
             ) : orderType === 'livraison' && !deliveryAddress ? (
               'Vérifiez votre adresse'
             ) : belowMinimum ? (
-              `Minimum ${DELIVERY_MINIMUM}€ pour la livraison`
+              'Min. 2 Senior ou 1 Méga'
             ) : orderType === 'emporter' && !pickupTime ? (
               'Choisissez une heure'
             ) : (
