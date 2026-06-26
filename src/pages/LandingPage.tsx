@@ -31,6 +31,14 @@ export default function LandingPage() {
   const { isAnyLivreur } = useAdmin();
   const navigate = useNavigate();
 
+  const [livreurOpen, setLivreurOpen] = useState(isLivreurWindowOpen());
+
+  useEffect(() => {
+    if (!isAnyLivreur) return;
+    const interval = setInterval(() => setLivreurOpen(isLivreurWindowOpen()), 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isAnyLivreur]);
+
   const handleRestaurantSelect = (restaurant: Restaurant) => {
     setRestaurant(restaurant);
     navigate('/menu');
