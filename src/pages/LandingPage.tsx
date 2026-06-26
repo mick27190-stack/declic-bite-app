@@ -10,6 +10,20 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { Restaurant } from '@/types/pizza';
 import heroImage from '@/assets/declic-hero.jpeg';
 
+// La badge "Livreur" n'est visible que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
+function isLivreurWindowOpen(): boolean {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+  const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
+  const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
+  const minutes = hour * 60 + minute;
+  return minutes >= 18 * 60 && minutes <= 23 * 60 + 30;
+}
+
 export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
   const { setRestaurant, selectedRestaurant } = useCart();
