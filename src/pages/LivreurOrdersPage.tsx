@@ -53,6 +53,30 @@ export default function LivreurOrdersPage() {
     (o) => o.order_type === 'livraison' && o.status !== 'delivered' && o.status !== 'cancelled',
   );
 
+  // Récupère le téléphone des clients pour les commandes affichées.
+  const [phones, setPhones] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const userIds = Array.from(new Set(activeOrders.map((o) => o.user_id)));
+    if (userIds.length === 0) return;
+    let cancelled = false;
+    supabase
+      .from('profiles')
+      .select('user_id, phone')
+      .in('user_id', userIds)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const map: Record<string, string> = {};
+        data.forEach((p: { user_id: string; phone: string | null }) => {
+          if (p.phone) map[p.user_id] = p.phone;
+        });
+        setPhones(map);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeOrders.map((o) => o.user_id).join(',')]);
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
