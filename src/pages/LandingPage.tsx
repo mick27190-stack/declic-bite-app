@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike } from 'lucide-react';
 import { Button } from '@/components/ui/button';
