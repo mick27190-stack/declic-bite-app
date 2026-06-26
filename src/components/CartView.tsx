@@ -324,7 +324,7 @@ export function CartView() {
             ) : orderType === 'livraison' && !deliveryAddress ? (
               'Vérifiez votre adresse'
             ) : belowMinimum ? (
-              `Minimum ${DELIVERY_MINIMUM}€ pour la livraison`
+              'Min. 2 Senior ou 1 Méga'
             ) : orderType === 'emporter' && !pickupTime ? (
               'Choisissez une heure'
             ) : (
