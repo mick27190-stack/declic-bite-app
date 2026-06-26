@@ -6,8 +6,9 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Bike, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Bike, CheckCircle2, Phone } from 'lucide-react';
 import { statusLabels, statusColors } from '@/types/order';
+import { supabase } from '@/integrations/supabase/client';
 
 // Plage horaire du livreur : 18h - 23h30 (heure de Paris).
 function isLivreurWindowOpen(): boolean {
@@ -51,6 +52,30 @@ export default function LivreurOrdersPage() {
   const activeOrders = orders.filter(
     (o) => o.order_type === 'livraison' && o.status !== 'delivered' && o.status !== 'cancelled',
   );
+
+  // Récupère le téléphone des clients pour les commandes affichées.
+  const [phones, setPhones] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const userIds = Array.from(new Set(activeOrders.map((o) => o.user_id)));
+    if (userIds.length === 0) return;
+    let cancelled = false;
+    supabase
+      .from('profiles')
+      .select('user_id, phone')
+      .in('user_id', userIds)
+      .then(({ data }) => {
+        if (cancelled || !data) return;
+        const map: Record<string, string> = {};
+        data.forEach((p: { user_id: string; phone: string | null }) => {
+          if (p.phone) map[p.user_id] = p.phone;
+        });
+        setPhones(map);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeOrders.map((o) => o.user_id).join(',')]);
 
   if (authLoading || adminLoading) {
     return (
@@ -130,6 +155,15 @@ export default function LivreurOrdersPage() {
                         <MapPin className="h-4 w-4" />
                         {order.delivery_address.address}
                       </span>
+                    )}
+                    {phones[order.user_id] && (
+                      <a
+                        href={`tel:${phones[order.user_id].replace(/\s/g, '')}`}
+                        className="flex items-center gap-1 text-primary font-medium underline underline-offset-2"
+                      >
+                        <Phone className="h-4 w-4" />
+                        {phones[order.user_id]}
+                      </a>
                     )}
                     {order.delivery_estimate && (
                       <span className="text-xs">Horaire proposé : {order.delivery_estimate}</span>
