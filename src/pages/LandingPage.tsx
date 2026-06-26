@@ -59,7 +59,7 @@ export default function LandingPage() {
       
       {/* Auth Button */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-        {isAnyLivreur && (
+        {isAnyLivreur && livreurOpen && (
           <Badge className="bg-amber-500 hover:bg-amber-500 text-white flex items-center gap-1 px-3 py-1.5 shadow-lg">
             <Bike className="w-4 h-4" />
             Livreur
