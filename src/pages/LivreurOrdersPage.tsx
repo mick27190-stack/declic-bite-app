@@ -6,8 +6,9 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Bike, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Bike, CheckCircle2, Phone } from 'lucide-react';
 import { statusLabels, statusColors } from '@/types/order';
+import { supabase } from '@/integrations/supabase/client';
 
 // Plage horaire du livreur : 18h - 23h30 (heure de Paris).
 function isLivreurWindowOpen(): boolean {
