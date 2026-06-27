@@ -28,16 +28,30 @@ export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
   const { setRestaurant, selectedRestaurant } = useCart();
   const { user, profile } = useAuth();
-  const { isAnyLivreur } = useAdmin();
+  const {
+    isAnyLivreur,
+    isSiteAdminConches,
+    isSiteAdminBeaumont,
+    isSecondaryAdminConches,
+    isSecondaryAdminBeaumont,
+  } = useAdmin();
   const navigate = useNavigate();
+
+  const isSiteAdmin =
+    isSiteAdminConches ||
+    isSiteAdminBeaumont ||
+    isSecondaryAdminConches ||
+    isSecondaryAdminBeaumont;
 
   const [livreurOpen, setLivreurOpen] = useState(isLivreurWindowOpen());
 
+  // Actualisation automatique (toutes les minutes) pour faire apparaître/disparaître
+  // le badge "Livreur" en fonction de l'heure, sans rechargement de la page.
   useEffect(() => {
-    if (!isAnyLivreur) return;
+    setLivreurOpen(isLivreurWindowOpen());
     const interval = setInterval(() => setLivreurOpen(isLivreurWindowOpen()), 60 * 1000);
     return () => clearInterval(interval);
-  }, [isAnyLivreur]);
+  }, [isAnyLivreur, isSiteAdmin]);
 
   const handleRestaurantSelect = (restaurant: Restaurant) => {
     setRestaurant(restaurant);
