@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
@@ -28,16 +28,30 @@ export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
   const { setRestaurant, selectedRestaurant } = useCart();
   const { user, profile } = useAuth();
-  const { isAnyLivreur } = useAdmin();
+  const {
+    isAnyLivreur,
+    isSiteAdminConches,
+    isSiteAdminBeaumont,
+    isSecondaryAdminConches,
+    isSecondaryAdminBeaumont,
+  } = useAdmin();
   const navigate = useNavigate();
+
+  const isSiteAdmin =
+    isSiteAdminConches ||
+    isSiteAdminBeaumont ||
+    isSecondaryAdminConches ||
+    isSecondaryAdminBeaumont;
 
   const [livreurOpen, setLivreurOpen] = useState(isLivreurWindowOpen());
 
+  // Actualisation automatique (toutes les minutes) pour faire apparaître/disparaître
+  // le badge "Livreur" en fonction de l'heure, sans rechargement de la page.
   useEffect(() => {
-    if (!isAnyLivreur) return;
+    setLivreurOpen(isLivreurWindowOpen());
     const interval = setInterval(() => setLivreurOpen(isLivreurWindowOpen()), 60 * 1000);
     return () => clearInterval(interval);
-  }, [isAnyLivreur]);
+  }, [isAnyLivreur, isSiteAdmin]);
 
   const handleRestaurantSelect = (restaurant: Restaurant) => {
     setRestaurant(restaurant);
@@ -59,6 +73,12 @@ export default function LandingPage() {
       
       {/* Auth Button */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        {isSiteAdmin && (
+          <Badge className="bg-primary hover:bg-primary text-primary-foreground flex items-center gap-1 px-3 py-1.5 shadow-lg">
+            <Shield className="w-4 h-4" />
+            Admin site
+          </Badge>
+        )}
         {isAnyLivreur && livreurOpen && (
           <Badge className="bg-amber-500 hover:bg-amber-500 text-white flex items-center gap-1 px-3 py-1.5 shadow-lg">
             <Bike className="w-4 h-4" />
