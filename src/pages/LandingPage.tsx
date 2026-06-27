@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
