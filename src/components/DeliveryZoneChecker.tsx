@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Truck, AlertCircle, CheckCircle, Loader2, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useDeliveryZone } from '@/hooks/useDeliveryZone';
@@ -15,8 +15,22 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
   const [showMap, setShowMap] = useState(true);
   const [customerCoords, setCustomerCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedFromAutocomplete, setSelectedFromAutocomplete] = useState(false);
-  const { checkDeliveryZone, isChecking, result } = useDeliveryZone();
-  const { selectedRestaurant } = useCart();
+  const { checkDeliveryZone, isChecking, result, clearResult } = useDeliveryZone();
+  const { selectedRestaurant, setDeliveryAddress } = useCart();
+
+  // Reset address/validation whenever the selected site changes so the cart
+  // alert and checkout button recompute live (postal code differs per site).
+  const lastSiteId = useRef(selectedRestaurant?.id ?? null);
+  useEffect(() => {
+    if (lastSiteId.current !== (selectedRestaurant?.id ?? null)) {
+      lastSiteId.current = selectedRestaurant?.id ?? null;
+      setAddress('');
+      setCustomerCoords(null);
+      setSelectedFromAutocomplete(false);
+      setDeliveryAddress(null);
+      clearResult();
+    }
+  }, [selectedRestaurant?.id, setDeliveryAddress, clearResult]);
 
   const handleCheck = async () => {
     if (!address.trim() || !selectedRestaurant) return;
@@ -50,6 +64,10 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
   const handleAddressChange = (newAddress: string) => {
     setAddress(newAddress);
     setSelectedFromAutocomplete(false);
+    // Editing the address invalidates the previously validated delivery address
+    // so the cart minimum alert and checkout button update in real time.
+    setDeliveryAddress(null);
+    clearResult();
   };
 
   return (
