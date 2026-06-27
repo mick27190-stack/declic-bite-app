@@ -56,7 +56,7 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
       const checkResult = await checkDeliveryZone(place.address, selectedRestaurant.id);
       
       if (checkResult.isInZone && checkResult.coordinates && onValidAddress) {
-        onValidAddress(checkResult.addressFormatted || place.address, checkResult.coordinates, checkResult.postalCode);
+        onValidAddress(checkResult.addressFormatted || place.address, checkResult.coordinates, checkResult.postalCode, checkResult.city);
       }
     }
   };
