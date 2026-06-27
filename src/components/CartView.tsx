@@ -199,8 +199,8 @@ export function CartView() {
       {orderType === 'livraison' && (
         <div className="glass-card p-4">
           <DeliveryZoneChecker 
-            onValidAddress={(address, coordinates, postalCode) => {
-              setDeliveryAddress({ address, coordinates, postalCode });
+            onValidAddress={(address, coordinates, postalCode, city) => {
+              setDeliveryAddress({ address, coordinates, postalCode, city });
             }}
           />
           {deliveryAddress && (
