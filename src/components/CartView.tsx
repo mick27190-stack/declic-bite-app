@@ -61,6 +61,8 @@ export function CartView() {
     return sum + unit * item.quantity;
   }, 0);
   const belowMinimum = needsMinimum && pizzaEquivalents < 2;
+  // Address not yet validated for the selected delivery site.
+  const needsAddress = orderType === 'livraison' && !deliveryAddress;
 
   const canCheckout = () => {
     if (isClosed) return false;
