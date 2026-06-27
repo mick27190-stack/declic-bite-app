@@ -85,6 +85,35 @@ function CurrentOrders() {
                   <span className="font-semibold text-primary">{order.total_price.toFixed(2)}€</span>
                 </div>
 
+                {/* Détail des pizzas commandées */}
+                {order.items && order.items.length > 0 && (
+                  <ul className="mt-2 space-y-1.5 border-t border-border pt-2">
+                    {order.items.map((item, idx) => (
+                      <li key={idx} className="text-xs">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium text-foreground">
+                            {item.quantity}× {item.pizza?.name}
+                          </span>
+                          {item.size?.name && (
+                            <span className="text-muted-foreground">{item.size.name}</span>
+                          )}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {item.base && <span>Base {item.base}</span>}
+                          {item.supplements && item.supplements.length > 0 && (
+                            <span> • + {item.supplements.map((s) => s.name).join(', ')}</span>
+                          )}
+                        </div>
+                        {item.notes && (
+                          <p className="text-muted-foreground italic">📝 {item.notes}</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+
+
                 {order.order_type === 'livraison' && order.delivery_estimate && (
                   <div className="mt-2 p-2 rounded-md bg-primary/5 border border-primary/20">
                     <p className="text-sm flex items-center gap-1.5">
