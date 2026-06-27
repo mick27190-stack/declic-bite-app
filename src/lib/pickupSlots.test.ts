@@ -44,26 +44,26 @@ describe("computePickupSlotsFromMinutes edge cases", () => {
 
   it("blocks all earlier slots and only keeps reachable ones", () => {
     const slots = computePickupSlotsFromMinutes(at(20, 0)); // earliest 20:15
-    expect(slots).toEqual(["20:15", "20:30", "20:45", "21:00", "21:15", "21:30", "21:45"]);
+    expect(slots).toEqual(["20:15", "20:30", "20:45", "21:00", "21:15", "21:30"]);
   });
 
   it("right at the last slot's lead window still offers it", () => {
-    // 21h30 + 15 = 21h45 exactly -> last slot 21h45 remains.
-    const slots = computePickupSlotsFromMinutes(at(21, 30));
-    expect(slots).toEqual(["21:45"]);
+    // 21h15 + 15 = 21h30 exactly -> last slot 21h30 remains.
+    const slots = computePickupSlotsFromMinutes(at(21, 15));
+    expect(slots).toEqual(["21:30"]);
   });
 
   it("midnight (00h00) returns the full next-service slot list", () => {
     const slots = computePickupSlotsFromMinutes(at(0, 0));
     expect(slots[0]).toBe("18:30");
-    expect(slots[slots.length - 1]).toBe("21:45");
+    expect(slots[slots.length - 1]).toBe("21:30");
   });
 
   it("late night past closing (23h50) falls back to full next-service list", () => {
     // 23h50 + 15 rounds beyond the last slot -> no reachable slot -> full list.
     const slots = computePickupSlotsFromMinutes(at(23, 50));
     expect(slots[0]).toBe("18:30");
-    expect(slots[slots.length - 1]).toBe("21:45");
+    expect(slots[slots.length - 1]).toBe("21:30");
   });
 
   it("before service (early afternoon) offers the full list starting at 18:30", () => {
