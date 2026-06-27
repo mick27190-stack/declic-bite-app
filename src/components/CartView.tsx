@@ -43,13 +43,20 @@ export function CartView() {
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const isClosed = isMonday || isOutsideHours || !!manualClosure;
 
-  // Minimum order check for delivery outside restaurant cities:
+  // Minimum order check for delivery outside the restaurant's own city:
   // 2 pizzas Senior OU 1 pizza Méga (ou plus) requis.
-  const LOCAL_POSTAL_CODES = ['27190', '27170'];
-  const isLocalDelivery = deliveryAddress?.postalCode && LOCAL_POSTAL_CODES.includes(deliveryAddress.postalCode);
-  const needsMinimum = orderType === 'livraison' && deliveryAddress && !isLocalDelivery;
-  // Pizza size equivalents: senior = 1, mega/super-mega = 2 (1 méga = 2 seniors)
+  // Conches -> 27190, Beaumont -> 27170. Toute autre adresse = "Hors Site".
+  const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
+  const localPostalCode = selectedRestaurant?.id === 'conches'
+    ? '27190'
+    : selectedRestaurant?.id === 'beaumont'
+      ? '27170'
+      : null;
+  const isLocalDelivery = !!deliveryAddress?.postalCode && deliveryAddress.postalCode === localPostalCode;
+  const needsMinimum = orderType === 'livraison' && !!deliveryAddress && !isLocalDelivery;
+  // Only real pizzas count. Pizza size equivalents: senior = 1, mega/super-mega = 2 (1 méga = 2 seniors)
   const pizzaEquivalents = items.reduce((sum, item) => {
+    if (!PIZZA_CATEGORIES.includes(item.pizza.category)) return sum;
     const unit = item.size.id === 'senior' ? 1 : 2;
     return sum + unit * item.quantity;
   }, 0);
