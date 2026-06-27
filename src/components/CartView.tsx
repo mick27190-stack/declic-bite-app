@@ -43,13 +43,20 @@ export function CartView() {
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const isClosed = isMonday || isOutsideHours || !!manualClosure;
 
-  // Minimum order check for delivery outside restaurant cities:
+  // Minimum order check for delivery outside the restaurant's own city:
   // 2 pizzas Senior OU 1 pizza Méga (ou plus) requis.
-  const LOCAL_POSTAL_CODES = ['27190', '27170'];
-  const isLocalDelivery = deliveryAddress?.postalCode && LOCAL_POSTAL_CODES.includes(deliveryAddress.postalCode);
-  const needsMinimum = orderType === 'livraison' && deliveryAddress && !isLocalDelivery;
-  // Pizza size equivalents: senior = 1, mega/super-mega = 2 (1 méga = 2 seniors)
+  // Conches -> 27190, Beaumont -> 27170. Toute autre adresse = "Hors Site".
+  const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
+  const localPostalCode = selectedRestaurant?.id === 'conches'
+    ? '27190'
+    : selectedRestaurant?.id === 'beaumont'
+      ? '27170'
+      : null;
+  const isLocalDelivery = !!deliveryAddress?.postalCode && deliveryAddress.postalCode === localPostalCode;
+  const needsMinimum = orderType === 'livraison' && !!deliveryAddress && !isLocalDelivery;
+  // Only real pizzas count. Pizza size equivalents: senior = 1, mega/super-mega = 2 (1 méga = 2 seniors)
   const pizzaEquivalents = items.reduce((sum, item) => {
+    if (!PIZZA_CATEGORIES.includes(item.pizza.category)) return sum;
     const unit = item.size.id === 'senior' ? 1 : 2;
     return sum + unit * item.quantity;
   }, 0);
@@ -198,7 +205,7 @@ export function CartView() {
           <div>
             <p className="font-semibold text-yellow-700 text-sm">Minimum de commande requis</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Pour les livraisons hors Conches-en-Ouche et Beaumont-le-Roger, le minimum de commande est de <strong className="text-primary">2 pizzas Senior ou 1 pizza Méga</strong>.
+              <strong className="text-primary">Hors Site, un minimum de 2 pizzas seniors ou 1 pizza Mega est requis en livraison</strong>
             </p>
             <p className="text-xs text-muted-foreground mt-1">
               Ajoutez des pizzas à votre panier pour atteindre le minimum requis.
