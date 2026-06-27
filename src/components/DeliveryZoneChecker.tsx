@@ -7,7 +7,7 @@ import { DeliveryZoneMap } from '@/components/DeliveryZoneMap';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 interface DeliveryZoneCheckerProps {
-  onValidAddress?: (address: string, coordinates: { lat: number; lng: number }, postalCode?: string | null) => void;
+  onValidAddress?: (address: string, coordinates: { lat: number; lng: number }, postalCode?: string | null, city?: string | null) => void;
 }
 
 export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps) {
