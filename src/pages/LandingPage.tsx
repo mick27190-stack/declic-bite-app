@@ -24,6 +24,24 @@ function isLivreurWindowOpen(): boolean {
   return minutes >= 18 * 60 && minutes <= 23 * 60 + 30;
 }
 
+// Le badge "Admin site" n'est visible que pendant les horaires d'ouverture :
+// 18h - 22h (heure de Paris), fermé le lundi.
+function isPizzeriaOpen(): boolean {
+  const parts = new Intl.DateTimeFormat('fr-FR', {
+    timeZone: 'Europe/Paris',
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+  const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
+  const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
+  const weekday = parts.find((p) => p.type === 'weekday')?.value?.toLowerCase() ?? '';
+  const isMonday = weekday.startsWith('lun');
+  const minutes = hour * 60 + minute;
+  return !isMonday && minutes >= 18 * 60 && minutes < 22 * 60;
+}
+
 export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
   const { setRestaurant, selectedRestaurant } = useCart();
@@ -44,12 +62,17 @@ export default function LandingPage() {
     isSecondaryAdminBeaumont;
 
   const [livreurOpen, setLivreurOpen] = useState(isLivreurWindowOpen());
+  const [pizzeriaOpen, setPizzeriaOpen] = useState(isPizzeriaOpen());
 
   // Actualisation automatique (toutes les minutes) pour faire apparaître/disparaître
-  // le badge "Livreur" en fonction de l'heure, sans rechargement de la page.
+  // les badges "Livreur" et "Admin site" en fonction de l'heure, sans rechargement de la page.
   useEffect(() => {
     setLivreurOpen(isLivreurWindowOpen());
-    const interval = setInterval(() => setLivreurOpen(isLivreurWindowOpen()), 60 * 1000);
+    setPizzeriaOpen(isPizzeriaOpen());
+    const interval = setInterval(() => {
+      setLivreurOpen(isLivreurWindowOpen());
+      setPizzeriaOpen(isPizzeriaOpen());
+    }, 60 * 1000);
     return () => clearInterval(interval);
   }, [isAnyLivreur, isSiteAdmin]);
 
@@ -73,7 +96,7 @@ export default function LandingPage() {
       
       {/* Auth Button */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-        {isSiteAdmin && (
+        {isSiteAdmin && pizzeriaOpen && (
           <Badge className="bg-primary hover:bg-primary text-primary-foreground flex items-center gap-1 px-3 py-1.5 shadow-lg">
             <Shield className="w-4 h-4" />
             Admin site
