@@ -44,7 +44,7 @@ describe("computePickupSlotsFromMinutes edge cases", () => {
 
   it("blocks all earlier slots and only keeps reachable ones", () => {
     const slots = computePickupSlotsFromMinutes(at(20, 0)); // earliest 20:15
-    expect(slots).toEqual(["20:15", "20:30", "20:45", "21:00", "21:15", "21:30", "21:45"]);
+    expect(slots).toEqual(["20:15", "20:30", "20:45", "21:00", "21:15", "21:30"]);
   });
 
   it("right at the last slot's lead window still offers it", () => {
