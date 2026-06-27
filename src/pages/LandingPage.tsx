@@ -62,12 +62,17 @@ export default function LandingPage() {
     isSecondaryAdminBeaumont;
 
   const [livreurOpen, setLivreurOpen] = useState(isLivreurWindowOpen());
+  const [pizzeriaOpen, setPizzeriaOpen] = useState(isPizzeriaOpen());
 
   // Actualisation automatique (toutes les minutes) pour faire apparaître/disparaître
-  // le badge "Livreur" en fonction de l'heure, sans rechargement de la page.
+  // les badges "Livreur" et "Admin site" en fonction de l'heure, sans rechargement de la page.
   useEffect(() => {
     setLivreurOpen(isLivreurWindowOpen());
-    const interval = setInterval(() => setLivreurOpen(isLivreurWindowOpen()), 60 * 1000);
+    setPizzeriaOpen(isPizzeriaOpen());
+    const interval = setInterval(() => {
+      setLivreurOpen(isLivreurWindowOpen());
+      setPizzeriaOpen(isPizzeriaOpen());
+    }, 60 * 1000);
     return () => clearInterval(interval);
   }, [isAnyLivreur, isSiteAdmin]);
 
