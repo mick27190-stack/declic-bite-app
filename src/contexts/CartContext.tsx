@@ -24,6 +24,7 @@ export interface DeliveryAddress {
   address: string;
   coordinates: { lat: number; lng: number };
   postalCode?: string | null;
+  city?: string | null;
 }
 
 interface CartContextType {
