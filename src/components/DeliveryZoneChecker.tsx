@@ -42,7 +42,7 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
     }
     
     if (checkResult.isInZone && checkResult.coordinates && onValidAddress) {
-      onValidAddress(checkResult.addressFormatted || address, checkResult.coordinates, checkResult.postalCode);
+      onValidAddress(checkResult.addressFormatted || address, checkResult.coordinates, checkResult.postalCode, checkResult.city);
     }
   };
 
