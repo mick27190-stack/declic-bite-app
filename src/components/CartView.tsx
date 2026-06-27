@@ -200,6 +200,19 @@ export function CartView() {
         </div>
       )}
 
+      {/* Address not validated alert for delivery */}
+      {needsAddress && (
+        <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-yellow-700 text-sm">Adresse non validée</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Validez une adresse de livraison pour le site sélectionné avant de commander.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Minimum order alert for delivery outside local cities */}
       {belowMinimum && (
         <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 flex items-start gap-3">
