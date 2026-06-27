@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronLeft, Truck } from 'lucide-react';
+import { Search, ChevronLeft, AlertTriangle } from 'lucide-react';
 import { PizzaCard } from '@/components/PizzaCard';
 import { PizzaDetailModal } from '@/components/PizzaDetailModal';
 import { BottomNavigation } from '@/components/BottomNavigation';
