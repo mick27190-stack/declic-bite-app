@@ -9,6 +9,7 @@ interface DeliveryZoneResult {
   addressFormatted?: string;
   coordinates?: { lat: number; lng: number };
   postalCode?: string | null;
+  city?: string | null;
   error?: string;
 }
 
