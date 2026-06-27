@@ -15,8 +15,22 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
   const [showMap, setShowMap] = useState(true);
   const [customerCoords, setCustomerCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [selectedFromAutocomplete, setSelectedFromAutocomplete] = useState(false);
-  const { checkDeliveryZone, isChecking, result } = useDeliveryZone();
-  const { selectedRestaurant } = useCart();
+  const { checkDeliveryZone, isChecking, result, clearResult } = useDeliveryZone();
+  const { selectedRestaurant, setDeliveryAddress } = useCart();
+
+  // Reset address/validation whenever the selected site changes so the cart
+  // alert and checkout button recompute live (postal code differs per site).
+  const lastSiteId = useRef(selectedRestaurant?.id ?? null);
+  useEffect(() => {
+    if (lastSiteId.current !== (selectedRestaurant?.id ?? null)) {
+      lastSiteId.current = selectedRestaurant?.id ?? null;
+      setAddress('');
+      setCustomerCoords(null);
+      setSelectedFromAutocomplete(false);
+      setDeliveryAddress(null);
+      clearResult();
+    }
+  }, [selectedRestaurant?.id, setDeliveryAddress, clearResult]);
 
   const handleCheck = async () => {
     if (!address.trim() || !selectedRestaurant) return;
