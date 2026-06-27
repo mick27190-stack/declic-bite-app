@@ -179,6 +179,16 @@ serve(async (req) => {
     );
     const postalCode = postalCodeComponent?.long_name || null;
 
+    // Extract the commune/city (locality) so we can detect whether the address
+    // is in the restaurant's own town. Postal codes (e.g. 27190) span many
+    // villages, so they are not reliable to identify the local commune.
+    const cityComponent = geocodeData.results[0].address_components?.find(
+      (c: any) => c.types?.includes('locality')
+    ) || geocodeData.results[0].address_components?.find(
+      (c: any) => c.types?.includes('postal_town')
+    );
+    const city = cityComponent?.long_name || null;
+
     return new Response(
       JSON.stringify({
         isInZone,
@@ -188,6 +198,7 @@ serve(async (req) => {
         addressFormatted: geocodeData.results[0].formatted_address,
         coordinates: addressLocation,
         postalCode,
+        city,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
