@@ -117,7 +117,8 @@ function CurrentOrders() {
                           <p className="text-muted-foreground italic">📝 {item.notes}</p>
                         )}
                       </li>
-                    ))}
+                      );
+                    })}
                   </ul>
                 )}
 
