@@ -96,7 +96,7 @@ export default function LandingPage() {
       
       {/* Auth Button */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-        {isSiteAdmin && (
+        {isSiteAdmin && pizzeriaOpen && (
           <Badge className="bg-primary hover:bg-primary text-primary-foreground flex items-center gap-1 px-3 py-1.5 shadow-lg">
             <Shield className="w-4 h-4" />
             Admin site
