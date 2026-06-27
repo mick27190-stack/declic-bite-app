@@ -64,6 +64,10 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
   const handleAddressChange = (newAddress: string) => {
     setAddress(newAddress);
     setSelectedFromAutocomplete(false);
+    // Editing the address invalidates the previously validated delivery address
+    // so the cart minimum alert and checkout button update in real time.
+    setDeliveryAddress(null);
+    clearResult();
   };
 
   return (
