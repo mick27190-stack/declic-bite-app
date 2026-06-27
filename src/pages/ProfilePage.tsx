@@ -36,15 +36,18 @@ import { statusLabels, statusColors } from '@/types/order';
 function CurrentOrders() {
   const { orders, loading, respondToOrder } = useUserOrders();
 
-  const activeOrders = orders.filter((order) => {
-    if (order.status === 'cancelled') return false;
+  const activeOrders = orders
+    .filter((order) => {
+      if (order.status === 'cancelled') return false;
 
-    // Delivery orders must stay visible in the customer profile for tracking,
-    // including when the restaurant marks them as delivered.
-    if (order.order_type === 'livraison') return true;
+      // Delivery orders must stay visible in the customer profile for tracking,
+      // including when the restaurant marks them as delivered.
+      if (order.order_type === 'livraison') return true;
 
-    return order.status !== 'delivered';
-  });
+      return order.status !== 'delivered';
+    })
+    // Suivi de commandes : uniquement les 5 dernières commandes.
+    .slice(0, 5);
 
   return (
     <div className="glass-card p-4 rounded-xl">
