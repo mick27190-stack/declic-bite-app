@@ -43,16 +43,31 @@ export function CartView() {
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const isClosed = isMonday || isOutsideHours || !!manualClosure;
 
-  // Minimum order check for delivery outside the restaurant's own city:
+  // Minimum order check for delivery outside the restaurant's own commune:
   // 2 pizzas Senior OU 1 pizza Méga (ou plus) requis.
-  // Conches -> 27190, Beaumont -> 27170. Toute autre adresse = "Hors Site".
+  // Conches -> Conches-en-Ouche, Beaumont -> Beaumont-le-Roger.
+  // A postal code alone is NOT reliable: 27190 spans many villages around
+  // Conches, so we match on the commune (city) and fall back to postal code.
   const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
+  const localCity = selectedRestaurant?.id === 'conches'
+    ? 'conches-en-ouche'
+    : selectedRestaurant?.id === 'beaumont'
+      ? 'beaumont-le-roger'
+      : null;
   const localPostalCode = selectedRestaurant?.id === 'conches'
     ? '27190'
     : selectedRestaurant?.id === 'beaumont'
       ? '27170'
       : null;
-  const isLocalDelivery = !!deliveryAddress?.postalCode && deliveryAddress.postalCode === localPostalCode;
+  const normalize = (s?: string | null) => (s ?? '').toLowerCase().trim();
+  const addressCity = normalize(deliveryAddress?.city);
+  // Local only when the delivery commune matches the restaurant's own town.
+  // If the geocoder did not return a city, fall back to the postal code check.
+  const isLocalDelivery = !!deliveryAddress && (
+    addressCity
+      ? addressCity === localCity
+      : !!deliveryAddress.postalCode && deliveryAddress.postalCode === localPostalCode
+  );
   const needsMinimum = orderType === 'livraison' && !!deliveryAddress && !isLocalDelivery;
   // Only real pizzas count. Pizza size equivalents: senior = 1, mega/super-mega = 2 (1 méga = 2 seniors)
   const pizzaEquivalents = items.reduce((sum, item) => {
