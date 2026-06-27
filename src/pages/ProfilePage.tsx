@@ -88,7 +88,12 @@ function CurrentOrders() {
                 {/* Détail des pizzas commandées */}
                 {order.items && order.items.length > 0 && (
                   <ul className="mt-2 space-y-1.5 border-t border-border pt-2">
-                    {order.items.map((item, idx) => (
+                    {order.items.map((item, idx) => {
+                      const unitPrice =
+                        (item.pizza?.basePrice ?? 0) +
+                        (item.size?.price ?? 0) +
+                        (item.supplements?.reduce((s, sup) => s + sup.price, 0) ?? 0);
+                      return (
                       <li key={idx} className="text-xs">
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-medium text-foreground">
@@ -97,6 +102,10 @@ function CurrentOrders() {
                           {item.size?.name && (
                             <span className="text-muted-foreground">{item.size.name}</span>
                           )}
+                        </div>
+                        <div className="flex items-center justify-between gap-2 text-muted-foreground">
+                          <span>{item.quantity} × {unitPrice.toFixed(2)}€</span>
+                          <span className="font-medium text-foreground">{(unitPrice * item.quantity).toFixed(2)}€</span>
                         </div>
                         <div className="text-muted-foreground">
                           {item.base && <span>Base {item.base}</span>}
