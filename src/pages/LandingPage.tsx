@@ -73,6 +73,12 @@ export default function LandingPage() {
       
       {/* Auth Button */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        {isSiteAdmin && (
+          <Badge className="bg-primary hover:bg-primary text-primary-foreground flex items-center gap-1 px-3 py-1.5 shadow-lg">
+            <Shield className="w-4 h-4" />
+            Admin site
+          </Badge>
+        )}
         {isAnyLivreur && livreurOpen && (
           <Badge className="bg-amber-500 hover:bg-amber-500 text-white flex items-center gap-1 px-3 py-1.5 shadow-lg">
             <Bike className="w-4 h-4" />
