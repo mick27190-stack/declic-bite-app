@@ -57,13 +57,43 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchRoles(user.id);
-    } else {
+    if (!user) {
       setRoles([]);
       setLoading(false);
+      return;
     }
+
+    // Re-sync roles against admin_phones so that any deactivation
+    // (e.g. a livreur disabled in the admin section) is reflected immediately,
+    // then load the resulting roles.
+    const syncAndFetch = async () => {
+      try {
+        await supabase.functions.invoke('assign-admin-role', {
+          body: { user_id: user.id, phone: user.phone },
+        });
+      } catch (e) {
+        console.error('Error syncing roles:', e);
+      }
+      await fetchRoles(user.id);
+    };
+    syncAndFetch();
+
+    // Keep the badge/permissions live: if the roles change in the database
+    // (granted or revoked), update the UI without a reload.
+    const channel = supabase
+      .channel(`user_roles_${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_roles', filter: `user_id=eq.${user.id}` },
+        () => fetchRoles(user.id),
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
+
 
   // A secondary super admin has the exact same rights as the super admin.
   const isSuperAdmin = roles.includes('super_admin') || roles.includes('secondary_super_admin');
