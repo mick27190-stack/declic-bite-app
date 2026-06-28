@@ -75,47 +75,84 @@ serve(async (req) => {
       (ap) => normalizePhone(ap.phone) === normalizedPhone,
     );
 
-    if (adminPhones.length > 0) {
-      // Roles already assigned to this user.
-      const { data: existingRoles } = await supabase
+    // All roles that are managed through admin_phones (admins + livreurs).
+    // These must be kept in sync: granted only while an active admin_phones
+    // entry exists, and revoked as soon as it is deactivated/removed.
+    const MANAGED_ROLES = [
+      "super_admin",
+      "secondary_super_admin",
+      "site_admin_conches",
+      "site_admin_beaumont",
+      "secondary_admin_conches",
+      "secondary_admin_beaumont",
+      "livreur_conches",
+      "livreur_beaumont",
+    ];
+
+    const activeRoles = new Set(adminPhones.map((ap) => ap.role));
+
+    // Current managed roles already on the account.
+    const { data: existingRoles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user_id);
+
+    const existing = new Set((existingRoles ?? []).map((r) => r.role));
+
+    // Revoke any managed role that is no longer backed by an active admin_phones entry
+    // (e.g. a livreur or admin that was deactivated in the admin section).
+    const toRemove = MANAGED_ROLES.filter(
+      (role) => existing.has(role) && !activeRoles.has(role),
+    );
+
+    if (toRemove.length > 0) {
+      const { error: deleteError } = await supabase
         .from("user_roles")
-        .select("role")
-        .eq("user_id", user_id);
+        .delete()
+        .eq("user_id", user_id)
+        .in("role", toRemove);
 
-      const existing = new Set((existingRoles ?? []).map((r) => r.role));
-
-      const toInsert = adminPhones
-        .filter((ap) => !existing.has(ap.role))
-        .map((ap) => ({
-          user_id,
-          role: ap.role,
-          assigned_by: ap.created_by,
-        }));
-
-      if (toInsert.length > 0) {
-        const { error: insertError } = await supabase
-          .from("user_roles")
-          .insert(toInsert);
-
-        if (insertError) {
-          console.error("Error assigning roles:", insertError);
-          return new Response(
-            JSON.stringify({ error: "Error assigning role" }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
+      if (deleteError) {
+        console.error("Error revoking roles:", deleteError);
+        return new Response(
+          JSON.stringify({ error: "Error revoking role" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: toInsert.length > 0 ? "Roles assigned successfully" : "Roles already assigned",
-          role: adminPhones[0]?.role,
-          roles: adminPhones.map((ap) => ap.role),
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
     }
+
+    const toInsert = adminPhones
+      .filter((ap) => !existing.has(ap.role))
+      .map((ap) => ({
+        user_id,
+        role: ap.role,
+        assigned_by: ap.created_by,
+      }));
+
+    if (toInsert.length > 0) {
+      const { error: insertError } = await supabase
+        .from("user_roles")
+        .insert(toInsert);
+
+      if (insertError) {
+        console.error("Error assigning roles:", insertError);
+        return new Response(
+          JSON.stringify({ error: "Error assigning role" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Roles synchronized successfully",
+        role: adminPhones[0]?.role,
+        roles: adminPhones.map((ap) => ap.role),
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+
 
     return new Response(
       JSON.stringify({ success: true, message: "No admin role for this phone" }),
