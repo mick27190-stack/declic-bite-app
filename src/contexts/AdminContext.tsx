@@ -149,6 +149,23 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         });
       
       if (error) throw error;
+
+      // Grant the role on any matching account right away so its badge/permissions
+      // update instantly via the user_roles realtime channel (no reload needed).
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('phone', phone)
+        .maybeSingle();
+      if (profile?.user_id) {
+        await supabase
+          .from('user_roles')
+          .upsert(
+            { user_id: profile.user_id, role },
+            { onConflict: 'user_id,role' }
+          );
+      }
+
       return { error: null };
     } catch (error) {
       return { error: error as Error };
@@ -164,6 +181,22 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         .eq('role', role);
       
       if (error) throw error;
+
+      // Revoke the role on any matching account right away so its badge/permissions
+      // disappear instantly via the user_roles realtime channel (no reload needed).
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('phone', phone)
+        .maybeSingle();
+      if (profile?.user_id) {
+        await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', profile.user_id)
+          .eq('role', role);
+      }
+
       return { error: null };
     } catch (error) {
       return { error: error as Error };
