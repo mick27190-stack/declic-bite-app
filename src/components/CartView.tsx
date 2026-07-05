@@ -10,7 +10,7 @@ import { PickupTimeSelector } from '@/components/PickupTimeSelector';
 import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
-import { getPizzaSizePrice } from '@/lib/pricing';
+import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 
 export function CartView() {
   const navigate = useNavigate();
