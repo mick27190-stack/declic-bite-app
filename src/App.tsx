@@ -92,6 +92,7 @@ const App = () => {
             </BrowserRouter>
           </TooltipProvider>
         </CartProvider>
+        </PricingProvider>
       </AdminProvider>
     </AuthProvider>
   </QueryClientProvider>
