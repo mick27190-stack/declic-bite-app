@@ -150,11 +150,7 @@ export function CartView() {
           <div>
             <p className="font-semibold text-destructive text-sm">Commandes bloquées</p>
             <p className="text-sm text-foreground mt-1">{manualClosure.reason}</p>
-            {manualClosure.end_at && (
-              <p className="text-xs text-foreground mt-1">
-                Jusqu'au {new Date(manualClosure.end_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
-              </p>
-            )}
+
           </div>
         </div>
       )}
