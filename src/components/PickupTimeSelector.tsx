@@ -61,8 +61,11 @@ export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSele
             <button
               key={time}
               type="button"
+              disabled={disabled}
               onClick={() => handleSelect(time)}
               className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                disabled ? 'cursor-not-allowed ' : ''
+              }${
                 selectedTime === time
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-foreground hover:bg-muted/80'
