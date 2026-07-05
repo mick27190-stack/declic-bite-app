@@ -23,6 +23,7 @@ import AdminChatPage from "./pages/admin/AdminChatPage";
 import AdminSMSPage from "./pages/admin/AdminSMSPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import AdminSalesPage from "./pages/admin/AdminSalesPage";
+import AdminPricingPage from "./pages/admin/AdminPricingPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import LivreurOrdersPage from "./pages/LivreurOrdersPage";
 import NotFound from "./pages/NotFound";
