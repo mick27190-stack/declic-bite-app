@@ -191,7 +191,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                         );
                       })() : (
                         <span className="font-display font-bold text-primary">
-                          {pizza.basePrice + size.price}€
+                          {getNonPizzaPrice(pizza, size)}€
                         </span>
                       )}
                     </div>
