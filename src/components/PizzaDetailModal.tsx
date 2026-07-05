@@ -36,6 +36,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   const [itemNotes, setItemNotes] = useState('');
   
   const { addItem, selectedRestaurant } = useCart();
+  usePricing();
   const { getClosureForSite } = useActiveClosures();
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const { toast } = useToast();
