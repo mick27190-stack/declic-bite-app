@@ -8,9 +8,10 @@ import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 interface DeliveryZoneCheckerProps {
   onValidAddress?: (address: string, coordinates: { lat: number; lng: number }, postalCode?: string | null, city?: string | null) => void;
+  disabled?: boolean;
 }
 
-export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps) {
+export function DeliveryZoneChecker({ onValidAddress, disabled }: DeliveryZoneCheckerProps) {
   const [address, setAddress] = useState('');
   const [showMap, setShowMap] = useState(true);
   const [customerCoords, setCustomerCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -71,7 +72,7 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
   };
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${disabled ? 'opacity-50' : ''}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-foreground">
           <Truck className="w-5 h-5 text-primary" />
@@ -112,12 +113,12 @@ export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps
           onChange={handleAddressChange}
           onPlaceSelect={handlePlaceSelect}
           placeholder="Entrez votre adresse complète"
-          disabled={!selectedRestaurant || isChecking}
+          disabled={disabled || !selectedRestaurant || isChecking}
           className="flex-1"
         />
         <Button
           onClick={handleCheck}
-          disabled={!address.trim() || !selectedRestaurant || isChecking}
+          disabled={disabled || !address.trim() || !selectedRestaurant || isChecking}
         >
           {isChecking ? (
             <Loader2 className="w-4 h-4 animate-spin" />

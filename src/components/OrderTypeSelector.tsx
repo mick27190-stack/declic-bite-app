@@ -5,27 +5,33 @@ interface OrderTypeSelectorProps {
   value: OrderType;
   onChange: (type: OrderType) => void;
   deliveryDisabled?: boolean;
+  disabled?: boolean;
 }
 
-export function OrderTypeSelector({ value, onChange, deliveryDisabled }: OrderTypeSelectorProps) {
+export function OrderTypeSelector({ value, onChange, deliveryDisabled, disabled }: OrderTypeSelectorProps) {
+  const takeawayDisabled = disabled;
+  const livraisonDisabled = disabled || deliveryDisabled;
   return (
-    <div className="space-y-3">
+    <div className={`space-y-3 ${disabled ? 'opacity-50' : ''}`}>
       <h3 className="font-display font-semibold text-foreground">Type de commande</h3>
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
-          onClick={() => onChange('emporter')}
+          onClick={() => !takeawayDisabled && onChange('emporter')}
+          disabled={takeawayDisabled}
           className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-            value === 'emporter'
-              ? 'border-primary bg-primary/10 shadow-glow'
-              : 'border-border hover:border-primary/50 bg-card'
+            takeawayDisabled
+              ? 'opacity-50 cursor-not-allowed border-border bg-muted'
+              : value === 'emporter'
+                ? 'border-primary bg-primary/10 shadow-glow'
+                : 'border-border hover:border-primary/50 bg-card'
           }`}
         >
           <ShoppingBag className={`w-6 h-6 mx-auto mb-2 ${
-            value === 'emporter' ? 'text-primary' : 'text-muted-foreground'
+            value === 'emporter' && !takeawayDisabled ? 'text-primary' : 'text-muted-foreground'
           }`} />
           <span className={`block font-semibold ${
-            value === 'emporter' ? 'text-primary' : 'text-foreground'
+            value === 'emporter' && !takeawayDisabled ? 'text-primary' : 'text-foreground'
           }`}>
             À Emporter
           </span>
@@ -36,10 +42,10 @@ export function OrderTypeSelector({ value, onChange, deliveryDisabled }: OrderTy
 
         <button
           type="button"
-          onClick={() => !deliveryDisabled && onChange('livraison')}
-          disabled={deliveryDisabled}
+          onClick={() => !livraisonDisabled && onChange('livraison')}
+          disabled={livraisonDisabled}
           className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-            deliveryDisabled 
+            livraisonDisabled 
               ? 'opacity-50 cursor-not-allowed border-border bg-muted'
               : value === 'livraison'
                 ? 'border-primary bg-primary/10 shadow-glow'
@@ -47,15 +53,15 @@ export function OrderTypeSelector({ value, onChange, deliveryDisabled }: OrderTy
           }`}
         >
           <Truck className={`w-6 h-6 mx-auto mb-2 ${
-            value === 'livraison' && !deliveryDisabled ? 'text-primary' : 'text-muted-foreground'
+            value === 'livraison' && !livraisonDisabled ? 'text-primary' : 'text-muted-foreground'
           }`} />
           <span className={`block font-semibold ${
-            value === 'livraison' && !deliveryDisabled ? 'text-primary' : 'text-foreground'
+            value === 'livraison' && !livraisonDisabled ? 'text-primary' : 'text-foreground'
           }`}>
             Livraison
           </span>
           <span className="text-xs text-muted-foreground">
-            {deliveryDisabled ? 'Non disponible' : 'Chez vous en ~30 min'}
+            {deliveryDisabled && !disabled ? 'Non disponible' : 'Chez vous en ~30 min'}
           </span>
         </button>
       </div>

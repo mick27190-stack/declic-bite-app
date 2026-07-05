@@ -6,9 +6,10 @@ import { computePickupSlots } from '@/lib/pickupSlots';
 interface PickupTimeSelectorProps {
   value: string | null;
   onChange: (time: string) => void;
+  disabled?: boolean;
 }
 
-export function PickupTimeSelector({ value, onChange }: PickupTimeSelectorProps) {
+export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSelectorProps) {
   const [selectedTime, setSelectedTime] = useState<string | null>(value);
 
   // Recompute slots from the real current time (in the restaurant timezone)
@@ -24,6 +25,7 @@ export function PickupTimeSelector({ value, onChange }: PickupTimeSelectorProps)
 
 
   const handleSelect = (time: string) => {
+    if (disabled) return;
     setSelectedTime(time);
     onChange(time);
   };
@@ -32,7 +34,7 @@ export function PickupTimeSelector({ value, onChange }: PickupTimeSelectorProps)
   const asapTime = availableTimes[0];
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${disabled ? 'opacity-50' : ''}`}>
       <div className="flex items-center gap-2 text-foreground">
         <Clock className="w-5 h-5 text-primary" />
         <h3 className="font-display font-semibold">Heure de retrait</h3>
@@ -43,6 +45,7 @@ export function PickupTimeSelector({ value, onChange }: PickupTimeSelectorProps)
         type="button"
         variant={selectedTime === asapTime ? "default" : "outline"}
         className="w-full justify-start gap-3"
+        disabled={disabled}
         onClick={() => handleSelect(asapTime)}
       >
         <Clock className="w-4 h-4" />
@@ -58,8 +61,11 @@ export function PickupTimeSelector({ value, onChange }: PickupTimeSelectorProps)
             <button
               key={time}
               type="button"
+              disabled={disabled}
               onClick={() => handleSelect(time)}
               className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                disabled ? 'cursor-not-allowed ' : ''
+              }${
                 selectedTime === time
                   ? 'bg-primary text-primary-foreground'
                   : 'bg-muted text-foreground hover:bg-muted/80'
