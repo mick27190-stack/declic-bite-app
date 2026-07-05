@@ -49,6 +49,7 @@ export const DEFAULT_ITEM_PRICES: Record<string, number> = {
   'coca-cola-1-5l': 3,
   'rose-bouteille': 7,
   bambino: 7,
+  'bambino-pizza-seule': 6,
   'panini-simple': 6,
   'panini-double': 9,
 };
@@ -59,6 +60,7 @@ export const MANAGED_ITEMS: { key: string; name: string }[] = [
   { key: 'panini-simple', name: 'Panini simple' },
   { key: 'panini-double', name: 'Panini double' },
   { key: 'bambino', name: 'Menu Bambino' },
+  { key: 'bambino-pizza-seule', name: 'Pizza Seule Bambino' },
 ];
 
 let _itemPrices: Record<string, number> = { ...DEFAULT_ITEM_PRICES };
