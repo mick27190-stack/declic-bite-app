@@ -123,7 +123,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const isPizza = PIZZA_CATEGORIES.includes(item.pizza.category);
     const baseTotal = isPizza
       ? getPizzaSizePrice(item.size.id, item.pizza.category)
-      : item.pizza.basePrice + item.size.price;
+      : getNonPizzaPrice(item.pizza, item.size);
     const supplementsTotal = item.supplements.reduce((s, sup) => s + sup.price, 0);
     return sum + (baseTotal + supplementsTotal) * item.quantity;
   }, 0);
