@@ -36,7 +36,7 @@ export function PizzaCard({ pizza, onClick }: PizzaCardProps) {
               <span>{info.effective}€</span>
             </span>
           ) : (
-            <>{isPizza ? info.effective : pizza.basePrice}€</>
+            <>{isPizza ? info.effective : getNonPizzaPrice(pizza)}€</>
           )}
         </div>
       </div>
