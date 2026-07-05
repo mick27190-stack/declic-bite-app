@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
+import { PricingProvider } from "@/contexts/PricingContext";
 import LandingPage from "./pages/LandingPage";
 import MenuPage from "./pages/MenuPage";
 import CartPage from "./pages/CartPage";
@@ -22,6 +23,7 @@ import AdminChatPage from "./pages/admin/AdminChatPage";
 import AdminSMSPage from "./pages/admin/AdminSMSPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import AdminSalesPage from "./pages/admin/AdminSalesPage";
+import AdminPricingPage from "./pages/admin/AdminPricingPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import LivreurOrdersPage from "./pages/LivreurOrdersPage";
 import NotFound from "./pages/NotFound";
@@ -59,6 +61,7 @@ const App = () => {
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <AdminProvider>
+        <PricingProvider>
         <CartProvider>
           <TooltipProvider>
             <Toaster />
@@ -83,11 +86,13 @@ const App = () => {
                 <Route path="/admin/sms" element={<AdminSMSPage />} />
                 <Route path="/admin/settings" element={<AdminSettingsPage />} />
                 <Route path="/admin/sales" element={<AdminSalesPage />} />
+                <Route path="/admin/pricing" element={<AdminPricingPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
         </CartProvider>
+        </PricingProvider>
       </AdminProvider>
     </AuthProvider>
   </QueryClientProvider>

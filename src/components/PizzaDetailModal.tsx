@@ -7,7 +7,8 @@ import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { useToast } from '@/hooks/use-toast';
-import { getEffectiveBasePrice, isPromoDay } from '@/lib/promo';
+import { getPizzaSizePrice, getSizePriceInfo } from '@/lib/pricing';
+import { usePricing } from '@/contexts/PricingContext';
 
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
@@ -35,6 +36,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   const [itemNotes, setItemNotes] = useState('');
   
   const { addItem, selectedRestaurant } = useCart();
+  usePricing();
   const { getClosureForSite } = useActiveClosures();
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const { toast } = useToast();
@@ -51,7 +53,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
     if (!showSize) {
       return pizza.basePrice * quantity;
     }
-    const base = isPizza ? getEffectiveBasePrice(pizza.basePrice, selectedSize.id, new Date(), pizza.category) + selectedSize.price : pizza.basePrice + selectedSize.price;
+    const base = isPizza ? getPizzaSizePrice(selectedSize.id, pizza.category) : pizza.basePrice + selectedSize.price;
     const supps = selectedSupplements.reduce((sum, s) => sum + s.price, 0);
     return (base + supps) * quantity;
   };
@@ -177,12 +179,17 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                       <p className="text-xs text-muted-foreground">{size.description}</p>
                     </div>
                     <div className="text-right">
-                      {isPizza && size.id === 'senior' && isPromoDay() ? (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground line-through">{pizza.basePrice + size.price}€</span>
-                          <span className="font-display font-bold text-green-500">{getEffectiveBasePrice(pizza.basePrice, size.id) + size.price}€</span>
-                        </div>
-                      ) : (
+                      {isPizza ? (() => {
+                        const info = getSizePriceInfo(size.id, pizza.category);
+                        return info.isPromo ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground line-through">{info.base}€</span>
+                            <span className="font-display font-bold text-green-500">{info.effective}€</span>
+                          </div>
+                        ) : (
+                          <span className="font-display font-bold text-primary">{info.effective}€</span>
+                        );
+                      })() : (
                         <span className="font-display font-bold text-primary">
                           {pizza.basePrice + size.price}€
                         </span>

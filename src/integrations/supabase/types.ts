@@ -302,6 +302,60 @@ export type Database = {
         }
         Relationships: []
       }
+      pizza_day_promos: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          id: string
+          is_active: boolean
+          label: string | null
+          price: number
+          size_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          price: number
+          size_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          price?: number
+          size_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pizza_size_prices: {
+        Row: {
+          created_at: string
+          price: number
+          size_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          price: number
+          size_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          price?: number
+          size_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

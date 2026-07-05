@@ -13,7 +13,9 @@ import {
   Settings,
   ArrowLeft,
   TrendingUp,
-  Contact
+  Contact,
+  Tag
+
 } from 'lucide-react';
 import NotificationBell from '@/components/admin/NotificationBell';
 
@@ -73,6 +75,13 @@ export default function AdminDashboard() {
       description: 'Modifier les pizzas et le menu',
       icon: Pizza,
       href: '/admin/menu',
+      show: canManageMenu
+    },
+    {
+      title: 'Gestion des Tarifs',
+      description: 'Prix des pizzas par taille & promotions',
+      icon: Tag,
+      href: '/admin/pricing',
       show: canManageMenu
     },
     {

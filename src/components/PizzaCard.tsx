@@ -1,5 +1,6 @@
 import { Pizza } from '@/types/pizza';
-import { isPromoDay } from '@/lib/promo';
+import { getSizePriceInfo } from '@/lib/pricing';
+import { usePricing } from '@/contexts/PricingContext';
 
 interface PizzaCardProps {
   pizza: Pizza;
@@ -9,8 +10,10 @@ interface PizzaCardProps {
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
 export function PizzaCard({ pizza, onClick }: PizzaCardProps) {
+  usePricing();
   const isPizza = PIZZA_CATEGORIES.includes(pizza.category);
-  const showPromo = isPizza && isPromoDay();
+  const info = getSizePriceInfo('senior', pizza.category);
+  const showPromo = isPizza && info.isPromo;
 
   return (
     <button
@@ -29,11 +32,11 @@ export function PizzaCard({ pizza, onClick }: PizzaCardProps) {
         <div className="absolute top-3 right-3 bg-primary text-primary-foreground px-3 py-1.5 rounded-full font-display font-bold text-sm shadow-glow">
           {showPromo ? (
             <span className="flex items-center gap-1">
-              <span className="line-through opacity-70 text-xs">{pizza.basePrice}€</span>
-              <span>10€</span>
+              <span className="line-through opacity-70 text-xs">{info.base}€</span>
+              <span>{info.effective}€</span>
             </span>
           ) : (
-            <>{pizza.basePrice}€</>
+            <>{isPizza ? info.effective : pizza.basePrice}€</>
           )}
         </div>
       </div>

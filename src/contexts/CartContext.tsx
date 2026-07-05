@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, Restaurant, OrderType } from '@/types/pizza';
-import { getEffectiveBasePrice } from '@/lib/promo';
+import { PIZZA_CATEGORIES } from '@/lib/promo';
+import { getPizzaSizePrice } from '@/lib/pricing';
+import { usePricing } from '@/contexts/PricingContext';
 
 const STORAGE_KEY = 'declic-cart-state';
 
@@ -48,6 +50,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  usePricing();
   const persisted = loadPersistedState();
   const [items, setItems] = useState<CartItem[]>(persisted?.items ?? []);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(persisted?.selectedRestaurant ?? null);
@@ -117,7 +120,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   const totalPrice = items.reduce((sum, item) => {
-    const baseTotal = getEffectiveBasePrice(item.pizza.basePrice, item.size.id, new Date(), item.pizza.category) + item.size.price;
+    const isPizza = PIZZA_CATEGORIES.includes(item.pizza.category);
+    const baseTotal = isPizza
+      ? getPizzaSizePrice(item.size.id, item.pizza.category)
+      : item.pizza.basePrice + item.size.price;
     const supplementsTotal = item.supplements.reduce((s, sup) => s + sup.price, 0);
     return sum + (baseTotal + supplementsTotal) * item.quantity;
   }, 0);
