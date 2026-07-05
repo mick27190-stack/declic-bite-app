@@ -45,6 +45,7 @@ export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSele
         type="button"
         variant={selectedTime === asapTime ? "default" : "outline"}
         className="w-full justify-start gap-3"
+        disabled={disabled}
         onClick={() => handleSelect(asapTime)}
       >
         <Clock className="w-4 h-4" />
