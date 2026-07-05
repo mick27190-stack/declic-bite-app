@@ -49,6 +49,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  usePricing();
   const persisted = loadPersistedState();
   const [items, setItems] = useState<CartItem[]>(persisted?.items ?? []);
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(persisted?.selectedRestaurant ?? null);
