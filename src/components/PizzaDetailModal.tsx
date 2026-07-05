@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { X, Plus, Minus, Check } from 'lucide-react';
+import { X, Plus, Minus, Check, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Pizza, PizzaSize, Supplement, CartItem } from '@/types/pizza';
 import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
+import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { useToast } from '@/hooks/use-toast';
 import { getEffectiveBasePrice, isPromoDay } from '@/lib/promo';
 
