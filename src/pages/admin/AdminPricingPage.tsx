@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { usePricing } from '@/contexts/PricingContext';
 import { supabase } from '@/integrations/supabase/client';
-import { DAY_NAMES } from '@/lib/pricing';
+import { DAY_NAMES, MANAGED_ITEMS } from '@/lib/pricing';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
