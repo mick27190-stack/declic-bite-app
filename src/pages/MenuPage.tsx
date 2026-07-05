@@ -8,6 +8,7 @@ import CustomerNotificationBell from '@/components/CustomerNotificationBell';
 import { pizzas, categories } from '@/data/pizzas';
 import { Pizza } from '@/types/pizza';
 import { useCart } from '@/contexts/CartContext';
+import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { isPromoDay, PROMO_LABEL } from '@/lib/promo';
 
 export default function MenuPage() {
