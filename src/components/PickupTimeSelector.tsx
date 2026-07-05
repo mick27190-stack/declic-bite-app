@@ -6,9 +6,10 @@ import { computePickupSlots } from '@/lib/pickupSlots';
 interface PickupTimeSelectorProps {
   value: string | null;
   onChange: (time: string) => void;
+  disabled?: boolean;
 }
 
-export function PickupTimeSelector({ value, onChange }: PickupTimeSelectorProps) {
+export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSelectorProps) {
   const [selectedTime, setSelectedTime] = useState<string | null>(value);
 
   // Recompute slots from the real current time (in the restaurant timezone)
