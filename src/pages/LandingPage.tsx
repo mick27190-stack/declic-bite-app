@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike, Shield } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { Restaurant } from '@/types/pizza';
 import heroImage from '@/assets/declic-hero.jpeg';
+
 
 // La badge "Livreur" n'est visible que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
 function isLivreurWindowOpen(): boolean {
@@ -54,6 +56,12 @@ export default function LandingPage() {
     isSecondaryAdminBeaumont,
   } = useAdmin();
   const navigate = useNavigate();
+  const { closures } = useActiveClosures();
+
+  const siteLabel = (site: string) => {
+    if (site === 'all') return 'Tous les sites';
+    return site.charAt(0).toUpperCase() + site.slice(1);
+  };
 
   const isSiteAdmin =
     isSiteAdminConches ||
@@ -126,6 +134,24 @@ export default function LandingPage() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
+        {closures.length > 0 && (
+          <div className="w-full max-w-md mb-8 space-y-3">
+            {closures.map((closure) => (
+              <div
+                key={closure.id}
+                className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3"
+              >
+                <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-destructive text-sm">
+                    Commandes bloquées{closure.site !== 'all' ? ` — ${siteLabel(closure.site)}` : ''}
+                  </p>
+                  <p className="text-sm text-foreground mt-1">{closure.reason}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
         {!showRestaurantSelector ? (
           <>
             {/* Logo/Hero Image */}
