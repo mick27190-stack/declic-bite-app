@@ -178,12 +178,17 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                       <p className="text-xs text-muted-foreground">{size.description}</p>
                     </div>
                     <div className="text-right">
-                      {isPizza && size.id === 'senior' && isPromoDay() ? (
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-muted-foreground line-through">{pizza.basePrice + size.price}€</span>
-                          <span className="font-display font-bold text-green-500">{getEffectiveBasePrice(pizza.basePrice, size.id) + size.price}€</span>
-                        </div>
-                      ) : (
+                      {isPizza ? (() => {
+                        const info = getSizePriceInfo(size.id, pizza.category);
+                        return info.isPromo ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground line-through">{info.base}€</span>
+                            <span className="font-display font-bold text-green-500">{info.effective}€</span>
+                          </div>
+                        ) : (
+                          <span className="font-display font-bold text-primary">{info.effective}€</span>
+                        );
+                      })() : (
                         <span className="font-display font-bold text-primary">
                           {pizza.basePrice + size.price}€
                         </span>
