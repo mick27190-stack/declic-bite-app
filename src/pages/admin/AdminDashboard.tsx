@@ -76,6 +76,13 @@ export default function AdminDashboard() {
       show: canManageMenu
     },
     {
+      title: 'Gestion des Tarifs',
+      description: 'Prix des pizzas par taille & promotions',
+      icon: Tag,
+      href: '/admin/pricing',
+      show: canManageMenu
+    },
+    {
       title: 'Chat Clients',
       description: 'Communiquer avec les clients',
       icon: MessageSquare,
