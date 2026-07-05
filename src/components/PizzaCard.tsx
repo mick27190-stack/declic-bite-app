@@ -1,5 +1,5 @@
 import { Pizza } from '@/types/pizza';
-import { getSizePriceInfo } from '@/lib/pricing';
+import { getSizePriceInfo, getNonPizzaPrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
 
 interface PizzaCardProps {
