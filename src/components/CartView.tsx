@@ -248,6 +248,7 @@ export function CartView() {
           <PickupTimeSelector 
             value={pickupTime}
             onChange={setPickupTime}
+            disabled={isClosed}
           />
         </div>
       )}
