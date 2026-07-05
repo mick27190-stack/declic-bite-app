@@ -10,7 +10,7 @@ import { PickupTimeSelector } from '@/components/PickupTimeSelector';
 import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
-import { getPizzaSizePrice } from '@/lib/pricing';
+import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 
 export function CartView() {
   const navigate = useNavigate();
@@ -260,7 +260,7 @@ export function CartView() {
           const isPizzaItem = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'].includes(item.pizza.category);
           const itemBase = isPizzaItem
             ? getPizzaSizePrice(item.size.id, item.pizza.category)
-            : item.pizza.basePrice + item.size.price;
+            : getNonPizzaPrice(item.pizza, item.size);
           const itemTotal =
             (itemBase + item.supplements.reduce((sum, s) => sum + s.price, 0)) *
             item.quantity;

@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { usePricing } from '@/contexts/PricingContext';
 import { supabase } from '@/integrations/supabase/client';
-import { DAY_NAMES } from '@/lib/pricing';
+import { DAY_NAMES, MANAGED_ITEMS } from '@/lib/pricing';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,10 +30,13 @@ export default function AdminPricingPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { canManageMenu, loading: adminLoading } = useAdmin();
-  const { sizePrices, dayPromos, refresh } = usePricing();
+  const { sizePrices, dayPromos, itemPrices, refresh } = usePricing();
 
   const [sizeDraft, setSizeDraft] = useState<Record<string, string>>({});
   const [savingSizes, setSavingSizes] = useState(false);
+
+  const [itemDraft, setItemDraft] = useState<Record<string, string>>({});
+  const [savingItems, setSavingItems] = useState(false);
 
   // Nouvelle promo
   const [newDay, setNewDay] = useState<string>('2');
@@ -56,6 +59,34 @@ export default function AdminPricingPage() {
       'super-mega': String(sizePrices['super-mega'] ?? ''),
     });
   }, [sizePrices]);
+
+  useEffect(() => {
+    const draft: Record<string, string> = {};
+    MANAGED_ITEMS.forEach((it) => {
+      draft[it.key] = String(itemPrices[it.key] ?? '');
+    });
+    setItemDraft(draft);
+  }, [itemPrices]);
+
+  const saveItems = async () => {
+    setSavingItems(true);
+    const rows = MANAGED_ITEMS.map((it) => ({
+      item_key: it.key,
+      price: parseFloat(itemDraft[it.key]),
+    })).filter((r) => !isNaN(r.price));
+
+    const { error } = await supabase
+      .from('menu_item_prices')
+      .upsert(rows, { onConflict: 'item_key' });
+
+    setSavingItems(false);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Tarifs enregistrés', description: 'Le menu est mis à jour en temps réel.' });
+      await refresh();
+    }
+  };
 
   const saveSizes = async () => {
     setSavingSizes(true);
@@ -179,6 +210,44 @@ export default function AdminPricingPage() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Autres éléments du menu */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Autres éléments du menu</CardTitle>
+            <CardDescription>
+              Tarifs des boissons, paninis et du menu Bambino (communs aux deux sites).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {MANAGED_ITEMS.map((it) => (
+                <div key={it.key} className="space-y-2">
+                  <Label htmlFor={`item-${it.key}`}>{it.name}</Label>
+                  <div className="relative">
+                    <Input
+                      id={`item-${it.key}`}
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={itemDraft[it.key] ?? ''}
+                      onChange={(e) =>
+                        setItemDraft((d) => ({ ...d, [it.key]: e.target.value }))
+                      }
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button onClick={saveItems} disabled={savingItems}>
+              <Save className="h-4 w-4 mr-2" />
+              {savingItems ? 'Enregistrement...' : 'Enregistrer les tarifs'}
+            </Button>
+          </CardContent>
+        </Card>
+
+
 
         {/* Promotions par jour */}
         <Card>

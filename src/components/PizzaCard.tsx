@@ -1,5 +1,5 @@
 import { Pizza } from '@/types/pizza';
-import { getSizePriceInfo } from '@/lib/pricing';
+import { getSizePriceInfo, getNonPizzaPrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
 
 interface PizzaCardProps {
@@ -36,7 +36,7 @@ export function PizzaCard({ pizza, onClick }: PizzaCardProps) {
               <span>{info.effective}€</span>
             </span>
           ) : (
-            <>{isPizza ? info.effective : pizza.basePrice}€</>
+            <>{isPizza ? info.effective : getNonPizzaPrice(pizza)}€</>
           )}
         </div>
       </div>

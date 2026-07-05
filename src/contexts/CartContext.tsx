@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, Restaurant, OrderType } from '@/types/pizza';
 import { PIZZA_CATEGORIES } from '@/lib/promo';
-import { getPizzaSizePrice } from '@/lib/pricing';
+import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
 
 const STORAGE_KEY = 'declic-cart-state';
@@ -123,7 +123,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const isPizza = PIZZA_CATEGORIES.includes(item.pizza.category);
     const baseTotal = isPizza
       ? getPizzaSizePrice(item.size.id, item.pizza.category)
-      : item.pizza.basePrice + item.size.price;
+      : getNonPizzaPrice(item.pizza, item.size);
     const supplementsTotal = item.supplements.reduce((s, sup) => s + sup.price, 0);
     return sum + (baseTotal + supplementsTotal) * item.quantity;
   }, 0);
