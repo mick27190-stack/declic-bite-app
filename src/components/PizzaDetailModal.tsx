@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { X, Plus, Minus, Check } from 'lucide-react';
+import { X, Plus, Minus, Check, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Pizza, PizzaSize, Supplement, CartItem } from '@/types/pizza';
 import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
+import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { useToast } from '@/hooks/use-toast';
 import { getEffectiveBasePrice, isPromoDay } from '@/lib/promo';
 
@@ -33,7 +34,9 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   const [selectedBambinoPizza, setSelectedBambinoPizza] = useState<Pizza | null>(null);
   const [itemNotes, setItemNotes] = useState('');
   
-  const { addItem } = useCart();
+  const { addItem, selectedRestaurant } = useCart();
+  const { getClosureForSite } = useActiveClosures();
+  const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const { toast } = useToast();
 
   const toggleSupplement = (supplement: Supplement) => {
@@ -251,14 +254,23 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             </div>
           </div>
 
+          {manualClosure && (
+            <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-destructive text-sm">Commandes bloquées</p>
+                <p className="text-sm text-foreground mt-1">{manualClosure.reason}</p>
+              </div>
+            </div>
+          )}
           <Button
             variant="hero"
             size="xl"
             className="w-full"
             onClick={handleAddToCart}
-            disabled={isBambino && !selectedBambinoPizza}
+            disabled={(isBambino && !selectedBambinoPizza) || !!manualClosure}
           >
-            Ajouter au panier • {calculateTotal().toFixed(2)}€
+            {manualClosure ? 'Commandes indisponibles' : `Ajouter au panier • ${calculateTotal().toFixed(2)}€`}
           </Button>
         </div>
       </div>
