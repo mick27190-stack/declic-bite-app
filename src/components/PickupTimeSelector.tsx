@@ -25,6 +25,7 @@ export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSele
 
 
   const handleSelect = (time: string) => {
+    if (disabled) return;
     setSelectedTime(time);
     onChange(time);
   };
@@ -33,7 +34,7 @@ export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSele
   const asapTime = availableTimes[0];
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${disabled ? 'opacity-50' : ''}`}>
       <div className="flex items-center gap-2 text-foreground">
         <Clock className="w-5 h-5 text-primary" />
         <h3 className="font-display font-semibold">Heure de retrait</h3>
