@@ -2,13 +2,16 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { supabase } from '@/integrations/supabase/client';
 import {
   DEFAULT_SIZE_PRICES,
+  DEFAULT_ITEM_PRICES,
   DayPromo,
   setPricingData,
+  setItemPrices,
 } from '@/lib/pricing';
 
 interface PricingContextValue {
   sizePrices: Record<string, number>;
   dayPromos: DayPromo[];
+  itemPrices: Record<string, number>;
   loading: boolean;
   refresh: () => Promise<void>;
 }
@@ -16,6 +19,7 @@ interface PricingContextValue {
 const PricingContext = createContext<PricingContextValue>({
   sizePrices: DEFAULT_SIZE_PRICES,
   dayPromos: [],
+  itemPrices: DEFAULT_ITEM_PRICES,
   loading: true,
   refresh: async () => {},
 });
@@ -23,12 +27,14 @@ const PricingContext = createContext<PricingContextValue>({
 export function PricingProvider({ children }: { children: ReactNode }) {
   const [sizePrices, setSizePrices] = useState<Record<string, number>>(DEFAULT_SIZE_PRICES);
   const [dayPromos, setDayPromos] = useState<DayPromo[]>([]);
+  const [itemPrices, setItemPricesState] = useState<Record<string, number>>(DEFAULT_ITEM_PRICES);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const [sizeRes, promoRes] = await Promise.all([
+    const [sizeRes, promoRes, itemRes] = await Promise.all([
       supabase.from('pizza_size_prices').select('*'),
       supabase.from('pizza_day_promos').select('*'),
+      supabase.from('menu_item_prices').select('*'),
     ]);
 
     const spMap: Record<string, number> = { ...DEFAULT_SIZE_PRICES };
@@ -45,9 +51,16 @@ export function PricingProvider({ children }: { children: ReactNode }) {
       is_active: row.is_active,
     }));
 
+    const ipMap: Record<string, number> = { ...DEFAULT_ITEM_PRICES };
+    (itemRes.data ?? []).forEach((row: any) => {
+      ipMap[row.item_key] = Number(row.price);
+    });
+
     setPricingData(spMap, promos);
+    setItemPrices(ipMap);
     setSizePrices(spMap);
     setDayPromos(promos);
+    setItemPricesState(ipMap);
     setLoading(false);
   }, []);
 
@@ -57,6 +70,7 @@ export function PricingProvider({ children }: { children: ReactNode }) {
       .channel('pricing-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pizza_size_prices' }, () => load())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'pizza_day_promos' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_item_prices' }, () => load())
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -64,7 +78,7 @@ export function PricingProvider({ children }: { children: ReactNode }) {
   }, [load]);
 
   return (
-    <PricingContext.Provider value={{ sizePrices, dayPromos, loading, refresh: load }}>
+    <PricingContext.Provider value={{ sizePrices, dayPromos, itemPrices, loading, refresh: load }}>
       {children}
     </PricingContext.Provider>
   );
