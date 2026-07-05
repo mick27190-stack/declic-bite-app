@@ -459,6 +459,10 @@ export type Database = {
         Returns: boolean
       }
       is_pizzeria_open: { Args: never; Returns: boolean }
+      is_site_manually_closed: {
+        Args: { _restaurant: string }
+        Returns: boolean
+      }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       normalize_phone: { Args: { _phone: string }; Returns: string }
       restaurant_to_site: { Args: { _restaurant: string }; Returns: string }
