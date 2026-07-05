@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, Restaurant, OrderType } from '@/types/pizza';
 import { PIZZA_CATEGORIES } from '@/lib/promo';
-import { getPizzaSizePrice } from '@/lib/pricing';
+import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
 
 const STORAGE_KEY = 'declic-cart-state';
