@@ -51,9 +51,9 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
 
   const calculateTotal = () => {
     if (!showSize) {
-      return pizza.basePrice * quantity;
+      return getNonPizzaPrice(pizza) * quantity;
     }
-    const base = isPizza ? getPizzaSizePrice(selectedSize.id, pizza.category) : pizza.basePrice + selectedSize.price;
+    const base = isPizza ? getPizzaSizePrice(selectedSize.id, pizza.category) : getNonPizzaPrice(pizza, selectedSize);
     const supps = selectedSupplements.reduce((sum, s) => sum + s.price, 0);
     return (base + supps) * quantity;
   };
