@@ -254,14 +254,23 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             </div>
           </div>
 
+          {manualClosure && (
+            <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-destructive text-sm">Commandes bloquées</p>
+                <p className="text-sm text-foreground mt-1">{manualClosure.reason}</p>
+              </div>
+            </div>
+          )}
           <Button
             variant="hero"
             size="xl"
             className="w-full"
             onClick={handleAddToCart}
-            disabled={isBambino && !selectedBambinoPizza}
+            disabled={(isBambino && !selectedBambinoPizza) || !!manualClosure}
           >
-            Ajouter au panier • {calculateTotal().toFixed(2)}€
+            {manualClosure ? 'Commandes indisponibles' : `Ajouter au panier • ${calculateTotal().toFixed(2)}€`}
           </Button>
         </div>
       </div>
