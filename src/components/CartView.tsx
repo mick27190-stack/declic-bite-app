@@ -188,6 +188,7 @@ export function CartView() {
         <OrderTypeSelector 
           value={orderType} 
           onChange={setOrderType}
+          disabled={isClosed}
         />
       </div>
 
