@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike, Shield } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike, Shield, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { Restaurant } from '@/types/pizza';
 import heroImage from '@/assets/declic-hero.jpeg';
+
 
 // La badge "Livreur" n'est visible que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
 function isLivreurWindowOpen(): boolean {
