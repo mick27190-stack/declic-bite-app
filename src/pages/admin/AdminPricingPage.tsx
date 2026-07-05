@@ -30,10 +30,13 @@ export default function AdminPricingPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { canManageMenu, loading: adminLoading } = useAdmin();
-  const { sizePrices, dayPromos, refresh } = usePricing();
+  const { sizePrices, dayPromos, itemPrices, refresh } = usePricing();
 
   const [sizeDraft, setSizeDraft] = useState<Record<string, string>>({});
   const [savingSizes, setSavingSizes] = useState(false);
+
+  const [itemDraft, setItemDraft] = useState<Record<string, string>>({});
+  const [savingItems, setSavingItems] = useState(false);
 
   // Nouvelle promo
   const [newDay, setNewDay] = useState<string>('2');
