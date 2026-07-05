@@ -31,7 +31,7 @@ export function OrderTypeSelector({ value, onChange, deliveryDisabled, disabled 
             value === 'emporter' && !takeawayDisabled ? 'text-primary' : 'text-muted-foreground'
           }`} />
           <span className={`block font-semibold ${
-            value === 'emporter' ? 'text-primary' : 'text-foreground'
+            value === 'emporter' && !takeawayDisabled ? 'text-primary' : 'text-foreground'
           }`}>
             À Emporter
           </span>
@@ -42,10 +42,10 @@ export function OrderTypeSelector({ value, onChange, deliveryDisabled, disabled 
 
         <button
           type="button"
-          onClick={() => !deliveryDisabled && onChange('livraison')}
-          disabled={deliveryDisabled}
+          onClick={() => !livraisonDisabled && onChange('livraison')}
+          disabled={livraisonDisabled}
           className={`p-4 rounded-xl border-2 transition-all duration-200 ${
-            deliveryDisabled 
+            livraisonDisabled 
               ? 'opacity-50 cursor-not-allowed border-border bg-muted'
               : value === 'livraison'
                 ? 'border-primary bg-primary/10 shadow-glow'
@@ -53,15 +53,15 @@ export function OrderTypeSelector({ value, onChange, deliveryDisabled, disabled 
           }`}
         >
           <Truck className={`w-6 h-6 mx-auto mb-2 ${
-            value === 'livraison' && !deliveryDisabled ? 'text-primary' : 'text-muted-foreground'
+            value === 'livraison' && !livraisonDisabled ? 'text-primary' : 'text-muted-foreground'
           }`} />
           <span className={`block font-semibold ${
-            value === 'livraison' && !deliveryDisabled ? 'text-primary' : 'text-foreground'
+            value === 'livraison' && !livraisonDisabled ? 'text-primary' : 'text-foreground'
           }`}>
             Livraison
           </span>
           <span className="text-xs text-muted-foreground">
-            {deliveryDisabled ? 'Non disponible' : 'Chez vous en ~30 min'}
+            {deliveryDisabled && !disabled ? 'Non disponible' : 'Chez vous en ~30 min'}
           </span>
         </button>
       </div>
