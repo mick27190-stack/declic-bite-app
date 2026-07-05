@@ -212,6 +212,30 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_item_prices: {
+        Row: {
+          created_at: string
+          id: string
+          item_key: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_key: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_key?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
