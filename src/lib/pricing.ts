@@ -43,6 +43,57 @@ export function getDayPromos(): DayPromo[] {
   return _dayPromos;
 }
 
+// ============= Autres éléments du menu (boissons, paninis, bambino) =============
+
+export const DEFAULT_ITEM_PRICES: Record<string, number> = {
+  'coca-cola-1-5l': 3,
+  'rose-bouteille': 7,
+  bambino: 7,
+  'panini-simple': 6,
+  'panini-double': 9,
+};
+
+export const MANAGED_ITEMS: { key: string; name: string }[] = [
+  { key: 'coca-cola-1-5l', name: 'Coca-Cola 1,5L' },
+  { key: 'rose-bouteille', name: 'Bouteille de Rosé' },
+  { key: 'panini-simple', name: 'Panini simple' },
+  { key: 'panini-double', name: 'Panini double' },
+  { key: 'bambino', name: 'Menu Bambino' },
+];
+
+let _itemPrices: Record<string, number> = { ...DEFAULT_ITEM_PRICES };
+
+export function setItemPrices(itemPrices: Record<string, number>) {
+  _itemPrices = { ...DEFAULT_ITEM_PRICES, ...itemPrices };
+}
+
+export function getItemPrice(key: string): number {
+  return _itemPrices[key] ?? DEFAULT_ITEM_PRICES[key] ?? 0;
+}
+
+export function getAllItemPrices(): Record<string, number> {
+  return { ..._itemPrices };
+}
+
+/**
+ * Prix des éléments non-pizza (boissons, paninis, bambino) en tenant compte
+ * des tarifs configurés par l'admin. `size` s'applique aux paninis
+ * (Simple / Double).
+ */
+export function getNonPizzaPrice(
+  pizza: { id: string; category: string; basePrice: number },
+  size?: { id: string; price: number },
+): number {
+  if (pizza.category === 'paninis') {
+    return size?.id === 'mega'
+      ? getItemPrice('panini-double')
+      : getItemPrice('panini-simple');
+  }
+  if (pizza.id === 'bambino') return getItemPrice('bambino');
+  if (pizza.id in DEFAULT_ITEM_PRICES) return getItemPrice(pizza.id);
+  return pizza.basePrice + (size?.price ?? 0);
+}
+
 function findDayPromo(sizeId: string, date: Date): DayPromo | undefined {
   return _dayPromos.find(
     (p) => p.is_active && p.day_of_week === date.getDay() && p.size_id === sizeId,
