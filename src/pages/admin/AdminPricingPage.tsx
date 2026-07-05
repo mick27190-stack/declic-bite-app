@@ -60,6 +60,34 @@ export default function AdminPricingPage() {
     });
   }, [sizePrices]);
 
+  useEffect(() => {
+    const draft: Record<string, string> = {};
+    MANAGED_ITEMS.forEach((it) => {
+      draft[it.key] = String(itemPrices[it.key] ?? '');
+    });
+    setItemDraft(draft);
+  }, [itemPrices]);
+
+  const saveItems = async () => {
+    setSavingItems(true);
+    const rows = MANAGED_ITEMS.map((it) => ({
+      item_key: it.key,
+      price: parseFloat(itemDraft[it.key]),
+    })).filter((r) => !isNaN(r.price));
+
+    const { error } = await supabase
+      .from('menu_item_prices')
+      .upsert(rows, { onConflict: 'item_key' });
+
+    setSavingItems(false);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Tarifs enregistrés', description: 'Le menu est mis à jour en temps réel.' });
+      await refresh();
+    }
+  };
+
   const saveSizes = async () => {
     setSavingSizes(true);
     const rows = SIZES.map((s) => ({
