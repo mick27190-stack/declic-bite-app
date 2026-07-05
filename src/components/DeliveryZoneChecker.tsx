@@ -72,7 +72,7 @@ export function DeliveryZoneChecker({ onValidAddress, disabled }: DeliveryZoneCh
   };
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${disabled ? 'opacity-50' : ''}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-foreground">
           <Truck className="w-5 h-5 text-primary" />
