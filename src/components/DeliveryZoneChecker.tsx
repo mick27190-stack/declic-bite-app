@@ -8,9 +8,10 @@ import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 
 interface DeliveryZoneCheckerProps {
   onValidAddress?: (address: string, coordinates: { lat: number; lng: number }, postalCode?: string | null, city?: string | null) => void;
+  disabled?: boolean;
 }
 
-export function DeliveryZoneChecker({ onValidAddress }: DeliveryZoneCheckerProps) {
+export function DeliveryZoneChecker({ onValidAddress, disabled }: DeliveryZoneCheckerProps) {
   const [address, setAddress] = useState('');
   const [showMap, setShowMap] = useState(true);
   const [customerCoords, setCustomerCoords] = useState<{ lat: number; lng: number } | null>(null);
