@@ -1,5 +1,6 @@
 import { Pizza } from '@/types/pizza';
-import { isPromoDay } from '@/lib/promo';
+import { getSizePriceInfo } from '@/lib/pricing';
+import { usePricing } from '@/contexts/PricingContext';
 
 interface PizzaCardProps {
   pizza: Pizza;
@@ -9,8 +10,10 @@ interface PizzaCardProps {
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
 export function PizzaCard({ pizza, onClick }: PizzaCardProps) {
+  usePricing();
   const isPizza = PIZZA_CATEGORIES.includes(pizza.category);
-  const showPromo = isPizza && isPromoDay();
+  const info = getSizePriceInfo('senior', pizza.category);
+  const showPromo = isPizza && info.isPromo;
 
   return (
     <button
