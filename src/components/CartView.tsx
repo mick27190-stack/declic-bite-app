@@ -260,7 +260,7 @@ export function CartView() {
           const isPizzaItem = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'].includes(item.pizza.category);
           const itemBase = isPizzaItem
             ? getPizzaSizePrice(item.size.id, item.pizza.category)
-            : item.pizza.basePrice + item.size.price;
+            : getNonPizzaPrice(item.pizza, item.size);
           const itemTotal =
             (itemBase + item.supplements.reduce((sum, s) => sum + s.price, 0)) *
             item.quantity;
