@@ -211,6 +211,44 @@ export default function AdminPricingPage() {
           </CardContent>
         </Card>
 
+        {/* Autres éléments du menu */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Autres éléments du menu</CardTitle>
+            <CardDescription>
+              Tarifs des boissons, paninis et du menu Bambino (communs aux deux sites).
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {MANAGED_ITEMS.map((it) => (
+                <div key={it.key} className="space-y-2">
+                  <Label htmlFor={`item-${it.key}`}>{it.name}</Label>
+                  <div className="relative">
+                    <Input
+                      id={`item-${it.key}`}
+                      type="number"
+                      step="0.5"
+                      min="0"
+                      value={itemDraft[it.key] ?? ''}
+                      onChange={(e) =>
+                        setItemDraft((d) => ({ ...d, [it.key]: e.target.value }))
+                      }
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button onClick={saveItems} disabled={savingItems}>
+              <Save className="h-4 w-4 mr-2" />
+              {savingItems ? 'Enregistrement...' : 'Enregistrer les tarifs'}
+            </Button>
+          </CardContent>
+        </Card>
+
+
+
         {/* Promotions par jour */}
         <Card>
           <CardHeader>
