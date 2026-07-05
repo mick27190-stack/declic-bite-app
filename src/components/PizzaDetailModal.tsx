@@ -7,7 +7,8 @@ import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { useToast } from '@/hooks/use-toast';
-import { getEffectiveBasePrice, isPromoDay } from '@/lib/promo';
+import { getPizzaSizePrice, getSizePriceInfo } from '@/lib/pricing';
+import { usePricing } from '@/contexts/PricingContext';
 
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
