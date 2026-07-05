@@ -113,12 +113,12 @@ export function DeliveryZoneChecker({ onValidAddress, disabled }: DeliveryZoneCh
           onChange={handleAddressChange}
           onPlaceSelect={handlePlaceSelect}
           placeholder="Entrez votre adresse complète"
-          disabled={!selectedRestaurant || isChecking}
+          disabled={disabled || !selectedRestaurant || isChecking}
           className="flex-1"
         />
         <Button
           onClick={handleCheck}
-          disabled={!address.trim() || !selectedRestaurant || isChecking}
+          disabled={disabled || !address.trim() || !selectedRestaurant || isChecking}
         >
           {isChecking ? (
             <Loader2 className="w-4 h-4 animate-spin" />
