@@ -151,10 +151,19 @@ export default function LivreurOrdersPage() {
                       })}
                     </span>
                     {order.delivery_address && (
-                      <span className="flex items-center gap-1 text-foreground font-medium">
+                      <a
+                        href={
+                          order.delivery_address.coordinates
+                            ? `https://www.google.com/maps/dir/?api=1&destination=${order.delivery_address.coordinates.lat},${order.delivery_address.coordinates.lng}`
+                            : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.delivery_address.address)}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-primary font-medium underline underline-offset-2"
+                      >
                         <MapPin className="h-4 w-4" />
                         {order.delivery_address.address}
-                      </span>
+                      </a>
                     )}
                     {phones[order.user_id] && (
                       <a
