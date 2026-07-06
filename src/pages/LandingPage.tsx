@@ -41,7 +41,7 @@ function isPizzeriaOpen(): boolean {
   const weekday = parts.find((p) => p.type === 'weekday')?.value?.toLowerCase() ?? '';
   const isMonday = weekday.startsWith('lun');
   const minutes = hour * 60 + minute;
-  return !isMonday && minutes >= 18 * 60 && minutes <= 23 * 60 + 30;
+  return !isMonday && minutes >= 18 * 60 && minutes < 22 * 60;
 }
 
 export default function LandingPage() {
