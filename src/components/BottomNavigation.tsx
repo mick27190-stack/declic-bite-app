@@ -8,14 +8,18 @@ import { useAdmin } from '@/contexts/AdminContext';
 function isLivreurWindowOpen(): boolean {
   const parts = new Intl.DateTimeFormat('fr-FR', {
     timeZone: 'Europe/Paris',
+    weekday: 'short',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   }).formatToParts(new Date());
   const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
   const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
+  const weekday = parts.find((p) => p.type === 'weekday')?.value?.toLowerCase() ?? '';
+  const isMonday = weekday.startsWith('lun');
   const minutes = hour * 60 + minute;
-  return minutes >= 18 * 60 && minutes <= 23 * 60 + 30;
+  // Fermé le lundi : pas de créneau livreur quand la pizzeria est fermée.
+  return !isMonday && minutes >= 18 * 60 && minutes <= 23 * 60 + 30;
 }
 
 export function BottomNavigation() {
