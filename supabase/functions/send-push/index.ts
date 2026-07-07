@@ -128,17 +128,26 @@ Deno.serve(async (req) => {
     const stale: string[] = [];
     await Promise.all(
       tokens.map(async ({ token }) => {
+        // IMPORTANT: send a DATA-ONLY message (no `notification` block).
+        // If a top-level `notification` (or `webpush.notification`) block is
+        // present, the browser/service worker displays it AUTOMATICALLY, and
+        // our onBackgroundMessage / onMessage handler then shows a SECOND one
+        // for the same event -> duplicate push. With data-only, our own code
+        // is the single source that decides when to display a notification.
         const message = {
           message: {
             token,
-            notification: { title, body },
-            data: { title, body, reference_id: String(referenceId) },
+            data: {
+              title,
+              body,
+              reference_id: String(referenceId),
+            },
             webpush: {
-              notification: { title, body, icon: "/favicon.ico", badge: "/favicon.ico" },
               fcm_options: { link: "/" },
             },
           },
         };
+
         const r = await fetch(endpoint, {
           method: "POST",
           headers: {
