@@ -176,7 +176,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                   >
                     <div className="text-left">
                       <p className="font-semibold text-foreground">{size.name}</p>
-                      <p className="text-xs text-muted-foreground">{size.description}</p>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line leading-snug">{size.description}</p>
                     </div>
                     <div className="text-right">
                       {isPizza ? (() => {
