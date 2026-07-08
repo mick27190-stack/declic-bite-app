@@ -1,9 +1,9 @@
 /**
- * Promotion: Mardi et Mercredi, toutes les pizzas Senior à 10€
+ * Promotion: Mardi, toutes les pizzas Senior à 10€
  */
 
 const PROMO_PRICE = 10;
-const PROMO_DAYS = [2, 3]; // Mardi = 2, Mercredi = 3
+const PROMO_DAYS = [2]; // Mardi = 2
 
 export function isPromoDay(date: Date = new Date()): boolean {
   return PROMO_DAYS.includes(date.getDay());
@@ -27,4 +27,4 @@ export function getEffectiveBasePrice(
   return basePrice;
 }
 
-export const PROMO_LABEL = 'Mardi & Mercredi : Senior à 10€ !';
+export const PROMO_LABEL = 'Mardi : Senior à 10€ !';

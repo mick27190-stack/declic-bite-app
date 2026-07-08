@@ -41,7 +41,7 @@ interface SMSCampaign {
 const mockCampaigns: SMSCampaign[] = [
   {
     id: '1',
-    message: '🍕 Mardi et Mercredi, toutes nos pizzas Senior à 10€ ! Venez en profiter !',
+    message: '🍕 Mardi, toutes nos pizzas Senior à 10€ ! Venez en profiter !',
     recipientCount: 150,
     sentAt: new Date(Date.now() - 86400000).toISOString(),
     site: 'all'
