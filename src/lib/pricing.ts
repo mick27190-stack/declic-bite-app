@@ -104,7 +104,7 @@ function findDayPromo(sizeId: string, date: Date): DayPromo | undefined {
 
 /**
  * Prix effectif (absolu) d'une pizza pour une taille donnée, en tenant compte
- * des promotions par jour (admin) et de la promo historique Mardi/Mercredi.
+ * des promotions par jour (admin) et de la promo historique Mardi.
  */
 export function getPizzaSizePrice(
   sizeId: string,
@@ -119,7 +119,7 @@ export function getPizzaSizePrice(
   const promo = findDayPromo(sizeId, date);
   if (promo) return promo.price;
 
-  // Promo historique : Mardi & Mercredi, Senior à 10€.
+  // Promo historique : Mardi, Senior à 10€.
   if (sizeId === 'senior' && isPromoDay(date)) return 10;
 
   return base;
@@ -143,7 +143,7 @@ export function getSizePriceInfo(
   const promoLabel = promo
     ? promo.label
     : sizeId === 'senior' && isPromoDay(date)
-      ? 'Mardi & Mercredi : Senior à 10€ !'
+      ? 'Mardi : Senior à 10€ !'
       : null;
   return { base, effective, isPromo: effective < base, promoLabel };
 }

@@ -109,7 +109,7 @@ export default function ContactPage() {
             </div>
           </div>
           <p className="mt-4 text-sm text-primary font-medium">
-            🎉 Mardi et Mercredi : toutes nos pizzas Senior à 10€ !
+            🎉 Mardi : toutes nos pizzas Senior à 10€ !
           </p>
         </div>
       </main>
