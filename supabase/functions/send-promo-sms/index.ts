@@ -36,7 +36,10 @@ Deno.serve(async (req) => {
     if (typeof message !== 'string' || message.trim().length === 0 || message.length > 1600) {
       return json({ error: 'Message invalide' }, 400);
     }
-    const siteList: string[] = Array.isArray(sites) ? sites : [];
+    const ALLOWED_SITES = ['conches', 'beaumont'];
+    const siteList: string[] = (Array.isArray(sites) ? sites : []).filter(
+      (s: unknown): s is string => typeof s === 'string' && ALLOWED_SITES.includes(s),
+    );
 
     // Gather recipients from the customer file (service role to read all customers)
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
