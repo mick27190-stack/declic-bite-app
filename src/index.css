@@ -232,3 +232,25 @@
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
 }
+
+/* iOS Safari: anchor fixed bottom navigation when the dynamic toolbar/address bar changes */
+@supports (-webkit-touch-callout: none) {
+  html {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  body {
+    height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
+}
+
+
+

@@ -45,7 +45,10 @@ export function BottomNavigation() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-card/90 backdrop-blur-xl border-t border-border/50 safe-area-inset-bottom">
+    <nav
+      className="fixed bottom-0 left-0 right-0 top-auto z-40 bg-card/90 backdrop-blur-xl border-t border-border/50"
+      style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+    >
       <div className="flex items-center justify-around h-16 max-w-md mx-auto px-4">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
