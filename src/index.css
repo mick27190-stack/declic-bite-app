@@ -234,7 +234,7 @@
 }
 
 /* iOS Safari: anchor fixed bottom navigation when the dynamic toolbar/address bar changes */
-@supports (-webkit-touch-callout: none) {
+@media (max-width: 1024px) {
   html {
     height: 100dvh;
     overflow: hidden;
@@ -251,4 +251,5 @@
     min-height: 100dvh !important;
   }
 }
+
 
