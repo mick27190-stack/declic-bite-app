@@ -46,7 +46,7 @@ export function BottomNavigation() {
 
   return (
     <nav
-      className="fixed left-0 right-0 top-auto z-40 bg-card/90 backdrop-blur-xl border-t border-border/50 bottom-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-0 left-0 right-0 top-auto z-40 bg-card/90 backdrop-blur-xl border-t border-border/50"
       style={{ transform: 'translateZ(0)', willChange: 'transform' }}
     >
       <div className="flex items-center justify-around h-16 max-w-md mx-auto px-4">
