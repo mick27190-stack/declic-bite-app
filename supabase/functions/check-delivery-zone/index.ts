@@ -42,6 +42,48 @@ function formatDuration(duration: string): string {
   return rem > 0 ? `${hours} h ${rem} min` : `${hours} h`;
 }
 
+async function gatewayFetch(
+  path: string,
+  options: RequestInit,
+  lovableApiKey: string,
+  connectionKeys: string[],
+) {
+  let lastErrorBody = '';
+
+  for (const connectionKey of connectionKeys) {
+    const response = await fetch(`${GATEWAY_URL}${path}`, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'X-Connection-Api-Key': connectionKey,
+      },
+    });
+
+    const body = await response.text();
+
+    if (!response.ok) {
+      lastErrorBody = body;
+      continue;
+    }
+
+    try {
+      const data = body ? JSON.parse(body) : null;
+
+      if (data?.status === 'REQUEST_DENIED') {
+        lastErrorBody = body;
+        continue;
+      }
+
+      return { response, data };
+    } catch (_error) {
+      return { response, data: body };
+    }
+  }
+
+  throw new Error(lastErrorBody || 'Google Maps gateway request failed');
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -87,8 +129,10 @@ serve(async (req) => {
     }
 
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    const connectionKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
-    if (!lovableApiKey || !connectionKey) {
+    const connectionKeys = [Deno.env.get('GOOGLE_MAPS_API_KEY_1'), Deno.env.get('GOOGLE_MAPS_API_KEY')]
+      .filter((key): key is string => Boolean(key));
+
+    if (!lovableApiKey || connectionKeys.length === 0) {
       console.error('Google Maps connector credentials not configured');
       return new Response(
         JSON.stringify({ error: 'Service de cartographie non configuré' }),
@@ -96,28 +140,28 @@ serve(async (req) => {
       );
     }
 
-    const gatewayHeaders = {
-      'Authorization': `Bearer ${lovableApiKey}`,
-      'X-Connection-Api-Key': connectionKey,
-    };
-
     const restaurantCoords = RESTAURANT_COORDS[restaurantId as keyof RestaurantCoordinates];
 
     console.log(`Checking delivery zone for restaurant: ${restaurantId}`);
 
     // Step 1: Geocode the customer address via the gateway
-    const geocodeUrl = `${GATEWAY_URL}/maps/api/geocode/json?address=${encodeURIComponent(trimmedAddress)}&region=fr`;
-    const geocodeResponse = await fetch(geocodeUrl, { headers: gatewayHeaders });
-
-    if (!geocodeResponse.ok) {
-      console.error(`Geocoding gateway error: ${geocodeResponse.status} ${await geocodeResponse.text()}`);
+    let geocodeData;
+    try {
+      const geocodeResult = await gatewayFetch(
+        `/maps/api/geocode/json?address=${encodeURIComponent(trimmedAddress)}&region=fr`,
+        {},
+        lovableApiKey,
+        connectionKeys,
+      );
+      geocodeData = geocodeResult.data;
+    } catch (error) {
+      console.error(`Geocoding gateway error: ${error instanceof Error ? error.message : String(error)}`);
       return new Response(
         JSON.stringify({ isInZone: false, error: 'Service de cartographie indisponible', distanceKm: null }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const geocodeData = await geocodeResponse.json();
     if (geocodeData.status !== 'OK' || !geocodeData.results?.length) {
       console.error(`Geocoding failed: ${geocodeData.status}`);
       return new Response(
@@ -130,33 +174,37 @@ serve(async (req) => {
     console.log(`Address coordinates: ${addressLocation.lat}, ${addressLocation.lng}`);
 
     // Step 2: Compute driving distance via Routes API (computeRouteMatrix)
-    const matrixResponse = await fetch(`${GATEWAY_URL}/routes/distanceMatrix/v2:computeRouteMatrix`, {
-      method: 'POST',
-      headers: {
-        ...gatewayHeaders,
-        'Content-Type': 'application/json',
-        'X-Goog-FieldMask': 'originIndex,destinationIndex,distanceMeters,duration,condition',
-      },
-      body: JSON.stringify({
-        origins: [{
-          waypoint: { location: { latLng: { latitude: restaurantCoords.lat, longitude: restaurantCoords.lng } } },
-        }],
-        destinations: [{
-          waypoint: { location: { latLng: { latitude: addressLocation.lat, longitude: addressLocation.lng } } },
-        }],
-        travelMode: 'DRIVE',
-      }),
-    });
-
-    if (!matrixResponse.ok) {
-      console.error(`Routes gateway error: ${matrixResponse.status} ${await matrixResponse.text()}`);
+    let matrixData;
+    try {
+      const matrixResult = await gatewayFetch(
+        '/routes/distanceMatrix/v2:computeRouteMatrix',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-FieldMask': 'originIndex,destinationIndex,distanceMeters,duration,condition',
+          },
+          body: JSON.stringify({
+            origins: [{
+              waypoint: { location: { latLng: { latitude: restaurantCoords.lat, longitude: restaurantCoords.lng } } },
+            }],
+            destinations: [{
+              waypoint: { location: { latLng: { latitude: addressLocation.lat, longitude: addressLocation.lng } } },
+            }],
+            travelMode: 'DRIVE',
+          }),
+        },
+        lovableApiKey,
+        connectionKeys,
+      );
+      matrixData = matrixResult.data;
+    } catch (error) {
+      console.error(`Routes gateway error: ${error instanceof Error ? error.message : String(error)}`);
       return new Response(
         JSON.stringify({ isInZone: false, error: 'Impossible de calculer la distance', distanceKm: null }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const matrixData = await matrixResponse.json();
     const element = Array.isArray(matrixData) ? matrixData[0] : matrixData;
 
     if (!element || element.condition !== 'ROUTE_EXISTS' || typeof element.distanceMeters !== 'number') {

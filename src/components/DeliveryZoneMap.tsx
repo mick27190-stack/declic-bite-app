@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { setOptions, importLibrary } from '@googlemaps/js-api-loader';
 
 import { MapPin, Loader2, AlertTriangle, RefreshCw, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { loadGoogleMapsLibrary } from '@/lib/googleMaps';
 
 // Restaurant coordinates
 const RESTAURANT_COORDS = {
@@ -15,8 +15,6 @@ interface DeliveryZoneMapProps {
   customerCoordinates?: { lat: number; lng: number } | null;
   className?: string;
 }
-
-let apiKeySet = false;
 
 const DELIVERY_RADIUS_METERS = 12000; // 12 km
 
@@ -44,8 +42,8 @@ export function DeliveryZoneMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const circleRef = useRef<google.maps.Circle | null>(null);
-  const restaurantMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
-  const customerMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const restaurantMarkerRef = useRef<google.maps.Marker | null>(null);
+  const customerMarkerRef = useRef<google.maps.Marker | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -74,24 +72,7 @@ export function DeliveryZoneMap({
       if (!mapRef.current) return;
 
       try {
-        const apiKey = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY;
-
-        if (!apiKey) {
-          throw new Error('Impossible de charger la carte');
-        }
-
-        // Set API key only once
-        if (!apiKeySet) {
-          setOptions({
-            key: apiKey,
-            v: 'weekly',
-          });
-          apiKeySet = true;
-        }
-
-        // Import required libraries
-        const { Map } = await importLibrary('maps') as google.maps.MapsLibrary;
-        const { AdvancedMarkerElement } = await importLibrary('marker') as google.maps.MarkerLibrary;
+        const { Map } = await loadGoogleMapsLibrary('maps') as google.maps.MapsLibrary;
 
         if (!isMounted || !mapRef.current) return;
 
@@ -99,7 +80,6 @@ export function DeliveryZoneMap({
         googleMapRef.current = new Map(mapRef.current, {
           center: restaurantCoords,
           zoom: 11,
-          mapId: 'DELIVERY_ZONE_MAP',
           disableDefaultUI: false,
           mapTypeControl: false,
           streetViewControl: false,
@@ -119,29 +99,23 @@ export function DeliveryZoneMap({
           clickable: false,
         });
 
-        // Create restaurant marker element
-        const restaurantPinElement = document.createElement('div');
-        restaurantPinElement.innerHTML = `
-          <div style="
-            background: linear-gradient(135deg, #ea580c, #dc2626);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.4);
-            border: 3px solid white;
-            font-size: 18px;
-          ">🍕</div>
-        `;
-
         // Add restaurant marker
-        restaurantMarkerRef.current = new AdvancedMarkerElement({
+        restaurantMarkerRef.current = new google.maps.Marker({
           map: googleMapRef.current,
           position: restaurantCoords,
           title: restaurantId === 'conches' ? 'Déclic Pizza Conches' : 'Déclic Pizza Beaumont',
-          content: restaurantPinElement,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 18,
+            fillColor: '#ea580c',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3,
+          },
+          label: {
+            text: '🍕',
+            fontSize: '16px',
+          },
         });
 
         setMapLoaded(true);
@@ -169,36 +143,28 @@ export function DeliveryZoneMap({
     const updateCustomerMarker = async () => {
       // Remove existing customer marker
       if (customerMarkerRef.current) {
-        customerMarkerRef.current.map = null;
+        customerMarkerRef.current.setMap(null);
         customerMarkerRef.current = null;
       }
 
       if (customerCoordinates) {
-        const { AdvancedMarkerElement } = await importLibrary('marker') as google.maps.MarkerLibrary;
-
-        // Create customer marker element
-        const customerPinElement = document.createElement('div');
-        customerPinElement.innerHTML = `
-          <div style="
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-            border: 3px solid white;
-            font-size: 14px;
-          ">📍</div>
-        `;
-
         // Add new customer marker
-        customerMarkerRef.current = new AdvancedMarkerElement({
+        customerMarkerRef.current = new google.maps.Marker({
           map: googleMapRef.current,
           position: customerCoordinates,
           title: 'Votre adresse',
-          content: customerPinElement,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 16,
+            fillColor: '#2563eb',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3,
+          },
+          label: {
+            text: '📍',
+            fontSize: '14px',
+          },
         });
 
         // Fit bounds to show both markers
@@ -222,8 +188,8 @@ export function DeliveryZoneMap({
       circleRef.current.setCenter(restaurantCoords);
     }
     if (restaurantMarkerRef.current) {
-      restaurantMarkerRef.current.position = restaurantCoords;
-      restaurantMarkerRef.current.title = restaurantId === 'conches' ? 'Déclic Pizza Conches' : 'Déclic Pizza Beaumont';
+      restaurantMarkerRef.current.setPosition(restaurantCoords);
+      restaurantMarkerRef.current.setTitle(restaurantId === 'conches' ? 'Déclic Pizza Conches' : 'Déclic Pizza Beaumont');
     }
     if (googleMapRef.current && !customerCoordinates) {
       googleMapRef.current.setCenter(restaurantCoords);
