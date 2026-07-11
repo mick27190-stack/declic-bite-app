@@ -87,7 +87,7 @@ serve(async (req) => {
     }
 
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    const connectionKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
+    const connectionKey = Deno.env.get('GOOGLE_MAPS_API_KEY_1') || Deno.env.get('GOOGLE_MAPS_API_KEY');
     if (!lovableApiKey || !connectionKey) {
       console.error('Google Maps connector credentials not configured');
       return new Response(
