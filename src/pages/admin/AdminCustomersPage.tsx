@@ -16,7 +16,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, UserPlus, Search, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, UserPlus, Phone, Search, Trash2, Users } from 'lucide-react';
 
 interface Customer {
   id: string;
@@ -247,7 +247,19 @@ export default function AdminCustomersPage() {
                       <TableCell className="font-medium">
                         {[c.first_name, c.last_name].filter(Boolean).join(' ') || '—'}
                       </TableCell>
-                      <TableCell>{c.phone || '—'}</TableCell>
+                      <TableCell>
+                        {c.phone ? (
+                          <a
+                            href={`tel:${c.phone.replace(/\s/g, '')}`}
+                            className="inline-flex items-center gap-1 text-primary font-medium hover:underline underline-offset-2"
+                          >
+                            <Phone className="h-3.5 w-3.5" />
+                            {c.phone}
+                          </a>
+                        ) : (
+                          '—'
+                        )}
+                      </TableCell>
                       <TableCell className="max-w-[180px] truncate">{c.email || '—'}</TableCell>
                       <TableCell className="capitalize">{c.site || '—'}</TableCell>
                       <TableCell>
