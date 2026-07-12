@@ -503,7 +503,7 @@ export default function AdminSalesPage() {
             </Popover>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">{viewMode === 'week' ? 'Semaine fin' : 'Au'}</span>
+            <span className="text-xs text-muted-foreground">{viewMode === 'month' ? 'Mois fin' : viewMode === 'week' ? 'Semaine fin' : 'Au'}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -511,19 +511,29 @@ export default function AdminSalesPage() {
                   className={cn('w-[150px] justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, 'dd/MM/yyyy', { locale: fr }) : <span>Date fin</span>}
+                  {endDate
+                    ? (viewMode === 'month'
+                        ? format(endDate, 'MMMM yyyy', { locale: fr })
+                        : format(endDate, 'dd/MM/yyyy', { locale: fr }))
+                    : <span>Date fin</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={endDate}
-                  onSelect={(d) => d && setEndDate(viewMode === 'week' ? endOfWeek(d) : d)}
+                  onSelect={(d) => d && setEndDate(viewMode === 'month' ? endOfMonth(d) : viewMode === 'week' ? endOfWeek(d) : d)}
                   disabled={(d) => d < startDate || d > new Date()}
                   initialFocus
                   locale={fr}
                   weekStartsOn={1}
-                  modifiers={viewMode === 'week' ? { selected: (d) => d >= startOfWeek(endDate) && d <= endOfWeek(endDate) } : undefined}
+                  modifiers={
+                    viewMode === 'month'
+                      ? { selected: (d) => d >= startOfMonth(endDate) && d <= endOfMonth(endDate) }
+                      : viewMode === 'week'
+                        ? { selected: (d) => d >= startOfWeek(endDate) && d <= endOfWeek(endDate) }
+                        : undefined
+                  }
                   className={cn('p-3 pointer-events-auto')}
                 />
               </PopoverContent>
