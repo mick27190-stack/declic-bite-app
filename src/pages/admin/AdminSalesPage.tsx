@@ -454,13 +454,14 @@ export default function AdminSalesPage() {
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Affichage</span>
-            <Select value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week')}>
+            <Select value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week' | 'month')}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="day">Par jour</SelectItem>
                 <SelectItem value="week">Par semaine</SelectItem>
+                <SelectItem value="month">Par mois</SelectItem>
               </SelectContent>
             </Select>
           </div>
