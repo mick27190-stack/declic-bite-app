@@ -537,7 +537,7 @@ export default function AdminSalesPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              Chiffre d'affaires par jour
+              Chiffre d'affaires {viewMode === 'week' ? 'par semaine' : 'par jour'}
             </CardTitle>
           </CardHeader>
           <CardContent>
