@@ -270,49 +270,41 @@ export default function AdminSalesPage() {
   };
 
   const exportCSV = () => {
-    const lines: string[] = ['Date;Pizzas;Chiffre d\'affaires (€)'];
-    monthlyGroups.forEach(m => {
-      lines.push('');
-      lines.push(`${monthLabel(m.month).toUpperCase()}`);
-      [...m.days].reverse().forEach(d => {
-        const label = new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
-        lines.push(`${label};${d.pizzas};${d.revenue.toFixed(2)}`);
-      });
-      lines.push(`TOTAL ${monthLabel(m.month).toUpperCase()};${m.pizzas};${m.revenue.toFixed(2)}`);
+    const lines: string[] = [`${viewColLabel};Pizzas;Chiffre d'affaires (€)`];
+    [...displayStats].reverse().forEach(d => {
+      lines.push(`${rowLabel(d.date)};${d.pizzas};${d.revenue.toFixed(2)}`);
     });
+    lines.push(`TOTAL;${totals.pizzas};${totals.revenue.toFixed(2)}`);
     const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    downloadBlob(blob, `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.csv`);
+    downloadBlob(blob, `ventes-${viewNoun}-${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text('Suivi des ventes — Détail mensuel', 14, 18);
-    let startY = 26;
-    monthlyGroups.forEach(m => {
-      const body = [...m.days].reverse().map(d => [
-        new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }),
-        String(d.pizzas),
-        `${d.revenue.toFixed(2)} €`,
-      ]);
-      body.push([`TOTAL ${monthLabel(m.month)}`, String(m.pizzas), `${m.revenue.toFixed(2)} €`]);
-      autoTable(doc, {
-        head: [[monthLabel(m.month).toUpperCase(), 'Pizzas', 'CA']],
-        body,
-        startY,
-        theme: 'striped',
-        headStyles: { fillColor: [234, 88, 12] },
-        didParseCell: (data) => {
-          if (data.row.index === body.length - 1 && data.section === 'body') {
-            data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fillColor = [255, 237, 213];
-          }
-        },
-      });
-      startY = (doc as any).lastAutoTable.finalY + 10;
+    doc.text(`Suivi des ventes — Détail ${viewNoun}`, 14, 18);
+    const body = [...displayStats].reverse().map(d => [
+      rowLabel(d.date),
+      String(d.pizzas),
+      `${d.revenue.toFixed(2)} €`,
+    ]);
+    body.push(['TOTAL', String(totals.pizzas), `${totals.revenue.toFixed(2)} €`]);
+    autoTable(doc, {
+      head: [[viewColLabel, 'Pizzas', 'CA']],
+      body,
+      startY: 26,
+      theme: 'striped',
+      headStyles: { fillColor: [234, 88, 12] },
+      didParseCell: (data) => {
+        if (data.row.index === body.length - 1 && data.section === 'body') {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [255, 237, 213];
+        }
+      },
     });
-    downloadBlob(doc.output('blob'), `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.pdf`);
+    downloadBlob(doc.output('blob'), `ventes-${viewNoun}-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
+
 
 
   const exportFullPDF = () => {
