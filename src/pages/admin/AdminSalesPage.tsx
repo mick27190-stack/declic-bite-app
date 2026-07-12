@@ -233,6 +233,23 @@ export default function AdminSalesPage() {
   const viewColLabel = viewMode === 'month' ? 'Mois' : viewMode === 'week' ? 'Semaine' : 'Date';
   const periodWord = viewMode === 'month' ? 'par mois' : viewMode === 'week' ? 'par semaine' : 'par jour';
 
+  // FR formatting helpers — shared by the on-screen table and the CSV/PDF exports
+  // so amounts and dates match exactly.
+  const formatEUR = (n: number) =>
+    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
+  // Same value but with narrow/no-break spaces normalized so jsPDF's core font
+  // renders it correctly (identical content to the on-screen amount).
+  const formatEURPdf = (n: number) => formatEUR(n).replace(/[\u202f\u00a0]/g, ' ');
+  const formatNumberFR = (n: number) =>
+    n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Inclusive period bounds in FR format (bornes incluses)
+  const periodBounds = () => {
+    const from = viewMode === 'month' ? startOfMonth(startDate) : startDate;
+    const to = viewMode === 'month' ? endOfMonth(endDate) : endDate;
+    return `du ${format(from, 'dd/MM/yyyy', { locale: fr })} au ${format(to, 'dd/MM/yyyy', { locale: fr })}`;
+  };
+
   // Robust download that works in sandboxed preview iframes and on mobile:
   // the anchor MUST be attached to the DOM before clicking, and we fall back
   // to opening the blob in a new tab if the download attribute is blocked.
@@ -256,11 +273,14 @@ export default function AdminSalesPage() {
   };
 
   const exportCSV = () => {
-    const lines: string[] = [`${viewColLabel};Pizzas;Chiffre d'affaires (€)`];
+    const lines: string[] = [];
+    lines.push(`Suivi des ventes ${periodWord} (${periodBounds()})`);
+    lines.push('');
+    lines.push(`${viewColLabel};Pizzas;Chiffre d'affaires (€)`);
     [...displayStats].reverse().forEach(d => {
-      lines.push(`${rowLabel(d.date)};${d.pizzas};${d.revenue.toFixed(2)}`);
+      lines.push(`${rowLabel(d.date)};${d.pizzas};${formatNumberFR(d.revenue)}`);
     });
-    lines.push(`TOTAL;${totals.pizzas};${totals.revenue.toFixed(2)}`);
+    lines.push(`TOTAL;${totals.pizzas};${formatNumberFR(totals.revenue)}`);
     const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, `ventes-${viewNoun}-${new Date().toISOString().slice(0, 10)}.csv`);
   };
@@ -269,16 +289,20 @@ export default function AdminSalesPage() {
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text(`Suivi des ventes — Détail ${viewNoun}`, 14, 18);
+    doc.setFontSize(11);
+    doc.setTextColor(120);
+    doc.text(`Période : ${periodBounds()}`, 14, 25);
+    doc.setTextColor(0);
     const body = [...displayStats].reverse().map(d => [
       rowLabel(d.date),
       String(d.pizzas),
-      `${d.revenue.toFixed(2)} €`,
+      formatEURPdf(d.revenue),
     ]);
-    body.push(['TOTAL', String(totals.pizzas), `${totals.revenue.toFixed(2)} €`]);
+    body.push(['TOTAL', String(totals.pizzas), formatEURPdf(totals.revenue)]);
     autoTable(doc, {
       head: [[viewColLabel, 'Pizzas', 'CA']],
       body,
-      startY: 26,
+      startY: 31,
       theme: 'striped',
       headStyles: { fillColor: [234, 88, 12] },
       didParseCell: (data) => {
@@ -290,6 +314,7 @@ export default function AdminSalesPage() {
     });
     downloadBlob(doc.output('blob'), `ventes-${viewNoun}-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
+
 
 
 
@@ -377,10 +402,10 @@ export default function AdminSalesPage() {
     autoTable(doc, {
       head: [['Résumé global sur la période', '']],
       body: [
-        ['Chiffre d\'affaires total', `${exportTotalRevenue.toFixed(2)} €`],
+        ['Chiffre d\'affaires total', formatEURPdf(exportTotalRevenue)],
         ['Pizzas vendues', String(exportTotalPizzas)],
         ['Commandes', String(exportOrders.length)],
-        ['Panier moyen', `${exportOrders.length ? (exportTotalRevenue / exportOrders.length).toFixed(2) : '0.00'} €`],
+        ['Panier moyen', formatEURPdf(exportOrders.length ? exportTotalRevenue / exportOrders.length : 0)],
       ],
       startY: 38,
       theme: 'grid',
@@ -391,7 +416,7 @@ export default function AdminSalesPage() {
     // 2. Totaux par site
     autoTable(doc, {
       head: [['Site', 'Commandes', 'Pizzas', 'CA']],
-      body: exportSiteTotals.map(s => [s.site, String(s.orders), String(s.pizzas), `${s.revenue.toFixed(2)} €`]),
+      body: exportSiteTotals.map(s => [s.site, String(s.orders), String(s.pizzas), formatEURPdf(s.revenue)]),
       startY,
       theme: 'striped',
       headStyles: { fillColor: [234, 88, 12] },
@@ -405,9 +430,9 @@ export default function AdminSalesPage() {
     const detailBody = [...exportDisplayStats].reverse().map(d => [
       rowLabel(d.date),
       String(d.pizzas),
-      `${d.revenue.toFixed(2)} €`,
+      formatEURPdf(d.revenue),
     ]);
-    detailBody.push(['TOTAL', String(exportTotalPizzas), `${exportTotalRevenue.toFixed(2)} €`]);
+    detailBody.push(['TOTAL', String(exportTotalPizzas), formatEURPdf(exportTotalRevenue)]);
     autoTable(doc, {
       head: [[viewColLabel, 'Pizzas', 'CA']],
       body: detailBody,
@@ -729,7 +754,7 @@ export default function AdminSalesPage() {
                     <tr key={d.date} className="border-b border-border/50">
                       <td className="py-2">{rowLabel(d.date)}</td>
                       <td className="text-right py-2 font-medium">{d.pizzas}</td>
-                      <td className="text-right py-2 font-medium text-primary">{d.revenue.toFixed(2)}€</td>
+                      <td className="text-right py-2 font-medium text-primary">{formatEUR(d.revenue)}</td>
                     </tr>
                   ))}
                 </tbody>
