@@ -13,14 +13,27 @@ export function useOrders() {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('*, profiles:user_id(first_name, last_name, phone)')
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      // Fetch matching profiles separately (no FK relationship available)
+      const userIds = Array.from(
+        new Set((data || []).map((o: any) => o.user_id).filter(Boolean))
+      );
+      const profileMap = new Map<string, { first_name?: string; last_name?: string; phone?: string }>();
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, first_name, last_name, phone')
+          .in('user_id', userIds);
+        (profiles || []).forEach((p: any) => profileMap.set(p.user_id, p));
+      }
+
       // Transform the data to match our Order type
       const transformedOrders: Order[] = (data || []).map((order: any) => {
-        const profile = order.profiles;
+        const profile = order.user_id ? profileMap.get(order.user_id) : undefined;
         return {
           ...order,
           customer_name: profile
