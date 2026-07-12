@@ -751,7 +751,7 @@ export default function AdminSalesPage() {
                     <tr key={d.date} className="border-b border-border/50">
                       <td className="py-2">{rowLabel(d.date)}</td>
                       <td className="text-right py-2 font-medium">{d.pizzas}</td>
-                      <td className="text-right py-2 font-medium text-primary">{d.revenue.toFixed(2)}€</td>
+                      <td className="text-right py-2 font-medium text-primary">{formatEUR(d.revenue)}</td>
                     </tr>
                   ))}
                 </tbody>
