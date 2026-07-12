@@ -237,6 +237,9 @@ export default function AdminSalesPage() {
   // so amounts and dates match exactly.
   const formatEUR = (n: number) =>
     new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
+  // Same value but with narrow/no-break spaces normalized so jsPDF's core font
+  // renders it correctly (identical content to the on-screen amount).
+  const formatEURPdf = (n: number) => formatEUR(n).replace(/[\u202f\u00a0]/g, ' ');
   const formatNumberFR = (n: number) =>
     n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
