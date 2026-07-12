@@ -39,6 +39,22 @@ export default function AdminSalesPage() {
   const [endDate, setEndDate] = useState<Date>(() => new Date());
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [fullExportSite, setFullExportSite] = useState<'all' | 'conches' | 'beaumont'>('all');
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+
+  // Week helpers (Monday start)
+  const startOfWeek = (d: Date) => {
+    const x = new Date(d);
+    const day = (x.getDay() + 6) % 7; // 0 = Monday
+    x.setDate(x.getDate() - day);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+  const endOfWeek = (d: Date) => {
+    const x = startOfWeek(d);
+    x.setDate(x.getDate() + 6);
+    x.setHours(23, 59, 59, 999);
+    return x;
+  };
 
   // Helpers for day-range handling (UTC keys to match order.created_at slicing)
   const dayKey = (d: Date) => d.toISOString().slice(0, 10);
