@@ -39,7 +39,7 @@ export default function AdminSalesPage() {
   const [endDate, setEndDate] = useState<Date>(() => new Date());
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [fullExportSite, setFullExportSite] = useState<'all' | 'conches' | 'beaumont'>('all');
-  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('day');
 
   // Week helpers (Monday start)
   const startOfWeek = (d: Date) => {
@@ -52,6 +52,18 @@ export default function AdminSalesPage() {
   const endOfWeek = (d: Date) => {
     const x = startOfWeek(d);
     x.setDate(x.getDate() + 6);
+    x.setHours(23, 59, 59, 999);
+    return x;
+  };
+
+  // Month helpers
+  const startOfMonth = (d: Date) => {
+    const x = new Date(d.getFullYear(), d.getMonth(), 1);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+  const endOfMonth = (d: Date) => {
+    const x = new Date(d.getFullYear(), d.getMonth() + 1, 0);
     x.setHours(23, 59, 59, 999);
     return x;
   };
@@ -154,7 +166,20 @@ export default function AdminSalesPage() {
     return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
   }, [dailyStats]);
 
-  const displayStats = viewMode === 'week' ? weeklyStats : dailyStats;
+  // Group daily stats into months for the monthly view (date = YYYY-MM-01)
+  const monthlyStats = useMemo(() => {
+    const map = new Map<string, { date: string; pizzas: number; revenue: number }>();
+    dailyStats.forEach(d => {
+      const key = d.date.slice(0, 7) + '-01';
+      const entry = map.get(key) || { date: key, pizzas: 0, revenue: 0 };
+      entry.pizzas += d.pizzas;
+      entry.revenue += d.revenue;
+      map.set(key, entry);
+    });
+    return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
+  }, [dailyStats]);
+
+  const displayStats = viewMode === 'month' ? monthlyStats : viewMode === 'week' ? weeklyStats : dailyStats;
 
   const totals = useMemo(() => {
     return dailyStats.reduce(
@@ -166,9 +191,11 @@ export default function AdminSalesPage() {
   const chartData = useMemo(() => {
     return displayStats.map(d => ({
       ...d,
-      label: viewMode === 'week'
-        ? `sem. ${new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}`
-        : new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+      label: viewMode === 'month'
+        ? new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
+        : viewMode === 'week'
+          ? `sem. ${new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}`
+          : new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
       revenue: Math.round(d.revenue * 100) / 100,
     }));
   }, [displayStats, viewMode]);
@@ -189,22 +216,22 @@ export default function AdminSalesPage() {
       .map(([name, count], i) => ({ rank: i + 1, name, count }));
   }, [filteredOrders]);
 
-  // Group daily stats by month for monthly exports
-  const monthlyGroups = useMemo(() => {
-    const map = new Map<string, { month: string; days: typeof dailyStats; pizzas: number; revenue: number }>();
-    dailyStats.forEach(d => {
-      const monthKey = d.date.slice(0, 7); // YYYY-MM
-      const entry = map.get(monthKey) || { month: monthKey, days: [], pizzas: 0, revenue: 0 };
-      entry.days.push(d);
-      entry.pizzas += d.pizzas;
-      entry.revenue += d.revenue;
-      map.set(monthKey, entry);
-    });
-    return Array.from(map.values()).sort((a, b) => b.month.localeCompare(a.month));
-  }, [dailyStats]);
 
-  const monthLabel = (key: string) =>
-    new Date(key + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+
+  // Label for a single display row, coherent with the selected view mode
+  const rowLabel = (dateKey: string) => {
+    if (viewMode === 'month') {
+      return new Date(dateKey + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    }
+    if (viewMode === 'week') {
+      return `Semaine du ${new Date(dateKey + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+    }
+    return new Date(dateKey).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  };
+
+  const viewNoun = viewMode === 'month' ? 'mensuel' : viewMode === 'week' ? 'hebdomadaire' : 'journalier';
+  const viewColLabel = viewMode === 'month' ? 'Mois' : viewMode === 'week' ? 'Semaine' : 'Date';
+  const periodWord = viewMode === 'month' ? 'par mois' : viewMode === 'week' ? 'par semaine' : 'par jour';
 
   // Robust download that works in sandboxed preview iframes and on mobile:
   // the anchor MUST be attached to the DOM before clicking, and we fall back
@@ -229,49 +256,41 @@ export default function AdminSalesPage() {
   };
 
   const exportCSV = () => {
-    const lines: string[] = ['Date;Pizzas;Chiffre d\'affaires (€)'];
-    monthlyGroups.forEach(m => {
-      lines.push('');
-      lines.push(`${monthLabel(m.month).toUpperCase()}`);
-      [...m.days].reverse().forEach(d => {
-        const label = new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
-        lines.push(`${label};${d.pizzas};${d.revenue.toFixed(2)}`);
-      });
-      lines.push(`TOTAL ${monthLabel(m.month).toUpperCase()};${m.pizzas};${m.revenue.toFixed(2)}`);
+    const lines: string[] = [`${viewColLabel};Pizzas;Chiffre d'affaires (€)`];
+    [...displayStats].reverse().forEach(d => {
+      lines.push(`${rowLabel(d.date)};${d.pizzas};${d.revenue.toFixed(2)}`);
     });
+    lines.push(`TOTAL;${totals.pizzas};${totals.revenue.toFixed(2)}`);
     const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    downloadBlob(blob, `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.csv`);
+    downloadBlob(blob, `ventes-${viewNoun}-${new Date().toISOString().slice(0, 10)}.csv`);
   };
 
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text('Suivi des ventes — Détail mensuel', 14, 18);
-    let startY = 26;
-    monthlyGroups.forEach(m => {
-      const body = [...m.days].reverse().map(d => [
-        new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }),
-        String(d.pizzas),
-        `${d.revenue.toFixed(2)} €`,
-      ]);
-      body.push([`TOTAL ${monthLabel(m.month)}`, String(m.pizzas), `${m.revenue.toFixed(2)} €`]);
-      autoTable(doc, {
-        head: [[monthLabel(m.month).toUpperCase(), 'Pizzas', 'CA']],
-        body,
-        startY,
-        theme: 'striped',
-        headStyles: { fillColor: [234, 88, 12] },
-        didParseCell: (data) => {
-          if (data.row.index === body.length - 1 && data.section === 'body') {
-            data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fillColor = [255, 237, 213];
-          }
-        },
-      });
-      startY = (doc as any).lastAutoTable.finalY + 10;
+    doc.text(`Suivi des ventes — Détail ${viewNoun}`, 14, 18);
+    const body = [...displayStats].reverse().map(d => [
+      rowLabel(d.date),
+      String(d.pizzas),
+      `${d.revenue.toFixed(2)} €`,
+    ]);
+    body.push(['TOTAL', String(totals.pizzas), `${totals.revenue.toFixed(2)} €`]);
+    autoTable(doc, {
+      head: [[viewColLabel, 'Pizzas', 'CA']],
+      body,
+      startY: 26,
+      theme: 'striped',
+      headStyles: { fillColor: [234, 88, 12] },
+      didParseCell: (data) => {
+        if (data.row.index === body.length - 1 && data.section === 'body') {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [255, 237, 213];
+        }
+      },
     });
-    downloadBlob(doc.output('blob'), `ventes-mensuelles-${new Date().toISOString().slice(0, 10)}.pdf`);
+    downloadBlob(doc.output('blob'), `ventes-${viewNoun}-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
+
 
 
   const exportFullPDF = () => {
@@ -324,17 +343,27 @@ export default function AdminSalesPage() {
     });
     const exportDailyStats = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
-    // Group export daily stats by month
-    const monthMap = new Map<string, { month: string; days: typeof exportDailyStats; pizzas: number; revenue: number }>();
+    // Aggregate export daily stats by the selected granularity
+    const groupKey = (dateKey: string) => {
+      if (viewMode === 'month') return dateKey.slice(0, 7) + '-01';
+      if (viewMode === 'week') {
+        const dt = new Date(dateKey + 'T00:00:00');
+        const day = (dt.getDay() + 6) % 7;
+        const monday = new Date(dt);
+        monday.setDate(dt.getDate() - day);
+        return format(monday, 'yyyy-MM-dd');
+      }
+      return dateKey;
+    };
+    const groupMap = new Map<string, { date: string; pizzas: number; revenue: number }>();
     exportDailyStats.forEach(d => {
-      const monthKey = d.date.slice(0, 7);
-      const entry = monthMap.get(monthKey) || { month: monthKey, days: [], pizzas: 0, revenue: 0 };
-      entry.days.push(d);
+      const key = groupKey(d.date);
+      const entry = groupMap.get(key) || { date: key, pizzas: 0, revenue: 0 };
       entry.pizzas += d.pizzas;
       entry.revenue += d.revenue;
-      monthMap.set(monthKey, entry);
+      groupMap.set(key, entry);
     });
-    const exportMonthlyGroups = Array.from(monthMap.values()).sort((a, b) => b.month.localeCompare(a.month));
+    const exportDisplayStats = Array.from(groupMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
     doc.setFontSize(18);
     doc.text('Suivi des ventes — Détail complet', 14, 18);
@@ -369,32 +398,30 @@ export default function AdminSalesPage() {
     });
     startY = (doc as any).lastAutoTable.finalY + 10;
 
-    // 3. Détail mensuel
+    // 3. Détail selon le type de suivi
     doc.setFontSize(13);
-    doc.text('Détail par mois', 14, startY);
+    doc.text(`Détail ${viewNoun}`, 14, startY);
     startY += 6;
-    exportMonthlyGroups.forEach(m => {
-      const body = [...m.days].reverse().map(d => [
-        new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }),
-        String(d.pizzas),
-        `${d.revenue.toFixed(2)} €`,
-      ]);
-      body.push([`TOTAL ${monthLabel(m.month)}`, String(m.pizzas), `${m.revenue.toFixed(2)} €`]);
-      autoTable(doc, {
-        head: [[monthLabel(m.month).toUpperCase(), 'Pizzas', 'CA']],
-        body,
-        startY,
-        theme: 'striped',
-        headStyles: { fillColor: [234, 88, 12] },
-        didParseCell: (data) => {
-          if (data.row.index === body.length - 1 && data.section === 'body') {
-            data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fillColor = [255, 237, 213];
-          }
-        },
-      });
-      startY = (doc as any).lastAutoTable.finalY + 10;
+    const detailBody = [...exportDisplayStats].reverse().map(d => [
+      rowLabel(d.date),
+      String(d.pizzas),
+      `${d.revenue.toFixed(2)} €`,
+    ]);
+    detailBody.push(['TOTAL', String(exportTotalPizzas), `${exportTotalRevenue.toFixed(2)} €`]);
+    autoTable(doc, {
+      head: [[viewColLabel, 'Pizzas', 'CA']],
+      body: detailBody,
+      startY,
+      theme: 'striped',
+      headStyles: { fillColor: [234, 88, 12] },
+      didParseCell: (data) => {
+        if (data.row.index === detailBody.length - 1 && data.section === 'body') {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [255, 237, 213];
+        }
+      },
     });
+
 
     const siteSuffix = fullExportSite === 'all' ? 'tous-sites' : fullExportSite;
     downloadBlob(doc.output('blob'), `ventes-detail-complet-${siteSuffix}-${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -428,18 +455,19 @@ export default function AdminSalesPage() {
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1">
             <span className="text-xs text-muted-foreground">Affichage</span>
-            <Select value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week')}>
+            <Select value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week' | 'month')}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="day">Par jour</SelectItem>
                 <SelectItem value="week">Par semaine</SelectItem>
+                <SelectItem value="month">Par mois</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">{viewMode === 'week' ? 'Semaine début' : 'Du'}</span>
+            <span className="text-xs text-muted-foreground">{viewMode === 'month' ? 'Mois début' : viewMode === 'week' ? 'Semaine début' : 'Du'}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -447,26 +475,36 @@ export default function AdminSalesPage() {
                   className={cn('w-[150px] justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, 'dd/MM/yyyy', { locale: fr }) : <span>Date début</span>}
+                  {startDate
+                    ? (viewMode === 'month'
+                        ? format(startDate, 'MMMM yyyy', { locale: fr })
+                        : format(startDate, 'dd/MM/yyyy', { locale: fr }))
+                    : <span>Date début</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={startDate}
-                  onSelect={(d) => d && setStartDate(viewMode === 'week' ? startOfWeek(d) : d)}
+                  onSelect={(d) => d && setStartDate(viewMode === 'month' ? startOfMonth(d) : viewMode === 'week' ? startOfWeek(d) : d)}
                   disabled={(d) => d > endDate || d > new Date()}
                   initialFocus
                   locale={fr}
                   weekStartsOn={1}
-                  modifiers={viewMode === 'week' ? { selected: (d) => d >= startOfWeek(startDate) && d <= endOfWeek(startDate) } : undefined}
+                  modifiers={
+                    viewMode === 'month'
+                      ? { selected: (d) => d >= startOfMonth(startDate) && d <= endOfMonth(startDate) }
+                      : viewMode === 'week'
+                        ? { selected: (d) => d >= startOfWeek(startDate) && d <= endOfWeek(startDate) }
+                        : undefined
+                  }
                   className={cn('p-3 pointer-events-auto')}
                 />
               </PopoverContent>
             </Popover>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">{viewMode === 'week' ? 'Semaine fin' : 'Au'}</span>
+            <span className="text-xs text-muted-foreground">{viewMode === 'month' ? 'Mois fin' : viewMode === 'week' ? 'Semaine fin' : 'Au'}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -474,19 +512,29 @@ export default function AdminSalesPage() {
                   className={cn('w-[150px] justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, 'dd/MM/yyyy', { locale: fr }) : <span>Date fin</span>}
+                  {endDate
+                    ? (viewMode === 'month'
+                        ? format(endDate, 'MMMM yyyy', { locale: fr })
+                        : format(endDate, 'dd/MM/yyyy', { locale: fr }))
+                    : <span>Date fin</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={endDate}
-                  onSelect={(d) => d && setEndDate(viewMode === 'week' ? endOfWeek(d) : d)}
+                  onSelect={(d) => d && setEndDate(viewMode === 'month' ? endOfMonth(d) : viewMode === 'week' ? endOfWeek(d) : d)}
                   disabled={(d) => d < startDate || d > new Date()}
                   initialFocus
                   locale={fr}
                   weekStartsOn={1}
-                  modifiers={viewMode === 'week' ? { selected: (d) => d >= startOfWeek(endDate) && d <= endOfWeek(endDate) } : undefined}
+                  modifiers={
+                    viewMode === 'month'
+                      ? { selected: (d) => d >= startOfMonth(endDate) && d <= endOfMonth(endDate) }
+                      : viewMode === 'week'
+                        ? { selected: (d) => d >= startOfWeek(endDate) && d <= endOfWeek(endDate) }
+                        : undefined
+                  }
                   className={cn('p-3 pointer-events-auto')}
                 />
               </PopoverContent>
@@ -537,7 +585,7 @@ export default function AdminSalesPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              Chiffre d'affaires {viewMode === 'week' ? 'par semaine' : 'par jour'}
+              Chiffre d'affaires {periodWord}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -572,7 +620,7 @@ export default function AdminSalesPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Pizza className="h-5 w-5 text-primary" />
-              Pizzas vendues {viewMode === 'week' ? 'par semaine' : 'par jour'}
+              Pizzas vendues {periodWord}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -635,7 +683,7 @@ export default function AdminSalesPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 text-primary" />
-                Détail {viewMode === 'week' ? 'par semaine' : 'par jour'}
+                Détail {periodWord}
               </CardTitle>
               <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                 <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={exportCSV} disabled={dailyStats.length === 0}>
@@ -671,7 +719,7 @@ export default function AdminSalesPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 text-muted-foreground font-medium">{viewMode === 'week' ? 'Semaine' : 'Date'}</th>
+                    <th className="text-left py-2 text-muted-foreground font-medium">{viewColLabel}</th>
                     <th className="text-right py-2 text-muted-foreground font-medium">Pizzas</th>
                     <th className="text-right py-2 text-muted-foreground font-medium">CA</th>
                   </tr>
@@ -679,11 +727,7 @@ export default function AdminSalesPage() {
                 <tbody>
                   {[...displayStats].reverse().map(d => (
                     <tr key={d.date} className="border-b border-border/50">
-                      <td className="py-2">
-                        {viewMode === 'week'
-                          ? `Semaine du ${new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
-                          : new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
-                      </td>
+                      <td className="py-2">{rowLabel(d.date)}</td>
                       <td className="text-right py-2 font-medium">{d.pizzas}</td>
                       <td className="text-right py-2 font-medium text-primary">{d.revenue.toFixed(2)}€</td>
                     </tr>
