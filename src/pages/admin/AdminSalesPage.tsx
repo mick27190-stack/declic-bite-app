@@ -166,7 +166,20 @@ export default function AdminSalesPage() {
     return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
   }, [dailyStats]);
 
-  const displayStats = viewMode === 'week' ? weeklyStats : dailyStats;
+  // Group daily stats into months for the monthly view (date = YYYY-MM-01)
+  const monthlyStats = useMemo(() => {
+    const map = new Map<string, { date: string; pizzas: number; revenue: number }>();
+    dailyStats.forEach(d => {
+      const key = d.date.slice(0, 7) + '-01';
+      const entry = map.get(key) || { date: key, pizzas: 0, revenue: 0 };
+      entry.pizzas += d.pizzas;
+      entry.revenue += d.revenue;
+      map.set(key, entry);
+    });
+    return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
+  }, [dailyStats]);
+
+  const displayStats = viewMode === 'month' ? monthlyStats : viewMode === 'week' ? weeklyStats : dailyStats;
 
   const totals = useMemo(() => {
     return dailyStats.reduce(
@@ -178,9 +191,11 @@ export default function AdminSalesPage() {
   const chartData = useMemo(() => {
     return displayStats.map(d => ({
       ...d,
-      label: viewMode === 'week'
-        ? `sem. ${new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}`
-        : new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+      label: viewMode === 'month'
+        ? new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
+        : viewMode === 'week'
+          ? `sem. ${new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}`
+          : new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
       revenue: Math.round(d.revenue * 100) / 100,
     }));
   }, [displayStats, viewMode]);
