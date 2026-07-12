@@ -357,17 +357,27 @@ export default function AdminSalesPage() {
     });
     const exportDailyStats = Array.from(dayMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
-    // Group export daily stats by month
-    const monthMap = new Map<string, { month: string; days: typeof exportDailyStats; pizzas: number; revenue: number }>();
+    // Aggregate export daily stats by the selected granularity
+    const groupKey = (dateKey: string) => {
+      if (viewMode === 'month') return dateKey.slice(0, 7) + '-01';
+      if (viewMode === 'week') {
+        const dt = new Date(dateKey + 'T00:00:00');
+        const day = (dt.getDay() + 6) % 7;
+        const monday = new Date(dt);
+        monday.setDate(dt.getDate() - day);
+        return format(monday, 'yyyy-MM-dd');
+      }
+      return dateKey;
+    };
+    const groupMap = new Map<string, { date: string; pizzas: number; revenue: number }>();
     exportDailyStats.forEach(d => {
-      const monthKey = d.date.slice(0, 7);
-      const entry = monthMap.get(monthKey) || { month: monthKey, days: [], pizzas: 0, revenue: 0 };
-      entry.days.push(d);
+      const key = groupKey(d.date);
+      const entry = groupMap.get(key) || { date: key, pizzas: 0, revenue: 0 };
       entry.pizzas += d.pizzas;
       entry.revenue += d.revenue;
-      monthMap.set(monthKey, entry);
+      groupMap.set(key, entry);
     });
-    const exportMonthlyGroups = Array.from(monthMap.values()).sort((a, b) => b.month.localeCompare(a.month));
+    const exportDisplayStats = Array.from(groupMap.values()).sort((a, b) => a.date.localeCompare(b.date));
 
     doc.setFontSize(18);
     doc.text('Suivi des ventes — Détail complet', 14, 18);
