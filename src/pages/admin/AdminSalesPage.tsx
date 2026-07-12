@@ -399,10 +399,10 @@ export default function AdminSalesPage() {
     autoTable(doc, {
       head: [['Résumé global sur la période', '']],
       body: [
-        ['Chiffre d\'affaires total', `${exportTotalRevenue.toFixed(2)} €`],
+        ['Chiffre d\'affaires total', formatEUR(exportTotalRevenue)],
         ['Pizzas vendues', String(exportTotalPizzas)],
         ['Commandes', String(exportOrders.length)],
-        ['Panier moyen', `${exportOrders.length ? (exportTotalRevenue / exportOrders.length).toFixed(2) : '0.00'} €`],
+        ['Panier moyen', formatEUR(exportOrders.length ? exportTotalRevenue / exportOrders.length : 0)],
       ],
       startY: 38,
       theme: 'grid',
