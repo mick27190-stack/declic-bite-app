@@ -39,6 +39,22 @@ export default function AdminSalesPage() {
   const [endDate, setEndDate] = useState<Date>(() => new Date());
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [fullExportSite, setFullExportSite] = useState<'all' | 'conches' | 'beaumont'>('all');
+  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+
+  // Week helpers (Monday start)
+  const startOfWeek = (d: Date) => {
+    const x = new Date(d);
+    const day = (x.getDay() + 6) % 7; // 0 = Monday
+    x.setDate(x.getDate() - day);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+  const endOfWeek = (d: Date) => {
+    const x = startOfWeek(d);
+    x.setDate(x.getDate() + 6);
+    x.setHours(23, 59, 59, 999);
+    return x;
+  };
 
   // Helpers for day-range handling (UTC keys to match order.created_at slicing)
   const dayKey = (d: Date) => d.toISOString().slice(0, 10);
@@ -121,6 +137,25 @@ export default function AdminSalesPage() {
     return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
   }, [filteredOrders, startDate, endDate]);
 
+  // Group daily stats into weeks (Monday start) for the weekly view
+  const weeklyStats = useMemo(() => {
+    const map = new Map<string, { date: string; pizzas: number; revenue: number }>();
+    dailyStats.forEach(d => {
+      const dt = new Date(d.date + 'T00:00:00');
+      const day = (dt.getDay() + 6) % 7;
+      const monday = new Date(dt);
+      monday.setDate(dt.getDate() - day);
+      const key = format(monday, 'yyyy-MM-dd');
+      const entry = map.get(key) || { date: key, pizzas: 0, revenue: 0 };
+      entry.pizzas += d.pizzas;
+      entry.revenue += d.revenue;
+      map.set(key, entry);
+    });
+    return Array.from(map.values()).sort((a, b) => a.date.localeCompare(b.date));
+  }, [dailyStats]);
+
+  const displayStats = viewMode === 'week' ? weeklyStats : dailyStats;
+
   const totals = useMemo(() => {
     return dailyStats.reduce(
       (acc, d) => ({ pizzas: acc.pizzas + d.pizzas, revenue: acc.revenue + d.revenue }),
@@ -129,12 +164,14 @@ export default function AdminSalesPage() {
   }, [dailyStats]);
 
   const chartData = useMemo(() => {
-    return dailyStats.map(d => ({
+    return displayStats.map(d => ({
       ...d,
-      label: new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+      label: viewMode === 'week'
+        ? `sem. ${new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}`
+        : new Date(d.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
       revenue: Math.round(d.revenue * 100) / 100,
     }));
-  }, [dailyStats]);
+  }, [displayStats, viewMode]);
 
   const topPizzas = useMemo(() => {
     const map = new Map<string, number>();
@@ -390,7 +427,19 @@ export default function AdminSalesPage() {
         {/* Filters */}
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Du</span>
+            <span className="text-xs text-muted-foreground">Affichage</span>
+            <Select value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week')}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Par jour</SelectItem>
+                <SelectItem value="week">Par semaine</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">{viewMode === 'week' ? 'Semaine début' : 'Du'}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -405,17 +454,19 @@ export default function AdminSalesPage() {
                 <Calendar
                   mode="single"
                   selected={startDate}
-                  onSelect={(d) => d && setStartDate(d)}
+                  onSelect={(d) => d && setStartDate(viewMode === 'week' ? startOfWeek(d) : d)}
                   disabled={(d) => d > endDate || d > new Date()}
                   initialFocus
                   locale={fr}
+                  weekStartsOn={1}
+                  modifiers={viewMode === 'week' ? { selected: (d) => d >= startOfWeek(startDate) && d <= endOfWeek(startDate) } : undefined}
                   className={cn('p-3 pointer-events-auto')}
                 />
               </PopoverContent>
             </Popover>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Au</span>
+            <span className="text-xs text-muted-foreground">{viewMode === 'week' ? 'Semaine fin' : 'Au'}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -430,10 +481,12 @@ export default function AdminSalesPage() {
                 <Calendar
                   mode="single"
                   selected={endDate}
-                  onSelect={(d) => d && setEndDate(d)}
+                  onSelect={(d) => d && setEndDate(viewMode === 'week' ? endOfWeek(d) : d)}
                   disabled={(d) => d < startDate || d > new Date()}
                   initialFocus
                   locale={fr}
+                  weekStartsOn={1}
+                  modifiers={viewMode === 'week' ? { selected: (d) => d >= startOfWeek(endDate) && d <= endOfWeek(endDate) } : undefined}
                   className={cn('p-3 pointer-events-auto')}
                 />
               </PopoverContent>
@@ -484,7 +537,7 @@ export default function AdminSalesPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              Chiffre d'affaires par jour
+              Chiffre d'affaires {viewMode === 'week' ? 'par semaine' : 'par jour'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -519,7 +572,7 @@ export default function AdminSalesPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Pizza className="h-5 w-5 text-primary" />
-              Pizzas vendues par jour
+              Pizzas vendues {viewMode === 'week' ? 'par semaine' : 'par jour'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -582,7 +635,7 @@ export default function AdminSalesPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 text-primary" />
-                Détail par jour
+                Détail {viewMode === 'week' ? 'par semaine' : 'par jour'}
               </CardTitle>
               <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                 <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={exportCSV} disabled={dailyStats.length === 0}>
@@ -618,16 +671,18 @@ export default function AdminSalesPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 text-muted-foreground font-medium">Date</th>
+                    <th className="text-left py-2 text-muted-foreground font-medium">{viewMode === 'week' ? 'Semaine' : 'Date'}</th>
                     <th className="text-right py-2 text-muted-foreground font-medium">Pizzas</th>
                     <th className="text-right py-2 text-muted-foreground font-medium">CA</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[...dailyStats].reverse().map(d => (
+                  {[...displayStats].reverse().map(d => (
                     <tr key={d.date} className="border-b border-border/50">
                       <td className="py-2">
-                        {new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        {viewMode === 'week'
+                          ? `Semaine du ${new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
+                          : new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
                       </td>
                       <td className="text-right py-2 font-medium">{d.pizzas}</td>
                       <td className="text-right py-2 font-medium text-primary">{d.revenue.toFixed(2)}€</td>
