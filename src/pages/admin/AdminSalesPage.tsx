@@ -585,7 +585,7 @@ export default function AdminSalesPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              Chiffre d'affaires {viewMode === 'week' ? 'par semaine' : 'par jour'}
+              Chiffre d'affaires {periodWord}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -620,7 +620,7 @@ export default function AdminSalesPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Pizza className="h-5 w-5 text-primary" />
-              Pizzas vendues {viewMode === 'week' ? 'par semaine' : 'par jour'}
+              Pizzas vendues {periodWord}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -683,7 +683,7 @@ export default function AdminSalesPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="text-base flex items-center gap-2">
                 <CalendarDays className="h-5 w-5 text-primary" />
-                Détail {viewMode === 'week' ? 'par semaine' : 'par jour'}
+                Détail {periodWord}
               </CardTitle>
               <div className="flex flex-wrap gap-2 w-full sm:w-auto">
                 <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={exportCSV} disabled={dailyStats.length === 0}>
