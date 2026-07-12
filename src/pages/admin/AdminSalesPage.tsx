@@ -719,7 +719,7 @@ export default function AdminSalesPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-2 text-muted-foreground font-medium">{viewMode === 'week' ? 'Semaine' : 'Date'}</th>
+                    <th className="text-left py-2 text-muted-foreground font-medium">{viewColLabel}</th>
                     <th className="text-right py-2 text-muted-foreground font-medium">Pizzas</th>
                     <th className="text-right py-2 text-muted-foreground font-medium">CA</th>
                   </tr>
