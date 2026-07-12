@@ -270,11 +270,14 @@ export default function AdminSalesPage() {
   };
 
   const exportCSV = () => {
-    const lines: string[] = [`${viewColLabel};Pizzas;Chiffre d'affaires (€)`];
+    const lines: string[] = [];
+    lines.push(`Suivi des ventes ${periodWord} (${periodBounds()})`);
+    lines.push('');
+    lines.push(`${viewColLabel};Pizzas;Chiffre d'affaires (€)`);
     [...displayStats].reverse().forEach(d => {
-      lines.push(`${rowLabel(d.date)};${d.pizzas};${d.revenue.toFixed(2)}`);
+      lines.push(`${rowLabel(d.date)};${d.pizzas};${formatNumberFR(d.revenue)}`);
     });
-    lines.push(`TOTAL;${totals.pizzas};${totals.revenue.toFixed(2)}`);
+    lines.push(`TOTAL;${totals.pizzas};${formatNumberFR(totals.revenue)}`);
     const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, `ventes-${viewNoun}-${new Date().toISOString().slice(0, 10)}.csv`);
   };
@@ -283,16 +286,20 @@ export default function AdminSalesPage() {
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.text(`Suivi des ventes — Détail ${viewNoun}`, 14, 18);
+    doc.setFontSize(11);
+    doc.setTextColor(120);
+    doc.text(`Période : ${periodBounds()}`, 14, 25);
+    doc.setTextColor(0);
     const body = [...displayStats].reverse().map(d => [
       rowLabel(d.date),
       String(d.pizzas),
-      `${d.revenue.toFixed(2)} €`,
+      formatEUR(d.revenue),
     ]);
-    body.push(['TOTAL', String(totals.pizzas), `${totals.revenue.toFixed(2)} €`]);
+    body.push(['TOTAL', String(totals.pizzas), formatEUR(totals.revenue)]);
     autoTable(doc, {
       head: [[viewColLabel, 'Pizzas', 'CA']],
       body,
-      startY: 26,
+      startY: 31,
       theme: 'striped',
       headStyles: { fillColor: [234, 88, 12] },
       didParseCell: (data) => {
@@ -304,6 +311,7 @@ export default function AdminSalesPage() {
     });
     downloadBlob(doc.output('blob'), `ventes-${viewNoun}-${new Date().toISOString().slice(0, 10)}.pdf`);
   };
+
 
 
 
