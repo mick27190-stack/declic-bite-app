@@ -412,32 +412,30 @@ export default function AdminSalesPage() {
     });
     startY = (doc as any).lastAutoTable.finalY + 10;
 
-    // 3. Détail mensuel
+    // 3. Détail selon le type de suivi
     doc.setFontSize(13);
-    doc.text('Détail par mois', 14, startY);
+    doc.text(`Détail ${viewNoun}`, 14, startY);
     startY += 6;
-    exportMonthlyGroups.forEach(m => {
-      const body = [...m.days].reverse().map(d => [
-        new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' }),
-        String(d.pizzas),
-        `${d.revenue.toFixed(2)} €`,
-      ]);
-      body.push([`TOTAL ${monthLabel(m.month)}`, String(m.pizzas), `${m.revenue.toFixed(2)} €`]);
-      autoTable(doc, {
-        head: [[monthLabel(m.month).toUpperCase(), 'Pizzas', 'CA']],
-        body,
-        startY,
-        theme: 'striped',
-        headStyles: { fillColor: [234, 88, 12] },
-        didParseCell: (data) => {
-          if (data.row.index === body.length - 1 && data.section === 'body') {
-            data.cell.styles.fontStyle = 'bold';
-            data.cell.styles.fillColor = [255, 237, 213];
-          }
-        },
-      });
-      startY = (doc as any).lastAutoTable.finalY + 10;
+    const detailBody = [...exportDisplayStats].reverse().map(d => [
+      rowLabel(d.date),
+      String(d.pizzas),
+      `${d.revenue.toFixed(2)} €`,
+    ]);
+    detailBody.push(['TOTAL', String(exportTotalPizzas), `${exportTotalRevenue.toFixed(2)} €`]);
+    autoTable(doc, {
+      head: [[viewColLabel, 'Pizzas', 'CA']],
+      body: detailBody,
+      startY,
+      theme: 'striped',
+      headStyles: { fillColor: [234, 88, 12] },
+      didParseCell: (data) => {
+        if (data.row.index === detailBody.length - 1 && data.section === 'body') {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [255, 237, 213];
+        }
+      },
     });
+
 
     const siteSuffix = fullExportSite === 'all' ? 'tous-sites' : fullExportSite;
     downloadBlob(doc.output('blob'), `ventes-detail-complet-${siteSuffix}-${new Date().toISOString().slice(0, 10)}.pdf`);
