@@ -427,7 +427,19 @@ export default function AdminSalesPage() {
         {/* Filters */}
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Du</span>
+            <span className="text-xs text-muted-foreground">Affichage</span>
+            <Select value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week')}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Par jour</SelectItem>
+                <SelectItem value="week">Par semaine</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-muted-foreground">{viewMode === 'week' ? 'Semaine début' : 'Du'}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -442,17 +454,19 @@ export default function AdminSalesPage() {
                 <Calendar
                   mode="single"
                   selected={startDate}
-                  onSelect={(d) => d && setStartDate(d)}
+                  onSelect={(d) => d && setStartDate(viewMode === 'week' ? startOfWeek(d) : d)}
                   disabled={(d) => d > endDate || d > new Date()}
                   initialFocus
                   locale={fr}
+                  weekStartsOn={1}
+                  modifiers={viewMode === 'week' ? { selected: (d) => d >= startOfWeek(startDate) && d <= endOfWeek(startDate) } : undefined}
                   className={cn('p-3 pointer-events-auto')}
                 />
               </PopoverContent>
             </Popover>
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-xs text-muted-foreground">Au</span>
+            <span className="text-xs text-muted-foreground">{viewMode === 'week' ? 'Semaine fin' : 'Au'}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -467,10 +481,12 @@ export default function AdminSalesPage() {
                 <Calendar
                   mode="single"
                   selected={endDate}
-                  onSelect={(d) => d && setEndDate(d)}
+                  onSelect={(d) => d && setEndDate(viewMode === 'week' ? endOfWeek(d) : d)}
                   disabled={(d) => d < startDate || d > new Date()}
                   initialFocus
                   locale={fr}
+                  weekStartsOn={1}
+                  modifiers={viewMode === 'week' ? { selected: (d) => d >= startOfWeek(endDate) && d <= endOfWeek(endDate) } : undefined}
                   className={cn('p-3 pointer-events-auto')}
                 />
               </PopoverContent>
