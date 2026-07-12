@@ -6,7 +6,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
@@ -224,6 +224,15 @@ export default function AdminOrdersPage() {
                           <Clock className="h-4 w-4" />
                           Retrait à {order.pickup_time}
                         </span>
+                      )}
+                      {order.customer_phone && (
+                        <a
+                          href={`tel:${order.customer_phone.replace(/\s/g, '')}`}
+                          className="flex items-center gap-1 text-primary hover:underline underline-offset-2"
+                        >
+                          <Phone className="h-4 w-4" />
+                          {order.customer_name ? `${order.customer_name} · ` : ''}{order.customer_phone}
+                        </a>
                       )}
                     </CardDescription>
                   </CardHeader>
