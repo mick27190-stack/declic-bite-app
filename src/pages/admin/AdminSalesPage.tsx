@@ -296,9 +296,9 @@ export default function AdminSalesPage() {
     const body = [...displayStats].reverse().map(d => [
       rowLabel(d.date),
       String(d.pizzas),
-      formatEUR(d.revenue),
+      formatEURPdf(d.revenue),
     ]);
-    body.push(['TOTAL', String(totals.pizzas), formatEUR(totals.revenue)]);
+    body.push(['TOTAL', String(totals.pizzas), formatEURPdf(totals.revenue)]);
     autoTable(doc, {
       head: [[viewColLabel, 'Pizzas', 'CA']],
       body,
@@ -402,10 +402,10 @@ export default function AdminSalesPage() {
     autoTable(doc, {
       head: [['Résumé global sur la période', '']],
       body: [
-        ['Chiffre d\'affaires total', formatEUR(exportTotalRevenue)],
+        ['Chiffre d\'affaires total', formatEURPdf(exportTotalRevenue)],
         ['Pizzas vendues', String(exportTotalPizzas)],
         ['Commandes', String(exportOrders.length)],
-        ['Panier moyen', formatEUR(exportOrders.length ? exportTotalRevenue / exportOrders.length : 0)],
+        ['Panier moyen', formatEURPdf(exportOrders.length ? exportTotalRevenue / exportOrders.length : 0)],
       ],
       startY: 38,
       theme: 'grid',
@@ -416,7 +416,7 @@ export default function AdminSalesPage() {
     // 2. Totaux par site
     autoTable(doc, {
       head: [['Site', 'Commandes', 'Pizzas', 'CA']],
-      body: exportSiteTotals.map(s => [s.site, String(s.orders), String(s.pizzas), formatEUR(s.revenue)]),
+      body: exportSiteTotals.map(s => [s.site, String(s.orders), String(s.pizzas), formatEURPdf(s.revenue)]),
       startY,
       theme: 'striped',
       headStyles: { fillColor: [234, 88, 12] },
@@ -430,9 +430,9 @@ export default function AdminSalesPage() {
     const detailBody = [...exportDisplayStats].reverse().map(d => [
       rowLabel(d.date),
       String(d.pizzas),
-      formatEUR(d.revenue),
+      formatEURPdf(d.revenue),
     ]);
-    detailBody.push(['TOTAL', String(exportTotalPizzas), formatEUR(exportTotalRevenue)]);
+    detailBody.push(['TOTAL', String(exportTotalPizzas), formatEURPdf(exportTotalRevenue)]);
     autoTable(doc, {
       head: [[viewColLabel, 'Pizzas', 'CA']],
       body: detailBody,
