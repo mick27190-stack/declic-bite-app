@@ -225,6 +225,15 @@ export default function AdminOrdersPage() {
                           Retrait à {order.pickup_time}
                         </span>
                       )}
+                      {order.customer_phone && (
+                        <a
+                          href={`tel:${order.customer_phone.replace(/\s/g, '')}`}
+                          className="flex items-center gap-1 text-primary hover:underline underline-offset-2"
+                        >
+                          <Phone className="h-4 w-4" />
+                          {order.customer_name ? `${order.customer_name} · ` : ''}{order.customer_phone}
+                        </a>
+                      )}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
