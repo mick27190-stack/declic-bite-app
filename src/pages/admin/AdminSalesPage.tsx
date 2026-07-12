@@ -233,6 +233,20 @@ export default function AdminSalesPage() {
   const viewColLabel = viewMode === 'month' ? 'Mois' : viewMode === 'week' ? 'Semaine' : 'Date';
   const periodWord = viewMode === 'month' ? 'par mois' : viewMode === 'week' ? 'par semaine' : 'par jour';
 
+  // FR formatting helpers — shared by the on-screen table and the CSV/PDF exports
+  // so amounts and dates match exactly.
+  const formatEUR = (n: number) =>
+    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n);
+  const formatNumberFR = (n: number) =>
+    n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Inclusive period bounds in FR format (bornes incluses)
+  const periodBounds = () => {
+    const from = viewMode === 'month' ? startOfMonth(startDate) : startDate;
+    const to = viewMode === 'month' ? endOfMonth(endDate) : endDate;
+    return `du ${format(from, 'dd/MM/yyyy', { locale: fr })} au ${format(to, 'dd/MM/yyyy', { locale: fr })}`;
+  };
+
   // Robust download that works in sandboxed preview iframes and on mobile:
   // the anchor MUST be attached to the DOM before clicking, and we fall back
   // to opening the blob in a new tab if the download attribute is blocked.
