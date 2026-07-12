@@ -233,6 +233,20 @@ export default function AdminSalesPage() {
   const monthLabel = (key: string) =>
     new Date(key + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
+  // Label for a single display row, coherent with the selected view mode
+  const rowLabel = (dateKey: string) => {
+    if (viewMode === 'month') {
+      return new Date(dateKey + 'T00:00:00').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    }
+    if (viewMode === 'week') {
+      return `Semaine du ${new Date(dateKey + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`;
+    }
+    return new Date(dateKey).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+  };
+
+  const viewNoun = viewMode === 'month' ? 'mensuel' : viewMode === 'week' ? 'hebdomadaire' : 'journalier';
+  const viewColLabel = viewMode === 'month' ? 'Mois' : viewMode === 'week' ? 'Semaine' : 'Date';
+
   // Robust download that works in sandboxed preview iframes and on mobile:
   // the anchor MUST be attached to the DOM before clicking, and we fall back
   // to opening the blob in a new tab if the download attribute is blocked.
