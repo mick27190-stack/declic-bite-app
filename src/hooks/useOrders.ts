@@ -13,19 +13,26 @@ export function useOrders() {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select('*, profiles:user_id(first_name, last_name, phone)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       // Transform the data to match our Order type
-      const transformedOrders: Order[] = (data || []).map(order => ({
-        ...order,
-        order_type: order.order_type as 'emporter' | 'livraison',
-        delivery_response: order.delivery_response as Order['delivery_response'],
-        items: order.items as unknown as CartItem[],
-        delivery_address: order.delivery_address as Order['delivery_address'],
-      }));
+      const transformedOrders: Order[] = (data || []).map((order: any) => {
+        const profile = order.profiles;
+        return {
+          ...order,
+          customer_name: profile
+            ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() || undefined
+            : undefined,
+          customer_phone: profile?.phone ?? undefined,
+          order_type: order.order_type as 'emporter' | 'livraison',
+          delivery_response: order.delivery_response as Order['delivery_response'],
+          items: order.items as unknown as CartItem[],
+          delivery_address: order.delivery_address as Order['delivery_address'],
+        };
+      });
 
       setOrders(transformedOrders);
     } catch (error) {
