@@ -231,6 +231,7 @@ export default function AdminSalesPage() {
 
   const viewNoun = viewMode === 'month' ? 'mensuel' : viewMode === 'week' ? 'hebdomadaire' : 'journalier';
   const viewColLabel = viewMode === 'month' ? 'Mois' : viewMode === 'week' ? 'Semaine' : 'Date';
+  const periodWord = viewMode === 'month' ? 'par mois' : viewMode === 'week' ? 'par semaine' : 'par jour';
 
   // Robust download that works in sandboxed preview iframes and on mobile:
   // the anchor MUST be attached to the DOM before clicking, and we fall back
