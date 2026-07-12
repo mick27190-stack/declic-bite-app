@@ -572,7 +572,7 @@ export default function AdminSalesPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Pizza className="h-5 w-5 text-primary" />
-              Pizzas vendues par jour
+              Pizzas vendues {viewMode === 'week' ? 'par semaine' : 'par jour'}
             </CardTitle>
           </CardHeader>
           <CardContent>
