@@ -216,22 +216,7 @@ export default function AdminSalesPage() {
       .map(([name, count], i) => ({ rank: i + 1, name, count }));
   }, [filteredOrders]);
 
-  // Group daily stats by month for monthly exports
-  const monthlyGroups = useMemo(() => {
-    const map = new Map<string, { month: string; days: typeof dailyStats; pizzas: number; revenue: number }>();
-    dailyStats.forEach(d => {
-      const monthKey = d.date.slice(0, 7); // YYYY-MM
-      const entry = map.get(monthKey) || { month: monthKey, days: [], pizzas: 0, revenue: 0 };
-      entry.days.push(d);
-      entry.pizzas += d.pizzas;
-      entry.revenue += d.revenue;
-      map.set(monthKey, entry);
-    });
-    return Array.from(map.values()).sort((a, b) => b.month.localeCompare(a.month));
-  }, [dailyStats]);
 
-  const monthLabel = (key: string) =>
-    new Date(key + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 
   // Label for a single display row, coherent with the selected view mode
   const rowLabel = (dateKey: string) => {
