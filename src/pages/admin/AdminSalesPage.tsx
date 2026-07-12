@@ -427,9 +427,9 @@ export default function AdminSalesPage() {
     const detailBody = [...exportDisplayStats].reverse().map(d => [
       rowLabel(d.date),
       String(d.pizzas),
-      `${d.revenue.toFixed(2)} €`,
+      formatEUR(d.revenue),
     ]);
-    detailBody.push(['TOTAL', String(exportTotalPizzas), `${exportTotalRevenue.toFixed(2)} €`]);
+    detailBody.push(['TOTAL', String(exportTotalPizzas), formatEUR(exportTotalRevenue)]);
     autoTable(doc, {
       head: [[viewColLabel, 'Pizzas', 'CA']],
       body: detailBody,
