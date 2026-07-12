@@ -727,11 +727,7 @@ export default function AdminSalesPage() {
                 <tbody>
                   {[...displayStats].reverse().map(d => (
                     <tr key={d.date} className="border-b border-border/50">
-                      <td className="py-2">
-                        {viewMode === 'week'
-                          ? `Semaine du ${new Date(d.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
-                          : new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
-                      </td>
+                      <td className="py-2">{rowLabel(d.date)}</td>
                       <td className="text-right py-2 font-medium">{d.pizzas}</td>
                       <td className="text-right py-2 font-medium text-primary">{d.revenue.toFixed(2)}€</td>
                     </tr>
