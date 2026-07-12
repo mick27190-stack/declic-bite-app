@@ -13,19 +13,26 @@ export function useOrders() {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select('*, profiles:user_id(first_name, last_name, phone)')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
       // Transform the data to match our Order type
-      const transformedOrders: Order[] = (data || []).map(order => ({
-        ...order,
-        order_type: order.order_type as 'emporter' | 'livraison',
-        delivery_response: order.delivery_response as Order['delivery_response'],
-        items: order.items as unknown as CartItem[],
-        delivery_address: order.delivery_address as Order['delivery_address'],
-      }));
+      const transformedOrders: Order[] = (data || []).map((order: any) => {
+        const profile = order.profiles;
+        return {
+          ...order,
+          customer_name: profile
+            ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() || undefined
+            : undefined,
+          customer_phone: profile?.phone ?? undefined,
+          order_type: order.order_type as 'emporter' | 'livraison',
+          delivery_response: order.delivery_response as Order['delivery_response'],
+          items: order.items as unknown as CartItem[],
+          delivery_address: order.delivery_address as Order['delivery_address'],
+        };
+      });
 
       setOrders(transformedOrders);
     } catch (error) {
@@ -160,30 +167,49 @@ export function useOrders() {
         },
         (payload) => {
           console.log('Order change:', payload);
-          
+
+          const buildOrder = async (record: Record<string, any>): Promise<Order> => {
+            const base: Order = {
+              ...record,
+              order_type: record.order_type as 'emporter' | 'livraison',
+              delivery_response: record.delivery_response as Order['delivery_response'],
+              items: record.items as unknown as CartItem[],
+              delivery_address: record.delivery_address as Order['delivery_address'],
+            };
+            if (record.user_id) {
+              try {
+                const { data } = await supabase
+                  .from('profiles')
+                  .select('first_name, last_name, phone')
+                  .eq('user_id', record.user_id)
+                  .single();
+                if (data) {
+                  base.customer_name = `${data.first_name ?? ''} ${data.last_name ?? ''}`.trim() || undefined;
+                  base.customer_phone = data.phone ?? undefined;
+                }
+              } catch {
+                // ignore missing profile
+              }
+            }
+            return base;
+          };
+
           if (payload.eventType === 'INSERT') {
-            const newOrder = {
-              ...payload.new,
-              order_type: payload.new.order_type as 'emporter' | 'livraison',
-              items: payload.new.items as unknown as CartItem[],
-              delivery_address: payload.new.delivery_address as Order['delivery_address'],
-            } as Order;
-            setOrders(prev => [newOrder, ...prev]);
-            
-            toast({
-              title: '🔔 Nouvelle commande !',
-              description: `Commande de ${newOrder.total_price.toFixed(2)}€`,
-            });
+            void (async () => {
+              const newOrder = await buildOrder(payload.new);
+              setOrders(prev => [newOrder, ...prev]);
+              toast({
+                title: '🔔 Nouvelle commande !',
+                description: `Commande de ${newOrder.total_price.toFixed(2)}€`,
+              });
+            })();
           } else if (payload.eventType === 'UPDATE') {
-            const updatedOrder = {
-              ...payload.new,
-              order_type: payload.new.order_type as 'emporter' | 'livraison',
-              items: payload.new.items as unknown as CartItem[],
-              delivery_address: payload.new.delivery_address as Order['delivery_address'],
-            } as Order;
-            setOrders(prev => prev.map(o => 
-              o.id === updatedOrder.id ? updatedOrder : o
-            ));
+            void (async () => {
+              const updatedOrder = await buildOrder(payload.new);
+              setOrders(prev => prev.map(o =>
+                o.id === updatedOrder.id ? updatedOrder : o
+              ));
+            })();
           } else if (payload.eventType === 'DELETE') {
             setOrders(prev => prev.filter(o => o.id !== payload.old.id));
           }
