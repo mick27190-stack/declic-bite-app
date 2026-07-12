@@ -5,5 +5,7 @@ project_id = "tzamsbbpygevsdvugdbv"
     verify_jwt = false
   [functions.check-delivery-zone]
     verify_jwt = false
+  [functions.places-autocomplete]
+    verify_jwt = false
   [functions.process-email-queue]
     verify_jwt = true
