@@ -413,7 +413,7 @@ export default function AdminSalesPage() {
     // 2. Totaux par site
     autoTable(doc, {
       head: [['Site', 'Commandes', 'Pizzas', 'CA']],
-      body: exportSiteTotals.map(s => [s.site, String(s.orders), String(s.pizzas), `${s.revenue.toFixed(2)} €`]),
+      body: exportSiteTotals.map(s => [s.site, String(s.orders), String(s.pizzas), formatEUR(s.revenue)]),
       startY,
       theme: 'striped',
       headStyles: { fillColor: [234, 88, 12] },
