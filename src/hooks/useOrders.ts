@@ -170,7 +170,7 @@ export function useOrders() {
 
           const buildOrder = async (record: Record<string, any>): Promise<Order> => {
             const base: Order = {
-              ...record,
+              ...(record as Order),
               order_type: record.order_type as 'emporter' | 'livraison',
               delivery_response: record.delivery_response as Order['delivery_response'],
               items: record.items as unknown as CartItem[],
