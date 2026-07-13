@@ -362,6 +362,36 @@ export type Database = {
         }
         Relationships: []
       }
+      order_history: {
+        Row: {
+          created_at: string
+          id: string
+          order_count: number
+          orders: Json
+          total_revenue: number
+          week_end: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_count?: number
+          orders?: Json
+          total_revenue?: number
+          week_end: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_count?: number
+          orders?: Json
+          total_revenue?: number
+          week_end?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
@@ -619,6 +649,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      archive_previous_week_orders: { Args: never; Returns: undefined }
+      archive_previous_week_orders_guarded: { Args: never; Returns: undefined }
       can_admin_access_order: {
         Args: { _restaurant: string; _user_id: string }
         Returns: boolean
