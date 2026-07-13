@@ -266,22 +266,30 @@ export default function AdminOrderHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [siteFilter, setSiteFilter] = useState<SiteFilter>('all');
   const [orderTypeFilter, setOrderTypeFilter] = useState<OrderTypeFilter>('all');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
+  const [customStart, setCustomStart] = useState<string | null>(null);
+  const [customEnd, setCustomEnd] = useState<string | null>(null);
 
-  const filteredWeeks = weeks
-    .map((week) => {
-      const filteredOrders = week.orders.filter((o) => {
-        const siteMatch = siteFilter === 'all' || orderSite(o.restaurant) === siteFilter;
-        const typeMatch = orderTypeFilter === 'all' || o.order_type === orderTypeFilter;
-        return siteMatch && typeMatch;
-      });
-      return {
-        ...week,
-        orders: filteredOrders,
-        order_count: filteredOrders.length,
-        total_revenue: filteredOrders.reduce((sum, o) => sum + (o.total_price || 0), 0),
-      };
-    })
-    .filter((week) => week.order_count > 0 || (siteFilter === 'all' && orderTypeFilter === 'all'));
+  const filteredWeeks = filterWeeksByPeriod(
+    weeks
+      .map((week) => {
+        const filteredOrders = week.orders.filter((o) => {
+          const siteMatch = siteFilter === 'all' || orderSite(o.restaurant) === siteFilter;
+          const typeMatch = orderTypeFilter === 'all' || o.order_type === orderTypeFilter;
+          return siteMatch && typeMatch;
+        });
+        return {
+          ...week,
+          orders: filteredOrders,
+          order_count: filteredOrders.length,
+          total_revenue: filteredOrders.reduce((sum, o) => sum + (o.total_price || 0), 0),
+        };
+      })
+      .filter((week) => week.order_count > 0 || (siteFilter === 'all' && orderTypeFilter === 'all')),
+    periodFilter,
+    customStart,
+    customEnd
+  );
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
