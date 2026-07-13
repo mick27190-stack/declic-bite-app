@@ -23,7 +23,18 @@ interface OrderRow {
   items: any;
   restaurant: string;
   status: string;
+  order_type: string;
 }
+
+// Only count an order in the revenue/stats once it has reached the relevant
+// "completed" status: 'delivered' for delivery orders, 'ready' (or beyond)
+// for take-away orders. Cancelled orders are never counted.
+const countsForSales = (o: { status: string; order_type: string }) => {
+  if (o.status === 'cancelled') return false;
+  if (o.order_type === 'livraison') return o.status === 'delivered';
+  // emporter: counted once prepared and beyond
+  return o.status === 'ready' || o.status === 'delivered';
+};
 
 export default function AdminSalesPage() {
   const navigate = useNavigate();
@@ -100,13 +111,13 @@ export default function AdminSalesPage() {
 
       const { data, error } = await supabase
         .from('orders')
-        .select('created_at, total_price, items, restaurant, status')
+        .select('created_at, total_price, items, restaurant, status, order_type')
         .gte('created_at', since.toISOString())
         .lte('created_at', until.toISOString())
         .neq('status', 'cancelled')
         .order('created_at', { ascending: true });
 
-      if (!error && data) setOrders(data);
+      if (!error && data) setOrders(data.filter(countsForSales) as OrderRow[]);
       setLoading(false);
     };
 
