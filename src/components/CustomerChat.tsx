@@ -54,12 +54,19 @@ export default function CustomerChat() {
 
   const scrollToBottom = useCallback(
     (behavior: ScrollBehavior = 'auto') => {
-      requestAnimationFrame(() => {
+      const run = () => {
         const viewport = getViewport();
         if (viewport) {
           viewport.scrollTo({ top: viewport.scrollHeight, behavior });
         }
+      };
+      // Multiple attempts so we land at the bottom even if the panel/content
+      // hasn't finished laying out yet (Radix viewport mounts a frame late).
+      requestAnimationFrame(() => {
+        run();
+        requestAnimationFrame(run);
       });
+      setTimeout(run, 80);
       isAtBottomRef.current = true;
       setIsAtBottom(true);
       setNewCount(0);
@@ -84,7 +91,7 @@ export default function CustomerChat() {
   }, [getViewport, open, loading]);
 
   // Snap to bottom when the panel opens or finishes loading
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (open && !loading && !wasOpenRef.current) {
       wasOpenRef.current = true;
       prevCountRef.current = messages.length;
@@ -92,7 +99,7 @@ export default function CustomerChat() {
     }
     if (!open) wasOpenRef.current = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, loading]);
+  }, [open, loading, messages.length]);
 
   // New messages: follow if near bottom or if I just sent, otherwise show badge
   useEffect(() => {
