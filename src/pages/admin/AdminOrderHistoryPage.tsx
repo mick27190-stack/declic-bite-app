@@ -46,6 +46,7 @@ function formatDate(value: string) {
 }
 
 type SiteFilter = 'all' | 'conches' | 'beaumont';
+type OrderTypeFilter = 'all' | 'livraison' | 'emporter';
 
 function orderSite(restaurant: string): 'conches' | 'beaumont' {
   const r = restaurant.toLowerCase();
@@ -63,13 +64,15 @@ export default function AdminOrderHistoryPage() {
   const [weeks, setWeeks] = useState<HistoryWeek[]>([]);
   const [loading, setLoading] = useState(true);
   const [siteFilter, setSiteFilter] = useState<SiteFilter>('all');
+  const [orderTypeFilter, setOrderTypeFilter] = useState<OrderTypeFilter>('all');
 
   const filteredWeeks = weeks
     .map((week) => {
-      const filteredOrders =
-        siteFilter === 'all'
-          ? week.orders
-          : week.orders.filter((o) => orderSite(o.restaurant) === siteFilter);
+      const filteredOrders = week.orders.filter((o) => {
+        const siteMatch = siteFilter === 'all' || orderSite(o.restaurant) === siteFilter;
+        const typeMatch = orderTypeFilter === 'all' || o.order_type === orderTypeFilter;
+        return siteMatch && typeMatch;
+      });
       return {
         ...week,
         orders: filteredOrders,
@@ -77,7 +80,7 @@ export default function AdminOrderHistoryPage() {
         total_revenue: filteredOrders.reduce((sum, o) => sum + (o.total_price || 0), 0),
       };
     })
-    .filter((week) => week.order_count > 0 || siteFilter === 'all');
+    .filter((week) => week.order_count > 0 || (siteFilter === 'all' && orderTypeFilter === 'all'));
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
