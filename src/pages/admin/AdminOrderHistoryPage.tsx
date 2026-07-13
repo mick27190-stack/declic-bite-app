@@ -13,9 +13,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { statusLabels, statusColors, OrderStatus } from '@/types/order';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface HistoryOrder {
   id: string;
