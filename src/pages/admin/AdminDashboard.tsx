@@ -73,6 +73,13 @@ export default function AdminDashboard() {
       show: canManageOrders
     },
     {
+      title: 'Historique des Commandes',
+      description: 'Commandes archivées semaine par semaine',
+      icon: History,
+      href: '/admin/orders-history',
+      show: canManageOrders
+    },
+    {
       title: 'Menu',
       description: 'Modifier les pizzas et le menu',
       icon: Pizza,
