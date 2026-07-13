@@ -224,13 +224,33 @@ export default function AdminChatPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-0 flex flex-col h-[500px]">
-                  <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-                    <div className="space-y-4">
-                      {messages.map((msg) => (
-                        <MessageBubble key={msg.id} message={msg} />
-                      ))}
-                    </div>
-                  </ScrollArea>
+                  <div className="relative flex-1 min-h-0">
+                    <ScrollArea className="h-full p-4" ref={scrollRef}>
+                      <div className="space-y-4">
+                        {messages.map((msg) => (
+                          <MessageBubble key={msg.id} message={msg} />
+                        ))}
+                      </div>
+                    </ScrollArea>
+
+                    {!isAtBottom && messages.length > 0 && (
+                      <button
+                        onClick={scrollToBottom}
+                        className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg px-4 py-2 text-xs font-medium hover:scale-105 transition-transform animate-in fade-in slide-in-from-bottom-2"
+                      >
+                        {newCount > 0 && (
+                          <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-primary-foreground text-primary text-[10px] font-bold">
+                            {newCount}
+                          </span>
+                        )}
+                        {newCount > 0
+                          ? `${newCount} nouveau${newCount > 1 ? 'x' : ''} message${newCount > 1 ? 's' : ''}`
+                          : 'Revenir au dernier message'}
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
                   <div className="border-t p-4 flex gap-2">
                     <Input
                       value={newMessage}
