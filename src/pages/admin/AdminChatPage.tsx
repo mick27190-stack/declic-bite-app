@@ -97,12 +97,15 @@ export default function AdminChatPage() {
     }
   }, [user, canManageChat, authLoading, adminLoading]);
 
-  // Auto-scroll on new messages
+  // Auto-scroll on new messages / conversation change
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const viewport = scrollRef.current?.querySelector<HTMLDivElement>(
+      '[data-radix-scroll-area-viewport]'
+    );
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, selectedConversationId]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || !selectedConversation) return;

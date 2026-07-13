@@ -40,10 +40,13 @@ export default function CustomerChat() {
   const { isOnline } = useAdminPresenceWatch();
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    const viewport = scrollRef.current?.querySelector<HTMLDivElement>(
+      '[data-radix-scroll-area-viewport]'
+    );
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
     }
-  }, [messages, open]);
+  }, [messages, open, loading]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
