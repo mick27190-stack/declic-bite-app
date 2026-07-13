@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Send, X, LogIn } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { MessageSquare, Send, X, LogIn, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
