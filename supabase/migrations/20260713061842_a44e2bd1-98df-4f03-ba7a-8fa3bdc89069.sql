@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.preview_purge_previous_week_orders();
