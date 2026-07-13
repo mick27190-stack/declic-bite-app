@@ -136,9 +136,16 @@ function escapeCsv(value: string | number | undefined) {
 function exportToCsv(
   weeks: HistoryWeek[],
   siteFilter: SiteFilter,
-  orderTypeFilter: OrderTypeFilter
+  orderTypeFilter: OrderTypeFilter,
+  periodFilter: PeriodFilter,
+  customStart: string | null,
+  customEnd: string | null
 ) {
-  const filterLine = `Filtres;${siteLabel(siteFilter)};${orderTypeLabel(orderTypeFilter)}\n`;
+  let periodText = periodLabel(periodFilter);
+  if (periodFilter === 'custom' && (customStart || customEnd)) {
+    periodText += ` (${customStart || '...'} au ${customEnd || '...'})`;
+  }
+  const filterLine = `Filtres;${siteLabel(siteFilter)};${orderTypeLabel(orderTypeFilter)};${periodText}\n`;
   const summaryHeader = 'Semaine;Commandes;CA (€)\n';
   const summaryRows = weeks
     .map(
@@ -172,16 +179,28 @@ function exportToCsv(
 function exportToPdf(
   weeks: HistoryWeek[],
   siteFilter: SiteFilter,
-  orderTypeFilter: OrderTypeFilter
+  orderTypeFilter: OrderTypeFilter,
+  periodFilter: PeriodFilter,
+  customStart: string | null,
+  customEnd: string | null
 ) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
+
+  let periodText = periodLabel(periodFilter);
+  if (periodFilter === 'custom' && (customStart || customEnd)) {
+    periodText += ` (${customStart || '...'} au ${customEnd || '...'})`;
+  }
 
   doc.setFontSize(18);
   doc.text('Historique des commandes', 14, 20);
   doc.setFontSize(11);
   doc.setTextColor(80);
-  doc.text(`Filtres : ${siteLabel(siteFilter)} · ${orderTypeLabel(orderTypeFilter)}`, 14, 28);
+  doc.text(
+    `Filtres : ${siteLabel(siteFilter)} · ${orderTypeLabel(orderTypeFilter)} · ${periodText}`,
+    14,
+    28
+  );
 
   const summaryHeaders = [['Semaine', 'Commandes', 'CA (€)']];
   const summaryRows = weeks.map((w) => [
