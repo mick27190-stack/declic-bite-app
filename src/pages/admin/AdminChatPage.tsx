@@ -97,14 +97,57 @@ export default function AdminChatPage() {
     }
   }, [user, canManageChat, authLoading, adminLoading]);
 
-  // Auto-scroll on new messages / conversation change
-  useEffect(() => {
-    const viewport = scrollRef.current?.querySelector<HTMLDivElement>(
-      '[data-radix-scroll-area-viewport]'
-    );
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [newCount, setNewCount] = useState(0);
+  const prevCountRef = useRef(0);
+
+  const getViewport = useCallback(
+    () =>
+      scrollRef.current?.querySelector<HTMLDivElement>('[data-radix-scroll-area-viewport]') ?? null,
+    []
+  );
+
+  const scrollToBottom = useCallback(() => {
+    const viewport = getViewport();
     if (viewport) {
       viewport.scrollTop = viewport.scrollHeight;
     }
+    setIsAtBottom(true);
+    setNewCount(0);
+  }, [getViewport]);
+
+  // Track scroll position
+  useEffect(() => {
+    const viewport = getViewport();
+    if (!viewport) return;
+    const handleScroll = () => {
+      const atBottom =
+        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 40;
+      setIsAtBottom(atBottom);
+      if (atBottom) setNewCount(0);
+    };
+    viewport.addEventListener('scroll', handleScroll);
+    return () => viewport.removeEventListener('scroll', handleScroll);
+  }, [getViewport, selectedConversationId]);
+
+  // Reset counters when switching conversation
+  useEffect(() => {
+    prevCountRef.current = 0;
+    setNewCount(0);
+    setIsAtBottom(true);
+  }, [selectedConversationId]);
+
+  // Handle new messages: auto-scroll if at bottom, otherwise show badge
+  useEffect(() => {
+    const prev = prevCountRef.current;
+    const added = messages.length - prev;
+    prevCountRef.current = messages.length;
+    if (added > 0 && !isAtBottom) {
+      setNewCount((c) => c + added);
+    } else {
+      scrollToBottom();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, selectedConversationId]);
 
   const handleSend = async () => {
