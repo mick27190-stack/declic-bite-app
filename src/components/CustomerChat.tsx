@@ -41,7 +41,7 @@ export default function CustomerChat() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, loading, sendMessage } = useCustomerChat();
+  const { messages, loading, sendMessage, markMessagesRead } = useCustomerChat();
   const { isOnline } = useAdminPresenceWatch();
 
   const [isAtBottom, setIsAtBottom] = useState(true);
