@@ -14,7 +14,9 @@ import {
   ArrowLeft,
   TrendingUp,
   Contact,
-  Tag
+  Tag,
+  History
+
 
 } from 'lucide-react';
 import NotificationBell from '@/components/admin/NotificationBell';
@@ -68,6 +70,13 @@ export default function AdminDashboard() {
       description: 'Statistiques pizzas & chiffre d\'affaires',
       icon: TrendingUp,
       href: '/admin/sales',
+      show: canManageOrders
+    },
+    {
+      title: 'Historique des Commandes',
+      description: 'Commandes archivées semaine par semaine',
+      icon: History,
+      href: '/admin/orders-history',
       show: canManageOrders
     },
     {

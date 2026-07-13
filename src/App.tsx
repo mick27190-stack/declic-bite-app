@@ -24,6 +24,7 @@ import AdminSMSPage from "./pages/admin/AdminSMSPage";
 import AdminSettingsPage from "./pages/admin/AdminSettingsPage";
 import AdminSalesPage from "./pages/admin/AdminSalesPage";
 import AdminPricingPage from "./pages/admin/AdminPricingPage";
+import AdminOrderHistoryPage from "./pages/admin/AdminOrderHistoryPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import LivreurOrdersPage from "./pages/LivreurOrdersPage";
 import NotFound from "./pages/NotFound";
@@ -82,6 +83,7 @@ const App = () => {
                 <Route path="/admin/customers" element={<AdminCustomersPage />} />
                 <Route path="/admin/menu" element={<AdminMenuPage />} />
                 <Route path="/admin/orders" element={<AdminOrdersPage />} />
+                <Route path="/admin/orders-history" element={<AdminOrderHistoryPage />} />
                 <Route path="/admin/chat" element={<AdminChatPage />} />
                 <Route path="/admin/sms" element={<AdminSMSPage />} />
                 <Route path="/admin/settings" element={<AdminSettingsPage />} />
