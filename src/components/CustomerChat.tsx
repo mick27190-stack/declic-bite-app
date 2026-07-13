@@ -149,26 +149,46 @@ export default function CustomerChat() {
             </div>
           ) : (
             <>
-              <ScrollArea className="flex-1 p-4 min-h-[250px] max-h-[50vh]" ref={scrollRef}>
-                {loading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full gap-2 py-8">
-                    <MessageSquare className="h-8 w-8 text-muted-foreground/40" />
-                    <p className="text-sm text-muted-foreground text-center">
-                      Envoyez-nous un message, nous vous répondrons au plus vite !
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {messages.map((msg) => (
-                      <MessageBubble key={msg.id} message={msg} />
-                    ))}
-                  </div>
+              <div className="relative flex-1 min-h-0">
+                <ScrollArea className="h-full p-4 min-h-[250px] max-h-[50vh]" ref={scrollRef}>
+                  {loading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full gap-2 py-8">
+                      <MessageSquare className="h-8 w-8 text-muted-foreground/40" />
+                      <p className="text-sm text-muted-foreground text-center">
+                        Envoyez-nous un message, nous vous répondrons au plus vite !
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {messages.map((msg) => (
+                        <MessageBubble key={msg.id} message={msg} />
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+
+                {!isAtBottom && messages.length > 0 && (
+                  <button
+                    onClick={scrollToBottom}
+                    className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg px-4 py-2 text-xs font-medium hover:scale-105 transition-transform animate-in fade-in slide-in-from-bottom-2"
+                  >
+                    {newCount > 0 && (
+                      <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-primary-foreground text-primary text-[10px] font-bold">
+                        {newCount}
+                      </span>
+                    )}
+                    {newCount > 0
+                      ? `${newCount} nouveau${newCount > 1 ? 'x' : ''} message${newCount > 1 ? 's' : ''}`
+                      : 'Revenir au dernier message'}
+                    <ArrowDown className="h-3.5 w-3.5" />
+                  </button>
                 )}
-              </ScrollArea>
+              </div>
+
 
               {/* Input */}
               <div className="border-t border-border p-3 flex gap-2">
