@@ -19,7 +19,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { statusLabels, statusColors, OrderStatus } from '@/types/order';
 import { jsPDF } from 'jspdf';
@@ -55,6 +63,7 @@ function formatDate(value: string) {
 
 type SiteFilter = 'all' | 'conches' | 'beaumont';
 type OrderTypeFilter = 'all' | 'livraison' | 'emporter';
+type PeriodFilter = 'all' | '4weeks' | '8weeks' | '12weeks' | 'custom';
 
 function orderSite(restaurant: string): 'conches' | 'beaumont' {
   const r = restaurant.toLowerCase();
@@ -71,6 +80,51 @@ function orderTypeLabel(type: OrderTypeFilter) {
   return type === 'all' ? 'Tous les types' : type === 'livraison' ? 'Livraison' : 'À emporter';
 }
 
+function periodLabel(period: PeriodFilter) {
+  switch (period) {
+    case 'all':
+      return "Tout l'historique";
+    case '4weeks':
+      return '4 dernières semaines';
+    case '8weeks':
+      return '8 dernières semaines';
+    case '12weeks':
+      return '12 dernières semaines';
+    case 'custom':
+      return 'Personnalisé';
+  }
+}
+
+function toDateInputValue(value: string | null): string {
+  if (!value) return '';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().split('T')[0];
+}
+
+function filterWeeksByPeriod(
+  weeks: HistoryWeek[],
+  period: PeriodFilter,
+  customStart: string | null,
+  customEnd: string | null
+): HistoryWeek[] {
+  if (period === 'all') return weeks;
+  if (period === 'custom') {
+    if (!customStart && !customEnd) return weeks;
+    const start = customStart ? new Date(customStart) : null;
+    const end = customEnd ? new Date(customEnd) : null;
+    return weeks.filter((w) => {
+      const weekStart = new Date(w.week_start);
+      const weekEnd = new Date(w.week_end);
+      if (start && weekEnd < start) return false;
+      if (end && weekStart > end) return false;
+      return true;
+    });
+  }
+  const count = period === '4weeks' ? 4 : period === '8weeks' ? 8 : 12;
+  return weeks.slice(0, count);
+}
+
 function escapeCsv(value: string | number | undefined) {
   const str = String(value ?? '');
   if (str.includes(';') || str.includes('"') || str.includes('\n')) {
@@ -82,9 +136,16 @@ function escapeCsv(value: string | number | undefined) {
 function exportToCsv(
   weeks: HistoryWeek[],
   siteFilter: SiteFilter,
-  orderTypeFilter: OrderTypeFilter
+  orderTypeFilter: OrderTypeFilter,
+  periodFilter: PeriodFilter,
+  customStart: string | null,
+  customEnd: string | null
 ) {
-  const filterLine = `Filtres;${siteLabel(siteFilter)};${orderTypeLabel(orderTypeFilter)}\n`;
+  let periodText = periodLabel(periodFilter);
+  if (periodFilter === 'custom' && (customStart || customEnd)) {
+    periodText += ` (${customStart || '...'} au ${customEnd || '...'})`;
+  }
+  const filterLine = `Filtres;${siteLabel(siteFilter)};${orderTypeLabel(orderTypeFilter)};${periodText}\n`;
   const summaryHeader = 'Semaine;Commandes;CA (€)\n';
   const summaryRows = weeks
     .map(
@@ -118,16 +179,28 @@ function exportToCsv(
 function exportToPdf(
   weeks: HistoryWeek[],
   siteFilter: SiteFilter,
-  orderTypeFilter: OrderTypeFilter
+  orderTypeFilter: OrderTypeFilter,
+  periodFilter: PeriodFilter,
+  customStart: string | null,
+  customEnd: string | null
 ) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
+
+  let periodText = periodLabel(periodFilter);
+  if (periodFilter === 'custom' && (customStart || customEnd)) {
+    periodText += ` (${customStart || '...'} au ${customEnd || '...'})`;
+  }
 
   doc.setFontSize(18);
   doc.text('Historique des commandes', 14, 20);
   doc.setFontSize(11);
   doc.setTextColor(80);
-  doc.text(`Filtres : ${siteLabel(siteFilter)} · ${orderTypeLabel(orderTypeFilter)}`, 14, 28);
+  doc.text(
+    `Filtres : ${siteLabel(siteFilter)} · ${orderTypeLabel(orderTypeFilter)} · ${periodText}`,
+    14,
+    28
+  );
 
   const summaryHeaders = [['Semaine', 'Commandes', 'CA (€)']];
   const summaryRows = weeks.map((w) => [
@@ -193,22 +266,30 @@ export default function AdminOrderHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [siteFilter, setSiteFilter] = useState<SiteFilter>('all');
   const [orderTypeFilter, setOrderTypeFilter] = useState<OrderTypeFilter>('all');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
+  const [customStart, setCustomStart] = useState<string | null>(null);
+  const [customEnd, setCustomEnd] = useState<string | null>(null);
 
-  const filteredWeeks = weeks
-    .map((week) => {
-      const filteredOrders = week.orders.filter((o) => {
-        const siteMatch = siteFilter === 'all' || orderSite(o.restaurant) === siteFilter;
-        const typeMatch = orderTypeFilter === 'all' || o.order_type === orderTypeFilter;
-        return siteMatch && typeMatch;
-      });
-      return {
-        ...week,
-        orders: filteredOrders,
-        order_count: filteredOrders.length,
-        total_revenue: filteredOrders.reduce((sum, o) => sum + (o.total_price || 0), 0),
-      };
-    })
-    .filter((week) => week.order_count > 0 || (siteFilter === 'all' && orderTypeFilter === 'all'));
+  const filteredWeeks = filterWeeksByPeriod(
+    weeks
+      .map((week) => {
+        const filteredOrders = week.orders.filter((o) => {
+          const siteMatch = siteFilter === 'all' || orderSite(o.restaurant) === siteFilter;
+          const typeMatch = orderTypeFilter === 'all' || o.order_type === orderTypeFilter;
+          return siteMatch && typeMatch;
+        });
+        return {
+          ...week,
+          orders: filteredOrders,
+          order_count: filteredOrders.length,
+          total_revenue: filteredOrders.reduce((sum, o) => sum + (o.total_price || 0), 0),
+        };
+      })
+      .filter((week) => week.order_count > 0 || (siteFilter === 'all' && orderTypeFilter === 'all')),
+    periodFilter,
+    customStart,
+    customEnd
+  );
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -276,12 +357,16 @@ export default function AdminOrderHistoryPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => exportToCsv(filteredWeeks, siteFilter, orderTypeFilter)}
+                  onClick={() =>
+                    exportToCsv(filteredWeeks, siteFilter, orderTypeFilter, periodFilter, customStart, customEnd)
+                  }
                 >
                   Exporter en CSV
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => exportToPdf(filteredWeeks, siteFilter, orderTypeFilter)}
+                  onClick={() =>
+                    exportToPdf(filteredWeeks, siteFilter, orderTypeFilter, periodFilter, customStart, customEnd)
+                  }
                 >
                   Exporter en PDF
                 </DropdownMenuItem>
@@ -326,6 +411,44 @@ export default function AdminOrderHistoryPage() {
                   {type === 'emporter' && <Store className="h-3 w-3 ml-1.5" />}
                 </Button>
               ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <Select
+                value={periodFilter}
+                onValueChange={(value) => setPeriodFilter(value as PeriodFilter)}
+              >
+                <SelectTrigger className="w-[200px] h-8 text-xs">
+                  <SelectValue placeholder="Période" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(['all', '4weeks', '8weeks', '12weeks', 'custom'] as PeriodFilter[]).map(
+                    (p) => (
+                      <SelectItem key={p} value={p}>
+                        {periodLabel(p)}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+              {periodFilter === 'custom' && (
+                <>
+                  <span className="text-sm text-muted-foreground">Du</span>
+                  <Input
+                    type="date"
+                    className="w-auto h-8 text-xs"
+                    value={toDateInputValue(customStart)}
+                    onChange={(e) => setCustomStart(e.target.value || null)}
+                  />
+                  <span className="text-sm text-muted-foreground">au</span>
+                  <Input
+                    type="date"
+                    className="w-auto h-8 text-xs"
+                    value={toDateInputValue(customEnd)}
+                    onChange={(e) => setCustomEnd(e.target.value || null)}
+                  />
+                </>
+              )}
             </div>
           </div>
         )}
