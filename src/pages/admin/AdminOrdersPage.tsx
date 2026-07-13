@@ -133,6 +133,9 @@ export default function AdminOrdersPage() {
             <p className="text-sm text-muted-foreground">
               {filteredOrders.length} commande(s) • Temps réel activé
             </p>
+            <p className="text-xs text-muted-foreground">
+              Total cumulé : {totalOrdersCount} commande(s)
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={refetch} disabled={ordersLoading}>
