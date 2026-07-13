@@ -173,6 +173,21 @@ export function useCustomerChat() {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const updated = payload.new as ChatMessage;
+          setMessages(prev =>
+            prev.map(m => (m.id === updated.id ? { ...m, ...updated } : m))
+          );
+        }
+      )
       .subscribe();
 
     channelRef.current = channel;
@@ -182,5 +197,5 @@ export function useCustomerChat() {
     };
   }, [conversationId]);
 
-  return { messages, loading, sendMessage, conversationId, site: resolveSite() };
+  return { messages, loading, sendMessage, markMessagesRead, conversationId, site: resolveSite() };
 }
