@@ -10,6 +10,7 @@ import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone } from 'lucide-reac
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Order, OrderStatus, statusLabels, statusColors } from '@/types/order';
 
 function DeliveryEstimateControl({ order, onSubmit }: { order: Order; onSubmit: (value: string) => void }) {
@@ -58,6 +59,24 @@ export default function AdminOrdersPage() {
   
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
+  // Persistent all-time total (archived weeks + current live orders).
+  // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
+  const [archivedCount, setArchivedCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from('order_history')
+      .select('order_count')
+      .then(({ data }) => {
+        if (!active) return;
+        const total = (data || []).reduce((sum, r: any) => sum + (r.order_count || 0), 0);
+        setArchivedCount(total);
+      });
+    return () => { active = false; };
+  }, [orders.length]);
+
+  const totalOrdersCount = archivedCount + orders.length;
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -113,6 +132,9 @@ export default function AdminOrdersPage() {
             <h1 className="text-xl font-bold text-primary">Gestion des Commandes</h1>
             <p className="text-sm text-muted-foreground">
               {filteredOrders.length} commande(s) • Temps réel activé
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Total cumulé : {totalOrdersCount} commande(s)
             </p>
           </div>
           <div className="flex items-center gap-2">
