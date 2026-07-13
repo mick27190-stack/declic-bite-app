@@ -357,12 +357,16 @@ export default function AdminOrderHistoryPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => exportToCsv(filteredWeeks, siteFilter, orderTypeFilter)}
+                  onClick={() =>
+                    exportToCsv(filteredWeeks, siteFilter, orderTypeFilter, periodFilter, customStart, customEnd)
+                  }
                 >
                   Exporter en CSV
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => exportToPdf(filteredWeeks, siteFilter, orderTypeFilter)}
+                  onClick={() =>
+                    exportToPdf(filteredWeeks, siteFilter, orderTypeFilter, periodFilter, customStart, customEnd)
+                  }
                 >
                   Exporter en PDF
                 </DropdownMenuItem>
