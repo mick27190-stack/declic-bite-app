@@ -200,7 +200,7 @@ export default function CustomerChat() {
 
                 {!isAtBottom && messages.length > 0 && (
                   <button
-                    onClick={scrollToBottom}
+                    onClick={() => scrollToBottom('smooth')}
                     className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg px-4 py-2 text-xs font-medium hover:scale-105 transition-transform animate-in fade-in slide-in-from-bottom-2"
                   >
                     {newCount > 0 && (
