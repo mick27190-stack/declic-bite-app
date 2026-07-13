@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown } from 'lucide-react';
+import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { statusLabels, statusColors, OrderStatus } from '@/types/order';
 import { jsPDF } from 'jspdf';
