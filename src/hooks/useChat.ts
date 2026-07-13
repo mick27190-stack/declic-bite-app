@@ -21,6 +21,7 @@ export interface ChatMessage {
   content: string;
   site: string;
   created_at: string;
+  read_at: string | null;
 }
 
 export function useChat(siteFilter?: string) {
