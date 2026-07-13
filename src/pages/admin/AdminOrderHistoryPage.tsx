@@ -63,6 +63,7 @@ function formatDate(value: string) {
 
 type SiteFilter = 'all' | 'conches' | 'beaumont';
 type OrderTypeFilter = 'all' | 'livraison' | 'emporter';
+type PeriodFilter = 'all' | '4weeks' | '8weeks' | '12weeks' | 'custom';
 
 function orderSite(restaurant: string): 'conches' | 'beaumont' {
   const r = restaurant.toLowerCase();
@@ -77,6 +78,51 @@ function siteLabel(site: SiteFilter) {
 
 function orderTypeLabel(type: OrderTypeFilter) {
   return type === 'all' ? 'Tous les types' : type === 'livraison' ? 'Livraison' : 'À emporter';
+}
+
+function periodLabel(period: PeriodFilter) {
+  switch (period) {
+    case 'all':
+      return "Tout l'historique";
+    case '4weeks':
+      return '4 dernières semaines';
+    case '8weeks':
+      return '8 dernières semaines';
+    case '12weeks':
+      return '12 dernières semaines';
+    case 'custom':
+      return 'Personnalisé';
+  }
+}
+
+function toDateInputValue(value: string | null): string {
+  if (!value) return '';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().split('T')[0];
+}
+
+function filterWeeksByPeriod(
+  weeks: HistoryWeek[],
+  period: PeriodFilter,
+  customStart: string | null,
+  customEnd: string | null
+): HistoryWeek[] {
+  if (period === 'all') return weeks;
+  if (period === 'custom') {
+    if (!customStart && !customEnd) return weeks;
+    const start = customStart ? new Date(customStart) : null;
+    const end = customEnd ? new Date(customEnd) : null;
+    return weeks.filter((w) => {
+      const weekStart = new Date(w.week_start);
+      const weekEnd = new Date(w.week_end);
+      if (start && weekEnd < start) return false;
+      if (end && weekStart > end) return false;
+      return true;
+    });
+  }
+  const count = period === '4weeks' ? 4 : period === '8weeks' ? 8 : 12;
+  return weeks.slice(0, count);
 }
 
 function escapeCsv(value: string | number | undefined) {
