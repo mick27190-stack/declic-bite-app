@@ -174,7 +174,7 @@ export function useChat(siteFilter?: string) {
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(convChannel);
     };
-  }, [user, fetchConversations, selectedConversationId]);
+  }, [user, fetchConversations, selectedConversationId, markMessagesRead]);
 
   return {
     conversations,
