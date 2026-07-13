@@ -111,13 +111,13 @@ export default function AdminSalesPage() {
 
       const { data, error } = await supabase
         .from('orders')
-        .select('created_at, total_price, items, restaurant, status')
+        .select('created_at, total_price, items, restaurant, status, order_type')
         .gte('created_at', since.toISOString())
         .lte('created_at', until.toISOString())
         .neq('status', 'cancelled')
         .order('created_at', { ascending: true });
 
-      if (!error && data) setOrders(data);
+      if (!error && data) setOrders(data.filter(countsForSales) as OrderRow[]);
       setLoading(false);
     };
 
