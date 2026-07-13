@@ -42,6 +42,9 @@ export default function CustomerChat() {
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [newCount, setNewCount] = useState(0);
   const prevCountRef = useRef(0);
+  const isAtBottomRef = useRef(true);
+  const forceScrollRef = useRef(false);
+  const wasOpenRef = useRef(false);
 
   const getViewport = useCallback(
     () =>
@@ -49,46 +52,70 @@ export default function CustomerChat() {
     []
   );
 
-  const scrollToBottom = useCallback(() => {
-    const viewport = getViewport();
-    if (viewport) {
-      viewport.scrollTop = viewport.scrollHeight;
-    }
-    setIsAtBottom(true);
-    setNewCount(0);
-  }, [getViewport]);
+  const scrollToBottom = useCallback(
+    (behavior: ScrollBehavior = 'auto') => {
+      requestAnimationFrame(() => {
+        const viewport = getViewport();
+        if (viewport) {
+          viewport.scrollTo({ top: viewport.scrollHeight, behavior });
+        }
+      });
+      isAtBottomRef.current = true;
+      setIsAtBottom(true);
+      setNewCount(0);
+    },
+    [getViewport]
+  );
 
-  // Track scroll position
+  // Track scroll position (near-bottom stays synced, reading up does not)
   useEffect(() => {
     const viewport = getViewport();
     if (!viewport) return;
     const handleScroll = () => {
-      const atBottom =
-        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 40;
+      const distanceToBottom =
+        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+      const atBottom = distanceToBottom < 80;
+      isAtBottomRef.current = atBottom;
       setIsAtBottom(atBottom);
       if (atBottom) setNewCount(0);
     };
-    viewport.addEventListener('scroll', handleScroll);
+    viewport.addEventListener('scroll', handleScroll, { passive: true });
     return () => viewport.removeEventListener('scroll', handleScroll);
   }, [getViewport, open, loading]);
 
-  // Handle new messages: auto-scroll if at bottom, otherwise show badge
+  // Snap to bottom when the panel opens or finishes loading
+  useEffect(() => {
+    if (open && !loading && !wasOpenRef.current) {
+      wasOpenRef.current = true;
+      prevCountRef.current = messages.length;
+      scrollToBottom();
+    }
+    if (!open) wasOpenRef.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, loading]);
+
+  // New messages: follow if near bottom or if I just sent, otherwise show badge
   useEffect(() => {
     const prev = prevCountRef.current;
     const added = messages.length - prev;
     prevCountRef.current = messages.length;
-    if (added > 0 && !isAtBottom) {
-      setNewCount((c) => c + added);
+    if (added <= 0) return;
+
+    if (forceScrollRef.current || isAtBottomRef.current) {
+      forceScrollRef.current = false;
+      scrollToBottom('smooth');
     } else {
-      scrollToBottom();
+      setNewCount((c) => c + added);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, open, loading]);
+  }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
     const msg = input.trim();
     setInput('');
+    forceScrollRef.current = true;
+    scrollToBottom('smooth');
     await sendMessage(msg);
   };
 
@@ -173,7 +200,7 @@ export default function CustomerChat() {
 
                 {!isAtBottom && messages.length > 0 && (
                   <button
-                    onClick={scrollToBottom}
+                    onClick={() => scrollToBottom('smooth')}
                     className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg px-4 py-2 text-xs font-medium hover:scale-105 transition-transform animate-in fade-in slide-in-from-bottom-2"
                   >
                     {newCount > 0 && (
