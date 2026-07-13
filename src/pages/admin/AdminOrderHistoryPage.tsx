@@ -412,6 +412,44 @@ export default function AdminOrderHistoryPage() {
                 </Button>
               ))}
             </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <Select
+                value={periodFilter}
+                onValueChange={(value) => setPeriodFilter(value as PeriodFilter)}
+              >
+                <SelectTrigger className="w-[200px] h-8 text-xs">
+                  <SelectValue placeholder="Période" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(['all', '4weeks', '8weeks', '12weeks', 'custom'] as PeriodFilter[]).map(
+                    (p) => (
+                      <SelectItem key={p} value={p}>
+                        {periodLabel(p)}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+              {periodFilter === 'custom' && (
+                <>
+                  <span className="text-sm text-muted-foreground">Du</span>
+                  <Input
+                    type="date"
+                    className="w-auto h-8 text-xs"
+                    value={toDateInputValue(customStart)}
+                    onChange={(e) => setCustomStart(e.target.value || null)}
+                  />
+                  <span className="text-sm text-muted-foreground">au</span>
+                  <Input
+                    type="date"
+                    className="w-auto h-8 text-xs"
+                    value={toDateInputValue(customEnd)}
+                    onChange={(e) => setCustomEnd(e.target.value || null)}
+                  />
+                </>
+              )}
+            </div>
           </div>
         )}
 
