@@ -9,7 +9,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 
-function MessageBubble({ message }: { message: { sender_type: string; content: string; created_at: string } }) {
+function MessageBubble({
+  message,
+}: {
+  message: { sender_type: string; content: string; created_at: string; read_at?: string | null };
+}) {
   const isCustomer = message.sender_type === 'customer';
   return (
     <div className={`flex ${isCustomer ? 'justify-end' : 'justify-start'}`}>
@@ -21,8 +25,9 @@ function MessageBubble({ message }: { message: { sender_type: string; content: s
         }`}
       >
         <p className="text-sm">{message.content}</p>
-        <p className={`text-[10px] mt-1 ${isCustomer ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+        <p className={`text-[10px] mt-1 flex items-center gap-1 ${isCustomer ? 'text-primary-foreground/60 justify-end' : 'text-muted-foreground'}`}>
           {new Date(message.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+          {isCustomer && message.read_at && <span className="font-medium">· Lu</span>}
         </p>
       </div>
     </div>
