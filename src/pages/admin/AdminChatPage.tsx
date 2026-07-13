@@ -100,6 +100,8 @@ export default function AdminChatPage() {
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [newCount, setNewCount] = useState(0);
   const prevCountRef = useRef(0);
+  const isAtBottomRef = useRef(true);
+  const forceScrollRef = useRef(false);
 
   const getViewport = useCallback(
     () =>
@@ -107,53 +109,70 @@ export default function AdminChatPage() {
     []
   );
 
-  const scrollToBottom = useCallback(() => {
-    const viewport = getViewport();
-    if (viewport) {
-      viewport.scrollTop = viewport.scrollHeight;
-    }
-    setIsAtBottom(true);
-    setNewCount(0);
-  }, [getViewport]);
+  const scrollToBottom = useCallback(
+    (behavior: ScrollBehavior = 'auto') => {
+      requestAnimationFrame(() => {
+        const viewport = getViewport();
+        if (viewport) {
+          viewport.scrollTo({ top: viewport.scrollHeight, behavior });
+        }
+      });
+      isAtBottomRef.current = true;
+      setIsAtBottom(true);
+      setNewCount(0);
+    },
+    [getViewport]
+  );
 
-  // Track scroll position
+  // Track scroll position (near-bottom stays synced, reading up does not)
   useEffect(() => {
     const viewport = getViewport();
     if (!viewport) return;
     const handleScroll = () => {
-      const atBottom =
-        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 40;
+      const distanceToBottom =
+        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+      const atBottom = distanceToBottom < 80;
+      isAtBottomRef.current = atBottom;
       setIsAtBottom(atBottom);
       if (atBottom) setNewCount(0);
     };
-    viewport.addEventListener('scroll', handleScroll);
+    viewport.addEventListener('scroll', handleScroll, { passive: true });
     return () => viewport.removeEventListener('scroll', handleScroll);
   }, [getViewport, selectedConversationId]);
 
-  // Reset counters when switching conversation
+  // Reset and snap to bottom when switching conversation
   useEffect(() => {
-    prevCountRef.current = 0;
+    prevCountRef.current = messages.length;
+    isAtBottomRef.current = true;
     setNewCount(0);
     setIsAtBottom(true);
+    scrollToBottom();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversationId]);
 
-  // Handle new messages: auto-scroll if at bottom, otherwise show badge
+  // New messages: follow if near bottom or if I just sent, otherwise show badge
   useEffect(() => {
     const prev = prevCountRef.current;
     const added = messages.length - prev;
     prevCountRef.current = messages.length;
-    if (added > 0 && !isAtBottom) {
-      setNewCount((c) => c + added);
+    if (added <= 0) return;
+
+    if (forceScrollRef.current || isAtBottomRef.current) {
+      forceScrollRef.current = false;
+      scrollToBottom('smooth');
     } else {
-      scrollToBottom();
+      setNewCount((c) => c + added);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, selectedConversationId]);
+  }, [messages]);
 
   const handleSend = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
-    await sendMessage(selectedConversation.id, newMessage.trim(), selectedConversation.site);
+    const content = newMessage.trim();
     setNewMessage('');
+    forceScrollRef.current = true;
+    scrollToBottom('smooth');
+    await sendMessage(selectedConversation.id, content, selectedConversation.site);
   };
 
   if (authLoading || adminLoading) {
