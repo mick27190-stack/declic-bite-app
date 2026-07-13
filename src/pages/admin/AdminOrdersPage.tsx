@@ -59,6 +59,24 @@ export default function AdminOrdersPage() {
   
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
+  // Persistent all-time total (archived weeks + current live orders).
+  // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
+  const [archivedCount, setArchivedCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from('order_history')
+      .select('order_count')
+      .then(({ data }) => {
+        if (!active) return;
+        const total = (data || []).reduce((sum, r: any) => sum + (r.order_count || 0), 0);
+        setArchivedCount(total);
+      });
+    return () => { active = false; };
+  }, [orders.length]);
+
+  const totalOrdersCount = archivedCount + orders.length;
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
