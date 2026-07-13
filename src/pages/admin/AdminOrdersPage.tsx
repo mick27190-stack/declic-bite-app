@@ -58,6 +58,7 @@ export default function AdminOrdersPage() {
   const { canManageOrders, isSiteAdminConches, isSiteAdminBeaumont, isSuperAdmin, loading: adminLoading } = useAdmin();
   const { orders, loading: ordersLoading, updateOrderStatus, setDeliveryEstimate, refetch } = useOrders();
   
+  const { toast } = useToast();
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
   // Persistent all-time total (archived weeks + current live orders).
