@@ -177,50 +177,8 @@ export default function AdminOrdersPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <Card className="mb-6 border-dashed">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <FlaskConical className="h-4 w-4" /> Test de la purge hebdomadaire (lundi 4h00 · Paris)
-            </CardTitle>
-            <CardDescription>
-              Simule l'exécution du cron pour la semaine précédente. Aucune donnée n'est modifiée.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button variant="outline" size="sm" onClick={runPurgePreview} disabled={previewing}>
-              <FlaskConical className={`h-4 w-4 mr-2 ${previewing ? 'animate-pulse' : ''}`} />
-              {previewing ? 'Simulation…' : 'Lancer la simulation'}
-            </Button>
-            {previewResult && (
-              <div className="text-sm space-y-1 rounded-md bg-muted p-3">
-                <p>
-                  Semaine ciblée :{' '}
-                  <span className="font-medium">
-                    {previewResult.week_start} → {previewResult.week_end}
-                  </span>
-                </p>
-                <p>
-                  Semaine archivée :{' '}
-                  <span className="font-medium">
-                    {previewResult.is_archived ? '✅ Oui' : '❌ Non'}
-                  </span>
-                </p>
-                <p>
-                  Commandes qui seraient effacées :{' '}
-                  <span className="font-medium">{previewResult.would_delete_count}</span>{' '}
-                  ({Number(previewResult.would_delete_revenue).toFixed(2)}€)
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {previewResult.would_run
-                    ? 'La purge réelle s\'exécuterait le lundi à 4h00 (heure de Paris).'
-                    : 'La purge ne s\'exécuterait pas : la semaine n\'est pas encore archivée.'}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         <div className="flex flex-wrap gap-4 mb-6">
+
 
           {isSuperAdmin && (
             <Select value={filterSite} onValueChange={(v) => setFilterSite(v as any)}>
