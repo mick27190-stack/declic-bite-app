@@ -13,7 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { ArrowLeft, RefreshCw, History, Package, MapPin } from 'lucide-react';
+import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { statusLabels, statusColors, OrderStatus } from '@/types/order';
 
@@ -46,6 +46,7 @@ function formatDate(value: string) {
 }
 
 type SiteFilter = 'all' | 'conches' | 'beaumont';
+type OrderTypeFilter = 'all' | 'livraison' | 'emporter';
 
 function orderSite(restaurant: string): 'conches' | 'beaumont' {
   const r = restaurant.toLowerCase();
@@ -63,13 +64,15 @@ export default function AdminOrderHistoryPage() {
   const [weeks, setWeeks] = useState<HistoryWeek[]>([]);
   const [loading, setLoading] = useState(true);
   const [siteFilter, setSiteFilter] = useState<SiteFilter>('all');
+  const [orderTypeFilter, setOrderTypeFilter] = useState<OrderTypeFilter>('all');
 
   const filteredWeeks = weeks
     .map((week) => {
-      const filteredOrders =
-        siteFilter === 'all'
-          ? week.orders
-          : week.orders.filter((o) => orderSite(o.restaurant) === siteFilter);
+      const filteredOrders = week.orders.filter((o) => {
+        const siteMatch = siteFilter === 'all' || orderSite(o.restaurant) === siteFilter;
+        const typeMatch = orderTypeFilter === 'all' || o.order_type === orderTypeFilter;
+        return siteMatch && typeMatch;
+      });
       return {
         ...week,
         orders: filteredOrders,
@@ -77,7 +80,7 @@ export default function AdminOrderHistoryPage() {
         total_revenue: filteredOrders.reduce((sum, o) => sum + (o.total_price || 0), 0),
       };
     })
-    .filter((week) => week.order_count > 0 || siteFilter === 'all');
+    .filter((week) => week.order_count > 0 || (siteFilter === 'all' && orderTypeFilter === 'all'));
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -144,18 +147,39 @@ export default function AdminOrderHistoryPage() {
 
       <main className="container mx-auto px-4 py-8">
         {!loading && weeks.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            {(['all', 'conches', 'beaumont'] as SiteFilter[]).map((site) => (
-              <Button
-                key={site}
-                variant={siteFilter === site ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSiteFilter(site)}
-              >
-                {site === 'all' ? 'Tous les sites' : site === 'conches' ? 'Conches' : 'Beaumont'}
-              </Button>
-            ))}
+          <div className="space-y-3 mb-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              {(['all', 'conches', 'beaumont'] as SiteFilter[]).map((site) => (
+                <Button
+                  key={site}
+                  variant={siteFilter === site ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSiteFilter(site)}
+                >
+                  {site === 'all' ? 'Tous les sites' : site === 'conches' ? 'Conches' : 'Beaumont'}
+                </Button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Truck className="h-4 w-4 text-muted-foreground" />
+              {(['all', 'livraison', 'emporter'] as OrderTypeFilter[]).map((type) => (
+                <Button
+                  key={type}
+                  variant={orderTypeFilter === type ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setOrderTypeFilter(type)}
+                >
+                  {type === 'all'
+                    ? 'Tous les types'
+                    : type === 'livraison'
+                    ? 'Livraison'
+                    : 'À emporter'}
+                  {type === 'livraison' && <Truck className="h-3 w-3 ml-1.5" />}
+                  {type === 'emporter' && <Store className="h-3 w-3 ml-1.5" />}
+                </Button>
+              ))}
+            </div>
           </div>
         )}
 
