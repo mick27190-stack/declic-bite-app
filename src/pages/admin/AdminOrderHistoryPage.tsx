@@ -147,18 +147,39 @@ export default function AdminOrderHistoryPage() {
 
       <main className="container mx-auto px-4 py-8">
         {!loading && weeks.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-6">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            {(['all', 'conches', 'beaumont'] as SiteFilter[]).map((site) => (
-              <Button
-                key={site}
-                variant={siteFilter === site ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSiteFilter(site)}
-              >
-                {site === 'all' ? 'Tous les sites' : site === 'conches' ? 'Conches' : 'Beaumont'}
-              </Button>
-            ))}
+          <div className="space-y-3 mb-6">
+            <div className="flex flex-wrap items-center gap-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              {(['all', 'conches', 'beaumont'] as SiteFilter[]).map((site) => (
+                <Button
+                  key={site}
+                  variant={siteFilter === site ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSiteFilter(site)}
+                >
+                  {site === 'all' ? 'Tous les sites' : site === 'conches' ? 'Conches' : 'Beaumont'}
+                </Button>
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Truck className="h-4 w-4 text-muted-foreground" />
+              {(['all', 'livraison', 'emporter'] as OrderTypeFilter[]).map((type) => (
+                <Button
+                  key={type}
+                  variant={orderTypeFilter === type ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setOrderTypeFilter(type)}
+                >
+                  {type === 'all'
+                    ? 'Tous les types'
+                    : type === 'livraison'
+                    ? 'Livraison'
+                    : 'À emporter'}
+                  {type === 'livraison' && <Truck className="h-3 w-3 ml-1.5" />}
+                  {type === 'emporter' && <Store className="h-3 w-3 ml-1.5" />}
+                </Button>
+              ))}
+            </div>
           </div>
         )}
 
