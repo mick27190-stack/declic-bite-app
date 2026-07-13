@@ -13,7 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { ArrowLeft, RefreshCw, History, Package } from 'lucide-react';
+import { ArrowLeft, RefreshCw, History, Package, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { statusLabels, statusColors, OrderStatus } from '@/types/order';
 
@@ -45,6 +45,15 @@ function formatDate(value: string) {
   });
 }
 
+type SiteFilter = 'all' | 'conches' | 'beaumont';
+
+function orderSite(restaurant: string): 'conches' | 'beaumont' {
+  const r = restaurant.toLowerCase();
+  if (r.includes('conches')) return 'conches';
+  if (r.includes('beaumont')) return 'beaumont';
+  return 'conches';
+}
+
 export default function AdminOrderHistoryPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -53,6 +62,22 @@ export default function AdminOrderHistoryPage() {
 
   const [weeks, setWeeks] = useState<HistoryWeek[]>([]);
   const [loading, setLoading] = useState(true);
+  const [siteFilter, setSiteFilter] = useState<SiteFilter>('all');
+
+  const filteredWeeks = weeks
+    .map((week) => {
+      const filteredOrders =
+        siteFilter === 'all'
+          ? week.orders
+          : week.orders.filter((o) => orderSite(o.restaurant) === siteFilter);
+      return {
+        ...week,
+        orders: filteredOrders,
+        order_count: filteredOrders.length,
+        total_revenue: filteredOrders.reduce((sum, o) => sum + (o.total_price || 0), 0),
+      };
+    })
+    .filter((week) => week.order_count > 0 || siteFilter === 'all');
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -118,23 +143,45 @@ export default function AdminOrderHistoryPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {!loading && weeks.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <MapPin className="h-4 w-4 text-muted-foreground" />
+            {(['all', 'conches', 'beaumont'] as SiteFilter[]).map((site) => (
+              <Button
+                key={site}
+                variant={siteFilter === site ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSiteFilter(site)}
+              >
+                {site === 'all' ? 'Tous les sites' : site === 'conches' ? 'Conches' : 'Beaumont'}
+              </Button>
+            ))}
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
-        ) : weeks.length === 0 ? (
+        ) : filteredWeeks.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
               <History className="h-10 w-10 mx-auto mb-3 opacity-50" />
-              <p>Aucune semaine archivée pour le moment.</p>
+              <p>
+                {weeks.length === 0
+                  ? 'Aucune semaine archivée pour le moment.'
+                  : 'Aucune commande ne correspond à ce filtre.'}
+              </p>
               <p className="text-sm mt-1">
-                Les commandes seront archivées automatiquement chaque lundi à 3h00.
+                {weeks.length === 0
+                  ? 'Les commandes seront archivées automatiquement chaque lundi à 3h00.'
+                  : 'Essayez un autre site ou vérifiez plus tard.'}
               </p>
             </CardContent>
           </Card>
         ) : (
           <Accordion type="single" collapsible className="space-y-4">
-            {weeks.map((week) => (
+            {filteredWeeks.map((week) => (
               <AccordionItem
                 key={week.id}
                 value={week.id}
@@ -163,7 +210,7 @@ export default function AdminOrderHistoryPage() {
                 <AccordionContent>
                   {week.orders.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-4">
-                      Aucune commande cette semaine.
+                      Aucune commande cette semaine pour ce site.
                     </p>
                   ) : (
                     <div className="space-y-2 pb-2">
