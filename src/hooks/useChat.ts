@@ -90,11 +90,22 @@ export function useChat(siteFilter?: string) {
     return { error };
   }, [user]);
 
+  // Mark customer messages in a conversation as read (admin is the reader)
+  const markMessagesRead = useCallback(async (conversationId: string) => {
+    await supabase
+      .from('chat_messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('conversation_id', conversationId)
+      .eq('sender_type', 'customer')
+      .is('read_at', null);
+  }, []);
+
   // Select conversation
   const selectConversation = useCallback((id: string) => {
     setSelectedConversationId(id);
     fetchMessages(id);
-  }, [fetchMessages]);
+    markMessagesRead(id);
+  }, [fetchMessages, markMessagesRead]);
 
   // Real-time subscriptions
   useEffect(() => {
