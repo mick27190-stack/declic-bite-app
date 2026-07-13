@@ -128,10 +128,31 @@ export function useChat(siteFilter?: string) {
           // Add to current messages if viewing this conversation
           if (newMsg.conversation_id === selectedConversationId) {
             setMessages(prev => [...prev, newMsg]);
+            // A new customer message arrived while viewing → mark as read
+            if (newMsg.sender_type === 'customer') {
+              markMessagesRead(selectedConversationId);
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_messages',
+        },
+        (payload) => {
+          const updated = payload.new as ChatMessage;
+          if (updated.conversation_id === selectedConversationId) {
+            setMessages(prev =>
+              prev.map(m => (m.id === updated.id ? { ...m, ...updated } : m))
+            );
           }
         }
       )
       .subscribe();
+
 
     // Subscribe to conversation updates
     const convChannel = supabase
