@@ -704,6 +704,7 @@ export type Database = {
         Returns: number
       }
       normalize_phone: { Args: { _phone: string }; Returns: string }
+      preview_purge_previous_week_orders: { Args: never; Returns: Json }
       purge_previous_week_orders: { Args: never; Returns: undefined }
       purge_previous_week_orders_guarded: { Args: never; Returns: undefined }
       read_email_batch: {

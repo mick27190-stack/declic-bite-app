@@ -6,7 +6,8 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, FlaskConical } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useEffect, useState } from 'react';
@@ -57,6 +58,7 @@ export default function AdminOrdersPage() {
   const { canManageOrders, isSiteAdminConches, isSiteAdminBeaumont, isSuperAdmin, loading: adminLoading } = useAdmin();
   const { orders, loading: ordersLoading, updateOrderStatus, setDeliveryEstimate, refetch } = useOrders();
   
+  const { toast } = useToast();
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
   // Persistent all-time total (archived weeks + current live orders).
@@ -113,6 +115,34 @@ export default function AdminOrdersPage() {
     await updateOrderStatus(orderId, newStatus);
   };
 
+  const [previewing, setPreviewing] = useState(false);
+  const [previewResult, setPreviewResult] = useState<{
+    week_start: string;
+    week_end: string;
+    is_archived: boolean;
+    would_delete_count: number;
+    would_delete_revenue: number;
+    would_run: boolean;
+  } | null>(null);
+
+  const runPurgePreview = async () => {
+    setPreviewing(true);
+    try {
+      const { data, error } = await supabase.rpc('preview_purge_previous_week_orders');
+      if (error) throw error;
+      setPreviewResult(data as any);
+    } catch (e: any) {
+      toast({
+        title: 'Erreur',
+        description: e.message || 'Impossible de lancer la simulation',
+        variant: 'destructive',
+      });
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -147,7 +177,51 @@ export default function AdminOrdersPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <Card className="mb-6 border-dashed">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <FlaskConical className="h-4 w-4" /> Test de la purge hebdomadaire (lundi 4h00 · Paris)
+            </CardTitle>
+            <CardDescription>
+              Simule l'exécution du cron pour la semaine précédente. Aucune donnée n'est modifiée.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button variant="outline" size="sm" onClick={runPurgePreview} disabled={previewing}>
+              <FlaskConical className={`h-4 w-4 mr-2 ${previewing ? 'animate-pulse' : ''}`} />
+              {previewing ? 'Simulation…' : 'Lancer la simulation'}
+            </Button>
+            {previewResult && (
+              <div className="text-sm space-y-1 rounded-md bg-muted p-3">
+                <p>
+                  Semaine ciblée :{' '}
+                  <span className="font-medium">
+                    {previewResult.week_start} → {previewResult.week_end}
+                  </span>
+                </p>
+                <p>
+                  Semaine archivée :{' '}
+                  <span className="font-medium">
+                    {previewResult.is_archived ? '✅ Oui' : '❌ Non'}
+                  </span>
+                </p>
+                <p>
+                  Commandes qui seraient effacées :{' '}
+                  <span className="font-medium">{previewResult.would_delete_count}</span>{' '}
+                  ({Number(previewResult.would_delete_revenue).toFixed(2)}€)
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {previewResult.would_run
+                    ? 'La purge réelle s\'exécuterait le lundi à 4h00 (heure de Paris).'
+                    : 'La purge ne s\'exécuterait pas : la semaine n\'est pas encore archivée.'}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <div className="flex flex-wrap gap-4 mb-6">
+
           {isSuperAdmin && (
             <Select value={filterSite} onValueChange={(v) => setFilterSite(v as any)}>
               <SelectTrigger className="w-[180px]">
