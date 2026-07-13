@@ -122,6 +122,14 @@ export default function CustomerChat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
+  // Mark admin messages as read while the panel is open
+  useEffect(() => {
+    if (!open || loading) return;
+    if (messages.some((m) => m.sender_type === 'admin' && !m.read_at)) {
+      markMessagesRead();
+    }
+  }, [open, loading, messages, markMessagesRead]);
+
   const handleSend = async () => {
     if (!input.trim()) return;
     const msg = input.trim();
