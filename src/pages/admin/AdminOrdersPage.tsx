@@ -114,6 +114,34 @@ export default function AdminOrdersPage() {
     await updateOrderStatus(orderId, newStatus);
   };
 
+  const [previewing, setPreviewing] = useState(false);
+  const [previewResult, setPreviewResult] = useState<{
+    week_start: string;
+    week_end: string;
+    is_archived: boolean;
+    would_delete_count: number;
+    would_delete_revenue: number;
+    would_run: boolean;
+  } | null>(null);
+
+  const runPurgePreview = async () => {
+    setPreviewing(true);
+    try {
+      const { data, error } = await supabase.rpc('preview_purge_previous_week_orders');
+      if (error) throw error;
+      setPreviewResult(data as any);
+    } catch (e: any) {
+      toast({
+        title: 'Erreur',
+        description: e.message || 'Impossible de lancer la simulation',
+        variant: 'destructive',
+      });
+    } finally {
+      setPreviewing(false);
+    }
+  };
+
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
