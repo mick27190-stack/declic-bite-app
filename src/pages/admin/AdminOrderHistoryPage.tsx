@@ -13,9 +13,17 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { statusLabels, statusColors, OrderStatus } from '@/types/order';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface HistoryOrder {
   id: string;
@@ -53,6 +61,126 @@ function orderSite(restaurant: string): 'conches' | 'beaumont' {
   if (r.includes('conches')) return 'conches';
   if (r.includes('beaumont')) return 'beaumont';
   return 'conches';
+}
+
+function siteLabel(site: SiteFilter) {
+  return site === 'all' ? 'Tous les sites' : site === 'conches' ? 'Conches' : 'Beaumont';
+}
+
+function orderTypeLabel(type: OrderTypeFilter) {
+  return type === 'all' ? 'Tous les types' : type === 'livraison' ? 'Livraison' : 'À emporter';
+}
+
+function escapeCsv(value: string | number | undefined) {
+  const str = String(value ?? '');
+  if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+function exportToCsv(
+  weeks: HistoryWeek[],
+  siteFilter: SiteFilter,
+  orderTypeFilter: OrderTypeFilter
+) {
+  const filterLine = `Filtres;${siteLabel(siteFilter)};${orderTypeLabel(orderTypeFilter)}\n`;
+  const summaryHeader = 'Semaine;Commandes;CA (€)\n';
+  const summaryRows = weeks
+    .map(
+      (w) =>
+        `${formatDate(w.week_start)} - ${formatDate(w.week_end)};${w.order_count};${w.total_revenue.toFixed(2)}`
+    )
+    .join('\n');
+
+  const detailHeader = '\n\nDate;Commande;Site;Restaurant;Type;Client;Statut;Total (€)\n';
+  const detailRows = weeks
+    .flatMap((w) =>
+      w.orders.map(
+        (o) =>
+          `${new Date(o.created_at).toLocaleString('fr-FR')};${o.id.slice(0, 8)};${orderSite(o.restaurant)};${escapeCsv(o.restaurant)};${o.order_type === 'livraison' ? 'Livraison' : 'À emporter'};${escapeCsv(o.customer_name || '-')};${statusLabels[o.status]};${o.total_price.toFixed(2)}`
+      )
+    )
+    .join('\n');
+
+  const csv = '\uFEFF' + filterLine + '\n' + summaryHeader + summaryRows + detailHeader + detailRows;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `historique-commandes-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function exportToPdf(
+  weeks: HistoryWeek[],
+  siteFilter: SiteFilter,
+  orderTypeFilter: OrderTypeFilter
+) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.setFontSize(18);
+  doc.text('Historique des commandes', 14, 20);
+  doc.setFontSize(11);
+  doc.setTextColor(80);
+  doc.text(`Filtres : ${siteLabel(siteFilter)} · ${orderTypeLabel(orderTypeFilter)}`, 14, 28);
+
+  const summaryHeaders = [['Semaine', 'Commandes', 'CA (€)']];
+  const summaryRows = weeks.map((w) => [
+    `${formatDate(w.week_start)} - ${formatDate(w.week_end)}`,
+    w.order_count,
+    w.total_revenue.toFixed(2) + ' €',
+  ]);
+
+  autoTable(doc, {
+    head: summaryHeaders,
+    body: summaryRows,
+    startY: 35,
+    theme: 'striped',
+    headStyles: { fillColor: [234, 88, 12] },
+    styles: { fontSize: 10, cellPadding: 2 },
+    margin: { left: 14, right: 14 },
+  });
+
+  const detailHeaders = [['Date', 'N°', 'Site', 'Type', 'Client', 'Statut', 'Total']];
+  const detailRows = weeks.flatMap((w) =>
+    w.orders.map((o) => [
+      new Date(o.created_at).toLocaleString('fr-FR'),
+      '#' + o.id.slice(0, 8),
+      orderSite(o.restaurant),
+      o.order_type === 'livraison' ? 'Livraison' : 'À emporter',
+      o.customer_name || '-',
+      statusLabels[o.status],
+      o.total_price.toFixed(2) + ' €',
+    ])
+  );
+
+  if (detailRows.length > 0) {
+    autoTable(doc, {
+      head: detailHeaders,
+      body: detailRows,
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      theme: 'grid',
+      headStyles: { fillColor: [234, 88, 12] },
+      styles: { fontSize: 9, cellPadding: 2 },
+      margin: { left: 14, right: 14 },
+      columnStyles: {
+        0: { cellWidth: 30 },
+        1: { cellWidth: 18 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 22 },
+        4: { cellWidth: 35 },
+        5: { cellWidth: 25 },
+        6: { cellWidth: 20 },
+      },
+    });
+  }
+
+  doc.save(`historique-commandes-${new Date().toISOString().slice(0, 10)}.pdf`);
 }
 
 export default function AdminOrderHistoryPage() {
@@ -140,6 +268,25 @@ export default function AdminOrderHistoryPage() {
             <Button variant="outline" size="icon" onClick={fetchHistory}>
               <RefreshCw className="h-4 w-4" />
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" disabled={loading || weeks.length === 0}>
+                  <FileDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => exportToCsv(filteredWeeks, siteFilter, orderTypeFilter)}
+                >
+                  Exporter en CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => exportToPdf(filteredWeeks, siteFilter, orderTypeFilter)}
+                >
+                  Exporter en PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <NotificationBell />
           </div>
         </div>
