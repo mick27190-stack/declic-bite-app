@@ -268,6 +268,25 @@ export default function AdminOrderHistoryPage() {
             <Button variant="outline" size="icon" onClick={fetchHistory}>
               <RefreshCw className="h-4 w-4" />
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" disabled={loading || weeks.length === 0}>
+                  <FileDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => exportToCsv(filteredWeeks, siteFilter, orderTypeFilter)}
+                >
+                  Exporter en CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => exportToPdf(filteredWeeks, siteFilter, orderTypeFilter)}
+                >
+                  Exporter en PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <NotificationBell />
           </div>
         </div>
