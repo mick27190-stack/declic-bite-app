@@ -21,6 +21,7 @@ export interface ChatMessage {
   content: string;
   site: string;
   created_at: string;
+  read_at: string | null;
 }
 
 export function useChat(siteFilter?: string) {
@@ -89,11 +90,22 @@ export function useChat(siteFilter?: string) {
     return { error };
   }, [user]);
 
+  // Mark customer messages in a conversation as read (admin is the reader)
+  const markMessagesRead = useCallback(async (conversationId: string) => {
+    await supabase
+      .from('chat_messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('conversation_id', conversationId)
+      .eq('sender_type', 'customer')
+      .is('read_at', null);
+  }, []);
+
   // Select conversation
   const selectConversation = useCallback((id: string) => {
     setSelectedConversationId(id);
     fetchMessages(id);
-  }, [fetchMessages]);
+    markMessagesRead(id);
+  }, [fetchMessages, markMessagesRead]);
 
   // Real-time subscriptions
   useEffect(() => {
@@ -116,10 +128,31 @@ export function useChat(siteFilter?: string) {
           // Add to current messages if viewing this conversation
           if (newMsg.conversation_id === selectedConversationId) {
             setMessages(prev => [...prev, newMsg]);
+            // A new customer message arrived while viewing → mark as read
+            if (newMsg.sender_type === 'customer') {
+              markMessagesRead(selectedConversationId);
+            }
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_messages',
+        },
+        (payload) => {
+          const updated = payload.new as ChatMessage;
+          if (updated.conversation_id === selectedConversationId) {
+            setMessages(prev =>
+              prev.map(m => (m.id === updated.id ? { ...m, ...updated } : m))
+            );
           }
         }
       )
       .subscribe();
+
 
     // Subscribe to conversation updates
     const convChannel = supabase
@@ -141,7 +174,7 @@ export function useChat(siteFilter?: string) {
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(convChannel);
     };
-  }, [user, fetchConversations, selectedConversationId]);
+  }, [user, fetchConversations, selectedConversationId, markMessagesRead]);
 
   return {
     conversations,

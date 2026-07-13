@@ -146,6 +146,7 @@ export type Database = {
           conversation_id: string
           created_at: string
           id: string
+          read_at: string | null
           sender_id: string
           sender_type: string
           site: string
@@ -155,6 +156,7 @@ export type Database = {
           conversation_id: string
           created_at?: string
           id?: string
+          read_at?: string | null
           sender_id: string
           sender_type: string
           site: string
@@ -164,6 +166,7 @@ export type Database = {
           conversation_id?: string
           created_at?: string
           id?: string
+          read_at?: string | null
           sender_id?: string
           sender_type?: string
           site?: string

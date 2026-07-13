@@ -9,7 +9,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 
-function MessageBubble({ message }: { message: { sender_type: string; content: string; created_at: string } }) {
+function MessageBubble({
+  message,
+}: {
+  message: { sender_type: string; content: string; created_at: string; read_at?: string | null };
+}) {
   const isCustomer = message.sender_type === 'customer';
   return (
     <div className={`flex ${isCustomer ? 'justify-end' : 'justify-start'}`}>
@@ -21,8 +25,9 @@ function MessageBubble({ message }: { message: { sender_type: string; content: s
         }`}
       >
         <p className="text-sm">{message.content}</p>
-        <p className={`text-[10px] mt-1 ${isCustomer ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+        <p className={`text-[10px] mt-1 flex items-center gap-1 ${isCustomer ? 'text-primary-foreground/60 justify-end' : 'text-muted-foreground'}`}>
           {new Date(message.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+          {isCustomer && message.read_at && <span className="font-medium">· Lu</span>}
         </p>
       </div>
     </div>
@@ -36,7 +41,7 @@ export default function CustomerChat() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, loading, sendMessage } = useCustomerChat();
+  const { messages, loading, sendMessage, markMessagesRead } = useCustomerChat();
   const { isOnline } = useAdminPresenceWatch();
 
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -116,6 +121,14 @@ export default function CustomerChat() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
+
+  // Mark admin messages as read while the panel is open
+  useEffect(() => {
+    if (!open || loading) return;
+    if (messages.some((m) => m.sender_type === 'admin' && !m.read_at)) {
+      markMessagesRead();
+    }
+  }, [open, loading, messages, markMessagesRead]);
 
   const handleSend = async () => {
     if (!input.trim()) return;

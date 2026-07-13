@@ -76,6 +76,17 @@ export function useCustomerChat() {
     }
   }, []);
 
+  // Mark admin messages in the current conversation as read (customer is the reader)
+  const markMessagesRead = useCallback(async () => {
+    if (!conversationId) return;
+    await supabase
+      .from('chat_messages')
+      .update({ read_at: new Date().toISOString() })
+      .eq('conversation_id', conversationId)
+      .eq('sender_type', 'admin')
+      .is('read_at', null);
+  }, [conversationId]);
+
   // Send message
   const sendMessage = useCallback(async (content: string) => {
     if (!user) return;
@@ -162,6 +173,21 @@ export function useCustomerChat() {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const updated = payload.new as ChatMessage;
+          setMessages(prev =>
+            prev.map(m => (m.id === updated.id ? { ...m, ...updated } : m))
+          );
+        }
+      )
       .subscribe();
 
     channelRef.current = channel;
@@ -171,5 +197,5 @@ export function useCustomerChat() {
     };
   }, [conversationId]);
 
-  return { messages, loading, sendMessage, conversationId, site: resolveSite() };
+  return { messages, loading, sendMessage, markMessagesRead, conversationId, site: resolveSite() };
 }
