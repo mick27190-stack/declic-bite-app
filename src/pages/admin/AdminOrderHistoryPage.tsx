@@ -45,6 +45,15 @@ function formatDate(value: string) {
   });
 }
 
+type SiteFilter = 'all' | 'conches' | 'beaumont';
+
+function orderSite(restaurant: string): 'conches' | 'beaumont' {
+  const r = restaurant.toLowerCase();
+  if (r.includes('conches')) return 'conches';
+  if (r.includes('beaumont')) return 'beaumont';
+  return 'conches';
+}
+
 export default function AdminOrderHistoryPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -53,6 +62,22 @@ export default function AdminOrderHistoryPage() {
 
   const [weeks, setWeeks] = useState<HistoryWeek[]>([]);
   const [loading, setLoading] = useState(true);
+  const [siteFilter, setSiteFilter] = useState<SiteFilter>('all');
+
+  const filteredWeeks = weeks
+    .map((week) => {
+      const filteredOrders =
+        siteFilter === 'all'
+          ? week.orders
+          : week.orders.filter((o) => orderSite(o.restaurant) === siteFilter);
+      return {
+        ...week,
+        orders: filteredOrders,
+        order_count: filteredOrders.length,
+        total_revenue: filteredOrders.reduce((sum, o) => sum + (o.total_price || 0), 0),
+      };
+    })
+    .filter((week) => week.order_count > 0 || siteFilter === 'all');
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
