@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Send, User } from 'lucide-react';
+import { ArrowLeft, Send, User, ArrowDown } from 'lucide-react';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -97,14 +97,57 @@ export default function AdminChatPage() {
     }
   }, [user, canManageChat, authLoading, adminLoading]);
 
-  // Auto-scroll on new messages / conversation change
-  useEffect(() => {
-    const viewport = scrollRef.current?.querySelector<HTMLDivElement>(
-      '[data-radix-scroll-area-viewport]'
-    );
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [newCount, setNewCount] = useState(0);
+  const prevCountRef = useRef(0);
+
+  const getViewport = useCallback(
+    () =>
+      scrollRef.current?.querySelector<HTMLDivElement>('[data-radix-scroll-area-viewport]') ?? null,
+    []
+  );
+
+  const scrollToBottom = useCallback(() => {
+    const viewport = getViewport();
     if (viewport) {
       viewport.scrollTop = viewport.scrollHeight;
     }
+    setIsAtBottom(true);
+    setNewCount(0);
+  }, [getViewport]);
+
+  // Track scroll position
+  useEffect(() => {
+    const viewport = getViewport();
+    if (!viewport) return;
+    const handleScroll = () => {
+      const atBottom =
+        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight < 40;
+      setIsAtBottom(atBottom);
+      if (atBottom) setNewCount(0);
+    };
+    viewport.addEventListener('scroll', handleScroll);
+    return () => viewport.removeEventListener('scroll', handleScroll);
+  }, [getViewport, selectedConversationId]);
+
+  // Reset counters when switching conversation
+  useEffect(() => {
+    prevCountRef.current = 0;
+    setNewCount(0);
+    setIsAtBottom(true);
+  }, [selectedConversationId]);
+
+  // Handle new messages: auto-scroll if at bottom, otherwise show badge
+  useEffect(() => {
+    const prev = prevCountRef.current;
+    const added = messages.length - prev;
+    prevCountRef.current = messages.length;
+    if (added > 0 && !isAtBottom) {
+      setNewCount((c) => c + added);
+    } else {
+      scrollToBottom();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, selectedConversationId]);
 
   const handleSend = async () => {
@@ -181,13 +224,33 @@ export default function AdminChatPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="p-0 flex flex-col h-[500px]">
-                  <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-                    <div className="space-y-4">
-                      {messages.map((msg) => (
-                        <MessageBubble key={msg.id} message={msg} />
-                      ))}
-                    </div>
-                  </ScrollArea>
+                  <div className="relative flex-1 min-h-0">
+                    <ScrollArea className="h-full p-4" ref={scrollRef}>
+                      <div className="space-y-4">
+                        {messages.map((msg) => (
+                          <MessageBubble key={msg.id} message={msg} />
+                        ))}
+                      </div>
+                    </ScrollArea>
+
+                    {!isAtBottom && messages.length > 0 && (
+                      <button
+                        onClick={scrollToBottom}
+                        className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg px-4 py-2 text-xs font-medium hover:scale-105 transition-transform animate-in fade-in slide-in-from-bottom-2"
+                      >
+                        {newCount > 0 && (
+                          <span className="flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-primary-foreground text-primary text-[10px] font-bold">
+                            {newCount}
+                          </span>
+                        )}
+                        {newCount > 0
+                          ? `${newCount} nouveau${newCount > 1 ? 'x' : ''} message${newCount > 1 ? 's' : ''}`
+                          : 'Revenir au dernier message'}
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
                   <div className="border-t p-4 flex gap-2">
                     <Input
                       value={newMessage}
