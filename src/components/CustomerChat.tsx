@@ -197,7 +197,7 @@ export default function CustomerChat() {
           ) : (
             <>
               <div className="relative flex-1 min-h-0">
-                <ScrollArea className="h-full p-4 min-h-[250px] max-h-[50vh]" ref={scrollRef}>
+                <ScrollArea className="h-full p-4" ref={scrollRef}>
                   {loading ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
