@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
@@ -189,11 +189,25 @@ function ProfileChat() {
   const { messages, loading, sendMessage, site } = useCustomerChat();
   const { isOnline } = useAdminPresenceWatch();
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+  const scrollToBottom = useCallback(() => {
+    const run = () => {
+      const viewport = scrollRef.current?.querySelector<HTMLDivElement>(
+        '[data-radix-scroll-area-viewport]'
+      );
+      if (viewport) viewport.scrollTop = viewport.scrollHeight;
+    };
+    requestAnimationFrame(() => {
+      run();
+      requestAnimationFrame(run);
+    });
+    setTimeout(run, 80);
+  }, []);
+
+  // Pin to the bottom on initial load and whenever messages change
+  useLayoutEffect(() => {
+    if (loading) return;
+    scrollToBottom();
+  }, [loading, messages.length, scrollToBottom]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
