@@ -95,6 +95,23 @@ export default function CustomerChat() {
     return () => viewport.removeEventListener('scroll', handleScroll);
   }, [getViewport, open, loading]);
 
+  // Keep pinned to the bottom when content reflows (wrapping, late layout,
+  // fonts) as long as we were already following the conversation.
+  useEffect(() => {
+    if (!open || loading) return;
+    const viewport = getViewport();
+    if (!viewport) return;
+    const observer = new ResizeObserver(() => {
+      if (isAtBottomRef.current) {
+        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'auto' });
+      }
+    });
+    observer.observe(viewport);
+    const content = viewport.firstElementChild;
+    if (content) observer.observe(content);
+    return () => observer.disconnect();
+  }, [getViewport, open, loading]);
+
   // Snap to bottom when the panel opens or finishes loading
   useLayoutEffect(() => {
     if (open && !loading && !wasOpenRef.current) {
