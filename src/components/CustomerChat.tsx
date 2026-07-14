@@ -156,7 +156,7 @@ export default function CustomerChat() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-20 right-4 left-4 sm:left-auto sm:w-96 z-50 rounded-2xl border border-border bg-background shadow-2xl flex flex-col max-h-[70vh] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+        <div className="fixed bottom-20 right-4 left-4 sm:left-auto sm:w-96 z-50 rounded-2xl border border-border bg-background shadow-2xl flex flex-col h-[70vh] max-h-[560px] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground rounded-t-2xl">
             <div className="flex items-center gap-2">
@@ -197,7 +197,7 @@ export default function CustomerChat() {
           ) : (
             <>
               <div className="relative flex-1 min-h-0">
-                <ScrollArea className="h-full p-4 min-h-[250px] max-h-[50vh]" ref={scrollRef}>
+                <ScrollArea className="h-full p-4" ref={scrollRef}>
                   {loading ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
