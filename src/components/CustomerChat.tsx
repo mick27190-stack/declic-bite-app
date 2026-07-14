@@ -139,13 +139,29 @@ export default function CustomerChat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages]);
 
-  // Mark admin messages as read while the panel is open
+  // Mark admin messages as read only when the panel is open, the tab is
+  // visible, and I'm near the bottom (actually looking at the latest messages).
   useEffect(() => {
-    if (!open || loading) return;
+    if (!open || loading || !isAtBottom) return;
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
     if (messages.some((m) => m.sender_type === 'admin' && !m.read_at)) {
       markMessagesRead();
     }
-  }, [open, loading, messages, markMessagesRead]);
+  }, [open, loading, isAtBottom, messages, markMessagesRead]);
+
+  // Re-check when the tab becomes visible again
+  useEffect(() => {
+    if (!open) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && isAtBottomRef.current) {
+        if (messages.some((m) => m.sender_type === 'admin' && !m.read_at)) {
+          markMessagesRead();
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [open, messages, markMessagesRead]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
