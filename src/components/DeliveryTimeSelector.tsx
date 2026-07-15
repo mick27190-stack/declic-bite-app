@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Clock } from 'lucide-react';
+import { Clock, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { computeDeliverySlots, DeliverySlots } from '@/lib/pickupSlots';
 
@@ -32,6 +32,13 @@ export function DeliveryTimeSelector({ value, onChange, disabled }: DeliveryTime
       <div className="flex items-center gap-2 text-foreground">
         <Clock className="w-5 h-5 text-primary" />
         <h3 className="font-display font-semibold">Heure de livraison</h3>
+      </div>
+
+      <div className="p-3 rounded-lg bg-muted/50 border border-border flex items-start gap-2">
+        <Info className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Votre restaurant est en droit de vous proposer un horaire de livraison différent de l'heure que vous souhaitez en fonction de leurs disponibilités. Vous devrez Accepter ou Refuser l'heure proposé par votre restaurant. En cas de Refus, votre commande sera annulée.
+        </p>
       </div>
 
       <Button
