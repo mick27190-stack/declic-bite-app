@@ -11,6 +11,7 @@ export interface ChatConversation {
   last_message: string | null;
   last_message_at: string | null;
   created_at: string;
+  unread_count?: number;
 }
 
 export interface ChatMessage {
