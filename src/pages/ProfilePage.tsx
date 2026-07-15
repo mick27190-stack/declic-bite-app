@@ -22,7 +22,8 @@ import {
   Check,
   X,
   MessageSquare,
-  Send
+  Send,
+  ArrowDown
 } from 'lucide-react';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import CustomerNotificationBell from '@/components/CustomerNotificationBell';
