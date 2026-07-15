@@ -323,6 +323,17 @@ export default function AdminOrdersPage() {
                         onSubmit={(value) => setDeliveryEstimate(order.id, value)}
                       />
                     )}
+
+                    <div className="mt-4 flex justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOrderToPrint(order)}
+                      >
+                        <Printer className="h-4 w-4 mr-2" />
+                        Imprimer le ticket
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))
@@ -330,6 +341,27 @@ export default function AdminOrdersPage() {
           </div>
         )}
       </main>
+
+      {orderToPrint && (
+        <OrderTicket
+          order={{
+            id: orderToPrint.id,
+            created_at: orderToPrint.created_at,
+            restaurant: orderToPrint.restaurant,
+            order_type: orderToPrint.order_type,
+            status: orderToPrint.status,
+            total_price: Number(orderToPrint.total_price),
+            pickup_time: orderToPrint.pickup_time,
+            delivery_estimate: orderToPrint.delivery_estimate,
+            delivery_address: orderToPrint.delivery_address,
+            notes: orderToPrint.notes,
+            items: orderToPrint.items,
+            customer_name: orderToPrint.customer_name,
+            customer_phone: orderToPrint.customer_phone,
+          }}
+          printOnly
+        />
+      )}
     </div>
   );
 }
