@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Order, statusLabels } from '@/types/order';
 import { CartItem } from '@/types/pizza';
+import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+
+const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
 export default function OrderConfirmationPage() {
   const navigate = useNavigate();
