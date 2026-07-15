@@ -235,7 +235,7 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchOrders, toast]);
+  }, [autoFetch, fetchOrders, toast]);
 
   return {
     orders,
