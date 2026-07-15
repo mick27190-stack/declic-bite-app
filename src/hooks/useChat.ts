@@ -150,6 +150,9 @@ export function useChat(siteFilter?: string) {
             if (newMsg.sender_type === 'customer') {
               markMessagesRead(selectedConversationId);
             }
+          } else if (newMsg.sender_type === 'customer') {
+            // Unread count / conversation list needs refresh
+            fetchConversations();
           }
         }
       )
@@ -167,6 +170,8 @@ export function useChat(siteFilter?: string) {
               prev.map(m => (m.id === updated.id ? { ...m, ...updated } : m))
             );
           }
+          // read_at updates may change unread counts
+          fetchConversations();
         }
       )
       .subscribe();
