@@ -90,6 +90,7 @@ const App = () => {
                 <Route path="/admin/settings" element={<AdminSettingsPage />} />
                 <Route path="/admin/sales" element={<AdminSalesPage />} />
                 <Route path="/admin/pricing" element={<AdminPricingPage />} />
+                <Route path="/dev/cutoff-preview" element={<CutoffPreviewPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
