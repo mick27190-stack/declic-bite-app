@@ -385,6 +385,8 @@ export function CartView() {
               'Vérifiez votre adresse'
             ) : belowMinimum ? (
               'Min. 2 Senior ou 1 Méga'
+            ) : orderType === 'emporter' && isTakeawayCutoff ? (
+              'À emporter fermé après 21h30'
             ) : orderType === 'emporter' && !pickupTime ? (
               'Choisissez une heure'
             ) : (
