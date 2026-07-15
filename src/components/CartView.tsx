@@ -312,9 +312,15 @@ export function CartView() {
                 <h3 className="font-display font-bold text-foreground truncate">
                   {item.pizza.name}
                 </h3>
+                {item.pizza.category === 'bambino' && item.pizza.description?.startsWith('Menu Bambino - ') && (
+                  <p className="text-xs text-primary font-semibold">
+                    🍕 {item.pizza.description.replace('Menu Bambino - ', '')}
+                  </p>
+                )}
                 <p className="text-sm text-muted-foreground">
                   {item.size.name} • Base {item.base}
                 </p>
+
                 {item.supplements.length > 0 && (
                   <p className="text-xs text-primary">
                     + {item.supplements.map((s) => s.name).join(', ')}
