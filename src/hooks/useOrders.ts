@@ -168,6 +168,7 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
 
   // Subscribe to real-time updates
   useEffect(() => {
+    if (!autoFetch) return;
     fetchOrders();
 
     const channel = supabase
