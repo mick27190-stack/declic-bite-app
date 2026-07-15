@@ -22,15 +22,13 @@ export function useCustomerChat() {
     return source.toLowerCase().includes('beaumont') ? 'beaumont' : 'conches';
   }, [selectedRestaurant, profile?.preferred_restaurant]);
 
-  // Get or create conversation for current user
-  const getOrCreateConversation = useCallback(async () => {
+  // Lookup existing conversation for current user (do NOT create).
+  const lookupConversation = useCallback(async () => {
     if (!user) return null;
 
     const site = resolveSite();
     if (!site) return null;
 
-
-    // Try to find existing conversation
     const { data: existing } = await supabase
       .from('chat_conversations')
       .select('*')
@@ -42,8 +40,15 @@ export function useCustomerChat() {
       setConversationId(existing.id);
       return existing.id;
     }
+    return null;
+  }, [user, resolveSite]);
 
-    // Create new conversation
+  // Create the conversation on demand (first customer message).
+  const createConversation = useCallback(async () => {
+    if (!user) return null;
+    const site = resolveSite();
+    if (!site) return null;
+
     const customerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Client';
     const { data: newConv, error } = await supabase
       .from('chat_conversations')
@@ -62,6 +67,7 @@ export function useCustomerChat() {
     }
     return null;
   }, [user, profile, resolveSite]);
+
 
   // Fetch messages
   const fetchMessages = useCallback(async (convId: string) => {
