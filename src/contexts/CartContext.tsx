@@ -103,7 +103,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (type === 'emporter') {
       setDeliveryAddressState(null);
     }
-    // Clear pickup time when switching to delivery
+    // Reset any previously chosen time when switching modes so the user
+    // picks a slot valid for the new flow (pickup vs delivery windows differ).
     if (type === 'livraison') {
       setPickupTimeState(null);
     }

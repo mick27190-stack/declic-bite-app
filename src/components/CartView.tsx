@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { DeliveryZoneChecker } from '@/components/DeliveryZoneChecker';
 import { OrderTypeSelector } from '@/components/OrderTypeSelector';
 import { PickupTimeSelector } from '@/components/PickupTimeSelector';
+import { DeliveryTimeSelector } from '@/components/DeliveryTimeSelector';
 import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
@@ -92,6 +93,7 @@ export function CartView() {
     if (orderType === 'emporter' && !pickupTime) return false;
     if (orderType === 'emporter' && isTakeawayCutoff) return false;
     if (orderType === 'livraison' && !deliveryAddress) return false;
+    if (orderType === 'livraison' && !pickupTime) return false;
     if (belowMinimum) return false;
     return true;
   };
@@ -218,6 +220,17 @@ export function CartView() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Delivery time selection */}
+      {orderType === 'livraison' && deliveryAddress && !isClosed && (
+        <div className="glass-card p-4">
+          <DeliveryTimeSelector
+            value={pickupTime}
+            onChange={setPickupTime}
+            disabled={isClosed}
+          />
         </div>
       )}
 
@@ -388,6 +401,8 @@ export function CartView() {
             ) : orderType === 'emporter' && isTakeawayCutoff ? (
               'À emporter fermé après 21h30'
             ) : orderType === 'emporter' && !pickupTime ? (
+              'Choisissez une heure'
+            ) : orderType === 'livraison' && !pickupTime ? (
               'Choisissez une heure'
             ) : (
               'Commander maintenant'
