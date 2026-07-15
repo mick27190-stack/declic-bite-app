@@ -43,6 +43,11 @@ export function CartView() {
   const isOutsideHours = currentHour < 18 || currentHour >= 22;
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const isClosed = isMonday || isOutsideHours || !!manualClosure;
+  // Take-away is blocked after 21h30 (Paris) on open days, so the last valid
+  // pickup slot (21h30) can still be honoured before the kitchen closes at 22h.
+  const TAKEAWAY_CUTOFF_MINUTES = 21 * 60 + 31; // 21:31
+  const isTakeawayCutoff = !isClosed && parisMinutes(now) >= TAKEAWAY_CUTOFF_MINUTES;
+
 
   // Minimum order check for delivery outside the restaurant's own commune:
   // 2 pizzas Senior OU 1 pizza Méga (ou plus) requis.
