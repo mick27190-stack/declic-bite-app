@@ -230,20 +230,22 @@ export default function AdminCustomersPage() {
     doc.text('Déclic Pizza — Fichier client', 14, 15);
     doc.setFontSize(9);
     doc.setTextColor(100);
+    const scopeLabel = scope === 'page' ? `page ${currentPage}/${totalPages}` : 'tous filtres appliqués';
     doc.text(
-      `Export du ${new Date().toLocaleString('fr-FR')} — ${paginated.length} client(s) — ${activeFilterSummary()}`,
+      `Export du ${new Date().toLocaleString('fr-FR')} — ${rows.length} client(s) — ${activeFilterSummary()} — ${scopeLabel}`,
       14,
       21,
     );
     autoTable(doc, {
       startY: 26,
       head: [['Nom', 'Téléphone', 'Email', 'Site', 'Origine', 'Créé le']],
-      body: buildRows(paginated),
+      body: buildRows(rows),
       styles: { fontSize: 9 },
       headStyles: { fillColor: [234, 88, 12] },
     });
-    doc.save(`clients_${new Date().toISOString().slice(0, 10)}_p${currentPage}.pdf`);
-    toast.success(`${paginated.length} client(s) exportés en PDF`);
+    const suffix = scope === 'page' ? `_p${currentPage}` : '_tous';
+    doc.save(`clients_${new Date().toISOString().slice(0, 10)}${suffix}.pdf`);
+    toast.success(`${rows.length} client(s) exportés en PDF`);
   };
 
   if (authLoading || adminLoading || loading) {
