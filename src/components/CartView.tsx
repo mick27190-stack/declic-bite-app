@@ -223,6 +223,17 @@ export function CartView() {
         </div>
       )}
 
+      {/* Delivery time selection */}
+      {orderType === 'livraison' && deliveryAddress && !isClosed && (
+        <div className="glass-card p-4">
+          <DeliveryTimeSelector
+            value={pickupTime}
+            onChange={setPickupTime}
+            disabled={isClosed}
+          />
+        </div>
+      )}
+
       {/* Address not validated alert for delivery */}
       {needsAddress && (
         <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 flex items-start gap-3">
