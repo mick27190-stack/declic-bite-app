@@ -254,6 +254,12 @@ export default function AdminOrdersPage() {
                           Retrait à {order.pickup_time}
                         </span>
                       )}
+                      {order.order_type === 'livraison' && order.pickup_time && (
+                        <span className="flex items-center gap-1 font-semibold text-primary">
+                          <Clock className="h-4 w-4" />
+                          Livraison souhaitée à {order.pickup_time}
+                        </span>
+                      )}
                       {order.customer_phone && (
                         <a
                           href={`tel:${order.customer_phone.replace(/\s/g, '')}`}
