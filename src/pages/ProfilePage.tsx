@@ -125,11 +125,18 @@ function CurrentOrders() {
 
 
 
+                {order.order_type === 'livraison' && order.pickup_time && !order.delivery_estimate && (
+                  <p className="mt-2 text-sm flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-primary" />
+                    Livraison souhaitée à <strong>{order.pickup_time}</strong>
+                  </p>
+                )}
+
                 {order.order_type === 'livraison' && order.delivery_estimate && (
                   <div className="mt-2 p-2 rounded-md bg-primary/5 border border-primary/20">
                     <p className="text-sm flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-primary" />
-                      Horaire de livraison estimé : <strong>{order.delivery_estimate}</strong>
+                      Nouvel horaire proposé par le restaurant : <strong>{order.delivery_estimate}</strong>
                     </p>
 
                     {awaitingResponse && (
