@@ -196,6 +196,7 @@ export function CartView() {
           value={orderType} 
           onChange={setOrderType}
           disabled={isClosed}
+          takeawayDisabled={isTakeawayCutoff}
         />
       </div>
 
