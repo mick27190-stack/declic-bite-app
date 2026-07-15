@@ -203,8 +203,21 @@ export function CartView() {
           onChange={setOrderType}
           disabled={isClosed}
           takeawayDisabled={isTakeawayCutoff}
+          deliveryDisabled={isDeliveryCutoff}
         />
       </div>
+
+      {orderType === 'livraison' && isDeliveryCutoff && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-destructive text-sm">Livraisons terminées</p>
+            <p className="text-sm text-foreground mt-1">
+              Les commandes en livraison ne sont plus acceptées après <strong className="text-primary">21h15</strong>. Vous pouvez encore commander à emporter jusqu'à 21h30.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Delivery Flow */}
       {orderType === 'livraison' && (
