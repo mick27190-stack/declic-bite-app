@@ -40,12 +40,19 @@ function ConversationItem({
             <p className="text-xs text-muted-foreground">{conversation.customer_phone || ''}</p>
           </div>
         </div>
-        <Badge variant="outline" className="text-xs capitalize">
-          {conversation.site}
-        </Badge>
+        <div className="flex flex-col items-end gap-1">
+          <Badge variant="outline" className="text-xs capitalize">
+            {conversation.site}
+          </Badge>
+          {(conversation.unread_count ?? 0) > 0 && (
+            <Badge className="text-[10px] bg-amber-500 hover:bg-amber-500 text-white">
+              Nouveau message
+            </Badge>
+          )}
+        </div>
       </div>
       {conversation.last_message && (
-        <p className="text-sm text-muted-foreground mt-2 truncate">
+        <p className={`text-sm mt-2 truncate ${(conversation.unread_count ?? 0) > 0 ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
           {conversation.last_message}
         </p>
       )}
