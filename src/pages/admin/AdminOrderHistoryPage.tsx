@@ -270,6 +270,43 @@ export default function AdminOrderHistoryPage() {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
   const [customStart, setCustomStart] = useState<string | null>(null);
   const [customEnd, setCustomEnd] = useState<string | null>(null);
+  const [orderToPrint, setOrderToPrint] = useState<OrderTicketData | null>(null);
+
+  useEffect(() => {
+    if (!orderToPrint) return;
+    const done = () => setOrderToPrint(null);
+    window.addEventListener('afterprint', done, { once: true });
+    const t = setTimeout(() => window.print(), 80);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('afterprint', done);
+    };
+  }, [orderToPrint]);
+
+  const handlePrint = async (o: HistoryOrder) => {
+    // Fetch full order from DB (items, address, notes...) if still present.
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', o.id)
+      .maybeSingle();
+
+    setOrderToPrint({
+      id: o.id,
+      created_at: o.created_at,
+      restaurant: o.restaurant,
+      order_type: o.order_type,
+      status: o.status,
+      total_price: Number(o.total_price),
+      customer_name: o.customer_name,
+      customer_phone: o.customer_phone,
+      items: (data as any)?.items,
+      delivery_address: (data as any)?.delivery_address,
+      pickup_time: (data as any)?.pickup_time,
+      delivery_estimate: (data as any)?.delivery_estimate,
+      notes: (data as any)?.notes,
+    });
+  };
 
   const filteredWeeks = filterWeeksByPeriod(
     weeks
