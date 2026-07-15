@@ -7,6 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { DeliveryZoneChecker } from '@/components/DeliveryZoneChecker';
 import { OrderTypeSelector } from '@/components/OrderTypeSelector';
 import { PickupTimeSelector } from '@/components/PickupTimeSelector';
+import { DeliveryTimeSelector } from '@/components/DeliveryTimeSelector';
 import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
