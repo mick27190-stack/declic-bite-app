@@ -113,9 +113,6 @@ export default function MenuPage() {
             <p className="text-xs sm:text-sm font-bold text-green-600 text-balance leading-tight">🎉 {PROMO_LABEL}</p>
           </div>
         )}
-        <div className="mb-4 p-3 rounded-xl bg-primary/10 border border-primary/30 text-center">
-          <p className="text-xs sm:text-sm font-bold text-primary text-balance leading-tight">🍕 Promo Senior à 10€ uniquement le mardi</p>
-        </div>
         <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
