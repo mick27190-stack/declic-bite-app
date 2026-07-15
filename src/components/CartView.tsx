@@ -11,6 +11,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+import { parisMinutes } from '@/lib/pickupSlots';
 
 export function CartView() {
   const navigate = useNavigate();
@@ -42,6 +43,11 @@ export function CartView() {
   const isOutsideHours = currentHour < 18 || currentHour >= 22;
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const isClosed = isMonday || isOutsideHours || !!manualClosure;
+  // Take-away is blocked after 21h30 (Paris) on open days, so the last valid
+  // pickup slot (21h30) can still be honoured before the kitchen closes at 22h.
+  const TAKEAWAY_CUTOFF_MINUTES = 21 * 60 + 31; // 21:31
+  const isTakeawayCutoff = !isClosed && parisMinutes(now) >= TAKEAWAY_CUTOFF_MINUTES;
+
 
   // Minimum order check for delivery outside the restaurant's own commune:
   // 2 pizzas Senior OU 1 pizza Méga (ou plus) requis.
@@ -84,6 +90,7 @@ export function CartView() {
     if (items.length === 0) return false;
     if (!selectedRestaurant) return false;
     if (orderType === 'emporter' && !pickupTime) return false;
+    if (orderType === 'emporter' && isTakeawayCutoff) return false;
     if (orderType === 'livraison' && !deliveryAddress) return false;
     if (belowMinimum) return false;
     return true;
@@ -189,6 +196,7 @@ export function CartView() {
           value={orderType} 
           onChange={setOrderType}
           disabled={isClosed}
+          takeawayDisabled={isTakeawayCutoff}
         />
       </div>
 
@@ -242,8 +250,21 @@ export function CartView() {
         </div>
       )}
 
+      {/* Take-away closed after 21h30 */}
+      {orderType === 'emporter' && isTakeawayCutoff && (
+        <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-yellow-700 text-sm">Commandes à emporter fermées</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Les commandes à emporter ne sont plus possibles après 21h30. Passez en livraison ou revenez demain à partir de 18h.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Pickup Flow */}
-      {orderType === 'emporter' && (
+      {orderType === 'emporter' && !isTakeawayCutoff && (
         <div className="glass-card p-4">
           <PickupTimeSelector 
             value={pickupTime}
@@ -252,6 +273,7 @@ export function CartView() {
           />
         </div>
       )}
+
 
       {/* Cart Items */}
       <div className="pt-2">
@@ -363,6 +385,8 @@ export function CartView() {
               'Vérifiez votre adresse'
             ) : belowMinimum ? (
               'Min. 2 Senior ou 1 Méga'
+            ) : orderType === 'emporter' && isTakeawayCutoff ? (
+              'À emporter fermé après 21h30'
             ) : orderType === 'emporter' && !pickupTime ? (
               'Choisissez une heure'
             ) : (
