@@ -11,6 +11,7 @@ export interface ChatConversation {
   last_message: string | null;
   last_message_at: string | null;
   created_at: string;
+  unread_count?: number;
 }
 
 export interface ChatMessage {
@@ -44,7 +45,26 @@ export function useChat(siteFilter?: string) {
 
     const { data } = await query;
     if (data) {
-      setConversations(data as ChatConversation[]);
+      // Load unread customer messages to compute per-conversation counts
+      const { data: unread } = await supabase
+        .from('chat_messages')
+        .select('conversation_id')
+        .is('read_at', null)
+        .eq('sender_type', 'customer');
+
+      const counts = new Map<string, number>();
+      (unread ?? []).forEach((m: { conversation_id: string }) => {
+        counts.set(m.conversation_id, (counts.get(m.conversation_id) ?? 0) + 1);
+      });
+
+      setConversations(
+        (data as ChatConversation[])
+          .filter(c => !!c.last_message_at)
+          .map(c => ({
+            ...c,
+            unread_count: counts.get(c.id) ?? 0,
+          }))
+      );
     }
     setLoading(false);
   }, [siteFilter]);
@@ -132,6 +152,9 @@ export function useChat(siteFilter?: string) {
             if (newMsg.sender_type === 'customer') {
               markMessagesRead(selectedConversationId);
             }
+          } else if (newMsg.sender_type === 'customer') {
+            // Unread count / conversation list needs refresh
+            fetchConversations();
           }
         }
       )
@@ -149,6 +172,8 @@ export function useChat(siteFilter?: string) {
               prev.map(m => (m.id === updated.id ? { ...m, ...updated } : m))
             );
           }
+          // read_at updates may change unread counts
+          fetchConversations();
         }
       )
       .subscribe();
