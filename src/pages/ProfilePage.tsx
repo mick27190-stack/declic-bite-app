@@ -632,6 +632,16 @@ export default function ProfilePage() {
                 <Phone className="w-4 h-4 text-muted-foreground" />
                 <span>{profile?.phone || '-'}</span>
               </div>
+              <div className="flex items-center gap-3 text-sm">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span>
+                  {profile?.preferred_restaurant === 'conches'
+                    ? 'Déclic Pizza Conches'
+                    : profile?.preferred_restaurant === 'beaumont'
+                    ? 'Déclic Pizza Beaumont'
+                    : 'Aucun site sélectionné'}
+                </span>
+              </div>
             </div>
           )}
         </div>
