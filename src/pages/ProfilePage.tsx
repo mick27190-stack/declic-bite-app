@@ -369,7 +369,8 @@ export default function ProfilePage() {
     first_name: profile?.first_name || '',
     last_name: profile?.last_name || '',
     phone: profile?.phone || '',
-    email: profile?.email || user?.email || ''
+    email: profile?.email || user?.email || '',
+    preferred_restaurant: profile?.preferred_restaurant || ''
   });
   
   const [showAddAddress, setShowAddAddress] = useState(false);
@@ -392,7 +393,8 @@ export default function ProfilePage() {
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
         phone: profile.phone || '',
-        email: profile.email || user?.email || ''
+        email: profile.email || user?.email || '',
+        preferred_restaurant: profile.preferred_restaurant || ''
       });
     }
   }, [profile, user]);
@@ -600,6 +602,21 @@ export default function ProfilePage() {
                   Nécessaire pour réinitialiser votre mot de passe
                 </p>
               </div>
+              <div>
+                <Label>Site de commande</Label>
+                <select
+                  value={profileForm.preferred_restaurant}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, preferred_restaurant: e.target.value }))}
+                  className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">— Choisir un site —</option>
+                  <option value="conches">Déclic Pizza Conches</option>
+                  <option value="beaumont">Déclic Pizza Beaumont</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Votre pizzeria par défaut pour commander et discuter
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
@@ -614,6 +631,16 @@ export default function ProfilePage() {
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="w-4 h-4 text-muted-foreground" />
                 <span>{profile?.phone || '-'}</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span>
+                  {profile?.preferred_restaurant === 'conches'
+                    ? 'Déclic Pizza Conches'
+                    : profile?.preferred_restaurant === 'beaumont'
+                    ? 'Déclic Pizza Beaumont'
+                    : 'Aucun site sélectionné'}
+                </span>
               </div>
             </div>
           )}
