@@ -5,11 +5,12 @@ interface OrderTypeSelectorProps {
   value: OrderType;
   onChange: (type: OrderType) => void;
   deliveryDisabled?: boolean;
+  takeawayDisabled?: boolean;
   disabled?: boolean;
 }
 
-export function OrderTypeSelector({ value, onChange, deliveryDisabled, disabled }: OrderTypeSelectorProps) {
-  const takeawayDisabled = disabled;
+export function OrderTypeSelector({ value, onChange, deliveryDisabled, takeawayDisabled: takeawayDisabledProp, disabled }: OrderTypeSelectorProps) {
+  const takeawayDisabled = disabled || takeawayDisabledProp;
   const livraisonDisabled = disabled || deliveryDisabled;
   return (
     <div className={`space-y-3 ${disabled ? 'opacity-50' : ''}`}>
@@ -36,7 +37,7 @@ export function OrderTypeSelector({ value, onChange, deliveryDisabled, disabled 
             À Emporter
           </span>
           <span className="text-xs text-muted-foreground">
-            Récupérez au restaurant
+            {takeawayDisabledProp && !disabled ? 'Non disponible après 21h30' : 'Récupérez au restaurant'}
           </span>
         </button>
 
