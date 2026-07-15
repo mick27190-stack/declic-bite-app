@@ -18,7 +18,7 @@ export function CartView() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { createOrder } = useOrders();
+  const { createOrder } = useOrders({ autoFetch: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { 
