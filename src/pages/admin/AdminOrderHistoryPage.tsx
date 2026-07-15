@@ -569,6 +569,15 @@ export default function AdminOrderHistoryPage() {
                             <span className="font-semibold whitespace-nowrap">
                               {Number(order.total_price).toFixed(2)} €
                             </span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handlePrint(order)}
+                              title="Imprimer le ticket"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -580,6 +589,8 @@ export default function AdminOrderHistoryPage() {
           </Accordion>
         )}
       </main>
+
+      {orderToPrint && <OrderTicket order={orderToPrint} printOnly />}
     </div>
   );
 }
