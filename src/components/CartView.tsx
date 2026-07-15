@@ -219,7 +219,7 @@ export function CartView() {
           <div>
             <p className="font-semibold text-destructive text-sm">Commandes limitées</p>
             <p className="text-sm text-foreground mt-1">
-              Commandes fermés pour la livraison à partir de 21h15 et 21h30 pour les commandes à emporter. Revenez demain à 18h00.
+              {CUTOFF_ALERT_MESSAGE}
             </p>
           </div>
         </div>
