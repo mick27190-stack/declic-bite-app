@@ -4,9 +4,10 @@ import { Order, OrderStatus, statusLabels } from '@/types/order';
 import { CartItem } from '@/types/pizza';
 import { useToast } from '@/hooks/use-toast';
 
-export function useOrders() {
+export function useOrders(options: { autoFetch?: boolean } = {}) {
+  const { autoFetch = true } = options;
   const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(autoFetch);
   const { toast } = useToast();
 
   const fetchOrders = useCallback(async () => {
