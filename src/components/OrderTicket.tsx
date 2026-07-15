@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
-import { PIZZA_CATEGORIES } from '@/data/pizzas';
+const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
 // TVA restauration à emporter / livraison en France = 10%
 const TVA_RATE = 0.10;
