@@ -602,6 +602,21 @@ export default function ProfilePage() {
                   Nécessaire pour réinitialiser votre mot de passe
                 </p>
               </div>
+              <div>
+                <Label>Site de commande</Label>
+                <select
+                  value={profileForm.preferred_restaurant}
+                  onChange={(e) => setProfileForm(prev => ({ ...prev, preferred_restaurant: e.target.value }))}
+                  className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                >
+                  <option value="">— Choisir un site —</option>
+                  <option value="conches">Déclic Pizza Conches</option>
+                  <option value="beaumont">Déclic Pizza Beaumont</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Votre pizzeria par défaut pour commander et discuter
+                </p>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
