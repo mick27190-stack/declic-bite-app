@@ -198,8 +198,8 @@ export default function AdminCustomersPage() {
     return parts.join(' • ');
   };
 
-  const exportCSV = () => {
-    if (paginated.length === 0) {
+  const exportCSV = (rows: Customer[], scope: 'page' | 'all') => {
+    if (rows.length === 0) {
       toast.error('Aucun client à exporter');
       return;
     }
@@ -207,20 +207,21 @@ export default function AdminCustomersPage() {
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const csv = [
       headers.map(escape).join(','),
-      ...buildRows(paginated).map((r) => r.map((v) => escape(String(v))).join(',')),
+      ...buildRows(rows).map((r) => r.map((v) => escape(String(v))).join(',')),
     ].join('\n');
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `clients_${new Date().toISOString().slice(0, 10)}_p${currentPage}.csv`;
+    const suffix = scope === 'page' ? `_p${currentPage}` : '_tous';
+    a.download = `clients_${new Date().toISOString().slice(0, 10)}${suffix}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`${paginated.length} client(s) exportés en CSV`);
+    toast.success(`${rows.length} client(s) exportés en CSV`);
   };
 
-  const exportPDF = () => {
-    if (paginated.length === 0) {
+  const exportPDF = (rows: Customer[], scope: 'page' | 'all') => {
+    if (rows.length === 0) {
       toast.error('Aucun client à exporter');
       return;
     }
