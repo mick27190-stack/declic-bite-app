@@ -47,7 +47,10 @@ export function CartView() {
   // Take-away is blocked after 21h30 (Paris) on open days, so the last valid
   // pickup slot (21h30) can still be honoured before the kitchen closes at 22h.
   const TAKEAWAY_CUTOFF_MINUTES = 21 * 60 + 31; // 21:31
+  // Delivery is blocked from 21h16 (Paris) — last accepted order at 21h15.
+  const DELIVERY_CUTOFF_MINUTES = 21 * 60 + 16; // 21:16
   const isTakeawayCutoff = !isClosed && parisMinutes(now) >= TAKEAWAY_CUTOFF_MINUTES;
+  const isDeliveryCutoff = !isClosed && parisMinutes(now) >= DELIVERY_CUTOFF_MINUTES;
 
 
   // Minimum order check for delivery outside the restaurant's own commune:
@@ -94,6 +97,7 @@ export function CartView() {
     if (orderType === 'emporter' && isTakeawayCutoff) return false;
     if (orderType === 'livraison' && !deliveryAddress) return false;
     if (orderType === 'livraison' && !pickupTime) return false;
+    if (orderType === 'livraison' && isDeliveryCutoff) return false;
     if (belowMinimum) return false;
     return true;
   };
@@ -199,8 +203,21 @@ export function CartView() {
           onChange={setOrderType}
           disabled={isClosed}
           takeawayDisabled={isTakeawayCutoff}
+          deliveryDisabled={isDeliveryCutoff}
         />
       </div>
+
+      {orderType === 'livraison' && isDeliveryCutoff && (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-destructive text-sm">Livraisons terminées</p>
+            <p className="text-sm text-foreground mt-1">
+              Les commandes en livraison ne sont plus acceptées après <strong className="text-primary">21h15</strong>. Vous pouvez encore commander à emporter jusqu'à 21h30.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Delivery Flow */}
       {orderType === 'livraison' && (
