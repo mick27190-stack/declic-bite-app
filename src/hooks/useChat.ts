@@ -125,7 +125,12 @@ export function useChat(siteFilter?: string) {
     setSelectedConversationId(id);
     fetchMessages(id);
     markMessagesRead(id);
+    // Optimistically clear the unread badge for this conversation
+    setConversations(prev =>
+      prev.map(c => (c.id === id ? { ...c, unread_count: 0 } : c))
+    );
   }, [fetchMessages, markMessagesRead]);
+
 
   // Real-time subscriptions
   useEffect(() => {
