@@ -162,7 +162,13 @@ export default function AdminCustomersPage() {
           </Button>
           <div>
             <h1 className="text-xl font-bold text-primary">Fichier Client</h1>
-            <p className="text-sm text-muted-foreground">{customers.length} client(s) enregistré(s)</p>
+            <p className="text-sm text-muted-foreground">
+              {customers.length} client(s) enregistré(s)
+              <span className="ml-2 inline-flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">Conches : {conchesCount}</Badge>
+                <Badge variant="outline" className="text-xs">Beaumont : {beaumontCount}</Badge>
+              </span>
+            </p>
           </div>
         </div>
       </header>
