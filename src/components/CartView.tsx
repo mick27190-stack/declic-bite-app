@@ -250,8 +250,21 @@ export function CartView() {
         </div>
       )}
 
+      {/* Take-away closed after 21h30 */}
+      {orderType === 'emporter' && isTakeawayCutoff && (
+        <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-yellow-700 text-sm">Commandes à emporter fermées</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Les commandes à emporter ne sont plus possibles après 21h30. Passez en livraison ou revenez demain à partir de 18h.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Pickup Flow */}
-      {orderType === 'emporter' && (
+      {orderType === 'emporter' && !isTakeawayCutoff && (
         <div className="glass-card p-4">
           <PickupTimeSelector 
             value={pickupTime}
@@ -260,6 +273,7 @@ export function CartView() {
           />
         </div>
       )}
+
 
       {/* Cart Items */}
       <div className="pt-2">
