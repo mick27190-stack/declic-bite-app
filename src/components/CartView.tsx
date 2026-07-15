@@ -414,11 +414,11 @@ export function CartView() {
                 Envoi en cours...
               </>
             ) : isTakeawayCutoff ? (
-              'Commandes fermés'
+              BUTTON_LABEL_TAKEAWAY_CLOSED
             ) : isDeliveryCutoff ? (
               orderType === 'emporter' && canCheckout()
-                ? 'Commander maintenant'
-                : 'commandes à emporter possibles jusqu\'à 21h30'
+                ? BUTTON_LABEL_ORDER_NOW
+                : BUTTON_LABEL_TAKEAWAY_HINT
             ) : manualClosure ? (
               'Commandes bloquées'
             ) : isMonday ? (
