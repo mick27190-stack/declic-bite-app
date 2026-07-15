@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -13,10 +13,18 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, UserPlus, Phone, Search, Trash2, Users } from 'lucide-react';
+import {
+  ArrowLeft, UserPlus, Phone, Search, Trash2, Users, Download,
+  ChevronLeft, ChevronRight,
+} from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Customer {
   id: string;
@@ -30,12 +38,20 @@ interface Customer {
   created_at: string;
 }
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
 const formatPhone = (raw: string) => {
   let p = raw.replace(/[\s.-]/g, '');
   if (p.startsWith('0')) p = '+33' + p.slice(1);
   else if (p.startsWith('33')) p = '+' + p;
   else if (!p.startsWith('+') && p.length > 0) p = '+33' + p;
   return p;
+};
+
+const siteLabel = (s: string | null) => {
+  if (s === 'conches') return 'Conches-en-Ouche';
+  if (s === 'beaumont') return 'Beaumont-le-Roger';
+  return '—';
 };
 
 export default function AdminCustomersPage() {
@@ -45,7 +61,14 @@ export default function AdminCustomersPage() {
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+
+  const [nameFilter, setNameFilter] = useState('');
+  const [emailFilter, setEmailFilter] = useState('');
+  const [siteFilter, setSiteFilter] = useState<string>('all');
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -79,7 +102,6 @@ export default function AdminCustomersPage() {
 
   useEffect(() => {
     if (!user || !isAnyAdmin) return;
-
     const channel = supabase
       .channel('admin-customers')
       .on(
@@ -88,7 +110,6 @@ export default function AdminCustomersPage() {
         () => fetchCustomers()
       )
       .subscribe();
-
     return () => {
       supabase.removeChannel(channel);
     };
@@ -136,14 +157,93 @@ export default function AdminCustomersPage() {
     }
   };
 
-  const filtered = customers.filter((c) => {
-    const q = search.toLowerCase();
-    return (
-      `${c.first_name ?? ''} ${c.last_name ?? ''}`.toLowerCase().includes(q) ||
-      (c.phone ?? '').toLowerCase().includes(q) ||
-      (c.email ?? '').toLowerCase().includes(q)
+  const filtered = useMemo(() => {
+    const n = nameFilter.trim().toLowerCase();
+    const e = emailFilter.trim().toLowerCase();
+    return customers.filter((c) => {
+      const fullName = `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim().toLowerCase();
+      if (n && !fullName.includes(n)) return false;
+      if (e && !(c.email ?? '').toLowerCase().includes(e)) return false;
+      if (siteFilter !== 'all' && c.site !== siteFilter) return false;
+      return true;
+    });
+  }, [customers, nameFilter, emailFilter, siteFilter]);
+
+  // Reset to first page whenever filters or page size change
+  useEffect(() => {
+    setPage(1);
+  }, [nameFilter, emailFilter, siteFilter, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * pageSize;
+  const paginated = filtered.slice(pageStart, pageStart + pageSize);
+
+  const buildRows = (rows: Customer[]) =>
+    rows.map((c) => [
+      [c.first_name, c.last_name].filter(Boolean).join(' ') || '—',
+      c.phone || '—',
+      c.email || '—',
+      siteLabel(c.site),
+      c.source === 'registration' ? 'Inscription' : 'Manuel',
+      new Date(c.created_at).toLocaleDateString('fr-FR'),
+    ]);
+
+  const activeFilterSummary = () => {
+    const parts: string[] = [];
+    if (nameFilter.trim()) parts.push(`nom="${nameFilter.trim()}"`);
+    if (emailFilter.trim()) parts.push(`email="${emailFilter.trim()}"`);
+    if (siteFilter !== 'all') parts.push(`site=${siteLabel(siteFilter)}`);
+    parts.push(`page ${currentPage}/${totalPages}`);
+    return parts.join(' • ');
+  };
+
+  const exportCSV = () => {
+    if (paginated.length === 0) {
+      toast.error('Aucun client à exporter');
+      return;
+    }
+    const headers = ['Nom', 'Téléphone', 'Email', 'Site', 'Origine', 'Créé le'];
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const csv = [
+      headers.map(escape).join(','),
+      ...buildRows(paginated).map((r) => r.map((v) => escape(String(v))).join(',')),
+    ].join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `clients_${new Date().toISOString().slice(0, 10)}_p${currentPage}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${paginated.length} client(s) exportés en CSV`);
+  };
+
+  const exportPDF = () => {
+    if (paginated.length === 0) {
+      toast.error('Aucun client à exporter');
+      return;
+    }
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14);
+    doc.text('Déclic Pizza — Fichier client', 14, 15);
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(
+      `Export du ${new Date().toLocaleString('fr-FR')} — ${paginated.length} client(s) — ${activeFilterSummary()}`,
+      14,
+      21,
     );
-  });
+    autoTable(doc, {
+      startY: 26,
+      head: [['Nom', 'Téléphone', 'Email', 'Site', 'Origine', 'Créé le']],
+      body: buildRows(paginated),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [234, 88, 12] },
+    });
+    doc.save(`clients_${new Date().toISOString().slice(0, 10)}_p${currentPage}.pdf`);
+    toast.success(`${paginated.length} client(s) exportés en PDF`);
+  };
 
   if (authLoading || adminLoading || loading) {
     return (
@@ -186,122 +286,197 @@ export default function AdminCustomersPage() {
                   Tous les clients inscrits et ajoutés manuellement
                 </CardDescription>
               </div>
-              <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Ajouter un client
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Nouveau client</DialogTitle>
-                    <DialogDescription>
-                      Ajoutez un client directement au fichier client.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-2">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">Prénom</Label>
-                        <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Nom</Label>
-                        <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Téléphone *</Label>
-                      <Input id="phone" type="tel" placeholder="06 12 34 56 78" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Site</Label>
-                      <Select value={site} onValueChange={setSite}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Aucun site" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="conches">Conches-en-Ouche</SelectItem>
-                          <SelectItem value="beaumont">Beaumont-le-Roger</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setDialogOpen(false)}>Annuler</Button>
-                    <Button onClick={handleCreate} disabled={saving}>
-                      {saving ? 'Enregistrement...' : 'Enregistrer'}
+              <div className="flex flex-wrap items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      <Download className="h-4 w-4 mr-2" />
+                      Exporter
                     </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={exportCSV}>Exporter en CSV</DropdownMenuItem>
+                    <DropdownMenuItem onClick={exportPDF}>Exporter en PDF</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Ajouter un client
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Nouveau client</DialogTitle>
+                      <DialogDescription>
+                        Ajoutez un client directement au fichier client.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="firstName">Prénom</Label>
+                          <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="lastName">Nom</Label>
+                          <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Téléphone *</Label>
+                        <Input id="phone" type="tel" placeholder="06 12 34 56 78" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Site</Label>
+                        <Select value={site} onValueChange={setSite}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Aucun site" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="conches">Conches-en-Ouche</SelectItem>
+                            <SelectItem value="beaumont">Beaumont-le-Roger</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setDialogOpen(false)}>Annuler</Button>
+                      <Button onClick={handleCreate} disabled={saving}>
+                        {saving ? 'Enregistrement...' : 'Enregistrer'}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher un client..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher par nom..."
+                  value={nameFilter}
+                  onChange={(e) => setNameFilter(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher par email..."
+                  value={emailFilter}
+                  onChange={(e) => setEmailFilter(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={siteFilter} onValueChange={setSiteFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Site" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous les sites</SelectItem>
+                  <SelectItem value="conches">Conches-en-Ouche</SelectItem>
+                  <SelectItem value="beaumont">Beaumont-le-Roger</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {filtered.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">Aucun client trouvé</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nom</TableHead>
-                    <TableHead>Téléphone</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Site</TableHead>
-                    <TableHead>Origine</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-medium">
-                        {[c.first_name, c.last_name].filter(Boolean).join(' ') || '—'}
-                      </TableCell>
-                      <TableCell>
-                        {c.phone ? (
-                          <a
-                            href={`tel:${c.phone.replace(/\s/g, '')}`}
-                            className="inline-flex items-center gap-1 text-primary font-medium hover:underline underline-offset-2"
-                          >
-                            <Phone className="h-3.5 w-3.5" />
-                            {c.phone}
-                          </a>
-                        ) : (
-                          '—'
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-[180px] truncate">{c.email || '—'}</TableCell>
-                      <TableCell className="capitalize">{c.site || '—'}</TableCell>
-                      <TableCell>
-                        <Badge variant={c.source === 'registration' ? 'default' : 'outline'}>
-                          {c.source === 'registration' ? 'Inscription' : 'Manuel'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TableCell>
+              <>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nom</TableHead>
+                      <TableHead>Téléphone</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Site</TableHead>
+                      <TableHead>Origine</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {paginated.map((c) => (
+                      <TableRow key={c.id}>
+                        <TableCell className="font-medium">
+                          {[c.first_name, c.last_name].filter(Boolean).join(' ') || '—'}
+                        </TableCell>
+                        <TableCell>
+                          {c.phone ? (
+                            <a
+                              href={`tel:${c.phone.replace(/\s/g, '')}`}
+                              className="inline-flex items-center gap-1 text-primary font-medium hover:underline underline-offset-2"
+                            >
+                              <Phone className="h-3.5 w-3.5" />
+                              {c.phone}
+                            </a>
+                          ) : (
+                            '—'
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-[180px] truncate">{c.email || '—'}</TableCell>
+                        <TableCell>{siteLabel(c.site)}</TableCell>
+                        <TableCell>
+                          <Badge variant={c.source === 'registration' ? 'default' : 'outline'}>
+                            {c.source === 'registration' ? 'Inscription' : 'Manuel'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-2">
+                  <div className="text-sm text-muted-foreground">
+                    {filtered.length} résultat(s) • affichage {pageStart + 1}–
+                    {Math.min(pageStart + pageSize, filtered.length)}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
+                      <SelectTrigger className="w-[110px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PAGE_SIZE_OPTIONS.map((n) => (
+                          <SelectItem key={n} value={String(n)}>{n} / page</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage <= 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm">
+                      Page {currentPage} / {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage >= totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
