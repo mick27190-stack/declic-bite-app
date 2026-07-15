@@ -69,3 +69,51 @@ export function computePickupSlotsFromMinutes(nowMinutes: number): string[] {
 export function computePickupSlots(now: Date = new Date()): string[] {
   return computePickupSlotsFromMinutes(parisMinutes(now));
 }
+
+// ---------------- Delivery slots ----------------
+// Delivery uses a 30-minute lead time and a 18:45 → 21:45 window.
+export const DELIVERY_FIRST_SLOT_MINUTES = 18 * 60 + 45; // 18:45
+export const DELIVERY_LAST_SLOT_MINUTES = 21 * 60 + 45; // 21:45
+export const DELIVERY_LEAD_MINUTES = 30;
+
+function toLabel(m: number): string {
+  const h = Math.floor(m / 60);
+  const mm = m % 60;
+  return `${h.toString().padStart(2, '0')}:${mm.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Earliest deliverable time (rounded up to the next 15 min slot),
+ * respecting the 30-minute lead.
+ * Ex: 18:00 -> 18:30, 19:23 -> 20:00, 20:32 -> 21:15.
+ */
+export function earliestDeliveryMinutes(nowMinutes: number): number {
+  return Math.ceil((nowMinutes + DELIVERY_LEAD_MINUTES) / SLOT_INTERVAL) * SLOT_INTERVAL;
+}
+
+export interface DeliverySlots {
+  asap: string;      // "Dès que possible" target time (may be 18:30 before service)
+  slots: string[];   // fixed grid slots strictly after ASAP, capped at 21:45
+}
+
+export function computeDeliverySlotsFromMinutes(nowMinutes: number): DeliverySlots {
+  // Before service opens, ASAP is fixed at 18:30 (opening + lead).
+  const openingMinutes = 18 * 60; // 18:00
+  const rawEarliest = nowMinutes < openingMinutes
+    ? openingMinutes + DELIVERY_LEAD_MINUTES
+    : earliestDeliveryMinutes(nowMinutes);
+
+  // Clamp ASAP to last slot so we never propose an unreachable time.
+  const asapMinutes = Math.min(rawEarliest, DELIVERY_LAST_SLOT_MINUTES);
+
+  const slots: string[] = [];
+  for (let m = DELIVERY_FIRST_SLOT_MINUTES; m <= DELIVERY_LAST_SLOT_MINUTES; m += SLOT_INTERVAL) {
+    if (m <= asapMinutes) continue;
+    slots.push(toLabel(m));
+  }
+  return { asap: toLabel(asapMinutes), slots };
+}
+
+export function computeDeliverySlots(now: Date = new Date()): DeliverySlots {
+  return computeDeliverySlotsFromMinutes(parisMinutes(now));
+}
