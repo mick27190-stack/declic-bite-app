@@ -70,7 +70,13 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         <p>{message.content}</p>
         <p className={`text-xs mt-1 flex items-center gap-1 ${isAdmin ? 'text-primary-foreground/70 justify-end' : 'text-muted-foreground'}`}>
           {new Date(message.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-          {isAdmin && message.read_at && <span className="font-medium">· Lu</span>}
+          {isAdmin ? (
+            message.read_at && <span className="font-medium">· Lu</span>
+          ) : (
+            <span className={`font-medium ${message.read_at ? '' : 'text-amber-500'}`}>
+              · {message.read_at ? 'Lu' : 'Non lu'}
+            </span>
+          )}
         </p>
       </div>
     </div>
