@@ -27,11 +27,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar } from 'lucide-react';
+import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { statusLabels, statusColors, OrderStatus } from '@/types/order';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import OrderTicket, { OrderTicketData } from '@/components/OrderTicket';
 
 interface HistoryOrder {
   id: string;
@@ -269,6 +270,43 @@ export default function AdminOrderHistoryPage() {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
   const [customStart, setCustomStart] = useState<string | null>(null);
   const [customEnd, setCustomEnd] = useState<string | null>(null);
+  const [orderToPrint, setOrderToPrint] = useState<OrderTicketData | null>(null);
+
+  useEffect(() => {
+    if (!orderToPrint) return;
+    const done = () => setOrderToPrint(null);
+    window.addEventListener('afterprint', done, { once: true });
+    const t = setTimeout(() => window.print(), 80);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('afterprint', done);
+    };
+  }, [orderToPrint]);
+
+  const handlePrint = async (o: HistoryOrder) => {
+    // Fetch full order from DB (items, address, notes...) if still present.
+    const { data } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', o.id)
+      .maybeSingle();
+
+    setOrderToPrint({
+      id: o.id,
+      created_at: o.created_at,
+      restaurant: o.restaurant,
+      order_type: o.order_type,
+      status: o.status,
+      total_price: Number(o.total_price),
+      customer_name: o.customer_name,
+      customer_phone: o.customer_phone,
+      items: (data as any)?.items,
+      delivery_address: (data as any)?.delivery_address,
+      pickup_time: (data as any)?.pickup_time,
+      delivery_estimate: (data as any)?.delivery_estimate,
+      notes: (data as any)?.notes,
+    });
+  };
 
   const filteredWeeks = filterWeeksByPeriod(
     weeks
@@ -531,6 +569,15 @@ export default function AdminOrderHistoryPage() {
                             <span className="font-semibold whitespace-nowrap">
                               {Number(order.total_price).toFixed(2)} €
                             </span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handlePrint(order)}
+                              title="Imprimer le ticket"
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       ))}
@@ -542,6 +589,8 @@ export default function AdminOrderHistoryPage() {
           </Accordion>
         )}
       </main>
+
+      {orderToPrint && <OrderTicket order={orderToPrint} printOnly />}
     </div>
   );
 }

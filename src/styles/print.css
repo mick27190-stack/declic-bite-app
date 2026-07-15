@@ -1,0 +1,78 @@
+/* Ticket de caisse — imprimante thermique 80mm */
+
+.order-ticket {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #000;
+  background: #fff;
+  width: 72mm;
+  margin: 0 auto;
+  padding: 2mm;
+}
+
+.order-ticket__body {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: transparent;
+  white-space: pre-wrap;
+  margin: 0;
+  padding: 0;
+}
+
+/* Ticket masqué à l'écran (visible uniquement à l'impression) */
+.order-ticket--print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Masquer tout le reste de l'application */
+  body * {
+    visibility: hidden !important;
+  }
+
+  .order-ticket,
+  .order-ticket * {
+    visibility: visible !important;
+  }
+
+  .order-ticket--print-only {
+    display: block !important;
+  }
+
+  .order-ticket {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 72mm;
+    margin: 0;
+    padding: 2mm;
+    color: #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Neutraliser toute couleur / dégradé résiduel */
+  .order-ticket * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    border-color: #000 !important;
+  }
+}

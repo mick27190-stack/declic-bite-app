@@ -6,7 +6,8 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer } from 'lucide-react';
+import OrderTicket from '@/components/OrderTicket';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -61,9 +62,21 @@ export default function AdminOrdersPage() {
   const { toast } = useToast();
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
+  const [orderToPrint, setOrderToPrint] = useState<Order | null>(null);
   // Persistent all-time total (archived weeks + current live orders).
   // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
   const [archivedCount, setArchivedCount] = useState(0);
+
+  useEffect(() => {
+    if (!orderToPrint) return;
+    const done = () => setOrderToPrint(null);
+    window.addEventListener('afterprint', done, { once: true });
+    const t = setTimeout(() => window.print(), 80);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('afterprint', done);
+    };
+  }, [orderToPrint]);
 
   useEffect(() => {
     let active = true;
@@ -310,6 +323,17 @@ export default function AdminOrdersPage() {
                         onSubmit={(value) => setDeliveryEstimate(order.id, value)}
                       />
                     )}
+
+                    <div className="mt-4 flex justify-end">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setOrderToPrint(order)}
+                      >
+                        <Printer className="h-4 w-4 mr-2" />
+                        Imprimer le ticket
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               ))
@@ -317,6 +341,27 @@ export default function AdminOrdersPage() {
           </div>
         )}
       </main>
+
+      {orderToPrint && (
+        <OrderTicket
+          order={{
+            id: orderToPrint.id,
+            created_at: orderToPrint.created_at,
+            restaurant: orderToPrint.restaurant,
+            order_type: orderToPrint.order_type,
+            status: orderToPrint.status,
+            total_price: Number(orderToPrint.total_price),
+            pickup_time: orderToPrint.pickup_time,
+            delivery_estimate: orderToPrint.delivery_estimate,
+            delivery_address: orderToPrint.delivery_address,
+            notes: orderToPrint.notes,
+            items: orderToPrint.items,
+            customer_name: orderToPrint.customer_name,
+            customer_phone: orderToPrint.customer_phone,
+          }}
+          printOnly
+        />
+      )}
     </div>
   );
 }
