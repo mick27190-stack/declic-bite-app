@@ -77,6 +77,26 @@ export default function AdminCustomersPage() {
     }
   }, [user, isAnyAdmin, authLoading, adminLoading, navigate, fetchCustomers]);
 
+  useEffect(() => {
+    if (!user || !isAnyAdmin) return;
+
+    const channel = supabase
+      .channel('admin-customers')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'customers' },
+        () => fetchCustomers()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, isAnyAdmin, fetchCustomers]);
+
+  const conchesCount = customers.filter((c) => c.site === 'conches').length;
+  const beaumontCount = customers.filter((c) => c.site === 'beaumont').length;
+
   const resetForm = () => {
     setFirstName(''); setLastName(''); setPhone(''); setEmail(''); setSite('');
   };
@@ -142,7 +162,13 @@ export default function AdminCustomersPage() {
           </Button>
           <div>
             <h1 className="text-xl font-bold text-primary">Fichier Client</h1>
-            <p className="text-sm text-muted-foreground">{customers.length} client(s) enregistré(s)</p>
+            <p className="text-sm text-muted-foreground">
+              {customers.length} client(s) enregistré(s)
+              <span className="ml-2 inline-flex items-center gap-2">
+                <Badge variant="outline" className="text-xs">Conches : {conchesCount}</Badge>
+                <Badge variant="outline" className="text-xs">Beaumont : {beaumontCount}</Badge>
+              </span>
+            </p>
           </div>
         </div>
       </header>
