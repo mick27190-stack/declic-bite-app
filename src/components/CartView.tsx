@@ -407,6 +407,12 @@ export function CartView() {
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Envoi en cours...
               </>
+            ) : isTakeawayCutoff ? (
+              'Commandes fermés'
+            ) : isDeliveryCutoff ? (
+              orderType === 'emporter' && canCheckout()
+                ? 'Commander maintenant'
+                : 'commandes à emporter possibles jusqu\'à 21h30'
             ) : manualClosure ? (
               'Commandes bloquées'
             ) : isMonday ? (
@@ -421,8 +427,6 @@ export function CartView() {
               'Vérifiez votre adresse'
             ) : belowMinimum ? (
               'Min. 2 Senior ou 1 Méga'
-            ) : orderType === 'emporter' && isTakeawayCutoff ? (
-              'À emporter fermé après 21h30'
             ) : orderType === 'emporter' && !pickupTime ? (
               'Choisissez une heure'
             ) : orderType === 'livraison' && !pickupTime ? (
