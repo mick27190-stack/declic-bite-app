@@ -190,30 +190,82 @@ function ProfileChat() {
   const { messages, loading, sendMessage, site } = useCustomerChat();
   const { isOnline } = useAdminPresenceWatch();
 
-  const scrollToBottom = useCallback(() => {
-    const run = () => {
-      const viewport = scrollRef.current?.querySelector<HTMLDivElement>(
-        '[data-radix-scroll-area-viewport]'
-      );
-      if (viewport) viewport.scrollTop = viewport.scrollHeight;
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const isAtBottomRef = useRef(true);
+  const forceScrollRef = useRef(false);
+
+  const getViewport = useCallback(
+    () =>
+      scrollRef.current?.querySelector<HTMLDivElement>('[data-radix-scroll-area-viewport]') ?? null,
+    []
+  );
+
+  const scrollToBottom = useCallback(
+    (behavior: ScrollBehavior = 'auto') => {
+      const run = () => {
+        const viewport = getViewport();
+        if (viewport) {
+          viewport.scrollTo({ top: viewport.scrollHeight, behavior });
+        }
+      };
+      requestAnimationFrame(() => {
+        run();
+        requestAnimationFrame(run);
+      });
+      setTimeout(run, 80);
+      isAtBottomRef.current = true;
+      setIsAtBottom(true);
+    },
+    [getViewport]
+  );
+
+  // Track scroll position so the "back to bottom" button appears when the user
+  // scrolls up to read older messages.
+  useEffect(() => {
+    const viewport = getViewport();
+    if (!viewport) return;
+    const handleScroll = () => {
+      const distanceToBottom =
+        viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+      const atBottom = distanceToBottom < 80;
+      isAtBottomRef.current = atBottom;
+      setIsAtBottom(atBottom);
     };
-    requestAnimationFrame(() => {
-      run();
-      requestAnimationFrame(run);
-    });
-    setTimeout(run, 80);
-  }, []);
+    viewport.addEventListener('scroll', handleScroll, { passive: true });
+    return () => viewport.removeEventListener('scroll', handleScroll);
+  }, [getViewport, loading]);
 
   // Pin to the bottom on initial load and whenever messages change
   useLayoutEffect(() => {
     if (loading) return;
-    scrollToBottom();
+    if (forceScrollRef.current || isAtBottomRef.current) {
+      forceScrollRef.current = false;
+      scrollToBottom();
+    }
   }, [loading, messages.length, scrollToBottom]);
+
+  // Keep pinned to bottom when the content reflows (fonts, images, wrapping)
+  useEffect(() => {
+    if (loading) return;
+    const viewport = getViewport();
+    if (!viewport) return;
+    const observer = new ResizeObserver(() => {
+      if (isAtBottomRef.current) {
+        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'auto' });
+      }
+    });
+    observer.observe(viewport);
+    const content = viewport.firstElementChild;
+    if (content) observer.observe(content);
+    return () => observer.disconnect();
+  }, [getViewport, loading]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
     const msg = input.trim();
     setInput('');
+    forceScrollRef.current = true;
+    scrollToBottom('smooth');
     await sendMessage(msg);
   };
 
@@ -235,42 +287,54 @@ function ProfileChat() {
         </div>
       </div>
 
-      <ScrollArea className="h-64 rounded-lg border border-border p-3 mb-3" ref={scrollRef}>
-        {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full gap-2 py-8 text-center">
-            <MessageSquare className="h-8 w-8 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
-              Envoyez un message à votre restaurant, nous vous répondrons au plus vite !
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {messages.map((msg) => {
-              const isCustomer = msg.sender_type === 'customer';
-              return (
-                <div key={msg.id} className={`flex ${isCustomer ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
-                      isCustomer
-                        ? 'bg-primary text-primary-foreground rounded-br-sm'
-                        : 'bg-muted text-foreground rounded-bl-sm'
-                    }`}
-                  >
-                    <p className="text-sm">{msg.content}</p>
-                    <p className={`text-[10px] mt-1 ${isCustomer ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
-                      {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
+      <div className="relative mb-3">
+        <ScrollArea className="h-64 rounded-lg border border-border p-3" ref={scrollRef}>
+          {loading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full gap-2 py-8 text-center">
+              <MessageSquare className="h-8 w-8 text-muted-foreground/40" />
+              <p className="text-sm text-muted-foreground">
+                Envoyez un message à votre restaurant, nous vous répondrons au plus vite !
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {messages.map((msg) => {
+                const isCustomer = msg.sender_type === 'customer';
+                return (
+                  <div key={msg.id} className={`flex ${isCustomer ? 'justify-end' : 'justify-start'}`}>
+                    <div
+                      className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
+                        isCustomer
+                          ? 'bg-primary text-primary-foreground rounded-br-sm'
+                          : 'bg-muted text-foreground rounded-bl-sm'
+                      }`}
+                    >
+                      <p className="text-sm">{msg.content}</p>
+                      <p className={`text-[10px] mt-1 ${isCustomer ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                        {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
+        </ScrollArea>
+
+        {!isAtBottom && messages.length > 0 && (
+          <button
+            onClick={() => scrollToBottom('smooth')}
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 rounded-full bg-primary text-primary-foreground shadow-lg px-4 py-2 text-xs font-medium hover:scale-105 transition-transform animate-in fade-in slide-in-from-bottom-2"
+          >
+            Revenir au dernier message
+            <ArrowDown className="h-3.5 w-3.5" />
+          </button>
         )}
-      </ScrollArea>
+      </div>
 
       <div className="flex gap-2">
         <Input
