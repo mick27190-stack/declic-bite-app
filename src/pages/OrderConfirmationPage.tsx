@@ -141,22 +141,31 @@ export default function OrderConfirmationPage() {
         <div className="glass-card p-4">
           <h3 className="font-display font-bold text-foreground mb-4">Détails de la commande</h3>
           <div className="space-y-3">
-            {order.items.map((item, index) => (
-              <div key={index} className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {item.quantity}x {item.pizza.name} ({item.size.name})
-                  {item.supplements.length > 0 && (
-                    <span className="text-muted-foreground"> + {item.supplements.map((s) => s.name).join(', ')}</span>
-                  )}
-                  {item.notes && (
-                    <span className="block text-xs italic mt-0.5">📝 {item.notes}</span>
-                  )}
-                </span>
-                <span className="font-medium text-foreground">
-                  {((item.pizza.basePrice + item.size.price + item.supplements.reduce((s, sup) => s + sup.price, 0)) * item.quantity).toFixed(2)}€
-                </span>
-              </div>
-            ))}
+            {order.items.map((item, index) => {
+              const orderDate = new Date(order.created_at);
+              const isPizza = PIZZA_CATEGORIES.includes(item.pizza.category);
+              const unitBase = isPizza
+                ? getPizzaSizePrice(item.size.id, item.pizza.category, orderDate)
+                : getNonPizzaPrice(item.pizza, item.size);
+              const supplementsTotal = item.supplements.reduce((s, sup) => s + sup.price, 0);
+              const lineTotal = (unitBase + supplementsTotal) * item.quantity;
+              return (
+                <div key={index} className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {item.quantity}x {item.pizza.name} ({item.size.name})
+                    {item.supplements.length > 0 && (
+                      <span className="text-muted-foreground"> + {item.supplements.map((s) => s.name).join(', ')}</span>
+                    )}
+                    {item.notes && (
+                      <span className="block text-xs italic mt-0.5">📝 {item.notes}</span>
+                    )}
+                  </span>
+                  <span className="font-medium text-foreground">
+                    {lineTotal.toFixed(2)}€
+                  </span>
+                </div>
+              );
+            })}
             <div className="border-t border-border pt-3 mt-3 flex justify-between font-bold">
               <span>Total</span>
               <span className="text-primary">{order.total_price.toFixed(2)}€</span>
