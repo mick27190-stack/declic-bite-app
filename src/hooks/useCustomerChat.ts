@@ -102,7 +102,10 @@ export function useCustomerChat() {
 
     let convId = conversationId;
     if (!convId) {
-      convId = await getOrCreateConversation();
+      convId = await lookupConversation();
+    }
+    if (!convId) {
+      convId = await createConversation();
     }
     if (!convId) return;
 
@@ -122,7 +125,7 @@ export function useCustomerChat() {
         last_message_at: new Date().toISOString(),
       })
       .eq('id', convId);
-  }, [user, conversationId, getOrCreateConversation, resolveSite]);
+  }, [user, conversationId, lookupConversation, createConversation, resolveSite]);
 
   // Init & realtime
   useEffect(() => {
