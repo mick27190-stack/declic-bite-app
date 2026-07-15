@@ -13,6 +13,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { parisMinutes } from '@/lib/pickupSlots';
+import {
+  DELIVERY_CUTOFF_MINUTES,
+  TAKEAWAY_CUTOFF_MINUTES,
+  CUTOFF_ALERT_MESSAGE,
+  BUTTON_LABEL_TAKEAWAY_CLOSED,
+  BUTTON_LABEL_TAKEAWAY_HINT,
+  BUTTON_LABEL_ORDER_NOW,
+} from '@/lib/orderCutoff';
 
 export function CartView() {
   const navigate = useNavigate();
@@ -46,9 +54,7 @@ export function CartView() {
   const isClosed = isMonday || isOutsideHours || !!manualClosure;
   // Take-away is blocked after 21h30 (Paris) on open days, so the last valid
   // pickup slot (21h30) can still be honoured before the kitchen closes at 22h.
-  const TAKEAWAY_CUTOFF_MINUTES = 21 * 60 + 31; // 21:31
   // Delivery is blocked from 21h16 (Paris) — last accepted order at 21h15.
-  const DELIVERY_CUTOFF_MINUTES = 21 * 60 + 16; // 21:16
   const isTakeawayCutoff = !isClosed && parisMinutes(now) >= TAKEAWAY_CUTOFF_MINUTES;
   const isDeliveryCutoff = !isClosed && parisMinutes(now) >= DELIVERY_CUTOFF_MINUTES;
 
@@ -213,7 +219,7 @@ export function CartView() {
           <div>
             <p className="font-semibold text-destructive text-sm">Commandes limitées</p>
             <p className="text-sm text-foreground mt-1">
-              Commandes fermés pour la livraison à partir de 21h15 et 21h30 pour les commandes à emporter. Revenez demain à 18h00.
+              {CUTOFF_ALERT_MESSAGE}
             </p>
           </div>
         </div>
@@ -408,11 +414,11 @@ export function CartView() {
                 Envoi en cours...
               </>
             ) : isTakeawayCutoff ? (
-              'Commandes fermés'
+              BUTTON_LABEL_TAKEAWAY_CLOSED
             ) : isDeliveryCutoff ? (
               orderType === 'emporter' && canCheckout()
-                ? 'Commander maintenant'
-                : 'commandes à emporter possibles jusqu\'à 21h30'
+                ? BUTTON_LABEL_ORDER_NOW
+                : BUTTON_LABEL_TAKEAWAY_HINT
             ) : manualClosure ? (
               'Commandes bloquées'
             ) : isMonday ? (
