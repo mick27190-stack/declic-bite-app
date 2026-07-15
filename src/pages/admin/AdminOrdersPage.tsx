@@ -271,6 +271,11 @@ export default function AdminOrdersPage() {
                         <div key={idx} className="flex justify-between text-sm">
                           <span>
                             {item?.quantity ?? 1}x {item?.pizza?.name ?? 'Produit'} ({item?.size?.name ?? '-'})
+                            {item?.pizza?.category === 'bambino' && item?.pizza?.description && (
+                              <span className="block text-xs font-medium text-primary mt-0.5">
+                                🍕 {item.pizza.description}
+                              </span>
+                            )}
                             {item?.supplements?.length > 0 && (
                               <span className="text-muted-foreground">
                                 {' '}+ {item.supplements.map((s: any) => s.name).join(', ')}
