@@ -393,7 +393,8 @@ export default function ProfilePage() {
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
         phone: profile.phone || '',
-        email: profile.email || user?.email || ''
+        email: profile.email || user?.email || '',
+        preferred_restaurant: profile.preferred_restaurant || ''
       });
     }
   }, [profile, user]);
