@@ -402,6 +402,8 @@ export function CartView() {
               'À emporter fermé après 21h30'
             ) : orderType === 'emporter' && !pickupTime ? (
               'Choisissez une heure'
+            ) : orderType === 'livraison' && !pickupTime ? (
+              'Choisissez une heure'
             ) : (
               'Commander maintenant'
             )}
