@@ -139,14 +139,14 @@ export function useCustomerChat() {
     setMessages([]);
 
     const init = async () => {
-      const convId = await getOrCreateConversation();
+      const convId = await lookupConversation();
       if (convId) {
         await fetchMessages(convId);
       }
       setLoading(false);
     };
     init();
-  }, [user, resolveSite, getOrCreateConversation, fetchMessages]);
+  }, [user, resolveSite, lookupConversation, fetchMessages]);
 
 
   // Realtime subscription based on conversationId
