@@ -14,7 +14,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -198,8 +199,8 @@ export default function AdminCustomersPage() {
     return parts.join(' • ');
   };
 
-  const exportCSV = () => {
-    if (paginated.length === 0) {
+  const exportCSV = (rows: Customer[], scope: 'page' | 'all') => {
+    if (rows.length === 0) {
       toast.error('Aucun client à exporter');
       return;
     }
@@ -207,20 +208,21 @@ export default function AdminCustomersPage() {
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const csv = [
       headers.map(escape).join(','),
-      ...buildRows(paginated).map((r) => r.map((v) => escape(String(v))).join(',')),
+      ...buildRows(rows).map((r) => r.map((v) => escape(String(v))).join(',')),
     ].join('\n');
     const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `clients_${new Date().toISOString().slice(0, 10)}_p${currentPage}.csv`;
+    const suffix = scope === 'page' ? `_p${currentPage}` : '_tous';
+    a.download = `clients_${new Date().toISOString().slice(0, 10)}${suffix}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success(`${paginated.length} client(s) exportés en CSV`);
+    toast.success(`${rows.length} client(s) exportés en CSV`);
   };
 
-  const exportPDF = () => {
-    if (paginated.length === 0) {
+  const exportPDF = (rows: Customer[], scope: 'page' | 'all') => {
+    if (rows.length === 0) {
       toast.error('Aucun client à exporter');
       return;
     }
@@ -229,20 +231,22 @@ export default function AdminCustomersPage() {
     doc.text('Déclic Pizza — Fichier client', 14, 15);
     doc.setFontSize(9);
     doc.setTextColor(100);
+    const scopeLabel = scope === 'page' ? `page ${currentPage}/${totalPages}` : 'tous filtres appliqués';
     doc.text(
-      `Export du ${new Date().toLocaleString('fr-FR')} — ${paginated.length} client(s) — ${activeFilterSummary()}`,
+      `Export du ${new Date().toLocaleString('fr-FR')} — ${rows.length} client(s) — ${activeFilterSummary()} — ${scopeLabel}`,
       14,
       21,
     );
     autoTable(doc, {
       startY: 26,
       head: [['Nom', 'Téléphone', 'Email', 'Site', 'Origine', 'Créé le']],
-      body: buildRows(paginated),
+      body: buildRows(rows),
       styles: { fontSize: 9 },
       headStyles: { fillColor: [234, 88, 12] },
     });
-    doc.save(`clients_${new Date().toISOString().slice(0, 10)}_p${currentPage}.pdf`);
-    toast.success(`${paginated.length} client(s) exportés en PDF`);
+    const suffix = scope === 'page' ? `_p${currentPage}` : '_tous';
+    doc.save(`clients_${new Date().toISOString().slice(0, 10)}${suffix}.pdf`);
+    toast.success(`${rows.length} client(s) exportés en PDF`);
   };
 
   if (authLoading || adminLoading || loading) {
@@ -294,9 +298,22 @@ export default function AdminCustomersPage() {
                       Exporter
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={exportCSV}>Exporter en CSV</DropdownMenuItem>
-                    <DropdownMenuItem onClick={exportPDF}>Exporter en PDF</DropdownMenuItem>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Page courante</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => exportCSV(paginated, 'page')}>
+                      CSV — page ({paginated.length})
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => exportPDF(paginated, 'page')}>
+                      PDF — page ({paginated.length})
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Tous les filtres</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => exportCSV(filtered, 'all')}>
+                      CSV — tous ({filtered.length})
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => exportPDF(filtered, 'all')}>
+                      PDF — tous ({filtered.length})
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
