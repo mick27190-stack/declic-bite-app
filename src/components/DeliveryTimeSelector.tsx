@@ -1,0 +1,83 @@
+import { useEffect, useState } from 'react';
+import { Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { computeDeliverySlots, DeliverySlots } from '@/lib/pickupSlots';
+
+interface DeliveryTimeSelectorProps {
+  value: string | null;
+  onChange: (time: string) => void;
+  disabled?: boolean;
+}
+
+export function DeliveryTimeSelector({ value, onChange, disabled }: DeliveryTimeSelectorProps) {
+  const [slots, setSlots] = useState<DeliverySlots>(() => computeDeliverySlots(new Date()));
+
+  useEffect(() => {
+    const refresh = () => setSlots(computeDeliverySlots(new Date()));
+    refresh();
+    const id = setInterval(refresh, 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const handleSelect = (time: string) => {
+    if (disabled) return;
+    onChange(time);
+  };
+
+  const asap = slots.asap;
+  const isAsapSelected = value === asap;
+
+  return (
+    <div className={`space-y-4 ${disabled ? 'opacity-50' : ''}`}>
+      <div className="flex items-center gap-2 text-foreground">
+        <Clock className="w-5 h-5 text-primary" />
+        <h3 className="font-display font-semibold">Heure de livraison</h3>
+      </div>
+
+      <Button
+        type="button"
+        variant={isAsapSelected ? 'default' : 'outline'}
+        className="w-full justify-start gap-3"
+        disabled={disabled}
+        onClick={() => handleSelect(asap)}
+      >
+        <Clock className="w-4 h-4" />
+        <span>Dès que possible</span>
+        <span className="text-muted-foreground ml-auto">~{asap}</span>
+      </Button>
+
+      {slots.slots.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">Ou choisissez une heure :</p>
+          <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+            {slots.slots.map((time) => (
+              <button
+                key={time}
+                type="button"
+                disabled={disabled}
+                onClick={() => handleSelect(time)}
+                className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                  disabled ? 'cursor-not-allowed ' : ''
+                }${
+                  value === time
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-foreground hover:bg-muted/80'
+                }`}
+              >
+                {time}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {value && !isAsapSelected && (
+        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+          <p className="text-sm text-foreground">
+            Livraison prévue à <strong className="text-primary">{value}</strong>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
