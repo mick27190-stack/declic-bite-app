@@ -297,9 +297,22 @@ export default function AdminCustomersPage() {
                       Exporter
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={exportCSV}>Exporter en CSV</DropdownMenuItem>
-                    <DropdownMenuItem onClick={exportPDF}>Exporter en PDF</DropdownMenuItem>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>Page courante</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => exportCSV(paginated, 'page')}>
+                      CSV — page ({paginated.length})
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => exportPDF(paginated, 'page')}>
+                      PDF — page ({paginated.length})
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Tous les filtres</DropdownMenuLabel>
+                    <DropdownMenuItem onClick={() => exportCSV(filtered, 'all')}>
+                      CSV — tous ({filtered.length})
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => exportPDF(filtered, 'all')}>
+                      PDF — tous ({filtered.length})
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
                 <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) resetForm(); }}>
