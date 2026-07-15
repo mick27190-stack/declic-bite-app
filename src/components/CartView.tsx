@@ -54,9 +54,7 @@ export function CartView() {
   const isClosed = isMonday || isOutsideHours || !!manualClosure;
   // Take-away is blocked after 21h30 (Paris) on open days, so the last valid
   // pickup slot (21h30) can still be honoured before the kitchen closes at 22h.
-  const TAKEAWAY_CUTOFF_MINUTES = 21 * 60 + 31; // 21:31
   // Delivery is blocked from 21h16 (Paris) — last accepted order at 21h15.
-  const DELIVERY_CUTOFF_MINUTES = 21 * 60 + 16; // 21:16
   const isTakeawayCutoff = !isClosed && parisMinutes(now) >= TAKEAWAY_CUTOFF_MINUTES;
   const isDeliveryCutoff = !isClosed && parisMinutes(now) >= DELIVERY_CUTOFF_MINUTES;
 
