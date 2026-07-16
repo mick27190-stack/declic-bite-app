@@ -175,6 +175,7 @@ export type Database = {
       }
       customers: {
         Row: {
+          address: string | null
           created_at: string
           created_by: string | null
           email: string | null
@@ -188,6 +189,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          address?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          address?: string | null
           created_at?: string
           created_by?: string | null
           email?: string | null
@@ -683,6 +686,10 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      format_address_line: {
+        Args: { _city: string; _postal_code: string; _street: string }
+        Returns: string
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -725,6 +732,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      resolve_customer_address: { Args: { _user_id: string }; Returns: string }
       restaurant_to_site: { Args: { _restaurant: string }; Returns: string }
       should_receive_site_notification: {
         Args: { _category?: string; _site: string; _user_id: string }
