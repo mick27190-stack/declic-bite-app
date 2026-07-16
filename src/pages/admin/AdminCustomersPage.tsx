@@ -189,6 +189,7 @@ export default function AdminCustomersPage() {
       [c.first_name, c.last_name].filter(Boolean).join(' ') || '—',
       c.phone || '—',
       c.email || '—',
+      c.address || '—',
       siteLabel(c.site),
       c.source === 'registration' ? 'Inscription' : 'Manuel',
       new Date(c.created_at).toLocaleDateString('fr-FR'),
@@ -198,6 +199,7 @@ export default function AdminCustomersPage() {
     const parts: string[] = [];
     if (nameFilter.trim()) parts.push(`nom="${nameFilter.trim()}"`);
     if (emailFilter.trim()) parts.push(`email="${emailFilter.trim()}"`);
+    if (addressFilter.trim()) parts.push(`adresse="${addressFilter.trim()}"`);
     if (siteFilter !== 'all') parts.push(`site=${siteLabel(siteFilter)}`);
     parts.push(`page ${currentPage}/${totalPages}`);
     return parts.join(' • ');
