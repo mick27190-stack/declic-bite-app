@@ -66,6 +66,7 @@ export default function AdminCustomersPage() {
 
   const [nameFilter, setNameFilter] = useState('');
   const [emailFilter, setEmailFilter] = useState('');
+  const [addressFilter, setAddressFilter] = useState('');
   const [siteFilter, setSiteFilter] = useState<string>('all');
 
   const [page, setPage] = useState(1);
