@@ -430,6 +430,7 @@ export default function AdminCustomersPage() {
                       <TableHead>Nom</TableHead>
                       <TableHead>Téléphone</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Adresse</TableHead>
                       <TableHead>Site</TableHead>
                       <TableHead>Origine</TableHead>
                       <TableHead className="text-right">Action</TableHead>
