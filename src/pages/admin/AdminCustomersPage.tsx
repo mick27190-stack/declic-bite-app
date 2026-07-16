@@ -210,7 +210,7 @@ export default function AdminCustomersPage() {
       toast.error('Aucun client à exporter');
       return;
     }
-    const headers = ['Nom', 'Téléphone', 'Email', 'Site', 'Origine', 'Créé le'];
+    const headers = ['Nom', 'Téléphone', 'Email', 'Adresse', 'Site', 'Origine', 'Créé le'];
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const csv = [
       headers.map(escape).join(','),
