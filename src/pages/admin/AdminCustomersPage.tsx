@@ -34,6 +34,7 @@ interface Customer {
   last_name: string | null;
   phone: string | null;
   email: string | null;
+  address: string | null;
   site: string | null;
   source: string;
   created_at: string;
@@ -65,6 +66,7 @@ export default function AdminCustomersPage() {
 
   const [nameFilter, setNameFilter] = useState('');
   const [emailFilter, setEmailFilter] = useState('');
+  const [addressFilter, setAddressFilter] = useState('');
   const [siteFilter, setSiteFilter] = useState<string>('all');
 
   const [page, setPage] = useState(1);
@@ -161,19 +163,21 @@ export default function AdminCustomersPage() {
   const filtered = useMemo(() => {
     const n = nameFilter.trim().toLowerCase();
     const e = emailFilter.trim().toLowerCase();
+    const a = addressFilter.trim().toLowerCase();
     return customers.filter((c) => {
       const fullName = `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim().toLowerCase();
       if (n && !fullName.includes(n)) return false;
       if (e && !(c.email ?? '').toLowerCase().includes(e)) return false;
+      if (a && !(c.address ?? '').toLowerCase().includes(a)) return false;
       if (siteFilter !== 'all' && c.site !== siteFilter) return false;
       return true;
     });
-  }, [customers, nameFilter, emailFilter, siteFilter]);
+  }, [customers, nameFilter, emailFilter, addressFilter, siteFilter]);
 
   // Reset to first page whenever filters or page size change
   useEffect(() => {
     setPage(1);
-  }, [nameFilter, emailFilter, siteFilter, pageSize]);
+  }, [nameFilter, emailFilter, addressFilter, siteFilter, pageSize]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -185,6 +189,7 @@ export default function AdminCustomersPage() {
       [c.first_name, c.last_name].filter(Boolean).join(' ') || '—',
       c.phone || '—',
       c.email || '—',
+      c.address || '—',
       siteLabel(c.site),
       c.source === 'registration' ? 'Inscription' : 'Manuel',
       new Date(c.created_at).toLocaleDateString('fr-FR'),
@@ -194,6 +199,7 @@ export default function AdminCustomersPage() {
     const parts: string[] = [];
     if (nameFilter.trim()) parts.push(`nom="${nameFilter.trim()}"`);
     if (emailFilter.trim()) parts.push(`email="${emailFilter.trim()}"`);
+    if (addressFilter.trim()) parts.push(`adresse="${addressFilter.trim()}"`);
     if (siteFilter !== 'all') parts.push(`site=${siteLabel(siteFilter)}`);
     parts.push(`page ${currentPage}/${totalPages}`);
     return parts.join(' • ');
@@ -204,7 +210,7 @@ export default function AdminCustomersPage() {
       toast.error('Aucun client à exporter');
       return;
     }
-    const headers = ['Nom', 'Téléphone', 'Email', 'Site', 'Origine', 'Créé le'];
+    const headers = ['Nom', 'Téléphone', 'Email', 'Adresse', 'Site', 'Origine', 'Créé le'];
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const csv = [
       headers.map(escape).join(','),
@@ -239,7 +245,7 @@ export default function AdminCustomersPage() {
     );
     autoTable(doc, {
       startY: 26,
-      head: [['Nom', 'Téléphone', 'Email', 'Site', 'Origine', 'Créé le']],
+      head: [['Nom', 'Téléphone', 'Email', 'Adresse', 'Site', 'Origine', 'Créé le']],
       body: buildRows(rows),
       styles: { fontSize: 9 },
       headStyles: { fillColor: [234, 88, 12] },
@@ -374,7 +380,7 @@ export default function AdminCustomersPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -390,6 +396,15 @@ export default function AdminCustomersPage() {
                   placeholder="Rechercher par email..."
                   value={emailFilter}
                   onChange={(e) => setEmailFilter(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher par adresse..."
+                  value={addressFilter}
+                  onChange={(e) => setAddressFilter(e.target.value)}
                   className="pl-9"
                 />
               </div>
@@ -415,6 +430,7 @@ export default function AdminCustomersPage() {
                       <TableHead>Nom</TableHead>
                       <TableHead>Téléphone</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Adresse</TableHead>
                       <TableHead>Site</TableHead>
                       <TableHead>Origine</TableHead>
                       <TableHead className="text-right">Action</TableHead>
@@ -440,6 +456,9 @@ export default function AdminCustomersPage() {
                           )}
                         </TableCell>
                         <TableCell className="max-w-[180px] truncate">{c.email || '—'}</TableCell>
+                        <TableCell className="max-w-[220px] truncate" title={c.address || undefined}>
+                          {c.address || '—'}
+                        </TableCell>
                         <TableCell>{siteLabel(c.site)}</TableCell>
                         <TableCell>
                           <Badge variant={c.source === 'registration' ? 'default' : 'outline'}>
