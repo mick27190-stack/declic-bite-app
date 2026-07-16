@@ -245,7 +245,7 @@ export default function AdminCustomersPage() {
     );
     autoTable(doc, {
       startY: 26,
-      head: [['Nom', 'Téléphone', 'Email', 'Site', 'Origine', 'Créé le']],
+      head: [['Nom', 'Téléphone', 'Email', 'Adresse', 'Site', 'Origine', 'Créé le']],
       body: buildRows(rows),
       styles: { fontSize: 9 },
       headStyles: { fillColor: [234, 88, 12] },
