@@ -380,7 +380,7 @@ export default function AdminCustomersPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -396,6 +396,15 @@ export default function AdminCustomersPage() {
                   placeholder="Rechercher par email..."
                   value={emailFilter}
                   onChange={(e) => setEmailFilter(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Rechercher par adresse..."
+                  value={addressFilter}
+                  onChange={(e) => setAddressFilter(e.target.value)}
                   className="pl-9"
                 />
               </div>
