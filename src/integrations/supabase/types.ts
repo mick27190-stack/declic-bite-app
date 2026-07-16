@@ -666,6 +666,14 @@ export type Database = {
         Args: { _restaurant: string; _user_id: string }
         Returns: boolean
       }
+      check_order_creation_cutoff: {
+        Args: {
+          _order_type: string
+          _paris_minutes: number
+          _pickup_time: string
+        }
+        Returns: undefined
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
