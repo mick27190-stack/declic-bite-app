@@ -163,19 +163,21 @@ export default function AdminCustomersPage() {
   const filtered = useMemo(() => {
     const n = nameFilter.trim().toLowerCase();
     const e = emailFilter.trim().toLowerCase();
+    const a = addressFilter.trim().toLowerCase();
     return customers.filter((c) => {
       const fullName = `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim().toLowerCase();
       if (n && !fullName.includes(n)) return false;
       if (e && !(c.email ?? '').toLowerCase().includes(e)) return false;
+      if (a && !(c.address ?? '').toLowerCase().includes(a)) return false;
       if (siteFilter !== 'all' && c.site !== siteFilter) return false;
       return true;
     });
-  }, [customers, nameFilter, emailFilter, siteFilter]);
+  }, [customers, nameFilter, emailFilter, addressFilter, siteFilter]);
 
   // Reset to first page whenever filters or page size change
   useEffect(() => {
     setPage(1);
-  }, [nameFilter, emailFilter, siteFilter, pageSize]);
+  }, [nameFilter, emailFilter, addressFilter, siteFilter, pageSize]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
