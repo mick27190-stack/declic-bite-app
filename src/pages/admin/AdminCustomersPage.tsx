@@ -456,6 +456,9 @@ export default function AdminCustomersPage() {
                           )}
                         </TableCell>
                         <TableCell className="max-w-[180px] truncate">{c.email || '—'}</TableCell>
+                        <TableCell className="max-w-[220px] truncate" title={c.address || undefined}>
+                          {c.address || '—'}
+                        </TableCell>
                         <TableCell>{siteLabel(c.site)}</TableCell>
                         <TableCell>
                           <Badge variant={c.source === 'registration' ? 'default' : 'outline'}>
