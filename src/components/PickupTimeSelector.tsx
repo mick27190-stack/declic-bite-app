@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { computePickupSlots } from '@/lib/pickupSlots';
+import { computePickupSlotOptions, type PickupSlot } from '@/lib/pickupSlots';
 
 interface PickupTimeSelectorProps {
   value: string | null;
@@ -12,26 +12,26 @@ interface PickupTimeSelectorProps {
 export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSelectorProps) {
   const [selectedTime, setSelectedTime] = useState<string | null>(value);
 
-  // Recompute slots from the real current time (in the restaurant timezone)
-  // and refresh every minute so the proposed times stay coherent.
-  const [availableTimes, setAvailableTimes] = useState<string[]>(() => computePickupSlots(new Date()));
+  const [slots, setSlots] = useState<PickupSlot[]>(() => computePickupSlotOptions(new Date()));
 
   useEffect(() => {
-    const refresh = () => setAvailableTimes(computePickupSlots(new Date()));
+    const refresh = () => setSlots(computePickupSlotOptions(new Date()));
     refresh();
     const id = setInterval(refresh, 60_000);
     return () => clearInterval(id);
   }, []);
 
-
-  const handleSelect = (time: string) => {
-    if (disabled) return;
+  const handleSelect = (time: string, slotDisabled: boolean) => {
+    if (disabled || slotDisabled) return;
     setSelectedTime(time);
     onChange(time);
   };
 
-  // Show "Dès que possible" option
-  const asapTime = availableTimes[0];
+  // First enabled slot drives the "Dès que possible" shortcut.
+  const asapSlot = slots.find((s) => !s.disabled) ?? slots[0];
+  const asapTime = asapSlot?.time;
+  const asapDisabled = disabled || !asapSlot || asapSlot.disabled;
+  const gridSlots = asapSlot ? slots.filter((s) => s.time !== asapSlot.time) : slots;
 
   return (
     <div className={`space-y-4 ${disabled ? 'opacity-50' : ''}`}>
@@ -41,39 +41,46 @@ export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSele
       </div>
 
       {/* ASAP Option */}
-      <Button
-        type="button"
-        variant={selectedTime === asapTime ? "default" : "outline"}
-        className="w-full justify-start gap-3"
-        disabled={disabled}
-        onClick={() => handleSelect(asapTime)}
-      >
-        <Clock className="w-4 h-4" />
-        <span>Dès que possible</span>
-        <span className="text-muted-foreground ml-auto">~{asapTime}</span>
-      </Button>
+      {asapTime && (
+        <Button
+          type="button"
+          variant={selectedTime === asapTime ? 'default' : 'outline'}
+          className="w-full justify-start gap-3"
+          disabled={asapDisabled}
+          onClick={() => handleSelect(asapTime, asapDisabled)}
+        >
+          <Clock className="w-4 h-4" />
+          <span>Dès que possible</span>
+          <span className="text-muted-foreground ml-auto">~{asapTime}</span>
+        </Button>
+      )}
 
       {/* Time grid */}
       <div className="space-y-2">
         <p className="text-sm text-muted-foreground">Ou choisissez une heure :</p>
         <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
-          {availableTimes.slice(1).map((time) => (
-            <button
-              key={time}
-              type="button"
-              disabled={disabled}
-              onClick={() => handleSelect(time)}
-              className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
-                disabled ? 'cursor-not-allowed ' : ''
-              }${
-                selectedTime === time
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-foreground hover:bg-muted/80'
-              }`}
-            >
-              {time}
-            </button>
-          ))}
+          {gridSlots.map(({ time, disabled: slotDisabled }) => {
+            const isDisabled = disabled || slotDisabled;
+            const isSelected = selectedTime === time;
+            return (
+              <button
+                key={time}
+                type="button"
+                disabled={isDisabled}
+                aria-disabled={isDisabled}
+                onClick={() => handleSelect(time, isDisabled)}
+                className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                  isDisabled
+                    ? 'cursor-not-allowed opacity-40 bg-muted text-muted-foreground line-through'
+                    : isSelected
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted text-foreground hover:bg-muted/80'
+                }`}
+              >
+                {time}
+              </button>
+            );
+          })}
         </div>
       </div>
 
