@@ -45,7 +45,7 @@ describe('order cut-off constants', () => {
   });
   it('alert message copy is the approved wording', () => {
     expect(CUTOFF_ALERT_MESSAGE).toBe(
-      'Commandes fermés pour la livraison à partir de 21h15 et 21h30 pour les commandes à emporter. Revenez demain à 18h00.',
+      'Commandes fermées pour la livraison à partir de 21h15 et 21h30 pour les commandes à emporter. Revenez demain à 18h00.',
     );
   });
 });
