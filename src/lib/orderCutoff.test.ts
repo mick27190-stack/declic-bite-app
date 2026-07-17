@@ -45,7 +45,7 @@ describe('order cut-off constants', () => {
   });
   it('alert message copy is the approved wording', () => {
     expect(CUTOFF_ALERT_MESSAGE).toBe(
-      'Commandes fermés pour la livraison à partir de 21h15 et 21h30 pour les commandes à emporter. Revenez demain à 18h00.',
+      'Commandes fermées pour la livraison à partir de 21h15 et 21h30 pour les commandes à emporter. Revenez demain à 18h00.',
     );
   });
 });
@@ -124,7 +124,7 @@ describe('getCutoffButtonLabel — exact wording', () => {
     ).toBe(BUTTON_LABEL_TAKEAWAY_HINT);
   });
 
-  it('at 21h31: both order types show "Commandes fermés"', () => {
+  it('at 21h31: both order types show "Commandes fermées"', () => {
     const s = getCutoffState(parisDate(21, 31));
     for (const orderType of ['emporter', 'livraison'] as const) {
       for (const canCheckout of [true, false]) {
@@ -133,6 +133,6 @@ describe('getCutoffButtonLabel — exact wording', () => {
         );
       }
     }
-    expect(BUTTON_LABEL_TAKEAWAY_CLOSED).toBe('Commandes fermés');
+    expect(BUTTON_LABEL_TAKEAWAY_CLOSED).toBe('Commandes fermées');
   });
 });

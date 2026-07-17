@@ -10,9 +10,9 @@ export const DELIVERY_CUTOFF_MINUTES = 21 * 60 + 16; // 21:16
 export const TAKEAWAY_CUTOFF_MINUTES = 21 * 60 + 31; // 21:31
 
 export const CUTOFF_ALERT_MESSAGE =
-  'Commandes fermés pour la livraison à partir de 21h15 et 21h30 pour les commandes à emporter. Revenez demain à 18h00.';
+  'Commandes fermées pour la livraison à partir de 21h15 et 21h30 pour les commandes à emporter. Revenez demain à 18h00.';
 
-export const BUTTON_LABEL_TAKEAWAY_CLOSED = 'Commandes fermés';
+export const BUTTON_LABEL_TAKEAWAY_CLOSED = 'Commandes fermées';
 export const BUTTON_LABEL_TAKEAWAY_HINT =
   "commandes à emporter possibles jusqu'à 21h30";
 export const BUTTON_LABEL_ORDER_NOW = 'Commander maintenant';
