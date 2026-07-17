@@ -83,6 +83,35 @@ export function computePickupSlots(now: Date = new Date()): string[] {
   return computePickupSlotsFromMinutes(parisMinutes(now));
 }
 
+export interface PickupSlot {
+  time: string;
+  disabled: boolean;
+}
+
+/**
+ * Return every take-away slot for the current service, marking those the
+ * customer cannot pick (past the earliest-lead time, or — from 21h16 —
+ * every slot except the final 21h30 one).
+ */
+export function computePickupSlotOptionsFromMinutes(nowMinutes: number): PickupSlot[] {
+  const inLateWindow =
+    nowMinutes >= LATE_TAKEAWAY_WINDOW_START && nowMinutes < LATE_TAKEAWAY_CUTOFF;
+  const earliestAllowed = earliestAllowedMinutes(nowMinutes);
+
+  const slots: PickupSlot[] = [];
+  for (let m = FIRST_SLOT_MINUTES; m <= LAST_SLOT_MINUTES; m += SLOT_INTERVAL) {
+    const disabled = inLateWindow
+      ? m !== LAST_SLOT_MINUTES
+      : earliestAllowed > FIRST_SLOT_MINUTES && m < earliestAllowed;
+    slots.push({ time: minutesToLabel(m), disabled });
+  }
+  return slots;
+}
+
+export function computePickupSlotOptions(now: Date = new Date()): PickupSlot[] {
+  return computePickupSlotOptionsFromMinutes(parisMinutes(now));
+}
+
 // ---------------- Delivery slots ----------------
 // Delivery uses a 30-minute lead time and a 18:45 → 21:45 window.
 export const DELIVERY_FIRST_SLOT_MINUTES = 18 * 60 + 45; // 18:45
