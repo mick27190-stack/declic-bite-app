@@ -46,7 +46,20 @@ export function parisMinutes(now: Date = new Date()): number {
  * The current time is always interpreted in the restaurant's timezone
  * (Europe/Paris) so the proposed slots stay coherent on any device.
  */
+// Late-evening take-away window: from 21h16 (inclusive) up to the 21h31
+// cut-off, only the last 21h30 slot remains selectable.
+const LATE_TAKEAWAY_WINDOW_START = 21 * 60 + 16; // 21:16
+const LATE_TAKEAWAY_CUTOFF = 21 * 60 + 31; // 21:31
+
 export function computePickupSlotsFromMinutes(nowMinutes: number): string[] {
+  // Between 21h16 and 21h30 included, only propose the 21h30 slot.
+  if (
+    nowMinutes >= LATE_TAKEAWAY_WINDOW_START &&
+    nowMinutes < LATE_TAKEAWAY_CUTOFF
+  ) {
+    return [minutesToLabel(LAST_SLOT_MINUTES)];
+  }
+
   const earliestAllowed = earliestAllowedMinutes(nowMinutes);
 
   const times: string[] = [];
