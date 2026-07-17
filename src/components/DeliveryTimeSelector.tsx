@@ -37,7 +37,7 @@ export function DeliveryTimeSelector({ value, onChange, disabled }: DeliveryTime
       <div className="p-3 rounded-lg bg-muted/50 border border-border flex items-start gap-2">
         <Info className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Votre restaurant est en droit de vous proposer un horaire de livraison différent de l'heure que vous souhaitez en fonction de leurs disponibilités. Vous devrez Accepter ou Refuser l'heure proposé par votre restaurant. En cas de Refus, votre commande sera annulée.
+          Votre restaurant est en droit de vous proposer un horaire de livraison différent de l'heure que vous souhaitez en fonction de leurs disponibilités. Vous devrez Accepter ou Refuser l'heure proposée par votre restaurant. En cas de Refus, votre commande sera annulée.
         </p>
       </div>
 
