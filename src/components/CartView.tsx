@@ -12,13 +12,9 @@ import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
-import { parisMinutes } from '@/lib/pickupSlots';
 import {
-  DELIVERY_CUTOFF_MINUTES,
-  TAKEAWAY_CUTOFF_MINUTES,
-  BUTTON_LABEL_TAKEAWAY_CLOSED,
-  BUTTON_LABEL_TAKEAWAY_HINT,
-  BUTTON_LABEL_ORDER_NOW,
+  getCutoffState,
+  getCutoffButtonLabel,
 } from '@/lib/orderCutoff';
 
 export function CartView() {
@@ -54,8 +50,8 @@ export function CartView() {
   // Take-away is blocked after 21h30 (Paris) on open days, so the last valid
   // pickup slot (21h30) can still be honoured before the kitchen closes at 22h.
   // Delivery is blocked from 21h16 (Paris) — last accepted order at 21h15.
-  const isTakeawayCutoff = !isClosed && parisMinutes(now) >= TAKEAWAY_CUTOFF_MINUTES;
-  const isDeliveryCutoff = !isClosed && parisMinutes(now) >= DELIVERY_CUTOFF_MINUTES;
+  // From 21h00 to 21h15 the CTA shows a warning that orders close at 21h15.
+  const cutoff = getCutoffState(now, isClosed);
 
 
   // Minimum order check for delivery outside the restaurant's own commune:
@@ -99,10 +95,10 @@ export function CartView() {
     if (items.length === 0) return false;
     if (!selectedRestaurant) return false;
     if (orderType === 'emporter' && !pickupTime) return false;
-    if (orderType === 'emporter' && isTakeawayCutoff) return false;
+    if (orderType === 'emporter' && cutoff.isTakeawayCutoff) return false;
     if (orderType === 'livraison' && !deliveryAddress) return false;
     if (orderType === 'livraison' && !pickupTime) return false;
-    if (orderType === 'livraison' && isDeliveryCutoff) return false;
+    if (orderType === 'livraison' && cutoff.isDeliveryCutoff) return false;
     if (belowMinimum) return false;
     return true;
   };
@@ -207,8 +203,8 @@ export function CartView() {
           value={orderType} 
           onChange={setOrderType}
           disabled={isClosed}
-          takeawayDisabled={isTakeawayCutoff}
-          deliveryDisabled={isDeliveryCutoff}
+          takeawayDisabled={cutoff.isTakeawayCutoff}
+          deliveryDisabled={cutoff.isDeliveryCutoff}
         />
       </div>
 
@@ -275,7 +271,7 @@ export function CartView() {
       )}
 
       {/* Take-away closed after 21h30 */}
-      {orderType === 'emporter' && isTakeawayCutoff && (
+      {orderType === 'emporter' && cutoff.isTakeawayCutoff && (
         <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -288,7 +284,7 @@ export function CartView() {
       )}
 
       {/* Pickup Flow */}
-      {orderType === 'emporter' && !isTakeawayCutoff && (
+      {orderType === 'emporter' && !cutoff.isTakeawayCutoff && (
         <div className="glass-card p-4">
           <PickupTimeSelector 
             value={pickupTime}
@@ -392,7 +388,7 @@ export function CartView() {
           <Button 
             variant="hero" 
             size="lg" 
-            className="w-full"
+            className="w-full h-auto min-h-14 py-2 px-3 sm:px-6 whitespace-normal text-sm sm:text-base lg:text-lg leading-tight text-balance"
             disabled={!canCheckout() || isSubmitting}
             onClick={handleSubmitOrder}
           >
@@ -401,32 +397,29 @@ export function CartView() {
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Envoi en cours...
               </>
-            ) : isTakeawayCutoff ? (
-              BUTTON_LABEL_TAKEAWAY_CLOSED
-            ) : isDeliveryCutoff ? (
-              orderType === 'emporter' && canCheckout()
-                ? BUTTON_LABEL_ORDER_NOW
-                : BUTTON_LABEL_TAKEAWAY_HINT
-            ) : manualClosure ? (
-              'Commandes bloquées'
-            ) : isMonday ? (
-              'Fermé le lundi'
-            ) : isOutsideHours ? (
-              'Ouvert de 18h à 22h'
-            ) : !selectedRestaurant ? (
-              'Choisissez un restaurant'
-            ) : !user ? (
-              'Se connecter pour commander'
-            ) : orderType === 'livraison' && !deliveryAddress ? (
-              'Vérifiez votre adresse'
-            ) : belowMinimum ? (
-              'Min. 2 Senior ou 1 Méga'
-            ) : orderType === 'emporter' && !pickupTime ? (
-              'Choisissez une heure'
-            ) : orderType === 'livraison' && !pickupTime ? (
-              'Choisissez une heure'
             ) : (
-              'Commander maintenant'
+              getCutoffButtonLabel(cutoff, { orderType, canCheckout: canCheckout() }) ??
+              (manualClosure ? (
+                'Commandes bloquées'
+              ) : isMonday ? (
+                'Fermé le lundi'
+              ) : isOutsideHours ? (
+                'Ouvert de 18h à 22h'
+              ) : !selectedRestaurant ? (
+                'Choisissez un restaurant'
+              ) : !user ? (
+                'Se connecter pour commander'
+              ) : orderType === 'livraison' && !deliveryAddress ? (
+                'Vérifiez votre adresse'
+              ) : belowMinimum ? (
+                'Min. 2 Senior ou 1 Méga'
+              ) : orderType === 'emporter' && !pickupTime ? (
+                'Choisissez une heure'
+              ) : orderType === 'livraison' && !pickupTime ? (
+                'Choisissez une heure'
+              ) : (
+                'Commander maintenant'
+              ))
             )}
           </Button>
         </div>
