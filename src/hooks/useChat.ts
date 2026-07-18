@@ -240,7 +240,17 @@ export function useChat(siteFilter?: string) {
           fetchConversations();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        // On any successful (re)connection, force a full recount from the
+        // server so badges match the persisted read_at values.
+        if (status === 'SUBSCRIBED') {
+          fetchConversations();
+          const currentId = selectedIdRef.current;
+          if (currentId) {
+            fetchMessages(currentId);
+          }
+        }
+      });
 
 
     // Subscribe to conversation updates
@@ -257,13 +267,37 @@ export function useChat(siteFilter?: string) {
           fetchConversations();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          fetchConversations();
+        }
+      });
+
+    // Also refresh when the browser tab becomes visible again or the
+    // network comes back online — realtime may have missed events while
+    // the socket was down.
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchConversations();
+        const currentId = selectedIdRef.current;
+        if (currentId) fetchMessages(currentId);
+      }
+    };
+    const handleOnline = () => {
+      fetchConversations();
+      const currentId = selectedIdRef.current;
+      if (currentId) fetchMessages(currentId);
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    window.addEventListener('online', handleOnline);
 
     return () => {
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(convChannel);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('online', handleOnline);
     };
-  }, [user, fetchConversations, selectedConversationId, markMessagesRead]);
+  }, [user, fetchConversations, fetchMessages, selectedConversationId, markMessagesRead]);
 
   return {
     conversations,
