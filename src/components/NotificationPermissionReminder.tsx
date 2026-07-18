@@ -7,6 +7,18 @@ import { toast } from 'sonner';
 
 const HIDE_KEY = 'notification_permission_reminder_dismissed';
 
+// True when the app runs inside an iframe (Lovable preview, embed, etc.).
+// Browsers refuse Notification.requestPermission() in cross-origin iframes and
+// return 'denied' immediately without ever showing the system prompt.
+function isInIframe(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
 export default function NotificationPermissionReminder() {
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(() => {
     if (!isNotificationSupported()) return 'unsupported';
@@ -43,6 +55,17 @@ export default function NotificationPermissionReminder() {
   const isDenied = permission === 'denied';
 
   const handleEnable = async () => {
+    // Cross-origin iframes (Lovable preview, embeds) can't show the browser's
+    // permission prompt — requestPermission() returns 'denied' immediately.
+    // Guide the user to open the app in a real browser tab instead of
+    // flipping the UI into the "blocked" state.
+    if (isInIframe()) {
+      toast.info(
+        "Ouvrez l’application dans votre navigateur (ou installez-la sur votre écran d’accueil) pour activer les notifications.",
+        { duration: 7000 }
+      );
+      return;
+    }
     if (isDenied) {
       toast.error(
         'Vous avez bloqué les notifications. Veuillez les autoriser dans les paramètres de votre navigateur, puis revenez sur cette page.',
@@ -53,15 +76,24 @@ export default function NotificationPermissionReminder() {
     setLoading(true);
     try {
       const result = await requestNotificationPermission();
-      setPermission(result);
       if (result === 'granted') {
+        setPermission(result);
         // Also register the device for FCM push if possible.
         await setupPushNotifications();
         toast.success('Notifications activées', {
           description: 'Vous recevrez désormais les alertes de votre restaurant.',
         });
       } else if (result === 'denied') {
-        toast.error('Vous avez refusé les notifications. Vous pourrez les autoriser plus tard dans les paramètres de votre navigateur.');
+        // Only reflect a real user refusal (prompt actually shown). If the
+        // prompt was suppressed by the browser (iframe, insecure context…)
+        // requestPermission() also returns 'denied' — keep the reminder in
+        // the neutral "not granted yet" state and explain how to retry.
+        setPermission(result);
+        toast.error(
+          "Vous avez refusé les notifications. Vous pourrez les autoriser plus tard dans les paramètres de votre navigateur.",
+        );
+      } else {
+        // 'default' — user dismissed the prompt without choosing. Do nothing.
       }
     } finally {
       setLoading(false);
