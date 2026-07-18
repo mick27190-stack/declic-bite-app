@@ -3,11 +3,13 @@
 import * as React from 'npm:react@18.3.1'
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
   Html,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
@@ -16,16 +18,18 @@ interface DeliveryEstimateProps {
   customerName?: string
   requestedTime?: string
   estimatedTime?: string
+  acceptUrl?: string
+  refuseUrl?: string
 }
 
 const DeliveryEstimateEmail = ({
   customerName,
   requestedTime,
   estimatedTime,
+  acceptUrl,
+  refuseUrl,
 }: DeliveryEstimateProps) => {
-  const greeting = customerName
-    ? `Bonsoir ${customerName},`
-    : 'Bonsoir,'
+  const greeting = customerName ? `Bonsoir ${customerName},` : 'Bonsoir,'
   return (
     <Html lang="fr" dir="ltr">
       <Head />
@@ -42,10 +46,25 @@ const DeliveryEstimateEmail = ({
             {estimatedTime ? ` : ${estimatedTime}` : ''}.
           </Text>
           <Text style={text}>
-            Merci de vous rendre dès que possible au niveau de votre commande en
-            cours dans votre profil client de l’application pour{' '}
-            <strong>ACCEPTER</strong> ou <strong>REFUSER</strong> le nouvel
-            horaire estimé de votre livraison.
+            Vous pouvez répondre directement depuis cet e-mail :
+          </Text>
+          {(acceptUrl || refuseUrl) && (
+            <Section style={{ textAlign: 'center' as const, margin: '24px 0' }}>
+              {acceptUrl && (
+                <Button href={acceptUrl} style={acceptBtn}>
+                  ✅ ACCEPTER
+                </Button>
+              )}
+              {refuseUrl && (
+                <Button href={refuseUrl} style={refuseBtn}>
+                  ❌ REFUSER
+                </Button>
+              )}
+            </Section>
+          )}
+          <Text style={textSmall}>
+            Vous pouvez également répondre depuis votre profil client dans
+            l’application.
           </Text>
           <Text style={text}>
             En cas de <strong>REFUS</strong> de votre part, votre commande sera
@@ -71,6 +90,8 @@ export const template = {
     customerName: 'Jean Dupont',
     requestedTime: '20:00',
     estimatedTime: '20:30',
+    acceptUrl: 'https://declicpizza.fr/',
+    refuseUrl: 'https://declicpizza.fr/',
   },
 } satisfies TemplateEntry
 
@@ -88,3 +109,22 @@ const text = {
   lineHeight: '1.6',
   margin: '0 0 16px',
 }
+const textSmall = {
+  fontSize: '13px',
+  color: '#6b5b52',
+  lineHeight: '1.5',
+  margin: '0 0 16px',
+  textAlign: 'center' as const,
+}
+const btnBase = {
+  display: 'inline-block',
+  padding: '12px 22px',
+  borderRadius: '8px',
+  fontSize: '15px',
+  fontWeight: 'bold' as const,
+  color: '#ffffff',
+  textDecoration: 'none',
+  margin: '0 8px',
+}
+const acceptBtn = { ...btnBase, backgroundColor: '#16a34a' }
+const refuseBtn = { ...btnBase, backgroundColor: '#dc2626' }
