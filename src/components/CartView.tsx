@@ -16,7 +16,6 @@ import { parisMinutes } from '@/lib/pickupSlots';
 import {
   DELIVERY_CUTOFF_MINUTES,
   TAKEAWAY_CUTOFF_MINUTES,
-  CUTOFF_ALERT_MESSAGE,
   BUTTON_LABEL_TAKEAWAY_CLOSED,
   BUTTON_LABEL_TAKEAWAY_HINT,
   BUTTON_LABEL_ORDER_NOW,
@@ -213,17 +212,6 @@ export function CartView() {
         />
       </div>
 
-      {isDeliveryCutoff && !isTakeawayCutoff && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-destructive text-sm">Commandes limitées</p>
-            <p className="text-sm text-foreground mt-1">
-              {CUTOFF_ALERT_MESSAGE}
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Delivery Flow */}
       {orderType === 'livraison' && (
