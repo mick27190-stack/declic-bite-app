@@ -309,13 +309,14 @@ export function useChat(siteFilter?: string) {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('online', handleOnline);
     };
-  }, [user, fetchConversations, fetchMessages, selectedConversationId, markMessagesRead]);
+  }, [user, fetchConversations, refreshConversations, fetchMessages, selectedConversationId, markMessagesRead]);
 
   return {
     conversations,
     messages,
     selectedConversationId,
     loading,
+    refreshing,
     selectConversation,
     sendMessage,
     deleteConversation,
