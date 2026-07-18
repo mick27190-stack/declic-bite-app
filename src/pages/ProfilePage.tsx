@@ -521,6 +521,9 @@ export default function ProfilePage() {
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Notification permission reminder */}
+        <NotificationPermissionReminder />
+
         {/* Push notification test */}
         <PushTestPanel />
 
