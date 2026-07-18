@@ -29,6 +29,7 @@ import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import LivreurOrdersPage from "./pages/LivreurOrdersPage";
 import NotFound from "./pages/NotFound";
 import CutoffPreviewPage from "./pages/dev/CutoffPreviewPage";
+import UnsubscribePage from "./pages/UnsubscribePage";
 import { useEffect } from "react";
 import { initNotificationSounds } from "@/lib/notificationSounds";
 
@@ -91,6 +92,7 @@ const App = () => {
                 <Route path="/admin/sales" element={<AdminSalesPage />} />
                 <Route path="/admin/pricing" element={<AdminPricingPage />} />
                 <Route path="/dev/cutoff-preview" element={<CutoffPreviewPage />} />
+                <Route path="/unsubscribe" element={<UnsubscribePage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

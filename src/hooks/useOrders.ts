@@ -152,6 +152,42 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
         o.id === orderId ? { ...o, delivery_estimate: estimate, delivery_response: null } : o
       ));
 
+      // Fire off email to the customer (if they have an email on file).
+      try {
+        const { data: order } = await supabase
+          .from('orders')
+          .select('user_id, pickup_time')
+          .eq('id', orderId)
+          .single();
+
+        if (order?.user_id) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('email, first_name, last_name')
+            .eq('user_id', order.user_id)
+            .maybeSingle();
+
+          const email = profile?.email?.trim();
+          if (email) {
+            const fullName = `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim();
+            await supabase.functions.invoke('send-transactional-email', {
+              body: {
+                templateName: 'delivery-estimate',
+                recipientEmail: email,
+                idempotencyKey: `delivery-estimate-${orderId}-${estimate}`,
+                templateData: {
+                  customerName: fullName || undefined,
+                  requestedTime: order.pickup_time || undefined,
+                  estimatedTime: estimate,
+                },
+              },
+            });
+          }
+        }
+      } catch (mailErr) {
+        console.error('Delivery estimate email failed:', mailErr);
+      }
+
       toast({
         title: 'Horaire envoyé',
         description: `Horaire de livraison proposé : ${estimate}`,
