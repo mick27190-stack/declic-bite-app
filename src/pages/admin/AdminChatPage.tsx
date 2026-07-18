@@ -273,6 +273,7 @@ export default function AdminChatPage() {
                       conversation={conv}
                       isSelected={selectedConversationId === conv.id}
                       onSelect={() => selectConversation(conv.id)}
+                      onDelete={() => deleteConversation(conv.id)}
                     />
                   ))
                 )}
