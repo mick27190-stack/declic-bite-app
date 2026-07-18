@@ -15,6 +15,7 @@ import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import {
   getCutoffState,
   getCutoffButtonLabel,
+  getCutoffWarningMinutesRemaining,
 } from '@/lib/orderCutoff';
 
 export function CartView() {
