@@ -290,13 +290,13 @@ export function useChat(siteFilter?: string) {
     // the socket was down.
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        fetchConversations();
+        refreshConversations();
         const currentId = selectedIdRef.current;
         if (currentId) fetchMessages(currentId);
       }
     };
     const handleOnline = () => {
-      fetchConversations();
+      refreshConversations();
       const currentId = selectedIdRef.current;
       if (currentId) fetchMessages(currentId);
     };
