@@ -24,11 +24,12 @@ export default function CutoffPreviewPage() {
   const orderType = (params.get('type') ?? 'livraison') as 'emporter' | 'livraison';
   const canCheckout = params.get('canCheckout') === '1';
 
-  // Build a fake Date whose Paris wall-clock is t. Since parisMinutes() converts
-  // from UTC, we subtract the Paris offset (UTC+2 in summer, +1 in winter) to get
-  // a UTC instant that corresponds to t in Paris.
-  const parisOffset = new Date().getTimezoneOffset() === 0 ? 120 : 0;
-  const fakeNow = new Date(Date.UTC(2026, 6, 15, hh, mm, 0) - parisOffset * 60 * 1000);
+  // Build a fake Date whose Paris wall-clock is t. The helper uses parisMinutes()
+  // to reverse-calculate the correct UTC timestamp for the requested Paris time.
+  const targetMinutes = hh * 60 + mm;
+  const baseUtc = new Date(Date.UTC(2026, 6, 15, hh, mm, 0, 0));
+  const offsetMinutes = parisMinutes(baseUtc) - targetMinutes;
+  const fakeNow = new Date(baseUtc.getTime() - offsetMinutes * 60 * 1000);
   const cutoff = getCutoffState(fakeNow);
 
   const buttonLabel =
