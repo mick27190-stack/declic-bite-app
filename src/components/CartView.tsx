@@ -390,7 +390,7 @@ export function CartView() {
           <Button 
             variant="hero" 
             size="lg" 
-            className="w-full"
+            className="w-full h-auto min-h-14 py-2 px-3 sm:px-6 whitespace-normal text-sm sm:text-base lg:text-lg leading-tight text-balance"
             disabled={!canCheckout() || isSubmitting}
             onClick={handleSubmitOrder}
           >
@@ -399,32 +399,29 @@ export function CartView() {
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Envoi en cours...
               </>
-            ) : isTakeawayCutoff ? (
-              BUTTON_LABEL_TAKEAWAY_CLOSED
-            ) : isDeliveryCutoff ? (
-              orderType === 'emporter' && canCheckout()
-                ? BUTTON_LABEL_ORDER_NOW
-                : BUTTON_LABEL_TAKEAWAY_HINT
-            ) : manualClosure ? (
-              'Commandes bloquées'
-            ) : isMonday ? (
-              'Fermé le lundi'
-            ) : isOutsideHours ? (
-              'Ouvert de 18h à 22h'
-            ) : !selectedRestaurant ? (
-              'Choisissez un restaurant'
-            ) : !user ? (
-              'Se connecter pour commander'
-            ) : orderType === 'livraison' && !deliveryAddress ? (
-              'Vérifiez votre adresse'
-            ) : belowMinimum ? (
-              'Min. 2 Senior ou 1 Méga'
-            ) : orderType === 'emporter' && !pickupTime ? (
-              'Choisissez une heure'
-            ) : orderType === 'livraison' && !pickupTime ? (
-              'Choisissez une heure'
             ) : (
-              'Commander maintenant'
+              getCutoffButtonLabel(cutoff, { orderType, canCheckout: canCheckout() }) ??
+              (manualClosure ? (
+                'Commandes bloquées'
+              ) : isMonday ? (
+                'Fermé le lundi'
+              ) : isOutsideHours ? (
+                'Ouvert de 18h à 22h'
+              ) : !selectedRestaurant ? (
+                'Choisissez un restaurant'
+              ) : !user ? (
+                'Se connecter pour commander'
+              ) : orderType === 'livraison' && !deliveryAddress ? (
+                'Vérifiez votre adresse'
+              ) : belowMinimum ? (
+                'Min. 2 Senior ou 1 Méga'
+              ) : orderType === 'emporter' && !pickupTime ? (
+                'Choisissez une heure'
+              ) : orderType === 'livraison' && !pickupTime ? (
+                'Choisissez une heure'
+              ) : (
+                'Commander maintenant'
+              ))
             )}
           </Button>
         </div>
