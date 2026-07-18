@@ -6,11 +6,13 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send } from 'lucide-react';
 import OrderTicket from '@/components/OrderTicket';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Order, OrderStatus, statusLabels, statusColors } from '@/types/order';
@@ -63,6 +65,9 @@ export default function AdminOrdersPage() {
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
   const [orderToPrint, setOrderToPrint] = useState<Order | null>(null);
+  const [chatOrder, setChatOrder] = useState<Order | null>(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatSending, setChatSending] = useState(false);
   // Persistent all-time total (archived weeks + current live orders).
   // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
   const [archivedCount, setArchivedCount] = useState(0);
@@ -126,6 +131,64 @@ export default function AdminOrdersPage() {
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     await updateOrderStatus(orderId, newStatus);
+  };
+
+  const handleSendChat = async () => {
+    if (!chatOrder || !user || !chatMessage.trim()) return;
+    const site = getSiteFromRestaurant(chatOrder.restaurant);
+    setChatSending(true);
+    try {
+      // Find or create conversation for this customer + site
+      const { data: existing } = await supabase
+        .from('chat_conversations')
+        .select('id')
+        .eq('customer_id', chatOrder.user_id)
+        .eq('site', site)
+        .maybeSingle();
+
+      let conversationId = existing?.id;
+      if (!conversationId) {
+        const { data: created, error: convErr } = await supabase
+          .from('chat_conversations')
+          .insert({
+            customer_id: chatOrder.user_id,
+            site,
+            customer_name: chatOrder.customer_name ?? 'Client',
+            customer_phone: chatOrder.customer_phone ?? null,
+          })
+          .select('id')
+          .single();
+        if (convErr || !created) throw convErr ?? new Error('Conversation introuvable');
+        conversationId = created.id;
+      }
+
+      const content = chatMessage.trim();
+      const { error: msgErr } = await supabase.from('chat_messages').insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        sender_type: 'admin',
+        content,
+        site,
+      });
+      if (msgErr) throw msgErr;
+
+      await supabase
+        .from('chat_conversations')
+        .update({ last_message: content, last_message_at: new Date().toISOString() })
+        .eq('id', conversationId);
+
+      toast({ title: 'Message envoyé', description: 'Le client a été notifié.' });
+      setChatMessage('');
+      setChatOrder(null);
+    } catch (e: any) {
+      toast({
+        title: 'Erreur',
+        description: e?.message || "Impossible d'envoyer le message",
+        variant: 'destructive',
+      });
+    } finally {
+      setChatSending(false);
+    }
   };
 
 
@@ -324,7 +387,19 @@ export default function AdminOrdersPage() {
                       />
                     )}
 
-                    <div className="mt-4 flex justify-end">
+                    <div className="mt-4 flex flex-wrap justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setChatMessage('');
+                          setChatOrder(order);
+                        }}
+                        disabled={!order.user_id}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Chat
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
@@ -362,6 +437,38 @@ export default function AdminOrdersPage() {
           printOnly
         />
       )}
+
+      <Dialog open={!!chatOrder} onOpenChange={(open) => !open && setChatOrder(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5" />
+              Envoyer un message au client
+            </DialogTitle>
+            <DialogDescription>
+              {chatOrder?.customer_name || 'Client'} · Commande #{chatOrder?.id.slice(0, 8)}
+              <br />
+              Le message apparaîtra dans le chat du client et dans la section Chat client.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={chatMessage}
+            onChange={(e) => setChatMessage(e.target.value)}
+            placeholder="Votre message…"
+            rows={4}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChatOrder(null)} disabled={chatSending}>
+              Annuler
+            </Button>
+            <Button onClick={handleSendChat} disabled={!chatMessage.trim() || chatSending}>
+              <Send className="h-4 w-4 mr-2" />
+              Envoyer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
