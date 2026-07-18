@@ -117,12 +117,13 @@ export function useCustomerChat() {
       site,
     });
 
-    // Update conversation
+    // Update conversation (and un-hide it for admin so the reply is visible again)
     await supabase
       .from('chat_conversations')
       .update({
         last_message: content,
         last_message_at: new Date().toISOString(),
+        hidden_for_admin_at: null,
       })
       .eq('id', convId);
   }, [user, conversationId, lookupConversation, createConversation, resolveSite]);
