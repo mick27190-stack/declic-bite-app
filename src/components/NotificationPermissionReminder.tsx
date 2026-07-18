@@ -7,6 +7,18 @@ import { toast } from 'sonner';
 
 const HIDE_KEY = 'notification_permission_reminder_dismissed';
 
+// True when the app runs inside an iframe (Lovable preview, embed, etc.).
+// Browsers refuse Notification.requestPermission() in cross-origin iframes and
+// return 'denied' immediately without ever showing the system prompt.
+function isInIframe(): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.self !== window.top;
+  } catch {
+    return true;
+  }
+}
+
 export default function NotificationPermissionReminder() {
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>(() => {
     if (!isNotificationSupported()) return 'unsupported';
