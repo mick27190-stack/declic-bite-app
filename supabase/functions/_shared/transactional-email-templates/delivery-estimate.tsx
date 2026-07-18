@@ -67,6 +67,9 @@ const DeliveryEstimateEmail = ({
             l’application.
           </Text>
           <Text style={text}>
+            Vous pouvez également ACCEPTER ou REFUSER le nouvel horaire de livraison estimé via ce mail.
+          </Text>
+          <Text style={text}>
             En cas de <strong>REFUS</strong> de votre part, votre commande sera
             automatiquement annulée.
           </Text>
