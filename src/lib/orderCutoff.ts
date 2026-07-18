@@ -26,6 +26,7 @@ export const BUTTON_LABEL_CUTOFF_WARNING = 'Commandes possibles jusqu’à 21h15
 export type CutoffState = {
   isDeliveryCutoff: boolean;
   isTakeawayCutoff: boolean;
+  isCutoffWarning: boolean;
 };
 
 /**
@@ -38,12 +39,13 @@ export function getCutoffState(
   isClosed = false,
 ): CutoffState {
   if (isClosed) {
-    return { isDeliveryCutoff: false, isTakeawayCutoff: false };
+    return { isDeliveryCutoff: false, isTakeawayCutoff: false, isCutoffWarning: false };
   }
   const m = parisMinutes(now);
   return {
     isDeliveryCutoff: m >= DELIVERY_CUTOFF_MINUTES,
     isTakeawayCutoff: m >= TAKEAWAY_CUTOFF_MINUTES,
+    isCutoffWarning: m >= CUTOFF_WARNING_START_MINUTES && m <= CUTOFF_WARNING_END_MINUTES,
   };
 }
 
