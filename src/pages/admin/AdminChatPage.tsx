@@ -104,6 +104,18 @@ function ConversationItem({
   );
 }
 
+function formatReadAt(iso: string): string {
+  const d = new Date(iso);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  if (sameDay) return time;
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return `hier ${time}`;
+  return `${d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} ${time}`;
+}
+
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isAdmin = message.sender_type === 'admin';
   return (
@@ -114,13 +126,17 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         }`}
       >
         <p>{message.content}</p>
-        <p className={`text-xs mt-1 flex items-center gap-1 ${isAdmin ? 'text-primary-foreground/70 justify-end' : 'text-muted-foreground'}`}>
+        <p className={`text-xs mt-1 flex items-center gap-1 flex-wrap ${isAdmin ? 'text-primary-foreground/70 justify-end' : 'text-muted-foreground'}`}>
           {new Date(message.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
           {isAdmin ? (
-            message.read_at && <span className="font-medium">· Lu</span>
+            message.read_at ? (
+              <span className="font-medium">· Lu à {formatReadAt(message.read_at)}</span>
+            ) : (
+              <span className="font-medium">· Envoyé</span>
+            )
           ) : (
             <span className={`font-medium ${message.read_at ? '' : 'text-amber-500'}`}>
-              · {message.read_at ? 'Lu' : 'Non lu'}
+              · {message.read_at ? `Lu à ${formatReadAt(message.read_at)}` : 'Non lu'}
             </span>
           )}
         </p>
