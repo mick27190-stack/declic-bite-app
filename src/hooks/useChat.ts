@@ -229,6 +229,7 @@ export function useChat(siteFilter?: string) {
     loading,
     selectConversation,
     sendMessage,
+    deleteConversation,
     refresh: fetchConversations,
   };
 }
