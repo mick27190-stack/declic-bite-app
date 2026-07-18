@@ -258,7 +258,15 @@ export default function AdminChatPage() {
           {/* Conversations list */}
           <Card className="md:col-span-1">
             <CardHeader>
-              <CardTitle className="text-lg">Conversations</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Conversations</CardTitle>
+                {refreshing && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Mise à jour…</span>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <ScrollArea className="h-[500px]">
