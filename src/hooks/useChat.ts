@@ -256,7 +256,7 @@ export function useChat(siteFilter?: string) {
         // On any successful (re)connection, force a full recount from the
         // server so badges match the persisted read_at values.
         if (status === 'SUBSCRIBED') {
-          fetchConversations();
+          refreshConversations();
           const currentId = selectedIdRef.current;
           if (currentId) {
             fetchMessages(currentId);
