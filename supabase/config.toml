@@ -17,3 +17,5 @@ project_id = "tzamsbbpygevsdvugdbv"
     verify_jwt = false
   [functions.handle-email-suppression]
     verify_jwt = false
+  [functions.handle-delivery-response]
+    verify_jwt = false
