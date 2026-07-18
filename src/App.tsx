@@ -29,6 +29,7 @@ import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import LivreurOrdersPage from "./pages/LivreurOrdersPage";
 import NotFound from "./pages/NotFound";
 import CutoffPreviewPage from "./pages/dev/CutoffPreviewPage";
+import UnsubscribePage from "./pages/UnsubscribePage";
 import { useEffect } from "react";
 import { initNotificationSounds } from "@/lib/notificationSounds";
 
