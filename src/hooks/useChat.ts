@@ -294,8 +294,10 @@ export function useChat(siteFilter?: string) {
     return () => {
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(convChannel);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('online', handleOnline);
     };
-  }, [user, fetchConversations, selectedConversationId, markMessagesRead]);
+  }, [user, fetchConversations, fetchMessages, selectedConversationId, markMessagesRead]);
 
   return {
     conversations,
