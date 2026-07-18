@@ -133,6 +133,64 @@ export default function AdminOrdersPage() {
     await updateOrderStatus(orderId, newStatus);
   };
 
+  const handleSendChat = async () => {
+    if (!chatOrder || !user || !chatMessage.trim()) return;
+    const site = getSiteFromRestaurant(chatOrder.restaurant);
+    setChatSending(true);
+    try {
+      // Find or create conversation for this customer + site
+      const { data: existing } = await supabase
+        .from('chat_conversations')
+        .select('id')
+        .eq('customer_id', chatOrder.user_id)
+        .eq('site', site)
+        .maybeSingle();
+
+      let conversationId = existing?.id;
+      if (!conversationId) {
+        const { data: created, error: convErr } = await supabase
+          .from('chat_conversations')
+          .insert({
+            customer_id: chatOrder.user_id,
+            site,
+            customer_name: chatOrder.customer_name ?? 'Client',
+            customer_phone: chatOrder.customer_phone ?? null,
+          })
+          .select('id')
+          .single();
+        if (convErr || !created) throw convErr ?? new Error('Conversation introuvable');
+        conversationId = created.id;
+      }
+
+      const content = chatMessage.trim();
+      const { error: msgErr } = await supabase.from('chat_messages').insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        sender_type: 'admin',
+        content,
+        site,
+      });
+      if (msgErr) throw msgErr;
+
+      await supabase
+        .from('chat_conversations')
+        .update({ last_message: content, last_message_at: new Date().toISOString() })
+        .eq('id', conversationId);
+
+      toast({ title: 'Message envoyé', description: 'Le client a été notifié.' });
+      setChatMessage('');
+      setChatOrder(null);
+    } catch (e: any) {
+      toast({
+        title: 'Erreur',
+        description: e?.message || "Impossible d'envoyer le message",
+        variant: 'destructive',
+      });
+    } finally {
+      setChatSending(false);
+    }
+  };
+
 
 
 
