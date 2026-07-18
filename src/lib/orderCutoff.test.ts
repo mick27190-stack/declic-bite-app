@@ -42,6 +42,13 @@ describe('order cut-off constants', () => {
   it('takeaway cut-off is exactly 21h17 Paris (last order accepted at 21h16 → 21h30 slot)', () => {
     expect(TAKEAWAY_CUTOFF_MINUTES).toBe(21 * 60 + 17);
   });
+  it('warning window is 21h00 to 21h15 Paris', () => {
+    expect(CUTOFF_WARNING_START_MINUTES).toBe(21 * 60);
+    expect(CUTOFF_WARNING_END_MINUTES).toBe(21 * 60 + 15);
+  });
+  it('warning button label is the approved wording', () => {
+    expect(BUTTON_LABEL_CUTOFF_WARNING).toBe('Commandes possibles jusqu’à 21h15 max');
+  });
   it('alert message copy is the approved wording', () => {
     expect(CUTOFF_ALERT_MESSAGE).toBe(
       'Commandes fermées pour la livraison à partir de 21h16 et pour les commandes à emporter à partir de 21h17. Revenez demain à 18h00.',
