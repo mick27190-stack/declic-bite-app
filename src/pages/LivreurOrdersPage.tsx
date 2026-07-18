@@ -174,9 +174,15 @@ export default function LivreurOrdersPage() {
                         {phones[order.user_id]}
                       </a>
                     )}
-                    {order.delivery_estimate && (
-                      <span className="text-xs">Horaire proposé : {order.delivery_estimate}</span>
-                    )}
+                    {order.delivery_estimate ? (
+                      <span className="text-xs font-medium text-primary">
+                        Heure de livraison estimée : {order.delivery_estimate}
+                      </span>
+                    ) : order.pickup_time ? (
+                      <span className="text-xs font-medium text-primary">
+                        Heure de livraison souhaitée : {order.pickup_time}
+                      </span>
+                    ) : null}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
