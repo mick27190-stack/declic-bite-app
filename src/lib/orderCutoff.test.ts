@@ -108,6 +108,20 @@ describe('getCutoffState — boundary behavior', () => {
   });
 });
 
+describe('getCutoffWarningMinutesRemaining — countdown', () => {
+  it('returns null outside the 21h00-21h15 window', () => {
+    expect(getCutoffWarningMinutesRemaining(parisDate(20, 59))).toBeNull();
+    expect(getCutoffWarningMinutesRemaining(parisDate(21, 16))).toBeNull();
+  });
+
+  it('counts down from 15 min at 21h00 to 0 min at 21h15', () => {
+    expect(getCutoffWarningMinutesRemaining(parisDate(21, 0))).toBe(15);
+    expect(getCutoffWarningMinutesRemaining(parisDate(21, 3))).toBe(12);
+    expect(getCutoffWarningMinutesRemaining(parisDate(21, 14))).toBe(1);
+    expect(getCutoffWarningMinutesRemaining(parisDate(21, 15))).toBe(0);
+  });
+});
+
 describe('getCutoffButtonLabel — exact wording', () => {
   it('before 21h00: no forced label', () => {
     const s = getCutoffState(parisDate(20, 59));
