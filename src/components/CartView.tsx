@@ -293,7 +293,7 @@ export function CartView() {
           <div>
             <p className="font-semibold text-yellow-700 text-sm">Commandes à emporter fermées</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Les commandes à emporter ne sont plus possibles après 21h30. Revenez demain à partir de 18h00.
+              Les commandes à emporter ne sont plus possibles après 21h16. Revenez demain à partir de 18h00.
             </p>
           </div>
         </div>

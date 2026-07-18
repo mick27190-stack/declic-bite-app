@@ -49,7 +49,7 @@ export function parisMinutes(now: Date = new Date()): number {
 // Late-evening take-away window: from 21h16 (inclusive) up to the 21h31
 // cut-off, only the last 21h30 slot remains selectable.
 const LATE_TAKEAWAY_WINDOW_START = 21 * 60 + 16; // 21:16
-const LATE_TAKEAWAY_CUTOFF = 21 * 60 + 31; // 21:31
+const LATE_TAKEAWAY_CUTOFF = 21 * 60 + 17; // 21:17
 
 export function computePickupSlotsFromMinutes(nowMinutes: number): string[] {
   // Between 21h16 and 21h30 included, only propose the 21h30 slot.
