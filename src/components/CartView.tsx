@@ -406,6 +406,13 @@ export function CartView() {
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Envoi en cours...
               </>
+            ) : cutoff.isCutoffWarning && warningMinutes !== null ? (
+              <span className="flex flex-col items-center justify-center gap-0.5">
+                <span>Commandes jusqu’à 21h15</span>
+                <span className="text-xs sm:text-sm opacity-90 font-normal">
+                  encore {warningMinutes} min
+                </span>
+              </span>
             ) : (
               getCutoffButtonLabel(cutoff, { orderType, canCheckout: canCheckout() }) ??
               (manualClosure ? (
