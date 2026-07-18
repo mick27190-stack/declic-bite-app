@@ -10,11 +10,9 @@
 import { useSearchParams } from 'react-router-dom';
 import {
   CUTOFF_ALERT_MESSAGE,
-  BUTTON_LABEL_TAKEAWAY_CLOSED,
-  BUTTON_LABEL_TAKEAWAY_HINT,
-  BUTTON_LABEL_ORDER_NOW,
-  DELIVERY_CUTOFF_MINUTES,
-  TAKEAWAY_CUTOFF_MINUTES,
+  BUTTON_LABEL_CUTOFF_WARNING,
+  getCutoffState,
+  getCutoffButtonLabel,
 } from '@/lib/orderCutoff';
 
 export default function CutoffPreviewPage() {
@@ -25,19 +23,18 @@ export default function CutoffPreviewPage() {
   const orderType = (params.get('type') ?? 'livraison') as 'emporter' | 'livraison';
   const canCheckout = params.get('canCheckout') === '1';
 
-  const isDeliveryCutoff = minutes >= DELIVERY_CUTOFF_MINUTES;
-  const isTakeawayCutoff = minutes >= TAKEAWAY_CUTOFF_MINUTES;
+  // Build a fake Date whose Paris wall-clock is t. getCutoffState uses parisMinutes,
+  // so any Date with the right Paris minutes works; we just reuse the local date.
+  const fakeNow = new Date();
+  fakeNow.setHours(hh, mm, 0, 0);
+  const cutoff = getCutoffState(fakeNow);
 
-  let buttonLabel = 'Commander maintenant';
-  if (isTakeawayCutoff) buttonLabel = BUTTON_LABEL_TAKEAWAY_CLOSED;
-  else if (isDeliveryCutoff)
-    buttonLabel =
-      orderType === 'emporter' && canCheckout
-        ? BUTTON_LABEL_ORDER_NOW
-        : BUTTON_LABEL_TAKEAWAY_HINT;
+  const buttonLabel =
+    getCutoffButtonLabel(cutoff, { orderType, canCheckout }) ?? 'Commander maintenant';
 
   const buttonDisabled =
-    isTakeawayCutoff || (isDeliveryCutoff && !(orderType === 'emporter' && canCheckout));
+    cutoff.isTakeawayCutoff ||
+    (cutoff.isDeliveryCutoff && !(orderType === 'emporter' && canCheckout));
 
   return (
     <div style={{ padding: 24, fontFamily: 'sans-serif' }}>
