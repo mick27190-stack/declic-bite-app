@@ -350,8 +350,15 @@ function ProfileChat() {
                         }`}
                       >
                         <p className="text-sm">{msg.content}</p>
-                        <p className={`text-[10px] mt-1 ${isCustomer ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                        <p className={`text-[10px] mt-1 flex items-center gap-1 flex-wrap ${isCustomer ? 'text-primary-foreground/60 justify-end' : 'text-muted-foreground'}`}>
                           {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          {isCustomer && (
+                            msg.read_at ? (
+                              <span className="font-medium">· Lu à {formatReadTime(msg.read_at)}</span>
+                            ) : (
+                              <span className="font-medium">· Envoyé</span>
+                            )
+                          )}
                         </p>
                       </div>
                     </div>
