@@ -40,7 +40,12 @@ export default function CutoffPreviewPage() {
     <div style={{ padding: 24, fontFamily: 'sans-serif' }}>
       <h1>Cutoff preview</h1>
       <p data-testid="virtual-now">Virtual Paris time: {t}</p>
-      {isDeliveryCutoff && !isTakeawayCutoff && (
+      {cutoff.isCutoffWarning && (
+        <div data-testid="cutoff-warning" role="status">
+          {BUTTON_LABEL_CUTOFF_WARNING}
+        </div>
+      )}
+      {cutoff.isDeliveryCutoff && !cutoff.isTakeawayCutoff && (
         <div data-testid="cutoff-alert" role="alert">
           {CUTOFF_ALERT_MESSAGE}
         </div>
