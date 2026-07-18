@@ -284,7 +284,7 @@ export function CartView() {
       )}
 
       {/* Pickup Flow */}
-      {orderType === 'emporter' && !isTakeawayCutoff && (
+      {orderType === 'emporter' && !cutoff.isTakeawayCutoff && (
         <div className="glass-card p-4">
           <PickupTimeSelector 
             value={pickupTime}
