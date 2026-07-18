@@ -115,29 +115,56 @@ export function useChat(siteFilter?: string) {
     return { error };
   }, [user]);
 
-  // Mark customer messages in a conversation as read (admin is the reader)
+  // Mark customer messages in a conversation as read (admin is the reader).
+  // Optimistic UI + server persistence with rollback on failure so badges
+  // stay correct after a refresh or reconnect.
   const markMessagesRead = useCallback(async (conversationId: string) => {
     const nowIso = new Date().toISOString();
-    // Optimistically update local state so badges disappear immediately,
-    // regardless of realtime UPDATE delivery.
-    setMessages(prev =>
-      prev.map(m =>
+
+    // Snapshot for rollback if the server update fails.
+    let previousMessages: ChatMessage[] = [];
+    let previousUnread = 0;
+    setMessages(prev => {
+      previousMessages = prev;
+      return prev.map(m =>
         m.conversation_id === conversationId &&
         m.sender_type === 'customer' &&
         !m.read_at
           ? { ...m, read_at: nowIso }
           : m
-      )
-    );
-    setConversations(prev =>
-      prev.map(c => (c.id === conversationId ? { ...c, unread_count: 0 } : c))
-    );
-    await supabase
+      );
+    });
+    setConversations(prev => {
+      const current = prev.find(c => c.id === conversationId);
+      previousUnread = current?.unread_count ?? 0;
+      return prev.map(c => (c.id === conversationId ? { ...c, unread_count: 0 } : c));
+    });
+
+    const { data, error } = await supabase
       .from('chat_messages')
       .update({ read_at: nowIso })
       .eq('conversation_id', conversationId)
       .eq('sender_type', 'customer')
-      .is('read_at', null);
+      .is('read_at', null)
+      .select('id, read_at');
+
+    if (error) {
+      console.error('markMessagesRead failed, rolling back:', error);
+      setMessages(previousMessages);
+      setConversations(prev =>
+        prev.map(c => (c.id === conversationId ? { ...c, unread_count: previousUnread } : c))
+      );
+      return;
+    }
+
+    // Reconcile with the persisted values returned by the server so a later
+    // refresh or realtime reconnect keeps the exact same state.
+    if (data && data.length > 0) {
+      const readMap = new Map(data.map(r => [r.id, r.read_at as string]));
+      setMessages(prev =>
+        prev.map(m => (readMap.has(m.id) ? { ...m, read_at: readMap.get(m.id) ?? nowIso } : m))
+      );
+    }
   }, []);
 
   // Select conversation
