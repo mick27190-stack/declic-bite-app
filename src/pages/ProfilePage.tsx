@@ -281,6 +281,21 @@ function ProfileChat() {
     ? `Déclic Pizza ${site.charAt(0).toUpperCase()}${site.slice(1)}`
     : 'votre restaurant';
 
+  const formatMessageDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const isSameDay = (a: Date, b: Date) =>
+      a.getDate() === b.getDate() &&
+      a.getMonth() === b.getMonth() &&
+      a.getFullYear() === b.getFullYear();
+
+    if (isSameDay(date, today)) return 'Aujourd\'hui';
+    if (isSameDay(date, yesterday)) return 'Hier';
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+  };
 
   return (
     <div className="glass-card p-4 rounded-xl">
@@ -310,21 +325,35 @@ function ProfileChat() {
             </div>
           ) : (
             <div className="space-y-3">
-              {messages.map((msg) => {
+              {messages.map((msg, index) => {
                 const isCustomer = msg.sender_type === 'customer';
+                const showDate =
+                  index === 0 ||
+                  formatMessageDate(msg.created_at) !==
+                    formatMessageDate(messages[index - 1].created_at);
+
                 return (
-                  <div key={msg.id} className={`flex ${isCustomer ? 'justify-end' : 'justify-start'}`}>
-                    <div
-                      className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
-                        isCustomer
-                          ? 'bg-primary text-primary-foreground rounded-br-sm'
-                          : 'bg-muted text-foreground rounded-bl-sm'
-                      }`}
-                    >
-                      <p className="text-sm">{msg.content}</p>
-                      <p className={`text-[10px] mt-1 ${isCustomer ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
-                        {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                      </p>
+                  <div key={msg.id} className="space-y-1">
+                    {showDate && (
+                      <div className="flex justify-center">
+                        <span className="text-[10px] text-muted-foreground bg-muted/60 px-2 py-0.5 rounded-full">
+                          {formatMessageDate(msg.created_at)}
+                        </span>
+                      </div>
+                    )}
+                    <div className={`flex ${isCustomer ? 'justify-end' : 'justify-start'}`}>
+                      <div
+                        className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
+                          isCustomer
+                            ? 'bg-primary text-primary-foreground rounded-br-sm'
+                            : 'bg-muted text-foreground rounded-bl-sm'
+                        }`}
+                      >
+                        <p className="text-sm">{msg.content}</p>
+                        <p className={`text-[10px] mt-1 ${isCustomer ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                          {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 );
