@@ -108,10 +108,23 @@ describe('getCutoffState — boundary behavior', () => {
 });
 
 describe('getCutoffButtonLabel — exact wording', () => {
-  it('before 21h16: no forced label', () => {
-    const s = getCutoffState(parisDate(21, 15));
+  it('before 21h00: no forced label', () => {
+    const s = getCutoffState(parisDate(20, 59));
     expect(getCutoffButtonLabel(s, { orderType: 'livraison', canCheckout: true })).toBeNull();
     expect(getCutoffButtonLabel(s, { orderType: 'emporter', canCheckout: true })).toBeNull();
+  });
+
+  it('from 21h00 to 21h15: shows warning label regardless of order type', () => {
+    for (const t of [parisDate(21, 0), parisDate(21, 7), parisDate(21, 15)]) {
+      const s = getCutoffState(t);
+      for (const orderType of ['emporter', 'livraison'] as const) {
+        for (const canCheckout of [true, false]) {
+          expect(getCutoffButtonLabel(s, { orderType, canCheckout })).toBe(
+            BUTTON_LABEL_CUTOFF_WARNING,
+          );
+        }
+      }
+    }
   });
 
   it('at 21h16 with orderType=livraison: shows takeaway hint', () => {
