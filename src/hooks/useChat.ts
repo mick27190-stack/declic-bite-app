@@ -67,7 +67,7 @@ export function useChat(siteFilter?: string) {
           .filter(c => !!c.last_message_at)
           .map(c => ({
             ...c,
-            unread_count: counts.get(c.id) ?? 0,
+            unread_count: c.id === selectedIdRef.current ? 0 : (counts.get(c.id) ?? 0),
           }))
       );
     }
