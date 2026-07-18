@@ -42,7 +42,14 @@ export function CartView() {
 
   const { getClosureForSite } = useActiveClosures();
 
-  const now = new Date();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    // Update the countdown every 30s so the CTA button reflects the remaining
+    // minutes until the 21h15 cut-off during the 21h00-21h15 warning window.
+    const id = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(id);
+  }, []);
+
   const isMonday = now.getDay() === 1;
   const currentHour = now.getHours();
   const isOutsideHours = currentHour < 18 || currentHour >= 22;
@@ -53,6 +60,7 @@ export function CartView() {
   // Delivery is blocked from 21h16 (Paris) — last accepted order at 21h15.
   // From 21h00 to 21h15 the CTA shows a warning that orders close at 21h15.
   const cutoff = getCutoffState(now, isClosed);
+  const warningMinutes = getCutoffWarningMinutesRemaining(now);
 
 
   // Minimum order check for delivery outside the restaurant's own commune:
