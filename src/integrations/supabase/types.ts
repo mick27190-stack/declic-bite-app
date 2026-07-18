@@ -308,6 +308,27 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_item_availability: {
+        Row: {
+          is_available: boolean
+          item_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          is_available?: boolean
+          item_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          is_available?: boolean
+          item_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       menu_item_prices: {
         Row: {
           created_at: string
