@@ -297,6 +297,17 @@ function ProfileChat() {
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
   };
 
+  const formatReadTime = (iso: string) => {
+    const d = new Date(iso);
+    const today = new Date();
+    const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    if (d.toDateString() === today.toDateString()) return time;
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+    if (d.toDateString() === yesterday.toDateString()) return `hier ${time}`;
+    return `${d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} ${time}`;
+  };
+
   return (
     <div className="glass-card p-4 rounded-xl">
       <div className="flex items-center justify-between mb-4">
@@ -350,8 +361,15 @@ function ProfileChat() {
                         }`}
                       >
                         <p className="text-sm">{msg.content}</p>
-                        <p className={`text-[10px] mt-1 ${isCustomer ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                        <p className={`text-[10px] mt-1 flex items-center gap-1 flex-wrap ${isCustomer ? 'text-primary-foreground/60 justify-end' : 'text-muted-foreground'}`}>
                           {new Date(msg.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                          {isCustomer && (
+                            msg.read_at ? (
+                              <span className="font-medium">· Lu à {formatReadTime(msg.read_at)}</span>
+                            ) : (
+                              <span className="font-medium">· Envoyé</span>
+                            )
+                          )}
                         </p>
                       </div>
                     </div>

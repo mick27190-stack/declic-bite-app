@@ -8,6 +8,18 @@ import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
+function formatReadAt(iso: string): string {
+  const d = new Date(iso);
+  const today = new Date();
+  const sameDay = d.toDateString() === today.toDateString();
+  const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  if (sameDay) return time;
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return `hier ${time}`;
+  return `${d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} ${time}`;
+}
+
 
 function MessageBubble({
   message,
@@ -25,9 +37,15 @@ function MessageBubble({
         }`}
       >
         <p className="text-sm">{message.content}</p>
-        <p className={`text-[10px] mt-1 flex items-center gap-1 ${isCustomer ? 'text-primary-foreground/60 justify-end' : 'text-muted-foreground'}`}>
+        <p className={`text-[10px] mt-1 flex items-center gap-1 flex-wrap ${isCustomer ? 'text-primary-foreground/60 justify-end' : 'text-muted-foreground'}`}>
           {new Date(message.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-          {isCustomer && message.read_at && <span className="font-medium">· Lu</span>}
+          {isCustomer && (
+            message.read_at ? (
+              <span className="font-medium">· Lu à {formatReadAt(message.read_at)}</span>
+            ) : (
+              <span className="font-medium">· Envoyé</span>
+            )
+          )}
         </p>
       </div>
     </div>
