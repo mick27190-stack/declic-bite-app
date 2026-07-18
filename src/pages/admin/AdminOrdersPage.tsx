@@ -437,6 +437,38 @@ export default function AdminOrdersPage() {
           printOnly
         />
       )}
+
+      <Dialog open={!!chatOrder} onOpenChange={(open) => !open && setChatOrder(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="h-5 w-5" />
+              Envoyer un message au client
+            </DialogTitle>
+            <DialogDescription>
+              {chatOrder?.customer_name || 'Client'} · Commande #{chatOrder?.id.slice(0, 8)}
+              <br />
+              Le message apparaîtra dans le chat du client et dans la section Chat client.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={chatMessage}
+            onChange={(e) => setChatMessage(e.target.value)}
+            placeholder="Votre message…"
+            rows={4}
+            autoFocus
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setChatOrder(null)} disabled={chatSending}>
+              Annuler
+            </Button>
+            <Button onClick={handleSendChat} disabled={!chatMessage.trim() || chatSending}>
+              <Send className="h-4 w-4 mr-2" />
+              Envoyer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
