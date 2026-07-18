@@ -14,6 +14,7 @@ import {
   BUTTON_LABEL_CUTOFF_WARNING,
   getCutoffState,
   getCutoffButtonLabel,
+  getCutoffWarningMinutesRemaining,
 } from '@/lib/orderCutoff';
 
 export default function CutoffPreviewPage() {
@@ -31,9 +32,12 @@ export default function CutoffPreviewPage() {
   const offsetMinutes = parisMinutes(baseUtc) - targetMinutes;
   const fakeNow = new Date(baseUtc.getTime() - offsetMinutes * 60 * 1000);
   const cutoff = getCutoffState(fakeNow);
+  const warningMinutes = getCutoffWarningMinutesRemaining(fakeNow);
 
   const buttonLabel =
-    getCutoffButtonLabel(cutoff, { orderType, canCheckout }) ?? 'Commander maintenant';
+    cutoff.isCutoffWarning && warningMinutes !== null
+      ? `Commandes jusqu'à 21h15 — encore ${warningMinutes} min`
+      : getCutoffButtonLabel(cutoff, { orderType, canCheckout }) ?? 'Commander maintenant';
 
   const buttonDisabled =
     cutoff.isTakeawayCutoff ||

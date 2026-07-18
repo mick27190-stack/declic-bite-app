@@ -50,6 +50,19 @@ export function getCutoffState(
 }
 
 /**
+ * Minutes remaining until the 21h15 last-order deadline, when the current
+ * Paris time is between 21h00 and 21h15 inclusive. Returns `null` outside the
+ * warning window. Used for the real-time countdown on the CTA button.
+ */
+export function getCutoffWarningMinutesRemaining(now: Date = new Date()): number | null {
+  const m = parisMinutes(now);
+  if (m < CUTOFF_WARNING_START_MINUTES || m > CUTOFF_WARNING_END_MINUTES) {
+    return null;
+  }
+  return Math.max(0, CUTOFF_WARNING_END_MINUTES - m);
+}
+
+/**
  * Label to show inside the "Commander" button given the cut-off state.
  * Returns `null` when the cut-offs do not force a specific label — the
  * caller can then fall back to its normal label logic.
