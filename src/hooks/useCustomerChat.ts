@@ -147,6 +147,34 @@ export function useCustomerChat() {
       setLoading(false);
     };
     init();
+
+    // Detect admin-created conversation in realtime (case where the restaurant
+    // sends the very first message before the customer has one).
+    if (!user) return;
+    const initChannel = supabase
+      .channel(`customer-chat-lookup-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_conversations',
+          filter: `customer_id=eq.${user.id}`,
+        },
+        async (payload) => {
+          const conv = payload.new as { id: string; site: string };
+          const site = resolveSite();
+          if (site && conv.site === site) {
+            setConversationId(conv.id);
+            await fetchMessages(conv.id);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(initChannel);
+    };
   }, [user, resolveSite, lookupConversation, fetchMessages]);
 
 
