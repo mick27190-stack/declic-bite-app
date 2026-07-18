@@ -12,7 +12,6 @@ import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
-import { parisMinutes } from '@/lib/pickupSlots';
 import {
   getCutoffState,
   getCutoffButtonLabel,
