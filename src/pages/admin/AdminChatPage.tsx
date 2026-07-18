@@ -28,11 +28,13 @@ import { fr } from 'date-fns/locale';
 function ConversationItem({ 
   conversation, 
   isSelected, 
-  onSelect 
+  onSelect,
+  onDelete,
 }: { 
   conversation: ChatConversation; 
   isSelected: boolean; 
   onSelect: () => void;
+  onDelete: () => void;
 }) {
   return (
     <div
