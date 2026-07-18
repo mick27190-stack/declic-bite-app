@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -31,6 +31,10 @@ export function useChat(siteFilter?: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const selectedIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    selectedIdRef.current = selectedConversationId;
+  }, [selectedConversationId]);
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
@@ -63,7 +67,7 @@ export function useChat(siteFilter?: string) {
           .filter(c => !!c.last_message_at)
           .map(c => ({
             ...c,
-            unread_count: counts.get(c.id) ?? 0,
+            unread_count: c.id === selectedIdRef.current ? 0 : (counts.get(c.id) ?? 0),
           }))
       );
     }
@@ -113,9 +117,24 @@ export function useChat(siteFilter?: string) {
 
   // Mark customer messages in a conversation as read (admin is the reader)
   const markMessagesRead = useCallback(async (conversationId: string) => {
+    const nowIso = new Date().toISOString();
+    // Optimistically update local state so badges disappear immediately,
+    // regardless of realtime UPDATE delivery.
+    setMessages(prev =>
+      prev.map(m =>
+        m.conversation_id === conversationId &&
+        m.sender_type === 'customer' &&
+        !m.read_at
+          ? { ...m, read_at: nowIso }
+          : m
+      )
+    );
+    setConversations(prev =>
+      prev.map(c => (c.id === conversationId ? { ...c, unread_count: 0 } : c))
+    );
     await supabase
       .from('chat_messages')
-      .update({ read_at: new Date().toISOString() })
+      .update({ read_at: nowIso })
       .eq('conversation_id', conversationId)
       .eq('sender_type', 'customer')
       .is('read_at', null);
@@ -126,11 +145,8 @@ export function useChat(siteFilter?: string) {
     setSelectedConversationId(id);
     fetchMessages(id);
     markMessagesRead(id);
-    // Optimistically clear the unread badge for this conversation
-    setConversations(prev =>
-      prev.map(c => (c.id === id ? { ...c, unread_count: 0 } : c))
-    );
   }, [fetchMessages, markMessagesRead]);
+
 
   // Hide conversation from admin view (does NOT delete messages, client keeps history)
   const deleteConversation = useCallback(async (id: string) => {
