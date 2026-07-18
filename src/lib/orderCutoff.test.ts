@@ -57,34 +57,53 @@ describe('order cut-off constants', () => {
 });
 
 describe('getCutoffState — boundary behavior', () => {
-  it('21h15 Paris: neither cut-off applies', () => {
+  it('20h59 Paris: no cut-off, no warning', () => {
+    const s = getCutoffState(parisDate(20, 59));
+    expect(s.isDeliveryCutoff).toBe(false);
+    expect(s.isTakeawayCutoff).toBe(false);
+    expect(s.isCutoffWarning).toBe(false);
+  });
+
+  it('21h00 Paris: warning starts', () => {
+    const s = getCutoffState(parisDate(21, 0));
+    expect(s.isDeliveryCutoff).toBe(false);
+    expect(s.isTakeawayCutoff).toBe(false);
+    expect(s.isCutoffWarning).toBe(true);
+  });
+
+  it('21h15 Paris: warning active, no cut-off yet', () => {
     const s = getCutoffState(parisDate(21, 15));
     expect(s.isDeliveryCutoff).toBe(false);
     expect(s.isTakeawayCutoff).toBe(false);
+    expect(s.isCutoffWarning).toBe(true);
   });
 
-  it('21h16 Paris: delivery cut-off triggers, takeaway still open (last accepted)', () => {
+  it('21h16 Paris: delivery cut-off triggers, warning ends', () => {
     const s = getCutoffState(parisDate(21, 16));
     expect(s.isDeliveryCutoff).toBe(true);
     expect(s.isTakeawayCutoff).toBe(false);
+    expect(s.isCutoffWarning).toBe(false);
   });
 
   it('21h17 Paris: both cut-offs apply', () => {
     const s = getCutoffState(parisDate(21, 17));
     expect(s.isDeliveryCutoff).toBe(true);
     expect(s.isTakeawayCutoff).toBe(true);
+    expect(s.isCutoffWarning).toBe(false);
   });
 
   it('21h30 Paris: both closed', () => {
     const s = getCutoffState(parisDate(21, 30));
     expect(s.isDeliveryCutoff).toBe(true);
     expect(s.isTakeawayCutoff).toBe(true);
+    expect(s.isCutoffWarning).toBe(false);
   });
 
   it('is short-circuited by isClosed = true', () => {
     const s = getCutoffState(parisDate(21, 45), true);
     expect(s.isDeliveryCutoff).toBe(false);
     expect(s.isTakeawayCutoff).toBe(false);
+    expect(s.isCutoffWarning).toBe(false);
   });
 });
 
