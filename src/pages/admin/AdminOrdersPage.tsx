@@ -174,7 +174,11 @@ export default function AdminOrdersPage() {
 
       await supabase
         .from('chat_conversations')
-        .update({ last_message: content, last_message_at: new Date().toISOString() })
+        .update({
+          last_message: content,
+          last_message_at: new Date().toISOString(),
+          hidden_for_admin_at: null,
+        })
         .eq('id', conversationId);
 
       toast({ title: 'Message envoyé', description: 'Le client a été notifié.' });
