@@ -221,6 +221,38 @@ export type Database = {
         }
         Relationships: []
       }
+      delivery_response_tokens: {
+        Row: {
+          action: string
+          created_at: string
+          order_id: string
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          order_id: string
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          order_id?: string
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_response_tokens_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
