@@ -281,7 +281,7 @@ export function useChat(siteFilter?: string) {
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          fetchConversations();
+          refreshConversations();
         }
       });
 
