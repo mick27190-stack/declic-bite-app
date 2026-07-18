@@ -37,6 +37,7 @@ export function useChat(siteFilter?: string) {
     let query = supabase
       .from('chat_conversations')
       .select('*')
+      .is('hidden_for_admin_at', null)
       .order('last_message_at', { ascending: false });
 
     if (siteFilter && siteFilter !== 'all') {
