@@ -75,6 +75,17 @@ export function useChat(siteFilter?: string) {
     setLoading(false);
   }, [siteFilter]);
 
+  // Background recount used after reconnect / visibility / online events.
+  // Shows a lightweight loading indicator without the full skeleton state.
+  const refreshConversations = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchConversations();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchConversations]);
+
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId: string) => {
     const { data } = await supabase
