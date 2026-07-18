@@ -31,6 +31,7 @@ export function useChat(siteFilter?: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const selectedIdRef = useRef<string | null>(null);
   useEffect(() => {
     selectedIdRef.current = selectedConversationId;
@@ -73,6 +74,17 @@ export function useChat(siteFilter?: string) {
     }
     setLoading(false);
   }, [siteFilter]);
+
+  // Background recount used after reconnect / visibility / online events.
+  // Shows a lightweight loading indicator without the full skeleton state.
+  const refreshConversations = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchConversations();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchConversations]);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId: string) => {
@@ -244,7 +256,7 @@ export function useChat(siteFilter?: string) {
         // On any successful (re)connection, force a full recount from the
         // server so badges match the persisted read_at values.
         if (status === 'SUBSCRIBED') {
-          fetchConversations();
+          refreshConversations();
           const currentId = selectedIdRef.current;
           if (currentId) {
             fetchMessages(currentId);
@@ -269,7 +281,7 @@ export function useChat(siteFilter?: string) {
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          fetchConversations();
+          refreshConversations();
         }
       });
 
@@ -278,13 +290,13 @@ export function useChat(siteFilter?: string) {
     // the socket was down.
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') {
-        fetchConversations();
+        refreshConversations();
         const currentId = selectedIdRef.current;
         if (currentId) fetchMessages(currentId);
       }
     };
     const handleOnline = () => {
-      fetchConversations();
+      refreshConversations();
       const currentId = selectedIdRef.current;
       if (currentId) fetchMessages(currentId);
     };
@@ -297,13 +309,14 @@ export function useChat(siteFilter?: string) {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('online', handleOnline);
     };
-  }, [user, fetchConversations, fetchMessages, selectedConversationId, markMessagesRead]);
+  }, [user, fetchConversations, refreshConversations, fetchMessages, selectedConversationId, markMessagesRead]);
 
   return {
     conversations,
     messages,
     selectedConversationId,
     loading,
+    refreshing,
     selectConversation,
     sendMessage,
     deleteConversation,
