@@ -65,5 +65,6 @@ export function getCutoffButtonLabel(
     }
     return BUTTON_LABEL_TAKEAWAY_HINT;
   }
+  if (state.isCutoffWarning) return BUTTON_LABEL_CUTOFF_WARNING;
   return null;
 }
