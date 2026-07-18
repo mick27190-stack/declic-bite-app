@@ -95,10 +95,10 @@ export function CartView() {
     if (items.length === 0) return false;
     if (!selectedRestaurant) return false;
     if (orderType === 'emporter' && !pickupTime) return false;
-    if (orderType === 'emporter' && isTakeawayCutoff) return false;
+    if (orderType === 'emporter' && cutoff.isTakeawayCutoff) return false;
     if (orderType === 'livraison' && !deliveryAddress) return false;
     if (orderType === 'livraison' && !pickupTime) return false;
-    if (orderType === 'livraison' && isDeliveryCutoff) return false;
+    if (orderType === 'livraison' && cutoff.isDeliveryCutoff) return false;
     if (belowMinimum) return false;
     return true;
   };
