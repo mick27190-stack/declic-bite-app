@@ -17,12 +17,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { pizzas as initialPizzas, categories } from '@/data/pizzas';
 import { Pizza } from '@/types/pizza';
 import { useEffect } from 'react';
+import { useMenuAvailability } from '@/hooks/useMenuAvailability';
 
 export default function AdminMenuPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { canManageMenu, loading: adminLoading } = useAdmin();
-  
+  const { isAvailable, setAvailable } = useMenuAvailability();
+
   const [pizzaList, setPizzaList] = useState<Pizza[]>(initialPizzas);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPizza, setEditingPizza] = useState<Pizza | null>(null);
@@ -100,10 +102,12 @@ export default function AdminMenuPage() {
     toast.success('Pizza supprimée');
   };
 
-  const handleToggleAvailability = (id: string) => {
-    setPizzaList(prev => prev.map(p => 
-      p.id === id ? { ...p, isAvailable: !p.isAvailable } : p
-    ));
+  const handleToggleAvailability = async (id: string) => {
+    try {
+      await setAvailable(id, !isAvailable(id));
+    } catch (e) {
+      toast.error("Impossible de mettre à jour la disponibilité");
+    }
   };
 
   if (authLoading || adminLoading) {
@@ -177,7 +181,7 @@ export default function AdminMenuPage() {
                     </TableCell>
                     <TableCell>
                       <Switch
-                        checked={pizza.isAvailable}
+                        checked={isAvailable(pizza.id)}
                         onCheckedChange={() => handleToggleAvailability(pizza.id)}
                       />
                     </TableCell>

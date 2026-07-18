@@ -10,6 +10,7 @@ import { Pizza } from '@/types/pizza';
 import { useCart } from '@/contexts/CartContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { isPromoDay, PROMO_LABEL } from '@/lib/promo';
+import { useMenuAvailability } from '@/hooks/useMenuAvailability';
 
 export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -19,6 +20,7 @@ export default function MenuPage() {
   const { getClosureForSite } = useActiveClosures();
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const navigate = useNavigate();
+  const { isAvailable } = useMenuAvailability();
 
   const filteredPizzas = pizzas.filter((pizza) => {
     const matchesCategory = selectedCategory === 'all' || pizza.category === selectedCategory;
@@ -123,18 +125,22 @@ export default function MenuPage() {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
-          {filteredPizzas.map((pizza, index) => (
-            <div
-              key={pizza.id}
-              className="fade-up"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <PizzaCard
-                pizza={pizza}
-                onClick={() => setSelectedPizza(pizza)}
-              />
-            </div>
-          ))}
+          {filteredPizzas.map((pizza, index) => {
+            const unavailable = !isAvailable(pizza.id);
+            return (
+              <div
+                key={pizza.id}
+                className="fade-up"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
+                <PizzaCard
+                  pizza={pizza}
+                  unavailable={unavailable}
+                  onClick={() => setSelectedPizza(pizza)}
+                />
+              </div>
+            );
+          })}
         </div>
 
         {filteredPizzas.length === 0 && (
