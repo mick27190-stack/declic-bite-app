@@ -139,7 +139,7 @@ export default function AdminChatPage() {
 
   // Determine site filter based on admin role
   const siteFilter = isSuperAdmin ? 'all' : isSiteAdminConches ? 'conches' : isSiteAdminBeaumont ? 'beaumont' : 'all';
-  const { conversations, messages, selectedConversationId, selectConversation, sendMessage, deleteConversation } = useChat(siteFilter);
+  const { conversations, messages, selectedConversationId, refreshing, selectConversation, sendMessage, deleteConversation } = useChat(siteFilter);
 
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
