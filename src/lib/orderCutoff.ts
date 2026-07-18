@@ -1,20 +1,21 @@
 // Pure helpers for evening order cut-offs (Europe/Paris).
 // - Delivery is refused from 21h16 (last accepted at 21h15).
-// - Take-away is refused from 21h31 (last accepted slot at 21h30).
+// - Take-away is refused from 21h17 (last order accepted at 21h16, honoured
+//   on the 21h30 pickup slot).
 // Extracted so the exact button labels and alert copy can be unit-tested
-// at the 21h16 and 21h30 boundaries.
+// at the 21h16 and 21h17 boundaries.
 
 import { parisMinutes } from './pickupSlots';
 
 export const DELIVERY_CUTOFF_MINUTES = 21 * 60 + 16; // 21:16
-export const TAKEAWAY_CUTOFF_MINUTES = 21 * 60 + 31; // 21:31
+export const TAKEAWAY_CUTOFF_MINUTES = 21 * 60 + 17; // 21:17
 
 export const CUTOFF_ALERT_MESSAGE =
-  'Commandes fermées pour la livraison à partir de 21h15 et 21h30 pour les commandes à emporter. Revenez demain à 18h00.';
+  'Commandes fermées pour la livraison à partir de 21h16 et pour les commandes à emporter à partir de 21h17. Revenez demain à 18h00.';
 
 export const BUTTON_LABEL_TAKEAWAY_CLOSED = 'Commandes fermées';
 export const BUTTON_LABEL_TAKEAWAY_HINT =
-  "commandes à emporter possibles jusqu'à 21h30";
+  "commandes à emporter possibles jusqu'à 21h16";
 export const BUTTON_LABEL_ORDER_NOW = 'Commander maintenant';
 
 export type CutoffState = {
