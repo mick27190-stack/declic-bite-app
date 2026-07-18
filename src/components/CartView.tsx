@@ -14,11 +14,8 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { parisMinutes } from '@/lib/pickupSlots';
 import {
-  DELIVERY_CUTOFF_MINUTES,
-  TAKEAWAY_CUTOFF_MINUTES,
-  BUTTON_LABEL_TAKEAWAY_CLOSED,
-  BUTTON_LABEL_TAKEAWAY_HINT,
-  BUTTON_LABEL_ORDER_NOW,
+  getCutoffState,
+  getCutoffButtonLabel,
 } from '@/lib/orderCutoff';
 
 export function CartView() {
