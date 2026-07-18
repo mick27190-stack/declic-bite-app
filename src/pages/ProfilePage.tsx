@@ -429,6 +429,34 @@ export default function ProfilePage() {
     }
   }, [profile, user]);
 
+  // Handle redirect back from the "Accepter/Refuser" email links.
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const resp = params.get('deliveryResponse');
+    if (!resp) return;
+    switch (resp) {
+      case 'accepted':
+        toast.success('Horaire de livraison accepté. Merci !');
+        break;
+      case 'refused':
+        toast.info('Horaire refusé. Votre commande a été annulée.');
+        break;
+      case 'already':
+        toast.info('Cette réponse a déjà été enregistrée.');
+        break;
+      case 'invalid':
+        toast.error('Lien invalide ou expiré.');
+        break;
+      case 'error':
+        toast.error("Impossible d'enregistrer votre réponse. Réessayez depuis l'app.");
+        break;
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete('deliveryResponse');
+    url.searchParams.delete('order');
+    window.history.replaceState({}, '', url.toString());
+  }, []);
+
 
   const handleUpdateProfile = async () => {
     setSavingProfile(true);
