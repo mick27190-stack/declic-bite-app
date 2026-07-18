@@ -54,9 +54,35 @@ function ConversationItem({
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <Badge variant="outline" className="text-xs capitalize">
-            {conversation.site}
-          </Badge>
+          <div className="flex items-center gap-1">
+            <Badge variant="outline" className="text-xs capitalize">
+              {conversation.site}
+            </Badge>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  aria-label="Supprimer la conversation"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer cette conversation ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    La conversation sera retirée de votre liste. Le client conservera l'historique
+                    complet des messages depuis son profil.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={onDelete}>Supprimer</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
           {(conversation.unread_count ?? 0) > 0 && (
             <Badge className="text-[10px] bg-amber-500 hover:bg-amber-500 text-white">
               Nouveau message
