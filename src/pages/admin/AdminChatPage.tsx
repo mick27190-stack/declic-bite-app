@@ -9,7 +9,18 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Send, User, ArrowDown } from 'lucide-react';
+import { ArrowLeft, Send, User, ArrowDown, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -17,11 +28,13 @@ import { fr } from 'date-fns/locale';
 function ConversationItem({ 
   conversation, 
   isSelected, 
-  onSelect 
+  onSelect,
+  onDelete,
 }: { 
   conversation: ChatConversation; 
   isSelected: boolean; 
   onSelect: () => void;
+  onDelete: () => void;
 }) {
   return (
     <div
@@ -41,9 +54,35 @@ function ConversationItem({
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <Badge variant="outline" className="text-xs capitalize">
-            {conversation.site}
-          </Badge>
+          <div className="flex items-center gap-1">
+            <Badge variant="outline" className="text-xs capitalize">
+              {conversation.site}
+            </Badge>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  aria-label="Supprimer la conversation"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Supprimer cette conversation ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    La conversation sera retirée de votre liste. Le client conservera l'historique
+                    complet des messages depuis son profil.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction onClick={onDelete}>Supprimer</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
           {(conversation.unread_count ?? 0) > 0 && (
             <Badge className="text-[10px] bg-amber-500 hover:bg-amber-500 text-white">
               Nouveau message
@@ -100,7 +139,7 @@ export default function AdminChatPage() {
 
   // Determine site filter based on admin role
   const siteFilter = isSuperAdmin ? 'all' : isSiteAdminConches ? 'conches' : isSiteAdminBeaumont ? 'beaumont' : 'all';
-  const { conversations, messages, selectedConversationId, selectConversation, sendMessage } = useChat(siteFilter);
+  const { conversations, messages, selectedConversationId, selectConversation, sendMessage, deleteConversation } = useChat(siteFilter);
 
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
@@ -234,6 +273,7 @@ export default function AdminChatPage() {
                       conversation={conv}
                       isSelected={selectedConversationId === conv.id}
                       onSelect={() => selectConversation(conv.id)}
+                      onDelete={() => deleteConversation(conv.id)}
                     />
                   ))
                 )}

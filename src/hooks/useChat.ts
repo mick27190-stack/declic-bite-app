@@ -37,6 +37,7 @@ export function useChat(siteFilter?: string) {
     let query = supabase
       .from('chat_conversations')
       .select('*')
+      .is('hidden_for_admin_at', null)
       .order('last_message_at', { ascending: false });
 
     if (siteFilter && siteFilter !== 'all') {
@@ -131,6 +132,21 @@ export function useChat(siteFilter?: string) {
     );
   }, [fetchMessages, markMessagesRead]);
 
+  // Hide conversation from admin view (does NOT delete messages, client keeps history)
+  const deleteConversation = useCallback(async (id: string) => {
+    const { error } = await supabase
+      .from('chat_conversations')
+      .update({ hidden_for_admin_at: new Date().toISOString() })
+      .eq('id', id);
+    if (!error) {
+      setConversations(prev => prev.filter(c => c.id !== id));
+      setSelectedConversationId(prev => (prev === id ? null : prev));
+      setMessages(prev => (selectedConversationId === id ? [] : prev));
+    }
+    return { error };
+  }, [selectedConversationId]);
+
+
 
   // Real-time subscriptions
   useEffect(() => {
@@ -213,6 +229,7 @@ export function useChat(siteFilter?: string) {
     loading,
     selectConversation,
     sendMessage,
+    deleteConversation,
     refresh: fetchConversations,
   };
 }
