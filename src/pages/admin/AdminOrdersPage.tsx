@@ -65,6 +65,9 @@ export default function AdminOrdersPage() {
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
   const [orderToPrint, setOrderToPrint] = useState<Order | null>(null);
+  const [chatOrder, setChatOrder] = useState<Order | null>(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatSending, setChatSending] = useState(false);
   // Persistent all-time total (archived weeks + current live orders).
   // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
   const [archivedCount, setArchivedCount] = useState(0);
