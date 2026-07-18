@@ -52,7 +52,6 @@ export function CartView() {
   // Delivery is blocked from 21h16 (Paris) — last accepted order at 21h15.
   // From 21h00 to 21h15 the CTA shows a warning that orders close at 21h15.
   const cutoff = getCutoffState(now, isClosed);
-  const { isDeliveryCutoff, isTakeawayCutoff } = cutoff;
 
 
   // Minimum order check for delivery outside the restaurant's own commune:
