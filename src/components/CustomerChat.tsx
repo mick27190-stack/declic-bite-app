@@ -25,9 +25,15 @@ function MessageBubble({
         }`}
       >
         <p className="text-sm">{message.content}</p>
-        <p className={`text-[10px] mt-1 flex items-center gap-1 ${isCustomer ? 'text-primary-foreground/60 justify-end' : 'text-muted-foreground'}`}>
+        <p className={`text-[10px] mt-1 flex items-center gap-1 flex-wrap ${isCustomer ? 'text-primary-foreground/60 justify-end' : 'text-muted-foreground'}`}>
           {new Date(message.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-          {isCustomer && message.read_at && <span className="font-medium">· Lu</span>}
+          {isCustomer && (
+            message.read_at ? (
+              <span className="font-medium">· Lu à {formatReadAt(message.read_at)}</span>
+            ) : (
+              <span className="font-medium">· Envoyé</span>
+            )
+          )}
         </p>
       </div>
     </div>
