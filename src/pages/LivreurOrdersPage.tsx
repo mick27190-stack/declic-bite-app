@@ -48,9 +48,20 @@ export default function LivreurOrdersPage() {
   }, [user, isAnyLivreur, authLoading, adminLoading, navigate]);
 
   // RLS limite déjà la liste aux commandes en livraison du site du livreur.
-  // On garde uniquement les commandes en cours (ni livrées, ni annulées).
+  // Filtre supplémentaire côté client au cas où l'utilisateur cumule
+  // plusieurs rôles (ex. Super Admin + livreur d'un seul site) : dans l'espace
+  // livreur on n'affiche QUE les livraisons du site dont il est livreur.
+  const matchesLivreurSite = (restaurant: string) => {
+    if (!livreurSite) return false;
+    const r = (restaurant || '').toLowerCase();
+    return livreurSite === 'beaumont' ? r.includes('beaumont') : r.includes('conches');
+  };
   const activeOrders = orders.filter(
-    (o) => o.order_type === 'livraison' && o.status !== 'delivered' && o.status !== 'cancelled',
+    (o) =>
+      o.order_type === 'livraison' &&
+      o.status !== 'delivered' &&
+      o.status !== 'cancelled' &&
+      matchesLivreurSite(o.restaurant),
   );
 
   // Récupère le téléphone des clients pour les commandes affichées.
