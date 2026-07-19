@@ -181,7 +181,14 @@ export function useChat(siteFilter?: string) {
 
   // Select conversation
   const selectConversation = useCallback((id: string) => {
+    // Update the ref synchronously so any fetchConversations() called by
+    // realtime/reconnect right after selection already forces unread=0 here.
+    selectedIdRef.current = id;
     setSelectedConversationId(id);
+    // Optimistic: clear the badge for this conversation right away.
+    setConversations(prev =>
+      prev.map(c => (c.id === id ? { ...c, unread_count: 0 } : c))
+    );
     fetchMessages(id);
     markMessagesRead(id);
   }, [fetchMessages, markMessagesRead]);
