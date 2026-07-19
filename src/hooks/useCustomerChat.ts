@@ -226,14 +226,31 @@ export function useCustomerChat() {
           );
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        // On (re)connection, refetch to catch any read_at / new messages
+        // that arrived while the socket was down.
+        if (status === 'SUBSCRIBED') {
+          fetchMessages(conversationId);
+        }
+      });
 
     channelRef.current = channel;
 
+    // Refetch on tab focus / network recovery so "Envoyé" flips to "Lu" even
+    // if a realtime UPDATE was missed while the tab was backgrounded.
+    const handleVisible = () => {
+      if (document.visibilityState === 'visible') fetchMessages(conversationId);
+    };
+    const handleOnline = () => fetchMessages(conversationId);
+    document.addEventListener('visibilitychange', handleVisible);
+    window.addEventListener('online', handleOnline);
+
     return () => {
       supabase.removeChannel(channel);
+      document.removeEventListener('visibilitychange', handleVisible);
+      window.removeEventListener('online', handleOnline);
     };
-  }, [conversationId]);
+  }, [conversationId, fetchMessages]);
 
   return { messages, loading, sendMessage, markMessagesRead, conversationId, site: resolveSite() };
 }

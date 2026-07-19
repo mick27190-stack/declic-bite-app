@@ -181,7 +181,14 @@ export function useChat(siteFilter?: string) {
 
   // Select conversation
   const selectConversation = useCallback((id: string) => {
+    // Update the ref synchronously so any fetchConversations() called by
+    // realtime/reconnect right after selection already forces unread=0 here.
+    selectedIdRef.current = id;
     setSelectedConversationId(id);
+    // Optimistic: clear the badge for this conversation right away.
+    setConversations(prev =>
+      prev.map(c => (c.id === id ? { ...c, unread_count: 0 } : c))
+    );
     fetchMessages(id);
     markMessagesRead(id);
   }, [fetchMessages, markMessagesRead]);
@@ -221,12 +228,13 @@ export function useChat(siteFilter?: string) {
         },
         (payload) => {
           const newMsg = payload.new as ChatMessage;
+          const activeId = selectedIdRef.current;
           // Add to current messages if viewing this conversation
-          if (newMsg.conversation_id === selectedConversationId) {
-            setMessages(prev => [...prev, newMsg]);
+          if (newMsg.conversation_id === activeId) {
+            setMessages(prev => (prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]));
             // A new customer message arrived while viewing → mark as read
             if (newMsg.sender_type === 'customer') {
-              markMessagesRead(selectedConversationId);
+              markMessagesRead(activeId);
             }
           } else if (newMsg.sender_type === 'customer') {
             // Unread count / conversation list needs refresh
@@ -243,7 +251,7 @@ export function useChat(siteFilter?: string) {
         },
         (payload) => {
           const updated = payload.new as ChatMessage;
-          if (updated.conversation_id === selectedConversationId) {
+          if (updated.conversation_id === selectedIdRef.current) {
             setMessages(prev =>
               prev.map(m => (m.id === updated.id ? { ...m, ...updated } : m))
             );
@@ -309,7 +317,7 @@ export function useChat(siteFilter?: string) {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('online', handleOnline);
     };
-  }, [user, fetchConversations, refreshConversations, fetchMessages, selectedConversationId, markMessagesRead]);
+  }, [user, fetchConversations, refreshConversations, fetchMessages, markMessagesRead]);
 
   return {
     conversations,
