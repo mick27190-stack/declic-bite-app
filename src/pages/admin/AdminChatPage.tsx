@@ -131,12 +131,18 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           {isAdmin ? (
             message.read_at ? (
               <span className="font-medium">· Lu à {formatReadAt(message.read_at)}</span>
+            ) : message.delivered_at ? (
+              <span className="font-medium">· Reçu</span>
             ) : (
               <span className="font-medium">· Envoyé</span>
             )
           ) : (
             <span className={`font-medium ${message.read_at ? '' : 'text-amber-500'}`}>
-              · {message.read_at ? `Lu à ${formatReadAt(message.read_at)}` : 'Non lu'}
+              · {message.read_at
+                ? `Lu à ${formatReadAt(message.read_at)}`
+                : message.delivered_at
+                  ? 'Reçu · Non lu'
+                  : 'Non lu'}
             </span>
           )}
         </p>
