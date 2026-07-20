@@ -298,6 +298,13 @@ export function useChat(siteFilter?: string) {
             fetchMessages(currentId);
           }
         }
+        // Realtime dropped / errored → resync immediately so Envoyé/Reçu/Lu
+        // don't stay stale until the next visibility or interval tick.
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          refreshConversations();
+          const currentId = selectedIdRef.current;
+          if (currentId) fetchMessages(currentId);
+        }
       });
 
 
@@ -317,6 +324,9 @@ export function useChat(siteFilter?: string) {
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
+          refreshConversations();
+        }
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
           refreshConversations();
         }
       });
@@ -339,11 +349,22 @@ export function useChat(siteFilter?: string) {
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('online', handleOnline);
 
+    // Periodic safety-net resync (every 30s while the tab is visible).
+    // Guarantees Envoyé/Reçu/Lu converge even if realtime silently drops
+    // an UPDATE event (mobile networks, proxies, sleeping sockets…).
+    const resyncInterval = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      refreshConversations();
+      const currentId = selectedIdRef.current;
+      if (currentId) fetchMessages(currentId);
+    }, 30000);
+
     return () => {
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(convChannel);
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('online', handleOnline);
+      window.clearInterval(resyncInterval);
     };
   }, [user, fetchConversations, refreshConversations, fetchMessages, markMessagesRead, markDelivered]);
 
