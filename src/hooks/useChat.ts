@@ -253,6 +253,10 @@ export function useChat(siteFilter?: string) {
         (payload) => {
           const newMsg = payload.new as ChatMessage;
           const activeId = selectedIdRef.current;
+          // Any incoming customer message is now delivered to this admin device
+          if (newMsg.sender_type === 'customer' && !newMsg.delivered_at) {
+            markDelivered([newMsg.id]);
+          }
           // Add to current messages if viewing this conversation
           if (newMsg.conversation_id === activeId) {
             setMessages(prev => (prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]));
