@@ -25,10 +25,19 @@ export interface OrderTicketData {
   paid?: boolean;
 }
 
+export interface TicketCompanyInfo {
+  name?: string | null;
+  siret?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+}
+
 interface Props {
   order: OrderTicketData;
   /** When true, ticket is only visible during print. */
   printOnly?: boolean;
+  company?: TicketCompanyInfo | null;
 }
 
 function fmt(n: number) {
