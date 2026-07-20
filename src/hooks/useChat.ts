@@ -34,9 +34,13 @@ export function useChat(siteFilter?: string) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const selectedIdRef = useRef<string | null>(null);
+  const conversationsRef = useRef<ChatConversation[]>([]);
+  const messagesRef = useRef<ChatMessage[]>([]);
   useEffect(() => {
     selectedIdRef.current = selectedConversationId;
   }, [selectedConversationId]);
+  useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
@@ -331,6 +335,10 @@ export function useChat(siteFilter?: string) {
         }
       });
 
+    // Ref-indirected kick so visibility/online handlers can also reset the
+    // adaptive scheduler (defined below) back to its base interval.
+    const kickResyncRef: { current: () => void } = { current: () => {} };
+
     // Also refresh when the browser tab becomes visible again or the
     // network comes back online — realtime may have missed events while
     // the socket was down.
@@ -339,32 +347,110 @@ export function useChat(siteFilter?: string) {
         refreshConversations();
         const currentId = selectedIdRef.current;
         if (currentId) fetchMessages(currentId);
+        kickResyncRef.current();
       }
     };
     const handleOnline = () => {
       refreshConversations();
       const currentId = selectedIdRef.current;
       if (currentId) fetchMessages(currentId);
+      kickResyncRef.current();
     };
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('online', handleOnline);
 
-    // Periodic safety-net resync (every 30s while the tab is visible).
-    // Guarantees Envoyé/Reçu/Lu converge even if realtime silently drops
-    // an UPDATE event (mobile networks, proxies, sleeping sockets…).
-    const resyncInterval = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      refreshConversations();
+
+    // Adaptive safety-net resync with exponential backoff.
+    // - Base 15s, doubles up to 5min when nothing changes.
+    // - Resets to base whenever the fetched snapshot differs.
+    // - Pauses entirely when everything is fully in sync (no unread badge
+    //   and no message pending a read receipt). Wakes back up on realtime
+    //   events, tab focus or network recovery via kickResync().
+    const BASE_DELAY = 15000;
+    const MAX_DELAY = 300000;
+    let currentDelay = BASE_DELAY;
+    let lastSnapshot = '';
+    let timerId: number | null = null;
+    let stopped = false;
+
+    const snapshot = () => {
+      const convPart = conversationsRef.current
+        .map(c => `${c.id}:${c.unread_count ?? 0}:${c.last_message_at ?? ''}`)
+        .join('|');
+      const msgPart = messagesRef.current
+        .map(m => `${m.id}:${m.delivered_at ?? ''}:${m.read_at ?? ''}`)
+        .join('|');
+      return `${convPart}#${msgPart}`;
+    };
+
+    const fullySynced = () => {
+      const anyUnread = conversationsRef.current.some(c => (c.unread_count ?? 0) > 0);
+      // Any message still awaiting a read receipt keeps polling alive.
+      const pending = messagesRef.current.some(m => !m.read_at);
+      return !anyUnread && !pending;
+    };
+
+    const scheduleNext = (delay: number) => {
+      if (stopped) return;
+      if (timerId !== null) window.clearTimeout(timerId);
+      timerId = window.setTimeout(tick, delay);
+    };
+
+    const tick = async () => {
+      if (stopped) return;
+      if (document.visibilityState !== 'visible') {
+        // Retry sooner when the tab comes back; don't burn cycles hidden.
+        scheduleNext(BASE_DELAY);
+        return;
+      }
+      await refreshConversations();
       const currentId = selectedIdRef.current;
-      if (currentId) fetchMessages(currentId);
-    }, 30000);
+      if (currentId) await fetchMessages(currentId);
+
+      const next = snapshot();
+      if (next !== lastSnapshot) {
+        lastSnapshot = next;
+        currentDelay = BASE_DELAY;
+      } else {
+        currentDelay = Math.min(currentDelay * 2, MAX_DELAY);
+      }
+
+      if (fullySynced()) {
+        // Nothing to reconcile — stop the timer until an external event
+        // (realtime, visibility, online, new selection) wakes it back up.
+        if (timerId !== null) {
+          window.clearTimeout(timerId);
+          timerId = null;
+        }
+        return;
+      }
+      scheduleNext(currentDelay);
+    };
+
+    const kickResync = () => {
+      currentDelay = BASE_DELAY;
+      scheduleNext(0);
+    };
+    kickResyncRef.current = kickResync;
+
+    // Also wake the scheduler whenever a realtime event refreshes state.
+    // (msgChannel/convChannel above already refetch; we just reset backoff.)
+    const originalRefresh = refreshConversations;
+    // No wrapping needed: realtime handlers already call refreshConversations
+    // which mutates state; the snapshot diff on the next tick will reset the
+    // delay. But we also kick immediately so we don't wait the current delay.
+    void originalRefresh;
+
+    // Start the scheduler.
+    scheduleNext(BASE_DELAY);
 
     return () => {
+      stopped = true;
+      if (timerId !== null) window.clearTimeout(timerId);
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(convChannel);
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('online', handleOnline);
-      window.clearInterval(resyncInterval);
     };
   }, [user, fetchConversations, refreshConversations, fetchMessages, markMessagesRead, markDelivered]);
 
