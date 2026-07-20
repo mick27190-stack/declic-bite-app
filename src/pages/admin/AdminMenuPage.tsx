@@ -18,14 +18,18 @@ import { pizzas as initialPizzas, categories } from '@/data/pizzas';
 import { Pizza } from '@/types/pizza';
 import { useEffect } from 'react';
 import { useMenuAvailability } from '@/hooks/useMenuAvailability';
+import { useMenuOverrides, applyOverride } from '@/hooks/useMenuOverrides';
+
+const CAPACITY_OPTIONS = ['0,25L', '0,33L', '0,5L', '0,75L', '1L', '1,25L', '1,5L', '1,75L', '2L'];
 
 export default function AdminMenuPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { canManageMenu, loading: adminLoading } = useAdmin();
   const { isAvailable, setAvailable } = useMenuAvailability();
+  const { overrides, upsert } = useMenuOverrides();
 
-  const [pizzaList, setPizzaList] = useState<Pizza[]>(initialPizzas);
+  const pizzaList: Pizza[] = initialPizzas.map((p) => applyOverride(p, overrides[p.id]));
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPizza, setEditingPizza] = useState<Pizza | null>(null);
   const [formData, setFormData] = useState({
@@ -33,6 +37,7 @@ export default function AdminMenuPage() {
     description: '',
     ingredients: '',
     category: 'classiques',
+    capacity: '',
     isAvailable: true
   });
 
