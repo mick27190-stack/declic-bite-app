@@ -27,7 +27,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar, Printer } from 'lucide-react';
+import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar, Printer, Trash2, Phone, ChevronDown } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { statusLabels, statusColors, OrderStatus } from '@/types/order';
 import { jsPDF } from 'jspdf';
@@ -44,6 +56,12 @@ interface HistoryOrder {
   created_at: string;
   customer_name?: string;
   customer_phone?: string;
+  items?: any[];
+  delivery_address?: any;
+  pickup_time?: string | null;
+  delivery_estimate?: string | null;
+  notes?: string | null;
+  user_id?: string | null;
 }
 
 interface HistoryWeek {
@@ -54,6 +72,7 @@ interface HistoryWeek {
   total_revenue: number;
   orders: HistoryOrder[];
 }
+
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('fr-FR', {
