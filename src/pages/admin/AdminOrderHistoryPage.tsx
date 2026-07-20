@@ -322,7 +322,10 @@ export default function AdminOrderHistoryPage() {
           ...week,
           orders: filteredOrders,
           order_count: filteredOrders.length,
-          total_revenue: filteredOrders.reduce((sum, o) => sum + (o.total_price || 0), 0),
+          total_revenue: filteredOrders.reduce(
+            (sum, o) => sum + (o.status === 'cancelled' ? 0 : (o.total_price || 0)),
+            0
+          ),
         };
       })
       .filter((week) => week.order_count > 0 || (siteFilter === 'all' && orderTypeFilter === 'all')),
