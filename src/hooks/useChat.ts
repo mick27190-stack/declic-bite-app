@@ -42,6 +42,21 @@ export function useChat(siteFilter?: string) {
   useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
 
+  const mergeMessages = useCallback((incoming: ChatMessage[]) => {
+    setMessages(prev => {
+      const local = new Map(prev.map(m => [m.id, m]));
+      return incoming.map(msg => {
+        const current = local.get(msg.id);
+        if (!current) return msg;
+        return {
+          ...msg,
+          delivered_at: msg.delivered_at ?? current.delivered_at,
+          read_at: msg.read_at ?? current.read_at,
+        };
+      });
+    });
+  }, []);
+
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
     let query = supabase
@@ -100,7 +115,7 @@ export function useChat(siteFilter?: string) {
       .order('created_at', { ascending: true });
 
     if (data) {
-      setMessages(data as ChatMessage[]);
+      mergeMessages(data as ChatMessage[]);
       // Any customer message loaded here has now been delivered to this admin device.
       const toDeliver = (data as ChatMessage[])
         .filter(m => m.sender_type === 'customer' && !m.delivered_at)
@@ -109,7 +124,7 @@ export function useChat(siteFilter?: string) {
         markDeliveredRef.current?.(toDeliver);
       }
     }
-  }, []);
+  }, [mergeMessages]);
 
   // Mark specific messages as delivered (received on this admin device).
   const markDeliveredRef = useRef<((ids: string[]) => Promise<void>) | null>(null);
@@ -119,11 +134,16 @@ export function useChat(siteFilter?: string) {
     setMessages(prev =>
       prev.map(m => (ids.includes(m.id) && !m.delivered_at ? { ...m, delivered_at: nowIso } : m))
     );
-    await supabase
+    const { data } = await supabase
       .from('chat_messages')
       .update({ delivered_at: nowIso })
       .in('id', ids)
-      .is('delivered_at', null);
+      .is('delivered_at', null)
+      .select('*');
+    if (data) {
+      const updated = data as ChatMessage[];
+      setMessages(prev => prev.map(m => updated.find(u => u.id === m.id) ?? m));
+    }
   }, []);
   useEffect(() => { markDeliveredRef.current = markDelivered; }, [markDelivered]);
 
@@ -182,11 +202,11 @@ export function useChat(siteFilter?: string) {
 
     const { data, error } = await supabase
       .from('chat_messages')
-      .update({ read_at: nowIso })
+      .update({ delivered_at: nowIso, read_at: nowIso })
       .eq('conversation_id', conversationId)
       .eq('sender_type', 'customer')
       .is('read_at', null)
-      .select('id, read_at');
+      .select('*');
 
     if (error) {
       console.error('markMessagesRead failed, rolling back:', error);
@@ -200,9 +220,9 @@ export function useChat(siteFilter?: string) {
     // Reconcile with the persisted values returned by the server so a later
     // refresh or realtime reconnect keeps the exact same state.
     if (data && data.length > 0) {
-      const readMap = new Map(data.map(r => [r.id, r.read_at as string]));
+      const updated = data as ChatMessage[];
       setMessages(prev =>
-        prev.map(m => (readMap.has(m.id) ? { ...m, read_at: readMap.get(m.id) ?? nowIso } : m))
+        prev.map(m => updated.find(u => u.id === m.id) ?? m)
       );
     }
   }, []);
