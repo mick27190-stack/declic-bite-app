@@ -209,6 +209,49 @@ export default function AdminCompanyInfoPage() {
               <Input type="email" value={form.email ?? ''} onChange={(e) => setField('email', e.target.value)} placeholder="contact@declicpizza.fr" maxLength={120} />
             </div>
 
+            <div className="space-y-2">
+              <Label>Logo du site (facture PDF uniquement)</Label>
+              <p className="text-xs text-muted-foreground">
+                Affiché sur les factures PDF envoyées aux clients. N'apparaît pas sur les tickets imprimés.
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="w-24 h-24 rounded-md border bg-muted/30 flex items-center justify-center overflow-hidden shrink-0">
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="Logo" className="w-full h-full object-contain" />
+                  ) : (
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      className="hidden"
+                      disabled={logoUploading}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleLogoUpload(f);
+                        e.target.value = '';
+                      }}
+                    />
+                    <Button type="button" variant="outline" size="sm" asChild disabled={logoUploading}>
+                      <span className="cursor-pointer">
+                        <Upload className="h-4 w-4 mr-2" />
+                        {logoUploading ? 'Envoi…' : (logoPreview ? 'Remplacer' : 'Téléverser')}
+                      </span>
+                    </Button>
+                  </label>
+                  {logoPreview && (
+                    <Button type="button" variant="ghost" size="sm" onClick={handleLogoDelete} className="text-destructive">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Supprimer
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <Button onClick={handleSave} disabled={saving} className="w-full">
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Enregistrement…' : 'Enregistrer'}
