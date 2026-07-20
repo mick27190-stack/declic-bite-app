@@ -335,6 +335,10 @@ export function useChat(siteFilter?: string) {
         }
       });
 
+    // Ref-indirected kick so visibility/online handlers can also reset the
+    // adaptive scheduler (defined below) back to its base interval.
+    const kickResyncRef: { current: () => void } = { current: () => {} };
+
     // Also refresh when the browser tab becomes visible again or the
     // network comes back online — realtime may have missed events while
     // the socket was down.
@@ -343,15 +347,18 @@ export function useChat(siteFilter?: string) {
         refreshConversations();
         const currentId = selectedIdRef.current;
         if (currentId) fetchMessages(currentId);
+        kickResyncRef.current();
       }
     };
     const handleOnline = () => {
       refreshConversations();
       const currentId = selectedIdRef.current;
       if (currentId) fetchMessages(currentId);
+      kickResyncRef.current();
     };
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('online', handleOnline);
+
 
     // Adaptive safety-net resync with exponential backoff.
     // - Base 15s, doubles up to 5min when nothing changes.
