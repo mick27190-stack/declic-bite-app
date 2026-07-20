@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar, Printer, Trash2, Phone, ChevronDown } from 'lucide-react';
+import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar, Printer, Trash2, Phone, ChevronDown, Search, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -290,6 +290,7 @@ export default function AdminOrderHistoryPage() {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
   const [customStart, setCustomStart] = useState<string | null>(null);
   const [customEnd, setCustomEnd] = useState<string | null>(null);
+  const [customerSearch, setCustomerSearch] = useState('');
   const [orderToPrint, setOrderToPrint] = useState<OrderTicketData | null>(null);
   const { data: companyData } = useCompanyInfo();
 
@@ -362,13 +363,29 @@ export default function AdminOrderHistoryPage() {
   };
 
 
+  const normalizedSearch = customerSearch
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
   const filteredWeeks = filterWeeksByPeriod(
     weeks
       .map((week) => {
         const filteredOrders = week.orders.filter((o) => {
           const siteMatch = siteFilter === 'all' || orderSite(o.restaurant) === siteFilter;
           const typeMatch = orderTypeFilter === 'all' || o.order_type === orderTypeFilter;
-          return siteMatch && typeMatch;
+          let searchMatch = true;
+          if (normalizedSearch) {
+            const haystack = [o.customer_name, o.customer_phone]
+              .filter(Boolean)
+              .join(' ')
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '');
+            searchMatch = haystack.includes(normalizedSearch);
+          }
+          return siteMatch && typeMatch && searchMatch;
         });
         return {
           ...week,
@@ -380,7 +397,11 @@ export default function AdminOrderHistoryPage() {
           ),
         };
       })
-      .filter((week) => week.order_count > 0 || (siteFilter === 'all' && orderTypeFilter === 'all')),
+      .filter(
+        (week) =>
+          week.order_count > 0 ||
+          (siteFilter === 'all' && orderTypeFilter === 'all' && !normalizedSearch)
+      ),
     periodFilter,
     customStart,
     customEnd
@@ -583,6 +604,28 @@ export default function AdminOrderHistoryPage() {
                   />
                 </>
               )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <div className="relative flex-1 min-w-[220px] max-w-sm">
+                <Input
+                  type="text"
+                  placeholder="Rechercher un client (nom ou téléphone)"
+                  className="h-8 text-xs pr-8"
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                />
+                {customerSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomerSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Effacer la recherche"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
