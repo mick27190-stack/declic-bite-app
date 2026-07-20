@@ -260,6 +260,10 @@ export function useCustomerChat() {
         if (status === 'SUBSCRIBED') {
           fetchMessages(conversationId);
         }
+        // Realtime unhealthy → force a resync so Envoyé/Reçu/Lu converge.
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          fetchMessages(conversationId);
+        }
       });
 
     channelRef.current = channel;
@@ -273,10 +277,18 @@ export function useCustomerChat() {
     document.addEventListener('visibilitychange', handleVisible);
     window.addEventListener('online', handleOnline);
 
+    // Periodic safety-net resync (every 30s while tab is visible) so
+    // Envoyé → Reçu → Lu converges even if a realtime UPDATE was dropped.
+    const resyncInterval = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      fetchMessages(conversationId);
+    }, 30000);
+
     return () => {
       supabase.removeChannel(channel);
       document.removeEventListener('visibilitychange', handleVisible);
       window.removeEventListener('online', handleOnline);
+      window.clearInterval(resyncInterval);
     };
   }, [conversationId, fetchMessages]);
 
