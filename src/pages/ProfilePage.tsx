@@ -195,7 +195,7 @@ interface AddressForm {
 function ProfileChat() {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, loading, sendMessage, site } = useCustomerChat();
+  const { messages, loading, sendMessage, markMessagesRead, site } = useCustomerChat();
   const { isOnline } = useAdminPresenceWatch();
 
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -267,6 +267,28 @@ function ProfileChat() {
     if (content) observer.observe(content);
     return () => observer.disconnect();
   }, [getViewport, loading]);
+
+  // Mark restaurant messages as read only when the customer is actually at the
+  // bottom of the conversation and the tab is visible.
+  useEffect(() => {
+    if (loading || !isAtBottom) return;
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+    if (messages.some((m) => m.sender_type === 'admin' && !m.read_at)) {
+      markMessagesRead();
+    }
+  }, [loading, isAtBottom, messages, markMessagesRead]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && isAtBottomRef.current) {
+        if (messages.some((m) => m.sender_type === 'admin' && !m.read_at)) {
+          markMessagesRead();
+        }
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [messages, markMessagesRead]);
 
   const handleSend = async () => {
     if (!input.trim()) return;

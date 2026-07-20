@@ -16,6 +16,21 @@ export function useCustomerChat() {
   const messagesRef = useRef<ChatMessage[]>([]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
 
+  const mergeMessages = useCallback((incoming: ChatMessage[]) => {
+    setMessages(prev => {
+      const local = new Map(prev.map(m => [m.id, m]));
+      return incoming.map(msg => {
+        const current = local.get(msg.id);
+        if (!current) return msg;
+        return {
+          ...msg,
+          delivered_at: msg.delivered_at ?? current.delivered_at,
+          read_at: msg.read_at ?? current.read_at,
+        };
+      });
+    });
+  }, []);
+
   // Active site: the restaurant selected for ordering takes priority,
   // then fall back to the customer's preferred restaurant from their profile.
   const resolveSite = useCallback((): 'conches' | 'beaumont' | null => {
@@ -80,7 +95,7 @@ export function useCustomerChat() {
       .order('created_at', { ascending: true });
 
     if (data) {
-      setMessages(data as ChatMessage[]);
+      mergeMessages(data as ChatMessage[]);
       // Mark any admin messages as delivered to this customer device.
       const toDeliver = (data as ChatMessage[])
         .filter(m => m.sender_type === 'admin' && !m.delivered_at)
@@ -97,18 +112,43 @@ export function useCustomerChat() {
           .is('delivered_at', null);
       }
     }
-  }, []);
+  }, [mergeMessages]);
 
   // Mark admin messages in the current conversation as read (customer is the reader)
   const markMessagesRead = useCallback(async () => {
     if (!conversationId) return;
-    await supabase
+    const nowIso = new Date().toISOString();
+    let previousMessages: ChatMessage[] = [];
+    setMessages(prev =>
+      {
+        previousMessages = prev;
+        return prev.map(m =>
+          m.conversation_id === conversationId && m.sender_type === 'admin' && !m.read_at
+            ? { ...m, delivered_at: m.delivered_at ?? nowIso, read_at: nowIso }
+            : m
+        );
+      }
+    );
+    const { data, error } = await supabase
       .from('chat_messages')
-      .update({ read_at: new Date().toISOString() })
+      .update({ delivered_at: nowIso, read_at: nowIso })
       .eq('conversation_id', conversationId)
       .eq('sender_type', 'admin')
-      .is('read_at', null);
-  }, [conversationId]);
+      .is('read_at', null)
+      .select('*');
+
+    if (error) {
+      setMessages(previousMessages);
+      await fetchMessages(conversationId);
+      return;
+    }
+    if (data) {
+      const updated = data as ChatMessage[];
+      setMessages(prev =>
+        prev.map(m => updated.find(u => u.id === m.id) ?? m)
+      );
+    }
+  }, [conversationId, fetchMessages]);
 
   // Send message
   const sendMessage = useCallback(async (content: string) => {
