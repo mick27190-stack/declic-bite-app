@@ -363,13 +363,29 @@ export default function AdminOrderHistoryPage() {
   };
 
 
+  const normalizedSearch = customerSearch
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
   const filteredWeeks = filterWeeksByPeriod(
     weeks
       .map((week) => {
         const filteredOrders = week.orders.filter((o) => {
           const siteMatch = siteFilter === 'all' || orderSite(o.restaurant) === siteFilter;
           const typeMatch = orderTypeFilter === 'all' || o.order_type === orderTypeFilter;
-          return siteMatch && typeMatch;
+          let searchMatch = true;
+          if (normalizedSearch) {
+            const haystack = [o.customer_name, o.customer_phone]
+              .filter(Boolean)
+              .join(' ')
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '');
+            searchMatch = haystack.includes(normalizedSearch);
+          }
+          return siteMatch && typeMatch && searchMatch;
         });
         return {
           ...week,
@@ -381,7 +397,11 @@ export default function AdminOrderHistoryPage() {
           ),
         };
       })
-      .filter((week) => week.order_count > 0 || (siteFilter === 'all' && orderTypeFilter === 'all')),
+      .filter(
+        (week) =>
+          week.order_count > 0 ||
+          (siteFilter === 'all' && orderTypeFilter === 'all' && !normalizedSearch)
+      ),
     periodFilter,
     customStart,
     customEnd
