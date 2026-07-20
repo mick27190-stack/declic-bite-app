@@ -67,25 +67,30 @@ export function generateInvoicePdf(
     }
   }
 
-  // Company info — kept to the right of the logo so text never overlaps it
-  const companyMaxWidth = (pageWidth - marginX) - companyX - 70; // leave room for invoice title on the right
+  // Company info — kept strictly to the right of the logo, wrapped to a safe width
+  const invoiceBlockWidth = 62; // reserved for the right-aligned FACTURE block
+  const companyMaxWidth = Math.max(40, pageWidth - marginX - companyX - invoiceBlockWidth - 4);
   let cy = headerTop + 5;
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(15);
+  doc.setFontSize(14);
   doc.setTextColor(249, 115, 22);
-  doc.text(company?.name || 'DÉCLIC PIZZA', companyX, cy);
-  cy += 5;
+  const nameLines = doc.splitTextToSize(company?.name || 'DÉCLIC PIZZA', companyMaxWidth) as string[];
+  doc.text(nameLines, companyX, cy);
+  cy += nameLines.length * 5 + 1;
+
   doc.setTextColor(60, 60, 60);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  if (company?.address) {
-    const lines = doc.splitTextToSize(company.address, companyMaxWidth) as string[];
+  const addLine = (text: string) => {
+    const lines = doc.splitTextToSize(text, companyMaxWidth) as string[];
     doc.text(lines, companyX, cy);
     cy += lines.length * 4;
-  }
-  if (company?.phone) { doc.text(`Tél : ${company.phone}`, companyX, cy); cy += 4; }
-  if (company?.email) { doc.text(`Email : ${company.email}`, companyX, cy); cy += 4; }
-  if (company?.siret) { doc.text(`SIRET : ${company.siret}`, companyX, cy); cy += 4; }
+  };
+  if (company?.address) addLine(company.address);
+  if (company?.phone) addLine(`Tél : ${company.phone}`);
+  if (company?.email) addLine(`Email : ${company.email}`);
+  if (company?.siret) addLine(`SIRET : ${company.siret}`);
 
   // Invoice title (top-right)
   doc.setFont('helvetica', 'bold');
@@ -120,22 +125,31 @@ export function generateInvoicePdf(
   // Two independent columns with strict widths — no overlap possible
   const colGap = 6;
   const colWidth = (pageWidth - 2 * marginX - colGap) / 2;
+  const innerPad = 3;
+  const innerWidth = colWidth - innerPad * 2;
   const leftX = marginX;
   const rightX = marginX + colWidth + colGap;
 
-  // Left column — Facturé à
-  const leftLines: string[] = [];
-  if (recipient.name) leftLines.push(recipient.name);
-  if (recipient.email) leftLines.push(recipient.email);
-  if (recipient.phone) leftLines.push(recipient.phone);
-  if (addr) {
-    const wrapped = doc.splitTextToSize(addr, colWidth - 6) as string[];
-    leftLines.push(...wrapped);
-  }
+  // Helper: wrap each entry so long values (emails, addresses…) stay inside the column
+  const wrapLines = (entries: (string | null | undefined)[]): string[] => {
+    const out: string[] = [];
+    entries.filter(Boolean).forEach((entry) => {
+      const parts = doc.splitTextToSize(String(entry), innerWidth) as string[];
+      out.push(...parts);
+    });
+    return out;
+  };
 
-  // Right column — Détails commande
-  const rightLines: string[] = [orderTypeLabel(order.order_type)];
-  if (when) rightLines.push(`Horaire : ${when}`);
+  const leftLines = wrapLines([
+    recipient.name,
+    recipient.email,
+    recipient.phone,
+    addr,
+  ]);
+  const rightLines = wrapLines([
+    orderTypeLabel(order.order_type),
+    when ? `Horaire : ${when}` : null,
+  ]);
 
   const bodyLineCount = Math.max(leftLines.length, rightLines.length, 1);
   const boxH = 10 + bodyLineCount * 4.5 + 4;
@@ -148,14 +162,14 @@ export function generateInvoicePdf(
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
   doc.setTextColor(30, 30, 30);
-  doc.text('Facturé à', leftX + 3, y + 6);
-  doc.text('Commande', rightX + 3, y + 6);
+  doc.text('Facturé à', leftX + innerPad, y + 6);
+  doc.text('Commande', rightX + innerPad, y + 6);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(40, 40, 40);
-  leftLines.forEach((line, i) => doc.text(line, leftX + 3, y + 11 + i * 4.5));
-  rightLines.forEach((line, i) => doc.text(line, rightX + 3, y + 11 + i * 4.5));
+  leftLines.forEach((line, i) => doc.text(line, leftX + innerPad, y + 11 + i * 4.5));
+  rightLines.forEach((line, i) => doc.text(line, rightX + innerPad, y + 11 + i * 4.5));
 
   y += boxH + 8;
 
