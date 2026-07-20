@@ -143,7 +143,7 @@ export function useCustomerChat() {
         prev.map(m => updated.find(u => u.id === m.id) ?? m)
       );
     }
-  }, [conversationId]);
+  }, [conversationId, fetchMessages]);
 
   // Send message
   const sendMessage = useCallback(async (content: string) => {
