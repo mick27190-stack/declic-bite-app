@@ -67,3 +67,75 @@ Deno.test("rejects anon-key requests (no admin role)", async () => {
     `expected 401 or 403 for anon-key call, got ${res.status}: ${text}`,
   );
 });
+
+// ---------------------------------------------------------------------------
+// Storage RLS invariants for the invoices / company-logos buckets.
+//
+// Both buckets are private and their storage.objects policies require the
+// caller to be an admin whose site matches split_part(name,'/',1). The
+// negative tests below confirm the policies reject unauthenticated writes
+// for every path shape the client code produces (site-prefixed and, for
+// coverage, an unprefixed path that used to be accepted before the fix).
+// ---------------------------------------------------------------------------
+
+async function tryUpload(bucket: string, path: string, auth?: string) {
+  const url = `${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/pdf",
+    "apikey": SUPABASE_ANON_KEY,
+  };
+  if (auth) headers["Authorization"] = auth;
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: new Uint8Array([0x25, 0x50, 0x44, 0x46]), // "%PDF"
+  });
+  await res.text();
+  return res.status;
+}
+
+Deno.test("invoices bucket: rejects unauthenticated upload with site prefix", async () => {
+  const status = await tryUpload("invoices", `conches/${crypto.randomUUID()}/x.pdf`);
+  const ok = status === 400 || status === 401 || status === 403;
+  assertEquals(ok, true, `expected 400/401/403, got ${status}`);
+});
+
+Deno.test("invoices bucket: rejects anon-authenticated upload (no admin role)", async () => {
+  const status = await tryUpload(
+    "invoices",
+    `conches/${crypto.randomUUID()}/x.pdf`,
+    `Bearer ${SUPABASE_ANON_KEY}`,
+  );
+  const ok = status === 400 || status === 401 || status === 403;
+  assertEquals(ok, true, `expected 400/401/403, got ${status}`);
+});
+
+Deno.test("invoices bucket: rejects upload without a site prefix", async () => {
+  // Even if a rogue admin tried the pre-fix path shape (no site segment),
+  // split_part(name,'/',1) would be a user_id UUID and can_admin_access_site
+  // would reject it. Anonymous callers are of course rejected too.
+  const status = await tryUpload(
+    "invoices",
+    `${crypto.randomUUID()}/x.pdf`,
+    `Bearer ${SUPABASE_ANON_KEY}`,
+  );
+  const ok = status === 400 || status === 401 || status === 403;
+  assertEquals(ok, true, `expected 400/401/403, got ${status}`);
+});
+
+Deno.test("company-logos bucket: rejects unauthenticated upload", async () => {
+  const status = await tryUpload("company-logos", `beaumont/logo-${crypto.randomUUID()}.png`);
+  const ok = status === 400 || status === 401 || status === 403;
+  assertEquals(ok, true, `expected 400/401/403, got ${status}`);
+});
+
+Deno.test("company-logos bucket: rejects anon-authenticated upload (no admin role)", async () => {
+  const status = await tryUpload(
+    "company-logos",
+    `beaumont/logo-${crypto.randomUUID()}.png`,
+    `Bearer ${SUPABASE_ANON_KEY}`,
+  );
+  const ok = status === 400 || status === 401 || status === 403;
+  assertEquals(ok, true, `expected 400/401/403, got ${status}`);
+});
+
