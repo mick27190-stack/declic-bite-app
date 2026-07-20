@@ -22,6 +22,7 @@ export interface ChatMessage {
   content: string;
   site: string;
   created_at: string;
+  delivered_at: string | null;
   read_at: string | null;
 }
 
