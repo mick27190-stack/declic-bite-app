@@ -156,7 +156,7 @@ export default function AdminPricingPage() {
     );
   }
 
-  if (!canManageMenu) return null;
+  if (!isSuperAdmin) return null;
 
   const sizeName = (id: string) => SIZES.find((s) => s.id === id)?.name ?? id;
 
