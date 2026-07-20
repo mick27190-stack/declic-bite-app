@@ -95,13 +95,13 @@ export default function AdminUsersPage() {
     if (!authLoading && !adminLoading) {
       if (!user) {
         navigate('/auth');
-      } else if (!canManageSecondaryAdmins && !isSuperAdmin) {
+      } else if (!isSuperAdmin) {
         navigate('/admin');
       } else {
         fetchAdminPhones();
       }
     }
-  }, [user, canManageSecondaryAdmins, isSuperAdmin, authLoading, adminLoading]);
+  }, [user, isSuperAdmin, authLoading, adminLoading]);
 
   const getAvailableRoles = (): { value: AppRole; label: string }[] => {
     if (isSuperAdmin) {

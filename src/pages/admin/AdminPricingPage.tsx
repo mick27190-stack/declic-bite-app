@@ -29,7 +29,7 @@ const SIZES: { id: string; name: string }[] = [
 export default function AdminPricingPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { canManageMenu, loading: adminLoading } = useAdmin();
+  const { isSuperAdmin, loading: adminLoading } = useAdmin();
   const { sizePrices, dayPromos, itemPrices, refresh } = usePricing();
 
   const [sizeDraft, setSizeDraft] = useState<Record<string, string>>({});
@@ -48,9 +48,9 @@ export default function AdminPricingPage() {
   useEffect(() => {
     if (!authLoading && !adminLoading) {
       if (!user) navigate('/auth');
-      else if (!canManageMenu) navigate('/');
+      else if (!isSuperAdmin) navigate('/admin');
     }
-  }, [user, canManageMenu, authLoading, adminLoading, navigate]);
+  }, [user, isSuperAdmin, authLoading, adminLoading, navigate]);
 
   useEffect(() => {
     setSizeDraft({
