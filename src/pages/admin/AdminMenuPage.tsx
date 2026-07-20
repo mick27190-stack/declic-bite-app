@@ -237,15 +237,34 @@ export default function AdminMenuPage() {
                   placeholder="Margherita"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="La classique italienne..."
-                />
-              </div>
+              {formData.category === 'boissons' ? (
+                <div className="space-y-2">
+                  <Label htmlFor="capacity">Contenance</Label>
+                  <Select
+                    value={formData.capacity}
+                    onValueChange={(v) => setFormData(prev => ({ ...prev, capacity: v }))}
+                  >
+                    <SelectTrigger id="capacity">
+                      <SelectValue placeholder="Choisir une contenance" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CAPACITY_OPTIONS.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="La classique italienne..."
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="ingredients">Ingrédients * (séparés par des virgules)</Label>
                 <Textarea
