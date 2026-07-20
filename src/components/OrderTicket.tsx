@@ -100,11 +100,22 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
       ? (order.delivery_estimate || order.pickup_time)
       : order.pickup_time;
 
+  const companyHeader = (() => {
+    const parts: string[] = [];
+    const title = company?.name || 'DÉCLIC PIZZA';
+    parts.push(centerLine(title.toUpperCase()));
+    if (!company?.name && order.restaurant) parts.push(centerLine(order.restaurant));
+    if (company?.address) parts.push(centerLine(company.address));
+    if (company?.phone) parts.push(centerLine('Tél : ' + company.phone));
+    if (company?.email) parts.push(centerLine(company.email));
+    if (company?.siret) parts.push(centerLine('SIRET : ' + company.siret));
+    return parts.join('\n');
+  })();
+
   return (
     <div ref={ref} className={printOnly ? 'order-ticket order-ticket--print-only' : 'order-ticket'}>
       <pre className="order-ticket__body">
-{`         DÉCLIC PIZZA
-${order.restaurant ? '     ' + order.restaurant : ''}
+{`${companyHeader}
 ${SEP}
 Commande : #${order.id.slice(0, 8)}
 Date     : ${date.toLocaleString('fr-FR', {
