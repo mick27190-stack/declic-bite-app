@@ -42,16 +42,16 @@ function initRealtime() {
 
 export function applyOverride(pizza: Pizza, o?: MenuOverride): Pizza {
   if (!o) return pizza;
+  const category = (o.category as ProductCategory) ?? pizza.category;
+  const isDrink = category === 'boissons';
+  const baseName = o.name ?? pizza.name;
+  const name = isDrink && o.capacity ? `${baseName} – ${o.capacity}` : baseName;
   return {
     ...pizza,
-    name: o.name ?? pizza.name,
-    description: o.description ?? pizza.description,
+    name,
+    description: isDrink && o.capacity ? o.capacity : (o.description ?? pizza.description),
     ingredients: o.ingredients && o.ingredients.length > 0 ? o.ingredients : pizza.ingredients,
-    category: (o.category as ProductCategory) ?? pizza.category,
-    // capacity is stored in description for drinks display
-    ...(pizza.category === 'boissons' && o.capacity
-      ? { description: o.capacity }
-      : {}),
+    category,
   };
 }
 
