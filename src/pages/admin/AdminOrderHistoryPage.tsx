@@ -290,6 +290,7 @@ export default function AdminOrderHistoryPage() {
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
   const [customStart, setCustomStart] = useState<string | null>(null);
   const [customEnd, setCustomEnd] = useState<string | null>(null);
+  const [customerSearch, setCustomerSearch] = useState('');
   const [orderToPrint, setOrderToPrint] = useState<OrderTicketData | null>(null);
   const { data: companyData } = useCompanyInfo();
 
