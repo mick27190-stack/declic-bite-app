@@ -111,6 +111,23 @@ export function useNotifications() {
           // duplicate system notifications for the same event.
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updated = payload.new as Notification;
+          setNotifications(prev => {
+            const next = prev.map(n => (n.id === updated.id ? updated : n));
+            setUnreadCount(next.filter(n => !n.is_read).length);
+            return next;
+          });
+        }
+      )
       .subscribe();
 
     return () => {
