@@ -87,20 +87,55 @@ export default function AdminOrdersPage() {
     };
   }, [orderToPrint]);
 
+  // Live count of current-week orders straight from the database.
+  // Acts as the source of truth so that deletions (or any drift between the
+  // local cache and the DB) are automatically reconciled.
+  const [liveCount, setLiveCount] = useState<number | null>(null);
+
+  const refreshCounters = async () => {
+    const [{ data: history }, { count: live }] = await Promise.all([
+      supabase.from('order_history').select('order_count'),
+      supabase.from('orders').select('*', { count: 'exact', head: true }),
+    ]);
+    const archived = (history || []).reduce((sum, r: any) => sum + (r.order_count || 0), 0);
+    setArchivedCount(archived);
+    setLiveCount(live ?? 0);
+    // If the local list drifted from the DB (e.g. after a delete), resync it.
+    if (typeof live === 'number' && live !== orders.length) {
+      refetch();
+    }
+  };
+
   useEffect(() => {
     let active = true;
-    supabase
-      .from('order_history')
-      .select('order_count')
-      .then(({ data }) => {
-        if (!active) return;
-        const total = (data || []).reduce((sum, r: any) => sum + (r.order_count || 0), 0);
-        setArchivedCount(total);
-      });
-    return () => { active = false; };
+    refreshCounters().then(() => { if (!active) return; });
+
+    // Realtime reconciliation: any INSERT/DELETE on orders forces a refresh.
+    const channel = supabase
+      .channel('admin-orders-counter')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, refreshCounters)
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'orders' }, refreshCounters)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'order_history' }, refreshCounters)
+      .subscribe();
+
+    // Safety net: recheck every 60 s in case a Realtime event was missed.
+    const interval = window.setInterval(refreshCounters, 60_000);
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+      window.clearInterval(interval);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Also reconcile whenever the local list changes (covers manual refetches).
+  useEffect(() => {
+    refreshCounters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders.length]);
 
-  const totalOrdersCount = archivedCount + orders.length;
+  const totalOrdersCount = archivedCount + (liveCount ?? orders.length);
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
