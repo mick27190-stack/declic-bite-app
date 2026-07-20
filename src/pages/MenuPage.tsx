@@ -11,6 +11,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { isPromoDay, PROMO_LABEL } from '@/lib/promo';
 import { useMenuAvailability } from '@/hooks/useMenuAvailability';
+import { useMenuOverrides } from '@/hooks/useMenuOverrides';
 
 export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -21,8 +22,9 @@ export default function MenuPage() {
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const navigate = useNavigate();
   const { isAvailable } = useMenuAvailability();
+  const { applyToList } = useMenuOverrides();
 
-  const filteredPizzas = pizzas.filter((pizza) => {
+  const filteredPizzas = applyToList(pizzas).filter((pizza) => {
     const matchesCategory = selectedCategory === 'all' || pizza.category === selectedCategory;
     const matchesSearch = pizza.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       pizza.ingredients.some((i) => i.toLowerCase().includes(searchQuery.toLowerCase()));
