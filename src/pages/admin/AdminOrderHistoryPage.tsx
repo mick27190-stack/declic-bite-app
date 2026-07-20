@@ -27,7 +27,19 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar, Printer } from 'lucide-react';
+import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar, Printer, Trash2, Phone, ChevronDown } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useToast } from '@/hooks/use-toast';
 import { statusLabels, statusColors, OrderStatus } from '@/types/order';
 import { jsPDF } from 'jspdf';
@@ -44,6 +56,12 @@ interface HistoryOrder {
   created_at: string;
   customer_name?: string;
   customer_phone?: string;
+  items?: any[];
+  delivery_address?: any;
+  pickup_time?: string | null;
+  delivery_estimate?: string | null;
+  notes?: string | null;
+  user_id?: string | null;
 }
 
 interface HistoryWeek {
@@ -54,6 +72,7 @@ interface HistoryWeek {
   total_revenue: number;
   orders: HistoryOrder[];
 }
+
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString('fr-FR', {
@@ -302,13 +321,46 @@ export default function AdminOrderHistoryPage() {
       total_price: Number(o.total_price),
       customer_name: o.customer_name,
       customer_phone: o.customer_phone,
-      items: (data as any)?.items,
-      delivery_address: (data as any)?.delivery_address,
-      pickup_time: (data as any)?.pickup_time,
-      delivery_estimate: (data as any)?.delivery_estimate,
-      notes: (data as any)?.notes,
+      items: (data as any)?.items ?? o.items,
+      delivery_address: (data as any)?.delivery_address ?? o.delivery_address,
+      pickup_time: (data as any)?.pickup_time ?? o.pickup_time,
+      delivery_estimate: (data as any)?.delivery_estimate ?? o.delivery_estimate,
+      notes: (data as any)?.notes ?? o.notes,
     });
   };
+
+  const handleDeleteOrder = async (week: HistoryWeek, orderId: string) => {
+    const remaining = (week.orders || []).filter((o) => o.id !== orderId);
+    const total = remaining.reduce(
+      (sum, o) => sum + (o.status === 'cancelled' ? 0 : Number(o.total_price) || 0),
+      0
+    );
+    const { error } = await supabase
+      .from('order_history')
+      .update({
+        orders: remaining as any,
+        order_count: remaining.length,
+        total_revenue: total,
+      })
+      .eq('id', week.id);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Commande supprimée de l\'historique' });
+      fetchHistory();
+    }
+  };
+
+  const handleDeleteWeek = async (weekId: string) => {
+    const { error } = await supabase.from('order_history').delete().eq('id', weekId);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Semaine supprimée de l\'historique' });
+      fetchHistory();
+    }
+  };
+
 
   const filteredWeeks = filterWeeksByPeriod(
     weeks
@@ -545,6 +597,29 @@ export default function AdminOrderHistoryPage() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent>
+                  <div className="flex justify-end pb-2">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4 mr-1.5" /> Supprimer la semaine
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Supprimer cette semaine ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Toutes les commandes archivées de la semaine du {formatDate(week.week_start)} au {formatDate(week.week_end)} seront définitivement supprimées de l'historique.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteWeek(week.id)}>
+                            Supprimer
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                   {week.orders.length === 0 ? (
                     <p className="text-sm text-muted-foreground py-4">
                       Aucune commande cette semaine pour ce site.
@@ -552,40 +627,151 @@ export default function AdminOrderHistoryPage() {
                   ) : (
                     <div className="space-y-2 pb-2">
                       {week.orders.map((order) => (
-                        <div
+                        <Collapsible
                           key={order.id}
-                          className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm"
+                          className="rounded-md border bg-background"
                         >
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">
-                              #{order.id.slice(0, 8)}
-                              {order.customer_name ? ` · ${order.customer_name}` : ''}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              {new Date(order.created_at).toLocaleString('fr-FR')} ·{' '}
-                              {order.restaurant} ·{' '}
-                              {order.order_type === 'livraison' ? 'Livraison' : 'À emporter'}
-                            </p>
+                          <div className="flex items-center justify-between gap-3 p-3 text-sm">
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">
+                                #{order.id.slice(0, 8)}
+                                {order.customer_name ? ` · ${order.customer_name}` : ''}
+                              </p>
+                              <p className="text-muted-foreground text-xs">
+                                {new Date(order.created_at).toLocaleString('fr-FR')} ·{' '}
+                                {order.restaurant} ·{' '}
+                                {order.order_type === 'livraison' ? 'Livraison' : 'À emporter'}
+                              </p>
+                              {order.customer_phone && (
+                                <a
+                                  href={`tel:${order.customer_phone}`}
+                                  className="text-xs text-primary hover:underline flex items-center gap-1 mt-0.5"
+                                >
+                                  <Phone className="h-3 w-3" /> {order.customer_phone}
+                                </a>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Badge className={`${statusColors[order.status]} text-white`}>
+                                {statusLabels[order.status]}
+                              </Badge>
+                              <span className="font-semibold whitespace-nowrap">
+                                {Number(order.total_price).toFixed(2)} €
+                              </span>
+                              <CollapsibleTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  title="Voir le détail"
+                                >
+                                  <ChevronDown className="h-4 w-4" />
+                                </Button>
+                              </CollapsibleTrigger>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handlePrint(order)}
+                                title="Imprimer le ticket"
+                              >
+                                <Printer className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:text-destructive"
+                                    title="Supprimer la commande"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Supprimer cette commande ?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      La commande #{order.id.slice(0, 8)}
+                                      {order.customer_name ? ` de ${order.customer_name}` : ''} sera retirée de l'historique de la semaine.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteOrder(week, order.id)}>
+                                      Supprimer
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Badge className={`${statusColors[order.status]} text-white`}>
-                              {statusLabels[order.status]}
-                            </Badge>
-                            <span className="font-semibold whitespace-nowrap">
-                              {Number(order.total_price).toFixed(2)} €
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handlePrint(order)}
-                              title="Imprimer le ticket"
-                            >
-                              <Printer className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
+                          <CollapsibleContent>
+                            <div className="border-t px-3 py-3 space-y-2 text-sm bg-muted/30">
+                              {(order.pickup_time || order.delivery_estimate) && (
+                                <p className="text-xs text-muted-foreground">
+                                  {order.order_type === 'livraison'
+                                    ? `Livraison souhaitée : ${order.pickup_time ?? '-'}${order.delivery_estimate ? ` · Estimée : ${order.delivery_estimate}` : ''}`
+                                    : `Retrait : ${order.pickup_time ?? '-'}`}
+                                </p>
+                              )}
+                              {order.delivery_address?.address && (
+                                <p className="text-xs text-muted-foreground">
+                                  📍 {order.delivery_address.address}
+                                </p>
+                              )}
+                              {Array.isArray(order.items) && order.items.length > 0 ? (
+                                <div className="space-y-1">
+                                  {order.items.map((item: any, idx: number) => (
+                                    <div key={idx} className="flex justify-between gap-2">
+                                      <span>
+                                        {item?.quantity ?? 1}x {item?.pizza?.name ?? item?.name ?? 'Produit'}
+                                        {item?.size?.name ? ` (${item.size.name})` : ''}
+                                        {item?.pizza?.category === 'bambino' && item?.pizza?.description && (
+                                          <span className="block text-xs font-medium text-primary mt-0.5">
+                                            🍕 {item.pizza.description}
+                                          </span>
+                                        )}
+                                        {item?.supplements?.length > 0 && (
+                                          <span className="text-muted-foreground">
+                                            {' '}+ {item.supplements.map((s: any) => s.name).join(', ')}
+                                          </span>
+                                        )}
+                                        {item?.notes && (
+                                          <span className="block text-xs text-muted-foreground italic mt-0.5">
+                                            📝 {item.notes}
+                                          </span>
+                                        )}
+                                      </span>
+                                      <span className="font-medium whitespace-nowrap">
+                                        {(
+                                          (((item?.pizza?.basePrice ?? 0) +
+                                            (item?.size?.price ?? 0) +
+                                            (item?.supplements ?? []).reduce(
+                                              (s: number, sup: any) => s + (sup.price ?? 0),
+                                              0
+                                            )) *
+                                            (item?.quantity ?? 1)) || 0
+                                        ).toFixed(2)}€
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-muted-foreground italic">
+                                  Détail des articles indisponible.
+                                </p>
+                              )}
+                              {order.notes && (
+                                <p className="text-xs text-muted-foreground italic border-t pt-2">
+                                  📝 {order.notes}
+                                </p>
+                              )}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
                       ))}
+
                     </div>
                   )}
                 </AccordionContent>
