@@ -627,6 +627,7 @@ export default function AdminOrderHistoryPage() {
                 )}
               </div>
             </div>
+          </div>
         )}
 
         {loading ? (
