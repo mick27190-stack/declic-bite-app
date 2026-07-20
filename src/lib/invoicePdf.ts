@@ -48,85 +48,116 @@ export function generateInvoicePdf(
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const marginX = 15;
-  let y = 18;
 
-  // Optional logo (top-left)
-  let headerLeftX = marginX;
+  // ---------- HEADER ----------
+  const headerTop = 15;
+  const logoSize = 22;
+  let companyX = marginX;
+
   if (logoDataUrl) {
     try {
       const fmt = logoDataUrl.includes('image/png') ? 'PNG'
         : logoDataUrl.includes('image/jpeg') || logoDataUrl.includes('image/jpg') ? 'JPEG'
         : logoDataUrl.includes('image/webp') ? 'WEBP'
         : 'PNG';
-      doc.addImage(logoDataUrl, fmt, marginX, y - 4, 24, 24);
-      headerLeftX = marginX + 28;
+      doc.addImage(logoDataUrl, fmt, marginX, headerTop, logoSize, logoSize);
+      companyX = marginX + logoSize + 6;
     } catch {
       // ignore malformed logo
     }
   }
 
-  // Header - Company
+  // Company info — kept to the right of the logo so text never overlaps it
+  const companyMaxWidth = (pageWidth - marginX) - companyX - 70; // leave room for invoice title on the right
+  let cy = headerTop + 5;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(249, 115, 22); // orange
-  doc.text(company?.name || 'DÉCLIC PIZZA', headerLeftX, y);
-  y += 6;
-  doc.setTextColor(20, 20, 20);
+  doc.setFontSize(15);
+  doc.setTextColor(249, 115, 22);
+  doc.text(company?.name || 'DÉCLIC PIZZA', companyX, cy);
+  cy += 5;
+  doc.setTextColor(60, 60, 60);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  if (company?.address) { doc.text(company.address, headerLeftX, y); y += 4; }
-  if (company?.phone) { doc.text(`Tél : ${company.phone}`, headerLeftX, y); y += 4; }
-  if (company?.email) { doc.text(`Email : ${company.email}`, headerLeftX, y); y += 4; }
-  if (company?.siret) { doc.text(`SIRET : ${company.siret}`, headerLeftX, y); y += 4; }
-  doc.text('TVA non applicable, art. 293 B du CGI ou TVA sur encaissements', marginX, y);
-  y += 4;
+  if (company?.address) {
+    const lines = doc.splitTextToSize(company.address, companyMaxWidth) as string[];
+    doc.text(lines, companyX, cy);
+    cy += lines.length * 4;
+  }
+  if (company?.phone) { doc.text(`Tél : ${company.phone}`, companyX, cy); cy += 4; }
+  if (company?.email) { doc.text(`Email : ${company.email}`, companyX, cy); cy += 4; }
+  if (company?.siret) { doc.text(`SIRET : ${company.siret}`, companyX, cy); cy += 4; }
 
-  // Invoice title/box (right side)
+  // Invoice title (top-right)
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(20);
-  doc.text('FACTURE', pageWidth - marginX, 22, { align: 'right' });
+  doc.setFontSize(22);
+  doc.setTextColor(30, 30, 30);
+  doc.text('FACTURE', pageWidth - marginX, headerTop + 6, { align: 'right' });
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`N° ${meta.number}`, pageWidth - marginX, 29, { align: 'right' });
+  doc.setTextColor(60, 60, 60);
+  doc.text(`N° ${meta.number}`, pageWidth - marginX, headerTop + 13, { align: 'right' });
   doc.text(
     `Date : ${meta.date.toLocaleDateString('fr-FR')}`,
-    pageWidth - marginX, 34, { align: 'right' },
+    pageWidth - marginX, headerTop + 18, { align: 'right' },
   );
   doc.text(
     `Commande : #${order.id.slice(0, 8)}`,
-    pageWidth - marginX, 39, { align: 'right' },
+    pageWidth - marginX, headerTop + 23, { align: 'right' },
   );
 
-  y = Math.max(y, 46) + 6;
+  // Separator below header (always past both logo & company text)
+  let y = Math.max(cy, headerTop + logoSize, headerTop + 26) + 6;
+  doc.setDrawColor(230, 230, 230);
+  doc.line(marginX, y, pageWidth - marginX, y);
+  y += 8;
 
-  // Customer block
-  doc.setDrawColor(220, 220, 220);
-  doc.setFillColor(250, 250, 250);
-  const boxY = y;
-  const boxH = 28;
-  doc.rect(marginX, boxY, pageWidth - 2 * marginX, boxH, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.text('Facturé à', marginX + 3, boxY + 6);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text(recipient.name || '-', marginX + 3, boxY + 12);
-  if (recipient.email) doc.text(recipient.email, marginX + 3, boxY + 17);
-  if (recipient.phone) doc.text(recipient.phone, marginX + 3, boxY + 22);
+  // ---------- CUSTOMER / ORDER INFO ----------
   const addr = order.order_type === 'livraison' ? order.delivery_address?.address : null;
-  if (addr) {
-    doc.text(doc.splitTextToSize(addr, 90) as string[], pageWidth / 2, boxY + 12);
-  }
-  doc.setFont('helvetica', 'bold');
-  doc.text('Type', pageWidth - marginX - 45, boxY + 6);
-  doc.setFont('helvetica', 'normal');
-  doc.text(orderTypeLabel(order.order_type), pageWidth - marginX - 45, boxY + 12);
   const when = order.order_type === 'livraison'
     ? (order.delivery_estimate || order.pickup_time)
     : order.pickup_time;
-  if (when) doc.text(`Horaire : ${when}`, pageWidth - marginX - 45, boxY + 17);
 
-  y = boxY + boxH + 8;
+  // Two independent columns with strict widths — no overlap possible
+  const colGap = 6;
+  const colWidth = (pageWidth - 2 * marginX - colGap) / 2;
+  const leftX = marginX;
+  const rightX = marginX + colWidth + colGap;
+
+  // Left column — Facturé à
+  const leftLines: string[] = [];
+  if (recipient.name) leftLines.push(recipient.name);
+  if (recipient.email) leftLines.push(recipient.email);
+  if (recipient.phone) leftLines.push(recipient.phone);
+  if (addr) {
+    const wrapped = doc.splitTextToSize(addr, colWidth - 6) as string[];
+    leftLines.push(...wrapped);
+  }
+
+  // Right column — Détails commande
+  const rightLines: string[] = [orderTypeLabel(order.order_type)];
+  if (when) rightLines.push(`Horaire : ${when}`);
+
+  const bodyLineCount = Math.max(leftLines.length, rightLines.length, 1);
+  const boxH = 10 + bodyLineCount * 4.5 + 4;
+
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(230, 230, 230);
+  doc.rect(leftX, y, colWidth, boxH, 'FD');
+  doc.rect(rightX, y, colWidth, boxH, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(30, 30, 30);
+  doc.text('Facturé à', leftX + 3, y + 6);
+  doc.text('Commande', rightX + 3, y + 6);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(40, 40, 40);
+  leftLines.forEach((line, i) => doc.text(line, leftX + 3, y + 11 + i * 4.5));
+  rightLines.forEach((line, i) => doc.text(line, rightX + 3, y + 11 + i * 4.5));
+
+  y += boxH + 8;
 
   // Items table
   const orderDate = new Date(order.created_at);
