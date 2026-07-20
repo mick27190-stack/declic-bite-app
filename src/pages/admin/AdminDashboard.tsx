@@ -72,7 +72,7 @@ export default function AdminDashboard() {
       description: 'Statistiques pizzas & chiffre d\'affaires',
       icon: TrendingUp,
       href: '/admin/sales',
-      show: canManageOrders
+      show: isSuperAdmin
     },
     {
       title: 'Historique des Commandes',
@@ -93,7 +93,7 @@ export default function AdminDashboard() {
       description: 'Prix des pizzas par taille & promotions',
       icon: Tag,
       href: '/admin/pricing',
-      show: canManageMenu
+      show: isSuperAdmin
     },
     {
       title: 'Chat Clients',
@@ -114,14 +114,14 @@ export default function AdminDashboard() {
       description: 'Envoyer des offres par SMS',
       icon: Send,
       href: '/admin/sms',
-      show: canSendSMS
+      show: isSuperAdmin
     },
     {
       title: 'Gestion Admins',
       description: 'Gérer les administrateurs',
       icon: Users,
       href: '/admin/users',
-      show: canManageSecondaryAdmins || isSuperAdmin
+      show: isSuperAdmin
     },
     {
       title: 'Paramètres',
@@ -135,14 +135,14 @@ export default function AdminDashboard() {
       description: 'Coordonnées affichées sur les tickets',
       icon: Building2,
       href: '/admin/company-info',
-      show: isAnyAdmin
+      show: isSuperAdmin
     },
     {
       title: 'Factures',
       description: 'Historique des factures envoyées',
       icon: FileText,
       href: '/admin/invoices',
-      show: canManageOrders
+      show: isSuperAdmin
     }
   ];
 

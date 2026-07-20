@@ -42,9 +42,9 @@ export default function AdminCompanyInfoPage() {
   useEffect(() => {
     if (!authLoading && !adminLoading) {
       if (!user) navigate('/auth');
-      else if (!isAnyAdmin) navigate('/');
+      else if (!isSuperAdmin) navigate('/admin');
     }
-  }, [user, isAnyAdmin, authLoading, adminLoading, navigate]);
+  }, [user, isSuperAdmin, authLoading, adminLoading, navigate]);
 
   useEffect(() => {
     if (availableSites.length && !availableSites.includes(site)) setSite(availableSites[0]);

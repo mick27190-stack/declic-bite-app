@@ -37,7 +37,7 @@ const normalize = (s: string) =>
 export default function AdminInvoicesPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { isAnyAdmin, loading: adminLoading } = useAdmin();
+  const { isAnyAdmin, isSuperAdmin, loading: adminLoading } = useAdmin();
   const { toast } = useToast();
 
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
@@ -49,9 +49,9 @@ export default function AdminInvoicesPage() {
   useEffect(() => {
     if (!authLoading && !adminLoading) {
       if (!user) navigate('/auth');
-      else if (!isAnyAdmin) navigate('/');
+      else if (!isSuperAdmin) navigate('/admin');
     }
-  }, [user, isAnyAdmin, authLoading, adminLoading, navigate]);
+  }, [user, isSuperAdmin, authLoading, adminLoading, navigate]);
 
   const fetchInvoices = async () => {
     setLoading(true);
