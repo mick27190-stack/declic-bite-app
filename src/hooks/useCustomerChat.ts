@@ -118,12 +118,16 @@ export function useCustomerChat() {
   const markMessagesRead = useCallback(async () => {
     if (!conversationId) return;
     const nowIso = new Date().toISOString();
+    let previousMessages: ChatMessage[] = [];
     setMessages(prev =>
-      prev.map(m =>
-        m.conversation_id === conversationId && m.sender_type === 'admin' && !m.read_at
-          ? { ...m, delivered_at: m.delivered_at ?? nowIso, read_at: nowIso }
-          : m
-      )
+      {
+        previousMessages = prev;
+        return prev.map(m =>
+          m.conversation_id === conversationId && m.sender_type === 'admin' && !m.read_at
+            ? { ...m, delivered_at: m.delivered_at ?? nowIso, read_at: nowIso }
+            : m
+        );
+      }
     );
     const { data, error } = await supabase
       .from('chat_messages')
@@ -134,6 +138,7 @@ export function useCustomerChat() {
       .select('*');
 
     if (error) {
+      setMessages(previousMessages);
       await fetchMessages(conversationId);
       return;
     }
