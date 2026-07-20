@@ -270,27 +270,69 @@ export function useCustomerChat() {
 
     channelRef.current = channel;
 
+    // Adaptive safety-net resync with exponential backoff.
+    // - Base 15s, doubles up to 5min when nothing changes.
+    // - Snapshot diff resets the delay whenever a status flips.
+    // - Pauses entirely when every message is fully read.
+    // - Wakes on tab focus, network recovery or realtime state changes.
+    const BASE_DELAY = 15000;
+    const MAX_DELAY = 300000;
+    let currentDelay = BASE_DELAY;
+    let lastSnapshot = '';
+    let timerId: number | null = null;
+    let stopped = false;
+
+    const snapshot = () =>
+      messagesRef.current.map(m => `${m.id}:${m.delivered_at ?? ''}:${m.read_at ?? ''}`).join('|');
+
+    const fullySynced = () => messagesRef.current.every(m => !!m.read_at);
+
+    const scheduleNext = (delay: number) => {
+      if (stopped) return;
+      if (timerId !== null) window.clearTimeout(timerId);
+      timerId = window.setTimeout(tick, delay);
+    };
+
+    const tick = async () => {
+      if (stopped) return;
+      if (document.visibilityState !== 'visible') {
+        scheduleNext(BASE_DELAY);
+        return;
+      }
+      await fetchMessages(conversationId);
+      const next = snapshot();
+      if (next !== lastSnapshot) {
+        lastSnapshot = next;
+        currentDelay = BASE_DELAY;
+      } else {
+        currentDelay = Math.min(currentDelay * 2, MAX_DELAY);
+      }
+      if (fullySynced()) {
+        if (timerId !== null) { window.clearTimeout(timerId); timerId = null; }
+        return;
+      }
+      scheduleNext(currentDelay);
+    };
+
+    const kickResync = () => { currentDelay = BASE_DELAY; scheduleNext(0); };
+
     // Refetch on tab focus / network recovery so "Envoyé" flips to "Lu" even
     // if a realtime UPDATE was missed while the tab was backgrounded.
     const handleVisible = () => {
-      if (document.visibilityState === 'visible') fetchMessages(conversationId);
+      if (document.visibilityState === 'visible') { fetchMessages(conversationId); kickResync(); }
     };
-    const handleOnline = () => fetchMessages(conversationId);
+    const handleOnline = () => { fetchMessages(conversationId); kickResync(); };
     document.addEventListener('visibilitychange', handleVisible);
     window.addEventListener('online', handleOnline);
 
-    // Periodic safety-net resync (every 30s while tab is visible) so
-    // Envoyé → Reçu → Lu converges even if a realtime UPDATE was dropped.
-    const resyncInterval = window.setInterval(() => {
-      if (document.visibilityState !== 'visible') return;
-      fetchMessages(conversationId);
-    }, 30000);
+    scheduleNext(BASE_DELAY);
 
     return () => {
+      stopped = true;
+      if (timerId !== null) window.clearTimeout(timerId);
       supabase.removeChannel(channel);
       document.removeEventListener('visibilitychange', handleVisible);
       window.removeEventListener('online', handleOnline);
-      window.clearInterval(resyncInterval);
     };
   }, [conversationId, fetchMessages]);
 
