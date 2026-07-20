@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Building2, Save } from 'lucide-react';
+import { ArrowLeft, Building2, Save, Upload, Trash2, ImageIcon } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { toast } from '@/hooks/use-toast';
 
@@ -35,6 +36,8 @@ export default function AdminCompanyInfoPage() {
   const [site, setSite] = useState<Site>(availableSites[0] || 'conches');
   const [form, setForm] = useState<Partial<CompanyInfo>>({});
   const [saving, setSaving] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -55,8 +58,65 @@ export default function AdminCompanyInfoPage() {
       address: current?.address ?? '',
       phone: current?.phone ?? '',
       email: current?.email ?? '',
+      logo_url: current?.logo_url ?? null,
     });
   }, [site, data]);
+
+  // Load signed preview for the current site's logo
+  useEffect(() => {
+    let cancelled = false;
+    const path = data[site]?.logo_url;
+    if (!path) { setLogoPreview(null); return; }
+    supabase.storage.from('company-logos').createSignedUrl(path, 60 * 60)
+      .then(({ data: signed }) => {
+        if (!cancelled) setLogoPreview(signed?.signedUrl ?? null);
+      });
+    return () => { cancelled = true; };
+  }, [site, data]);
+
+  const handleLogoUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Format invalide', description: 'Choisissez une image (PNG, JPG, SVG).', variant: 'destructive' });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: 'Fichier trop lourd', description: 'Le logo doit faire moins de 2 Mo.', variant: 'destructive' });
+      return;
+    }
+    setLogoUploading(true);
+    try {
+      const ext = (file.name.split('.').pop() || 'png').toLowerCase();
+      const path = `${site}/logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('company-logos')
+        .upload(path, file, { contentType: file.type, upsert: true });
+      if (upErr) throw upErr;
+      // Delete previous
+      const prev = data[site]?.logo_url;
+      if (prev && prev !== path) {
+        await supabase.storage.from('company-logos').remove([prev]).catch(() => {});
+      }
+      await upsert(site, { logo_url: path });
+      toast({ title: 'Logo mis à jour' });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+
+  const handleLogoDelete = async () => {
+    const prev = data[site]?.logo_url;
+    if (!prev) return;
+    try {
+      await supabase.storage.from('company-logos').remove([prev]).catch(() => {});
+      await upsert(site, { logo_url: null });
+      setLogoPreview(null);
+      toast({ title: 'Logo supprimé' });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e.message, variant: 'destructive' });
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
