@@ -321,13 +321,46 @@ export default function AdminOrderHistoryPage() {
       total_price: Number(o.total_price),
       customer_name: o.customer_name,
       customer_phone: o.customer_phone,
-      items: (data as any)?.items,
-      delivery_address: (data as any)?.delivery_address,
-      pickup_time: (data as any)?.pickup_time,
-      delivery_estimate: (data as any)?.delivery_estimate,
-      notes: (data as any)?.notes,
+      items: (data as any)?.items ?? o.items,
+      delivery_address: (data as any)?.delivery_address ?? o.delivery_address,
+      pickup_time: (data as any)?.pickup_time ?? o.pickup_time,
+      delivery_estimate: (data as any)?.delivery_estimate ?? o.delivery_estimate,
+      notes: (data as any)?.notes ?? o.notes,
     });
   };
+
+  const handleDeleteOrder = async (week: HistoryWeek, orderId: string) => {
+    const remaining = (week.orders || []).filter((o) => o.id !== orderId);
+    const total = remaining.reduce(
+      (sum, o) => sum + (o.status === 'cancelled' ? 0 : Number(o.total_price) || 0),
+      0
+    );
+    const { error } = await supabase
+      .from('order_history')
+      .update({
+        orders: remaining as any,
+        order_count: remaining.length,
+        total_revenue: total,
+      })
+      .eq('id', week.id);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Commande supprimée de l\'historique' });
+      fetchHistory();
+    }
+  };
+
+  const handleDeleteWeek = async (weekId: string) => {
+    const { error } = await supabase.from('order_history').delete().eq('id', weekId);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Semaine supprimée de l\'historique' });
+      fetchHistory();
+    }
+  };
+
 
   const filteredWeeks = filterWeeksByPeriod(
     weeks
