@@ -34,9 +34,13 @@ export function useChat(siteFilter?: string) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const selectedIdRef = useRef<string | null>(null);
+  const conversationsRef = useRef<ChatConversation[]>([]);
+  const messagesRef = useRef<ChatMessage[]>([]);
   useEffect(() => {
     selectedIdRef.current = selectedConversationId;
   }, [selectedConversationId]);
+  useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
