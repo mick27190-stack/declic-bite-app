@@ -605,7 +605,28 @@ export default function AdminOrderHistoryPage() {
                 </>
               )}
             </div>
-          </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <div className="relative flex-1 min-w-[220px] max-w-sm">
+                <Input
+                  type="text"
+                  placeholder="Rechercher un client (nom ou téléphone)"
+                  className="h-8 text-xs pr-8"
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                />
+                {customerSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setCustomerSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label="Effacer la recherche"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
         )}
 
         {loading ? (
