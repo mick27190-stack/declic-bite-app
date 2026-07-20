@@ -48,6 +48,8 @@ function centerLine(text: string, width = 32): string {
   const t = text.length > width ? text.slice(0, width) : text;
   const pad = Math.max(0, Math.floor((width - t.length) / 2));
   return ' '.repeat(pad) + t;
+}
+
 
 function padLine(left: string, right: string, width = 32): string {
   const l = left.length > width - right.length - 1
