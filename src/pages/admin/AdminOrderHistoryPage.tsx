@@ -400,11 +400,50 @@ export default function AdminOrderHistoryPage() {
         description: "Impossible de charger l'historique des commandes",
         variant: 'destructive',
       });
-    } else {
-      setWeeks((data || []) as unknown as HistoryWeek[]);
+      setLoading(false);
+      return;
     }
+
+    const rawWeeks = (data || []) as unknown as HistoryWeek[];
+
+    // Archived orders JSON has no customer name/phone (not columns on `orders`).
+    // Enrich from profiles via user_id so the detail view can display them.
+    const userIds = Array.from(
+      new Set(
+        rawWeeks.flatMap((w) =>
+          (w.orders || []).map((o) => o.user_id).filter((v): v is string => !!v)
+        )
+      )
+    );
+
+    let profileMap = new Map<string, { name: string; phone: string }>();
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name, phone')
+        .in('user_id', userIds);
+      (profiles || []).forEach((p: any) => {
+        const name = [p.first_name, p.last_name].filter(Boolean).join(' ').trim();
+        profileMap.set(p.user_id, { name, phone: p.phone || '' });
+      });
+    }
+
+    const enriched = rawWeeks.map((w) => ({
+      ...w,
+      orders: (w.orders || []).map((o) => {
+        const p = o.user_id ? profileMap.get(o.user_id) : undefined;
+        return {
+          ...o,
+          customer_name: o.customer_name || p?.name || undefined,
+          customer_phone: o.customer_phone || p?.phone || undefined,
+        };
+      }),
+    }));
+
+    setWeeks(enriched);
     setLoading(false);
   }, [toast]);
+
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
