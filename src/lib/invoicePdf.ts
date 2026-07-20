@@ -43,25 +43,41 @@ export function generateInvoicePdf(
   company: CompanyInfo | null,
   recipient: InvoiceRecipient,
   meta: InvoiceMeta,
+  logoDataUrl?: string | null,
 ): { blob: Blob; totalTTC: number; totalHT: number; tva: number } {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const marginX = 15;
   let y = 18;
 
+  // Optional logo (top-left)
+  let headerLeftX = marginX;
+  if (logoDataUrl) {
+    try {
+      const fmt = logoDataUrl.includes('image/png') ? 'PNG'
+        : logoDataUrl.includes('image/jpeg') || logoDataUrl.includes('image/jpg') ? 'JPEG'
+        : logoDataUrl.includes('image/webp') ? 'WEBP'
+        : 'PNG';
+      doc.addImage(logoDataUrl, fmt, marginX, y - 4, 24, 24);
+      headerLeftX = marginX + 28;
+    } catch {
+      // ignore malformed logo
+    }
+  }
+
   // Header - Company
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
   doc.setTextColor(249, 115, 22); // orange
-  doc.text(company?.name || 'DÉCLIC PIZZA', marginX, y);
+  doc.text(company?.name || 'DÉCLIC PIZZA', headerLeftX, y);
   y += 6;
   doc.setTextColor(20, 20, 20);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  if (company?.address) { doc.text(company.address, marginX, y); y += 4; }
-  if (company?.phone) { doc.text(`Tél : ${company.phone}`, marginX, y); y += 4; }
-  if (company?.email) { doc.text(`Email : ${company.email}`, marginX, y); y += 4; }
-  if (company?.siret) { doc.text(`SIRET : ${company.siret}`, marginX, y); y += 4; }
+  if (company?.address) { doc.text(company.address, headerLeftX, y); y += 4; }
+  if (company?.phone) { doc.text(`Tél : ${company.phone}`, headerLeftX, y); y += 4; }
+  if (company?.email) { doc.text(`Email : ${company.email}`, headerLeftX, y); y += 4; }
+  if (company?.siret) { doc.text(`SIRET : ${company.siret}`, headerLeftX, y); y += 4; }
   doc.text('TVA non applicable, art. 293 B du CGI ou TVA sur encaissements', marginX, y);
   y += 4;
 
