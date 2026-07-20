@@ -190,7 +190,7 @@ export function useChat(siteFilter?: string) {
         m.conversation_id === conversationId &&
         m.sender_type === 'customer' &&
         !m.read_at
-          ? { ...m, read_at: nowIso }
+          ? { ...m, delivered_at: m.delivered_at ?? nowIso, read_at: nowIso }
           : m
       );
     });
@@ -227,6 +227,17 @@ export function useChat(siteFilter?: string) {
     }
   }, []);
 
+  const markConversationNotificationsRead = useCallback(async (conversationId: string) => {
+    if (!user) return;
+    await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', user.id)
+      .eq('type', 'new_message')
+      .eq('reference_id', conversationId)
+      .eq('is_read', false);
+  }, [user]);
+
   // Select conversation
   const selectConversation = useCallback((id: string) => {
     // Update the ref synchronously so any fetchConversations() called by
@@ -239,7 +250,8 @@ export function useChat(siteFilter?: string) {
     );
     fetchMessages(id);
     markMessagesRead(id);
-  }, [fetchMessages, markMessagesRead]);
+    markConversationNotificationsRead(id);
+  }, [fetchMessages, markMessagesRead, markConversationNotificationsRead]);
 
 
   // Hide conversation from admin view (does NOT delete messages, client keeps history)
