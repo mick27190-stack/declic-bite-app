@@ -13,6 +13,8 @@ export function useCustomerChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const messagesRef = useRef<ChatMessage[]>([]);
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   // Active site: the restaurant selected for ordering takes priority,
   // then fall back to the customer's preferred restaurant from their profile.
