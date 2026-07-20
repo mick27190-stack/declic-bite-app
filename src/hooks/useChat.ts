@@ -431,27 +431,26 @@ export function useChat(siteFilter?: string) {
       currentDelay = BASE_DELAY;
       scheduleNext(0);
     };
+    kickResyncRef.current = kickResync;
+
+    // Also wake the scheduler whenever a realtime event refreshes state.
+    // (msgChannel/convChannel above already refetch; we just reset backoff.)
+    const originalRefresh = refreshConversations;
+    // No wrapping needed: realtime handlers already call refreshConversations
+    // which mutates state; the snapshot diff on the next tick will reset the
+    // delay. But we also kick immediately so we don't wait the current delay.
+    void originalRefresh;
 
     // Start the scheduler.
     scheduleNext(BASE_DELAY);
-
-    // Wake the scheduler from external events.
-    const prevHandleVisibility = handleVisibility;
-    const prevHandleOnline = handleOnline;
-    const wakeOnVisibility = () => { prevHandleVisibility(); if (document.visibilityState === 'visible') kickResync(); };
-    const wakeOnOnline = () => { prevHandleOnline(); kickResync(); };
-    document.removeEventListener('visibilitychange', prevHandleVisibility);
-    window.removeEventListener('online', prevHandleOnline);
-    document.addEventListener('visibilitychange', wakeOnVisibility);
-    window.addEventListener('online', wakeOnOnline);
 
     return () => {
       stopped = true;
       if (timerId !== null) window.clearTimeout(timerId);
       supabase.removeChannel(msgChannel);
       supabase.removeChannel(convChannel);
-      document.removeEventListener('visibilitychange', wakeOnVisibility);
-      window.removeEventListener('online', wakeOnOnline);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('online', handleOnline);
     };
   }, [user, fetchConversations, refreshConversations, fetchMessages, markMessagesRead, markDelivered]);
 
