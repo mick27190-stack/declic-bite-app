@@ -309,6 +309,28 @@ export default function AdminOrdersPage() {
       );
       if (mailErr) throw mailErr;
 
+      // Record the invoice for the "Factures" admin section
+      const siteValue = order.restaurant?.toLowerCase().includes('beaumont')
+        ? 'beaumont'
+        : 'conches';
+      const { error: recErr } = await supabase.from('invoices').upsert(
+        {
+          order_id: order.id,
+          user_id: order.user_id,
+          invoice_number: meta.number,
+          storage_path: path,
+          total_ttc: Number(totalTTC.toFixed(2)),
+          recipient_email: email,
+          customer_name: fullName,
+          customer_phone: profile?.phone ?? order.customer_phone ?? null,
+          restaurant: order.restaurant,
+          site: siteValue,
+          sent_at: new Date().toISOString(),
+        },
+        { onConflict: 'invoice_number' },
+      );
+      if (recErr) console.warn('Failed to record invoice:', recErr);
+
       toast({
         title: '📄 Facture envoyée',
         description: `Facture ${meta.number} envoyée à ${email}.`,

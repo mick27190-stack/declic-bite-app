@@ -379,6 +379,71 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          invoice_number: string
+          last_resent_at: string | null
+          order_id: string
+          recipient_email: string
+          resent_count: number
+          restaurant: string
+          sent_at: string
+          site: string
+          storage_path: string
+          total_ttc: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          invoice_number: string
+          last_resent_at?: string | null
+          order_id: string
+          recipient_email: string
+          resent_count?: number
+          restaurant: string
+          sent_at?: string
+          site: string
+          storage_path: string
+          total_ttc: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          invoice_number?: string
+          last_resent_at?: string | null
+          order_id?: string
+          recipient_email?: string
+          resent_count?: number
+          restaurant?: string
+          sent_at?: string
+          site?: string
+          storage_path?: string
+          total_ttc?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_item_availability: {
         Row: {
           is_available: boolean

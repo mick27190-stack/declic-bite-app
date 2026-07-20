@@ -26,6 +26,7 @@ import AdminSalesPage from "./pages/admin/AdminSalesPage";
 import AdminPricingPage from "./pages/admin/AdminPricingPage";
 import AdminOrderHistoryPage from "./pages/admin/AdminOrderHistoryPage";
 import AdminCompanyInfoPage from "./pages/admin/AdminCompanyInfoPage";
+import AdminInvoicesPage from "./pages/admin/AdminInvoicesPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import LivreurOrdersPage from "./pages/LivreurOrdersPage";
 import NotFound from "./pages/NotFound";
@@ -93,6 +94,7 @@ const App = () => {
                 <Route path="/admin/sales" element={<AdminSalesPage />} />
                 <Route path="/admin/pricing" element={<AdminPricingPage />} />
                 <Route path="/admin/company-info" element={<AdminCompanyInfoPage />} />
+                <Route path="/admin/invoices" element={<AdminInvoicesPage />} />
                 <Route path="/dev/cutoff-preview" element={<CutoffPreviewPage />} />
                 <Route path="/unsubscribe" element={<UnsubscribePage />} />
                 <Route path="*" element={<NotFound />} />

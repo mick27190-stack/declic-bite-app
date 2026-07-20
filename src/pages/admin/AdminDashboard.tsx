@@ -16,7 +16,8 @@ import {
   Contact,
   Tag,
   History,
-  Building2
+  Building2,
+  FileText
 
 
 } from 'lucide-react';
@@ -135,6 +136,13 @@ export default function AdminDashboard() {
       icon: Building2,
       href: '/admin/company-info',
       show: isAnyAdmin
+    },
+    {
+      title: 'Factures',
+      description: 'Historique des factures envoyées',
+      icon: FileText,
+      href: '/admin/invoices',
+      show: canManageOrders
     }
   ];
 
