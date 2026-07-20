@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar, Printer, Trash2, Phone, ChevronDown } from 'lucide-react';
+import { ArrowLeft, RefreshCw, History, Package, MapPin, Truck, Store, FileDown, Calendar, Printer, Trash2, Phone, ChevronDown, Search, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
