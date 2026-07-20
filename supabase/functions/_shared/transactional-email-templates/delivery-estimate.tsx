@@ -42,7 +42,7 @@ const DeliveryEstimateEmail = ({
             Malheureusement nos disponibilités de livraison ne nous permettent pas
             de livrer votre commande à l’heure que vous souhaitez
             {requestedTime ? ` (${requestedTime})` : ''}, nous vous proposons un
-            nouvel horaire de livraison estimée
+            nouvel horaire de livraison estimé
             {estimatedTime ? ` : ${estimatedTime}` : ''}.
           </Text>
           <Text style={text}>
