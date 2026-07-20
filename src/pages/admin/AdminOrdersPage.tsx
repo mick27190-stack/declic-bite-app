@@ -61,6 +61,7 @@ export default function AdminOrdersPage() {
   const { user, loading: authLoading } = useAuth();
   const { canManageOrders, isSiteAdminConches, isSiteAdminBeaumont, isSuperAdmin, loading: adminLoading } = useAdmin();
   const { orders, loading: ordersLoading, updateOrderStatus, setDeliveryEstimate, refetch } = useOrders();
+  const { data: companyData } = useCompanyInfo();
   
   const { toast } = useToast();
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');

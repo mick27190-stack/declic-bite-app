@@ -272,6 +272,7 @@ export default function AdminOrderHistoryPage() {
   const [customStart, setCustomStart] = useState<string | null>(null);
   const [customEnd, setCustomEnd] = useState<string | null>(null);
   const [orderToPrint, setOrderToPrint] = useState<OrderTicketData | null>(null);
+  const { data: companyData } = useCompanyInfo();
 
   useEffect(() => {
     if (!orderToPrint) return;
