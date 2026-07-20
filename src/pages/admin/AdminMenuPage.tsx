@@ -54,12 +54,14 @@ export default function AdminMenuPage() {
   const handleOpenDialog = (pizza?: Pizza) => {
     if (pizza) {
       setEditingPizza(pizza);
+      const isDrink = pizza.category === 'boissons';
       setFormData({
         name: pizza.name,
-        description: pizza.description,
+        description: isDrink ? '' : pizza.description,
         ingredients: pizza.ingredients.join(', '),
         category: pizza.category,
-        isAvailable: pizza.isAvailable
+        capacity: isDrink ? (pizza.description || '') : '',
+        isAvailable: pizza.isAvailable,
       });
     } else {
       setEditingPizza(null);
@@ -68,44 +70,43 @@ export default function AdminMenuPage() {
         description: '',
         ingredients: '',
         category: 'classiques',
-        isAvailable: true
+        capacity: '',
+        isAvailable: true,
       });
     }
     setIsDialogOpen(true);
   };
 
-  const handleSavePizza = () => {
+  const handleSavePizza = async () => {
     if (!formData.name || !formData.ingredients) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
-
-    const newPizza: Pizza = {
-      id: editingPizza?.id || `pizza-${Date.now()}`,
-      name: formData.name,
-      description: formData.description,
-      ingredients: formData.ingredients.split(',').map(i => i.trim()),
-      image: editingPizza?.image || '/placeholder.svg',
-      basePrice: 13, // Prix Senior par défaut
-      category: formData.category as 'classiques' | 'gourmandes' | 'speciales' | 'vegetariennes',
-      isAvailable: formData.isAvailable
-    };
-
-    if (editingPizza) {
-      setPizzaList(prev => prev.map(p => p.id === editingPizza.id ? newPizza : p));
-      toast.success('Pizza modifiée avec succès');
-    } else {
-      setPizzaList(prev => [...prev, newPizza]);
-      toast.success('Pizza ajoutée avec succès');
+    if (!editingPizza) {
+      toast.error("L'ajout de nouveaux produits n'est pas encore supporté.");
+      return;
     }
 
-    setIsDialogOpen(false);
+    try {
+      await upsert({
+        item_id: editingPizza.id,
+        name: formData.name,
+        description: formData.category === 'boissons' ? null : formData.description,
+        ingredients: formData.ingredients.split(',').map((i) => i.trim()).filter(Boolean),
+        category: formData.category,
+        capacity: formData.category === 'boissons' ? (formData.capacity || null) : null,
+      });
+      toast.success('Produit mis à jour');
+      setIsDialogOpen(false);
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur lors de la sauvegarde');
+    }
   };
 
-  const handleDeletePizza = (id: string) => {
-    setPizzaList(prev => prev.filter(p => p.id !== id));
-    toast.success('Pizza supprimée');
+  const handleDeletePizza = (_id: string) => {
+    toast.info("La suppression définitive n'est pas disponible. Désactivez le produit à la place.");
   };
+
 
   const handleToggleAvailability = async (id: string) => {
     try {
