@@ -251,6 +251,7 @@ export function useChat(siteFilter?: string) {
     fetchMessages(id);
     markMessagesRead(id);
     markConversationNotificationsRead(id);
+    window.setTimeout(() => markConversationNotificationsRead(id), 750);
   }, [fetchMessages, markMessagesRead, markConversationNotificationsRead]);
 
 
@@ -299,6 +300,8 @@ export function useChat(siteFilter?: string) {
             // A new customer message arrived while viewing → mark as read
             if (newMsg.sender_type === 'customer') {
               markMessagesRead(activeId);
+              markConversationNotificationsRead(activeId);
+              window.setTimeout(() => markConversationNotificationsRead(activeId), 750);
             }
           } else if (newMsg.sender_type === 'customer') {
             // Unread count / conversation list needs refresh
@@ -484,7 +487,7 @@ export function useChat(siteFilter?: string) {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('online', handleOnline);
     };
-  }, [user, fetchConversations, refreshConversations, fetchMessages, markMessagesRead, markDelivered]);
+  }, [user, fetchConversations, refreshConversations, fetchMessages, markMessagesRead, markConversationNotificationsRead, markDelivered]);
 
   return {
     conversations,
