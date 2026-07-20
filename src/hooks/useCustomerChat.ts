@@ -219,6 +219,19 @@ export function useCustomerChat() {
 
           // Notify only when the restaurant (admin) replies
           if (msg.sender_type === 'admin') {
+            // Mark as delivered to this customer device immediately
+            if (!msg.delivered_at) {
+              const nowIso = new Date().toISOString();
+              setMessages(prev =>
+                prev.map(m => (m.id === msg.id ? { ...m, delivered_at: nowIso } : m))
+              );
+              supabase
+                .from('chat_messages')
+                .update({ delivered_at: nowIso })
+                .eq('id', msg.id)
+                .is('delivered_at', null)
+                .then(() => {});
+            }
             try { playChatSound(); } catch {}
             try {
               showWebNotification('Nouveau message', msg.content, msg.id);
