@@ -273,8 +273,12 @@ export default function AdminOrdersPage() {
         logoDataUrl,
       );
 
-      // Upload PDF to private "invoices" bucket
-      const path = `${order.user_id}/${meta.number}.pdf`;
+      // Upload PDF to private "invoices" bucket, prefixed by site so RLS
+      // policies can scope access to the admin's own restaurant.
+      const invoiceSite = order.restaurant?.toLowerCase().includes('beaumont')
+        ? 'beaumont'
+        : 'conches';
+      const path = `${invoiceSite}/${order.user_id}/${meta.number}.pdf`;
       const { error: upErr } = await supabase.storage
         .from('invoices')
         .upload(path, blob, {

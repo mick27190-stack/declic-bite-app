@@ -25,15 +25,86 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+// Auth note: even though the platform gateway validates the JWT (verify_jwt=true),
+// the public anon key satisfies that check — so we MUST additionally verify in
+// code that the caller is an authenticated admin. Otherwise anyone with the
+// bundled anon key could send branded emails with attacker-controlled links.
+const ADMIN_ROLES = new Set([
+  'super_admin',
+  'secondary_super_admin',
+  'site_admin_conches',
+  'site_admin_beaumont',
+  'secondary_admin_conches',
+  'secondary_admin_beaumont',
+])
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
+
+  // Require an authenticated admin caller. The gateway accepts the anon key,
+  // so we re-validate the JWT here against the user's roles.
+  const authHeader = req.headers.get('Authorization') ?? ''
+  if (!authHeader.toLowerCase().startsWith('bearer ')) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+  const jwt = authHeader.slice('bearer '.length).trim()
+
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
+  const supabaseUrlEarly = Deno.env.get('SUPABASE_URL')
+  if (!anonKey || !supabaseUrlEarly) {
+    return new Response(
+      JSON.stringify({ error: 'Server configuration error' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+  const authClient = createClient(supabaseUrlEarly, anonKey, {
+    global: { headers: { Authorization: `Bearer ${jwt}` } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  })
+  const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(jwt)
+  const callerId = claimsData?.claims?.sub as string | undefined
+  if (claimsError || !callerId) {
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+
+  // Look up the caller's roles via the service role (RLS-safe) and require
+  // at least one admin role before letting them send branded emails.
+  const serviceKeyForAuth = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+  if (!serviceKeyForAuth) {
+    return new Response(
+      JSON.stringify({ error: 'Server configuration error' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+  const adminAuthClient = createClient(supabaseUrlEarly, serviceKeyForAuth)
+  const { data: rolesRows, error: rolesError } = await adminAuthClient
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', callerId)
+  if (rolesError) {
+    console.error('Role lookup failed', { error: rolesError })
+    return new Response(
+      JSON.stringify({ error: 'Authorization check failed' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+  const isAdmin = (rolesRows ?? []).some((r: { role: string }) => ADMIN_ROLES.has(r.role))
+  if (!isAdmin) {
+    return new Response(
+      JSON.stringify({ error: 'Forbidden' }),
+      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    )
+  }
+
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')

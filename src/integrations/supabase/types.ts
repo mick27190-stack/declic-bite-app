@@ -873,6 +873,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      compute_order_total: {
+        Args: { _items: Json; _now?: string }
+        Returns: number
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
