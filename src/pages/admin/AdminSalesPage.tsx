@@ -109,15 +109,56 @@ export default function AdminSalesPage() {
       const until = new Date(endDate);
       until.setHours(23, 59, 59, 999);
 
-      const { data, error } = await supabase
+      // Live orders (current week; older orders are purged Monday 4am Paris)
+      const liveReq = supabase
         .from('orders')
-        .select('created_at, total_price, items, restaurant, status, order_type')
+        .select('created_at, total_price, items, restaurant, status, order_type, id')
         .gte('created_at', since.toISOString())
         .lte('created_at', until.toISOString())
         .neq('status', 'cancelled')
         .order('created_at', { ascending: true });
 
-      if (!error && data) setOrders(data.filter(countsForSales) as OrderRow[]);
+      // Archived orders for any week whose range overlaps [since, until]
+      const sinceDay = since.toISOString().slice(0, 10);
+      const untilDay = until.toISOString().slice(0, 10);
+      const archiveReq = supabase
+        .from('order_history')
+        .select('orders, week_start, week_end')
+        .lte('week_start', untilDay)
+        .gte('week_end', sinceDay);
+
+      const [{ data: liveData }, { data: archiveData }] = await Promise.all([liveReq, archiveReq]);
+
+      const seen = new Set<string>();
+      const merged: (OrderRow & { id?: string })[] = [];
+
+      (liveData || []).filter(countsForSales).forEach((o: any) => {
+        if (o.id) seen.add(o.id);
+        merged.push(o as OrderRow);
+      });
+
+      (archiveData || []).forEach((row: any) => {
+        const arr = Array.isArray(row.orders) ? row.orders : [];
+        arr.forEach((o: any) => {
+          if (!o?.created_at) return;
+          if (o.id && seen.has(o.id)) return;
+          const t = new Date(o.created_at).getTime();
+          if (t < since.getTime() || t > until.getTime()) return;
+          if (!countsForSales(o)) return;
+          if (o.id) seen.add(o.id);
+          merged.push({
+            created_at: o.created_at,
+            total_price: Number(o.total_price) || 0,
+            items: o.items,
+            restaurant: o.restaurant,
+            status: o.status,
+            order_type: o.order_type,
+          });
+        });
+      });
+
+      merged.sort((a, b) => a.created_at.localeCompare(b.created_at));
+      setOrders(merged as OrderRow[]);
       setLoading(false);
     };
 
