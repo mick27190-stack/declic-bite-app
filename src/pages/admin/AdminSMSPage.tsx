@@ -93,11 +93,12 @@ export default function AdminSMSPage() {
     if (!authLoading && !adminLoading) {
       if (!user) {
         navigate('/auth');
-      } else if (!canSendSMS) {
+      } else if (!isSuperAdmin) {
+        // Restreint aux Super Admins (et Super Admins secondaires) uniquement
         navigate('/admin');
       }
     }
-  }, [user, canSendSMS, authLoading, adminLoading]);
+  }, [user, isSuperAdmin, authLoading, adminLoading, navigate]);
 
   // Set default targets based on role
   useEffect(() => {
