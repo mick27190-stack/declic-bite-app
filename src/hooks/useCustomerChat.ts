@@ -79,6 +79,21 @@ export function useCustomerChat() {
 
     if (data) {
       setMessages(data as ChatMessage[]);
+      // Mark any admin messages as delivered to this customer device.
+      const toDeliver = (data as ChatMessage[])
+        .filter(m => m.sender_type === 'admin' && !m.delivered_at)
+        .map(m => m.id);
+      if (toDeliver.length > 0) {
+        const nowIso = new Date().toISOString();
+        setMessages(prev =>
+          prev.map(m => (toDeliver.includes(m.id) ? { ...m, delivered_at: nowIso } : m))
+        );
+        await supabase
+          .from('chat_messages')
+          .update({ delivered_at: nowIso })
+          .in('id', toDeliver)
+          .is('delivered_at', null);
+      }
     }
   }, []);
 
