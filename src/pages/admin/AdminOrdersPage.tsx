@@ -6,8 +6,9 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send, FileText, Loader2 } from 'lucide-react';
 import OrderTicket from '@/components/OrderTicket';
+import { generateInvoicePdf, buildInvoiceNumber } from '@/lib/invoicePdf';
 import { useCompanyInfo, resolveCompanyForRestaurant } from '@/hooks/useCompanyInfo';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -70,6 +71,7 @@ export default function AdminOrdersPage() {
   const [chatOrder, setChatOrder] = useState<Order | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [chatSending, setChatSending] = useState(false);
+  const [invoiceSendingId, setInvoiceSendingId] = useState<string | null>(null);
   // Persistent all-time total (archived weeks + current live orders).
   // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
   const [archivedCount, setArchivedCount] = useState(0);
