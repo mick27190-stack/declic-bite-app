@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send } from 'lucide-react';
 import OrderTicket from '@/components/OrderTicket';
+import { useCompanyInfo, resolveCompanyForRestaurant } from '@/hooks/useCompanyInfo';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -60,6 +61,7 @@ export default function AdminOrdersPage() {
   const { user, loading: authLoading } = useAuth();
   const { canManageOrders, isSiteAdminConches, isSiteAdminBeaumont, isSuperAdmin, loading: adminLoading } = useAdmin();
   const { orders, loading: ordersLoading, updateOrderStatus, setDeliveryEstimate, refetch } = useOrders();
+  const { data: companyData } = useCompanyInfo();
   
   const { toast } = useToast();
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
@@ -438,6 +440,7 @@ export default function AdminOrdersPage() {
             customer_name: orderToPrint.customer_name,
             customer_phone: orderToPrint.customer_phone,
           }}
+          company={resolveCompanyForRestaurant(companyData, orderToPrint.restaurant)}
           printOnly
         />
       )}

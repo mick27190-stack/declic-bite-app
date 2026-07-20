@@ -33,6 +33,7 @@ import { statusLabels, statusColors, OrderStatus } from '@/types/order';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import OrderTicket, { OrderTicketData } from '@/components/OrderTicket';
+import { useCompanyInfo, resolveCompanyForRestaurant } from '@/hooks/useCompanyInfo';
 
 interface HistoryOrder {
   id: string;
@@ -271,6 +272,7 @@ export default function AdminOrderHistoryPage() {
   const [customStart, setCustomStart] = useState<string | null>(null);
   const [customEnd, setCustomEnd] = useState<string | null>(null);
   const [orderToPrint, setOrderToPrint] = useState<OrderTicketData | null>(null);
+  const { data: companyData } = useCompanyInfo();
 
   useEffect(() => {
     if (!orderToPrint) return;
@@ -590,7 +592,7 @@ export default function AdminOrderHistoryPage() {
         )}
       </main>
 
-      {orderToPrint && <OrderTicket order={orderToPrint} printOnly />}
+      {orderToPrint && <OrderTicket order={orderToPrint} company={resolveCompanyForRestaurant(companyData, orderToPrint.restaurant)} printOnly />}
     </div>
   );
 }

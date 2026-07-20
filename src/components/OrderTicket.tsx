@@ -25,15 +25,31 @@ export interface OrderTicketData {
   paid?: boolean;
 }
 
+export interface TicketCompanyInfo {
+  name?: string | null;
+  siret?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+}
+
 interface Props {
   order: OrderTicketData;
   /** When true, ticket is only visible during print. */
   printOnly?: boolean;
+  company?: TicketCompanyInfo | null;
 }
 
 function fmt(n: number) {
   return n.toFixed(2) + '€';
 }
+
+function centerLine(text: string, width = 32): string {
+  const t = text.length > width ? text.slice(0, width) : text;
+  const pad = Math.max(0, Math.floor((width - t.length) / 2));
+  return ' '.repeat(pad) + t;
+}
+
 
 function padLine(left: string, right: string, width = 32): string {
   const l = left.length > width - right.length - 1
@@ -50,7 +66,7 @@ function orderTypeLabel(t: string) {
   return t;
 }
 
-const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true }, ref) => {
+const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true, company }, ref) => {
   const date = new Date(order.created_at);
   const items = Array.isArray(order.items) ? order.items : [];
 
@@ -91,11 +107,22 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
       ? (order.delivery_estimate || order.pickup_time)
       : order.pickup_time;
 
+  const companyHeader = (() => {
+    const parts: string[] = [];
+    const title = company?.name || 'DÉCLIC PIZZA';
+    parts.push(centerLine(title.toUpperCase()));
+    if (!company?.name && order.restaurant) parts.push(centerLine(order.restaurant));
+    if (company?.address) parts.push(centerLine(company.address));
+    if (company?.phone) parts.push(centerLine('Tél : ' + company.phone));
+    if (company?.email) parts.push(centerLine(company.email));
+    if (company?.siret) parts.push(centerLine('SIRET : ' + company.siret));
+    return parts.join('\n');
+  })();
+
   return (
     <div ref={ref} className={printOnly ? 'order-ticket order-ticket--print-only' : 'order-ticket'}>
       <pre className="order-ticket__body">
-{`         DÉCLIC PIZZA
-${order.restaurant ? '     ' + order.restaurant : ''}
+{`${companyHeader}
 ${SEP}
 Commande : #${order.id.slice(0, 8)}
 Date     : ${date.toLocaleString('fr-FR', {

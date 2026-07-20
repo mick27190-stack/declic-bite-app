@@ -15,7 +15,8 @@ import {
   TrendingUp,
   Contact,
   Tag,
-  History
+  History,
+  Building2
 
 
 } from 'lucide-react';
@@ -127,6 +128,13 @@ export default function AdminDashboard() {
       icon: Settings,
       href: '/admin/settings',
       show: isSuperAdmin
+    },
+    {
+      title: "Informations de l'entreprise",
+      description: 'Coordonnées affichées sur les tickets',
+      icon: Building2,
+      href: '/admin/company-info',
+      show: isAnyAdmin
     }
   ];
 
