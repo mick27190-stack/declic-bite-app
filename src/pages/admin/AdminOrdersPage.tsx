@@ -6,8 +6,9 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send, FileText, Loader2 } from 'lucide-react';
 import OrderTicket from '@/components/OrderTicket';
+import { generateInvoicePdf, buildInvoiceNumber } from '@/lib/invoicePdf';
 import { useCompanyInfo, resolveCompanyForRestaurant } from '@/hooks/useCompanyInfo';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -70,6 +71,7 @@ export default function AdminOrdersPage() {
   const [chatOrder, setChatOrder] = useState<Order | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [chatSending, setChatSending] = useState(false);
+  const [invoiceSendingId, setInvoiceSendingId] = useState<string | null>(null);
   // Persistent all-time total (archived weeks + current live orders).
   // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
   const [archivedCount, setArchivedCount] = useState(0);
@@ -197,6 +199,111 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const handleSendInvoice = async (order: Order) => {
+    if (!order.user_id) {
+      toast({
+        title: 'Client inconnu',
+        description: 'Cette commande n’est associée à aucun compte client.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setInvoiceSendingId(order.id);
+    try {
+      // Fetch customer profile for email + name
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('email, first_name, last_name, phone')
+        .eq('user_id', order.user_id)
+        .maybeSingle();
+      if (profileErr) throw profileErr;
+      const email = profile?.email?.trim();
+      if (!email) {
+        toast({
+          title: 'Adresse email manquante',
+          description: 'Le client n’a pas renseigné d’email dans son profil.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const fullName =
+        `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim() ||
+        order.customer_name ||
+        'Client';
+
+      const company = resolveCompanyForRestaurant(companyData, order.restaurant);
+      const meta = { number: buildInvoiceNumber(order), date: new Date(order.created_at) };
+      const { blob, totalTTC } = generateInvoicePdf(
+        order,
+        company,
+        {
+          name: fullName,
+          email,
+          phone: profile?.phone ?? order.customer_phone ?? null,
+          address:
+            order.order_type === 'livraison'
+              ? order.delivery_address?.address ?? null
+              : null,
+        },
+        meta,
+      );
+
+      // Upload PDF to private "invoices" bucket
+      const path = `${order.user_id}/${meta.number}.pdf`;
+      const { error: upErr } = await supabase.storage
+        .from('invoices')
+        .upload(path, blob, {
+          contentType: 'application/pdf',
+          upsert: true,
+        });
+      if (upErr) throw upErr;
+
+      // Signed URL valid 30 days
+      const { data: signed, error: signErr } = await supabase.storage
+        .from('invoices')
+        .createSignedUrl(path, 60 * 60 * 24 * 30);
+      if (signErr || !signed?.signedUrl) throw signErr ?? new Error('URL indisponible');
+
+      const { error: mailErr } = await supabase.functions.invoke(
+        'send-transactional-email',
+        {
+          body: {
+            templateName: 'invoice',
+            recipientEmail: email,
+            idempotencyKey: `invoice-${order.id}-${meta.number}`,
+            templateData: {
+              customerName: fullName,
+              invoiceNumber: meta.number,
+              orderDate: meta.date.toLocaleDateString('fr-FR'),
+              totalTTC: totalTTC.toFixed(2).replace('.', ',') + '€',
+              downloadUrl: signed.signedUrl,
+              companyName: company?.name || 'Déclic Pizza',
+            },
+          },
+        },
+      );
+      if (mailErr) throw mailErr;
+
+      toast({
+        title: '📄 Facture envoyée',
+        description: `Facture ${meta.number} envoyée à ${email}.`,
+      });
+    } catch (e: any) {
+      console.error('Invoice send error:', e);
+      toast({
+        title: 'Erreur',
+        description: e?.message || "Impossible d'envoyer la facture",
+        variant: 'destructive',
+      });
+    } finally {
+      setInvoiceSendingId(null);
+    }
+  };
+
+
+
+
 
 
 
@@ -295,24 +402,40 @@ export default function AdminOrdersPage() {
                           {order.order_type === 'livraison' ? '🚗 Livraison' : '🏪 À emporter'}
                         </Badge>
                       </div>
-                      <Select 
-                        value={order.status} 
-                        onValueChange={(v) => handleStatusChange(order.id, v as OrderStatus)}
-                      >
-                        <SelectTrigger className="w-[160px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">En attente</SelectItem>
-                          <SelectItem value="confirmed">Confirmée</SelectItem>
-                          <SelectItem value="preparing">En préparation</SelectItem>
-                          <SelectItem value="ready">Prête</SelectItem>
-                          {order.order_type === 'livraison' && (
-                            <SelectItem value="delivered">Livrée</SelectItem>
+                      <div className="flex items-center gap-2">
+                        <Select 
+                          value={order.status} 
+                          onValueChange={(v) => handleStatusChange(order.id, v as OrderStatus)}
+                        >
+                          <SelectTrigger className="w-[160px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">En attente</SelectItem>
+                            <SelectItem value="confirmed">Confirmée</SelectItem>
+                            <SelectItem value="preparing">En préparation</SelectItem>
+                            <SelectItem value="ready">Prête</SelectItem>
+                            {order.order_type === 'livraison' && (
+                              <SelectItem value="delivered">Livrée</SelectItem>
+                            )}
+                            <SelectItem value="cancelled">Annulée</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSendInvoice(order)}
+                          disabled={invoiceSendingId === order.id || !order.user_id}
+                          title="Envoyer la facture PDF par email au client"
+                        >
+                          {invoiceSendingId === order.id ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <FileText className="h-4 w-4 mr-2" />
                           )}
-                          <SelectItem value="cancelled">Annulée</SelectItem>
-                        </SelectContent>
-                      </Select>
+                          Facture
+                        </Button>
+                      </div>
                     </div>
                     <CardDescription className="flex flex-wrap gap-4 mt-2">
                       <span className="flex items-center gap-1">
