@@ -345,7 +345,7 @@ export function useChat(siteFilter?: string) {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('online', handleOnline);
     };
-  }, [user, fetchConversations, refreshConversations, fetchMessages, markMessagesRead]);
+  }, [user, fetchConversations, refreshConversations, fetchMessages, markMessagesRead, markDelivered]);
 
   return {
     conversations,
