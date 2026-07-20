@@ -366,6 +366,8 @@ function ProfileChat() {
                           {isCustomer && (
                             msg.read_at ? (
                               <span className="font-medium">· Lu à {formatReadTime(msg.read_at)}</span>
+                            ) : msg.delivered_at ? (
+                              <span className="font-medium">· Reçu</span>
                             ) : (
                               <span className="font-medium">· Envoyé</span>
                             )

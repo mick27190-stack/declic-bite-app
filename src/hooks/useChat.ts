@@ -22,6 +22,7 @@ export interface ChatMessage {
   content: string;
   site: string;
   created_at: string;
+  delivered_at: string | null;
   read_at: string | null;
 }
 
@@ -96,8 +97,31 @@ export function useChat(siteFilter?: string) {
 
     if (data) {
       setMessages(data as ChatMessage[]);
+      // Any customer message loaded here has now been delivered to this admin device.
+      const toDeliver = (data as ChatMessage[])
+        .filter(m => m.sender_type === 'customer' && !m.delivered_at)
+        .map(m => m.id);
+      if (toDeliver.length > 0) {
+        markDeliveredRef.current?.(toDeliver);
+      }
     }
   }, []);
+
+  // Mark specific messages as delivered (received on this admin device).
+  const markDeliveredRef = useRef<((ids: string[]) => Promise<void>) | null>(null);
+  const markDelivered = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) return;
+    const nowIso = new Date().toISOString();
+    setMessages(prev =>
+      prev.map(m => (ids.includes(m.id) && !m.delivered_at ? { ...m, delivered_at: nowIso } : m))
+    );
+    await supabase
+      .from('chat_messages')
+      .update({ delivered_at: nowIso })
+      .in('id', ids)
+      .is('delivered_at', null);
+  }, []);
+  useEffect(() => { markDeliveredRef.current = markDelivered; }, [markDelivered]);
 
   // Send message as admin
   const sendMessage = useCallback(async (conversationId: string, content: string, site: string) => {
@@ -229,6 +253,10 @@ export function useChat(siteFilter?: string) {
         (payload) => {
           const newMsg = payload.new as ChatMessage;
           const activeId = selectedIdRef.current;
+          // Any incoming customer message is now delivered to this admin device
+          if (newMsg.sender_type === 'customer' && !newMsg.delivered_at) {
+            markDelivered([newMsg.id]);
+          }
           // Add to current messages if viewing this conversation
           if (newMsg.conversation_id === activeId) {
             setMessages(prev => (prev.some(m => m.id === newMsg.id) ? prev : [...prev, newMsg]));
@@ -317,7 +345,7 @@ export function useChat(siteFilter?: string) {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('online', handleOnline);
     };
-  }, [user, fetchConversations, refreshConversations, fetchMessages, markMessagesRead]);
+  }, [user, fetchConversations, refreshConversations, fetchMessages, markMessagesRead, markDelivered]);
 
   return {
     conversations,

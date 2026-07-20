@@ -24,7 +24,7 @@ function formatReadAt(iso: string): string {
 function MessageBubble({
   message,
 }: {
-  message: { sender_type: string; content: string; created_at: string; read_at?: string | null };
+  message: { sender_type: string; content: string; created_at: string; delivered_at?: string | null; read_at?: string | null };
 }) {
   const isCustomer = message.sender_type === 'customer';
   return (
@@ -42,6 +42,8 @@ function MessageBubble({
           {isCustomer && (
             message.read_at ? (
               <span className="font-medium">· Lu à {formatReadAt(message.read_at)}</span>
+            ) : message.delivered_at ? (
+              <span className="font-medium">· Reçu</span>
             ) : (
               <span className="font-medium">· Envoyé</span>
             )
