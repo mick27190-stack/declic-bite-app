@@ -361,6 +361,39 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_item_overrides: {
+        Row: {
+          capacity: string | null
+          category: string | null
+          created_at: string
+          description: string | null
+          ingredients: string[] | null
+          item_id: string
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          capacity?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          ingredients?: string[] | null
+          item_id: string
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          capacity?: string | null
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          ingredients?: string[] | null
+          item_id?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       menu_item_prices: {
         Row: {
           created_at: string
