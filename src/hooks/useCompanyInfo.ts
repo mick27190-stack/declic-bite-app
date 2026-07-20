@@ -9,6 +9,7 @@ export interface CompanyInfo {
   address: string | null;
   phone: string | null;
   email: string | null;
+  logo_url: string | null;
 }
 
 const SITES: Array<CompanyInfo['site']> = ['conches', 'beaumont'];

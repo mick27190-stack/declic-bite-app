@@ -234,6 +234,29 @@ export default function AdminOrdersPage() {
 
       const company = resolveCompanyForRestaurant(companyData, order.restaurant);
       const meta = { number: buildInvoiceNumber(order), date: new Date(order.created_at) };
+
+      // Fetch logo as data URL for embedding in the PDF
+      let logoDataUrl: string | null = null;
+      if (company?.logo_url) {
+        try {
+          const { data: signed } = await supabase.storage
+            .from('company-logos')
+            .createSignedUrl(company.logo_url, 60);
+          if (signed?.signedUrl) {
+            const res = await fetch(signed.signedUrl);
+            const b = await res.blob();
+            logoDataUrl = await new Promise<string>((resolve, reject) => {
+              const fr = new FileReader();
+              fr.onload = () => resolve(fr.result as string);
+              fr.onerror = reject;
+              fr.readAsDataURL(b);
+            });
+          }
+        } catch (err) {
+          console.warn('Logo fetch failed, continuing without it:', err);
+        }
+      }
+
       const { blob, totalTTC } = generateInvoicePdf(
         order,
         company,
@@ -247,6 +270,7 @@ export default function AdminOrdersPage() {
               : null,
         },
         meta,
+        logoDataUrl,
       );
 
       // Upload PDF to private "invoices" bucket
