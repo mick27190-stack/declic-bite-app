@@ -402,24 +402,40 @@ export default function AdminOrdersPage() {
                           {order.order_type === 'livraison' ? '🚗 Livraison' : '🏪 À emporter'}
                         </Badge>
                       </div>
-                      <Select 
-                        value={order.status} 
-                        onValueChange={(v) => handleStatusChange(order.id, v as OrderStatus)}
-                      >
-                        <SelectTrigger className="w-[160px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="pending">En attente</SelectItem>
-                          <SelectItem value="confirmed">Confirmée</SelectItem>
-                          <SelectItem value="preparing">En préparation</SelectItem>
-                          <SelectItem value="ready">Prête</SelectItem>
-                          {order.order_type === 'livraison' && (
-                            <SelectItem value="delivered">Livrée</SelectItem>
+                      <div className="flex items-center gap-2">
+                        <Select 
+                          value={order.status} 
+                          onValueChange={(v) => handleStatusChange(order.id, v as OrderStatus)}
+                        >
+                          <SelectTrigger className="w-[160px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">En attente</SelectItem>
+                            <SelectItem value="confirmed">Confirmée</SelectItem>
+                            <SelectItem value="preparing">En préparation</SelectItem>
+                            <SelectItem value="ready">Prête</SelectItem>
+                            {order.order_type === 'livraison' && (
+                              <SelectItem value="delivered">Livrée</SelectItem>
+                            )}
+                            <SelectItem value="cancelled">Annulée</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleSendInvoice(order)}
+                          disabled={invoiceSendingId === order.id || !order.user_id}
+                          title="Envoyer la facture PDF par email au client"
+                        >
+                          {invoiceSendingId === order.id ? (
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          ) : (
+                            <FileText className="h-4 w-4 mr-2" />
                           )}
-                          <SelectItem value="cancelled">Annulée</SelectItem>
-                        </SelectContent>
-                      </Select>
+                          Facture
+                        </Button>
+                      </div>
                     </div>
                     <CardDescription className="flex flex-wrap gap-4 mt-2">
                       <span className="flex items-center gap-1">
