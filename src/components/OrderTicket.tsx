@@ -59,7 +59,7 @@ function orderTypeLabel(t: string) {
   return t;
 }
 
-const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true }, ref) => {
+const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true, company }, ref) => {
   const date = new Date(order.created_at);
   const items = Array.isArray(order.items) ? order.items : [];
 
