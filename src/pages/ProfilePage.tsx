@@ -751,7 +751,7 @@ export default function ProfilePage() {
                           if (!target) return;
                           const { error } = await supabase.auth.updateUser(
                             { email: target },
-                            { emailRedirectTo: `${window.location.origin}/` }
+                            { emailRedirectTo: `${window.location.origin}/auth/confirm` }
                           );
                           if (error) toast.error(error.message);
                           else toast.success('Email de vérification renvoyé');
