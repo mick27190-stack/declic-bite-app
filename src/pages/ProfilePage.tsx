@@ -986,7 +986,48 @@ export default function ProfilePage() {
           <LogOut className="w-5 h-5 mr-2" />
           Se déconnecter
         </Button>
+
+        {/* Delete Account Button */}
+        <Button
+          variant="outline"
+          className="w-full mt-3 border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          onClick={() => { setDeleteConfirmText(''); setDeleteConfirmOpen(true); }}
+        >
+          <Trash2 className="w-5 h-5 mr-2" />
+          Supprimer mon compte
+        </Button>
       </div>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer votre compte ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action est <strong>définitive</strong>. Votre profil, vos adresses et vos données personnelles seront supprimés.
+              Un email de confirmation sera envoyé à l'adresse enregistrée sur votre compte.
+              <br /><br />
+              Pour confirmer, tapez <strong>SUPPRIMER</strong> ci-dessous.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder="SUPPRIMER"
+            autoFocus
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingAccount}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDeleteAccount(); }}
+              disabled={deletingAccount || deleteConfirmText.trim().toUpperCase() !== 'SUPPRIMER'}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingAccount ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Supprimer définitivement'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
       <BottomNavigation />
     </div>
