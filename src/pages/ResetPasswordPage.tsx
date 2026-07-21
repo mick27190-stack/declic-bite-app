@@ -98,9 +98,15 @@ export default function ResetPasswordPage() {
     } catch (e) {
       console.error('Sign out after password reset failed:', e);
     }
+
     setLoading(false);
-    toast.success('Mot de passe mis à jour ! Connectez-vous avec votre nouveau mot de passe.');
-    navigate('/auth');
+    setSuccess(true);
+    toast.success('Mot de passe réinitialisé avec succès ! Redirection vers la connexion...');
+
+    // Let the user see the confirmation before redirecting to the login page.
+    setTimeout(() => {
+      navigate('/auth');
+    }, 2500);
   };
 
   return (
