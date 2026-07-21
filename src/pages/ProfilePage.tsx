@@ -577,6 +577,30 @@ export default function ProfilePage() {
     navigate('/');
   };
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText.trim().toUpperCase() !== 'SUPPRIMER') {
+      toast.error('Merci de taper SUPPRIMER pour confirmer');
+      return;
+    }
+    setDeletingAccount(true);
+    try {
+      const { error } = await supabase.functions.invoke('delete-account');
+      if (error) throw error;
+      toast.success('Votre compte a été supprimé. Un email de confirmation vous a été envoyé.');
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+      toast.error('Erreur lors de la suppression du compte');
+      setDeletingAccount(false);
+    }
+  };
+
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
