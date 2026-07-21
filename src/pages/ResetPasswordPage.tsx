@@ -98,6 +98,14 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    // Send confirmation email BEFORE signing out — the recovery session
+    // is what authenticates the caller to the edge function.
+    try {
+      await supabase.functions.invoke('send-password-changed-email', { body: {} });
+    } catch (e) {
+      console.error('Password-changed email send failed:', e);
+    }
+
     // Sign out the recovery session so the user must log in with the new
     // password — this both confirms it works and avoids leaving a stale
     // recovery session behind.
