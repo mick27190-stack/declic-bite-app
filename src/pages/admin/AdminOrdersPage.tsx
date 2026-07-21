@@ -442,7 +442,7 @@ export default function AdminOrdersPage() {
         <div className="flex flex-wrap gap-4 mb-6">
 
 
-          {isSuperAdmin && (
+          {isSuperAdmin ? (
             <Select value={filterSite} onValueChange={(v) => setFilterSite(v as any)}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Filtrer par site" />
@@ -453,7 +453,18 @@ export default function AdminOrdersPage() {
                 <SelectItem value="beaumont">Beaumont</SelectItem>
               </SelectContent>
             </Select>
-          )}
+          ) : forcedSite ? (
+            <Select value={forcedSite} disabled>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={forcedSite}>
+                  {forcedSite === 'conches' ? 'Conches' : 'Beaumont'}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          ) : null}
           <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as any)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrer par statut" />
