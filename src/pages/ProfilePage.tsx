@@ -34,6 +34,7 @@ import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useUserOrders } from '@/hooks/useOrders';
 import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
 import { statusLabels, statusColors } from '@/types/order';
+import { supabase } from '@/integrations/supabase/client';
 
 function CurrentOrders() {
   const { orders, loading, respondToOrder } = useUserOrders();
