@@ -727,9 +727,40 @@ export default function ProfilePage() {
                 <User className="w-4 h-4 text-muted-foreground" />
                 <span>{profile?.first_name || '-'} {profile?.last_name || '-'}</span>
               </div>
-              <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-3 text-sm flex-wrap">
                 <Mail className="w-4 h-4 text-muted-foreground" />
                 <span>{profile?.email || user?.email || 'Non renseigné'}</span>
+                {(profile?.email || user?.email) && (
+                  user?.email_confirmed_at ? (
+                    <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+                      <Check className="w-3 h-3" /> Email vérifié
+                    </span>
+                  ) : (
+                    <>
+                      <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                        <X className="w-3 h-3" /> Non vérifié
+                      </span>
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs"
+                        onClick={async () => {
+                          const target = profile?.email || user?.email;
+                          if (!target) return;
+                          const { error } = await supabase.auth.updateUser(
+                            { email: target },
+                            { emailRedirectTo: `${window.location.origin}/` }
+                          );
+                          if (error) toast.error(error.message);
+                          else toast.success('Email de vérification renvoyé');
+                        }}
+                      >
+                        Renvoyer le lien
+                      </Button>
+                    </>
+                  )
+                )}
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <Phone className="w-4 h-4 text-muted-foreground" />
