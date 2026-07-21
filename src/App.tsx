@@ -14,6 +14,7 @@ import ContactPage from "./pages/ContactPage";
 import AuthPage from "./pages/AuthPage";
 import ProfilePage from "./pages/ProfilePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import AuthConfirmPage from "./pages/AuthConfirmPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminCustomersPage from "./pages/admin/AdminCustomersPage";
@@ -80,6 +81,8 @@ const App = () => {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/auth/confirm" element={<AuthConfirmPage />} />
+                <Route path="/auth/callback" element={<AuthConfirmPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/livreur" element={<LivreurOrdersPage />} />
                 <Route path="/admin" element={<AdminDashboard />} />

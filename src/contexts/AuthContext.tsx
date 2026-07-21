@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await supabase.auth.updateUser(
           { email },
-          { emailRedirectTo: `${window.location.origin}/` }
+          { emailRedirectTo: `${window.location.origin}/auth/confirm` }
         );
       } catch (e) {
         console.error('Error attaching email:', e);
