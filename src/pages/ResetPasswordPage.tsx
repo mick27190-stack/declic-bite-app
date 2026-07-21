@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Lock, ArrowLeft, Loader2 } from 'lucide-react';
+import { Lock, ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 import { z } from 'zod';
 
 const passwordSchema = z.string().min(6, 'Le mot de passe doit contenir au moins 6 caractères');
@@ -15,9 +15,12 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const { updatePassword } = useAuth();
 
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -62,6 +65,12 @@ export default function ResetPasswordPage() {
     };
 
     establishSession();
+
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
   }, []);
 
 
@@ -97,9 +106,15 @@ export default function ResetPasswordPage() {
     } catch (e) {
       console.error('Sign out after password reset failed:', e);
     }
+
     setLoading(false);
-    toast.success('Mot de passe mis à jour ! Connectez-vous avec votre nouveau mot de passe.');
-    navigate('/auth');
+    setSuccess(true);
+    toast.success('Mot de passe réinitialisé avec succès ! Redirection vers la connexion...');
+
+    // Let the user see the confirmation before redirecting to the login page.
+    redirectTimeoutRef.current = setTimeout(() => {
+      navigate('/auth');
+    }, 2500);
   };
 
   return (
@@ -122,7 +137,20 @@ export default function ResetPasswordPage() {
         </div>
 
         <div className="w-full max-w-md glass-card p-6 rounded-2xl">
-          {checking ? (
+          {success ? (
+            <div className="text-center py-6 space-y-4">
+              <div className="flex justify-center">
+                <CheckCircle className="w-14 h-14 text-green-500" />
+              </div>
+              <p className="text-foreground font-medium text-lg">Mot de passe mis à jour !</p>
+              <p className="text-muted-foreground text-sm">
+                Votre nouveau mot de passe est enregistré. Vous allez être redirigé vers la page de connexion pour vous reconnecter.
+              </p>
+              <Button className="w-full" variant="warm" onClick={() => navigate('/auth')}>
+                Se connecter maintenant
+              </Button>
+            </div>
+          ) : checking ? (
             <div className="flex flex-col items-center justify-center py-8 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <p className="text-muted-foreground text-sm">Vérification du lien...</p>
