@@ -781,31 +781,31 @@ export default function ProfilePage() {
                         size="sm"
                         className="h-auto p-0 text-xs"
                         onClick={async () => {
-                          const target = profile?.email || user?.email;
+                          const target = (profile?.email || user?.email || '').trim();
                           if (!target) {
                             toast.error("Renseignez d'abord une adresse email dans votre profil.");
                             return;
                           }
-                          // If the email is not yet attached to the auth account
-                          // (legacy accounts created before email verification),
-                          // attach it via updateUser — this sends the confirmation.
-                          if (!user?.email || user.email !== target) {
-                            const { error } = await supabase.auth.updateUser(
-                              { email: target },
-                              { emailRedirectTo: `${window.location.origin}/auth/confirm` }
-                            );
-                            if (error) toast.error(error.message);
-                            else toast.success('Email de vérification envoyé. Vérifiez votre boîte de réception.');
-                            return;
+                          // Call the edge function which handles the case where
+                          // the email was previously used by another (orphan)
+                          // account and needs to be freed before re-attaching.
+                          const { data, error } = await supabase.functions.invoke(
+                            'resend-email-verification',
+                            {
+                              body: {
+                                email: target,
+                                redirectTo: `${window.location.origin}/auth/confirm`,
+                              },
+                            }
+                          );
+                          const errMsg =
+                            (error as { message?: string } | null)?.message ||
+                            (data as { error?: string } | null)?.error;
+                          if (errMsg) {
+                            toast.error(errMsg);
+                          } else {
+                            toast.success('Email de vérification envoyé. Vérifiez votre boîte de réception.');
                           }
-                          // Email already attached but unconfirmed → resend signup confirmation.
-                          const { error } = await supabase.auth.resend({
-                            type: 'signup',
-                            email: target,
-                            options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
-                          });
-                          if (error) toast.error(error.message);
-                          else toast.success('Email de vérification renvoyé. Vérifiez votre boîte de réception.');
                         }}
 
                       >
