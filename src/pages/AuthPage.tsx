@@ -340,7 +340,9 @@ export default function AuthPage() {
               </div>
 
               <div>
-                <Label htmlFor="emailSignup" className="text-foreground">Email</Label>
+                <Label htmlFor="emailSignup" className="text-foreground">
+                  Email <span className="text-destructive">*</span>
+                </Label>
                 <div className="relative mt-1">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -350,9 +352,14 @@ export default function AuthPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
                     placeholder="vous@exemple.com"
+                    required
+                    aria-required="true"
                   />
                 </div>
                 {errors.email && <p className="text-destructive text-sm mt-1">{errors.email}</p>}
+                <p className="text-muted-foreground text-xs mt-1">
+                  Nécessaire pour réinitialiser votre mot de passe et recevoir vos factures.
+                </p>
               </div>
 
 
