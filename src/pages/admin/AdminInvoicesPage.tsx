@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Loader2, Search, Send, Download, RefreshCw } from 'lucide-react';
+import { ArrowLeft, FileText, Loader2, Search, Send, Download, RefreshCw, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -143,6 +154,28 @@ export default function AdminInvoicesPage() {
     }
   };
 
+  const handleDelete = async (inv: InvoiceRow) => {
+    setBusyId(inv.id);
+    try {
+      // Best-effort remove of the stored PDF; ignore errors so a missing
+      // object doesn't block deletion of the row.
+      if (inv.storage_path) {
+        await supabase.storage.from('invoices').remove([inv.storage_path]);
+      }
+      const { error } = await supabase.from('invoices').delete().eq('id', inv.id);
+      if (error) throw error;
+      setInvoices((prev) => prev.filter((i) => i.id !== inv.id));
+      toast({
+        title: '🗑️ Facture supprimée',
+        description: `Facture ${inv.invoice_number} supprimée de l'historique.`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.message ?? 'Suppression impossible', variant: 'destructive' });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -266,6 +299,34 @@ export default function AdminInvoicesPage() {
                       )}
                       Renvoyer la facture
                     </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={busyId === inv.id}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" /> Supprimer
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Supprimer cette facture ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            La facture {inv.invoice_number} sera définitivement retirée de l'historique et le PDF associé supprimé du stockage. Cette action est irréversible.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            onClick={() => handleDelete(inv)}
+                          >
+                            Supprimer
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardContent>
               </Card>
