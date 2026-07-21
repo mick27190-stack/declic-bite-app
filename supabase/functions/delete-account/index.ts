@@ -161,7 +161,40 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Delete the auth user. Related public rows cascade via FK on auth.users.
+  // Resolve site (best-effort) for the RGPD deletion log.
+  let deletionSite: string | null = null
+  try {
+    const { data: cust } = await supabase
+      .from('customers')
+      .select('site')
+      .eq('user_id', callerId)
+      .maybeSingle()
+    deletionSite = (cust?.site as string | null) ?? null
+  } catch (_) { /* non-fatal */ }
+
+  // Anonymize orders / customers / invoices / chat BEFORE deleting the auth user
+  // so accounting data is preserved without personal identifiers. If this step
+  // fails we abort — better to leave the account intact than to orphan PII.
+  const { error: anonError } = await supabase.rpc('anonymize_user_orders', {
+    user_id_param: callerId,
+  })
+  if (anonError) {
+    console.error('anonymize_user_orders failed:', anonError.message)
+    return new Response(JSON.stringify({ error: 'Failed to anonymize account data' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  // RGPD proof-of-deletion log (no identity stored).
+  try {
+    await supabase.from('account_deletion_log').insert({ site: deletionSite })
+  } catch (err) {
+    console.error('account_deletion_log insert failed (non-fatal):', err)
+  }
+
+  // Delete the auth user. Related PII rows (profiles, addresses, push_tokens)
+  // cascade via FK on auth.users.
   const { error: deleteError } = await supabase.auth.admin.deleteUser(callerId)
   if (deleteError) {
     console.error('deleteUser failed:', deleteError)

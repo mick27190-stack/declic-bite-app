@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_log: {
+        Row: {
+          deleted_at: string
+          id: string
+          site: string | null
+        }
+        Insert: {
+          deleted_at?: string
+          id?: string
+          site?: string | null
+        }
+        Update: {
+          deleted_at?: string
+          id?: string
+          site?: string | null
+        }
+        Relationships: []
+      }
       addresses: {
         Row: {
           city: string
@@ -851,6 +869,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      anonymize_user_orders: {
+        Args: { user_id_param: string }
+        Returns: undefined
+      }
       archive_previous_week_orders: { Args: never; Returns: undefined }
       archive_previous_week_orders_guarded: { Args: never; Returns: undefined }
       can_admin_access_order: {
