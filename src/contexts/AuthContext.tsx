@@ -147,7 +147,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Attach an email to the account so password reset by email works
     if (!error && data.user && email) {
       try {
-        await supabase.auth.updateUser({ email });
+        await supabase.auth.updateUser(
+          { email },
+          { emailRedirectTo: `${window.location.origin}/` }
+        );
       } catch (e) {
         console.error('Error attaching email:', e);
       }

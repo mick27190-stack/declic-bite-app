@@ -142,7 +142,14 @@ export default function AuthPage() {
         toast.error(error.message);
       }
     } else {
-      toast.success('Compte créé avec succès !');
+      if (email) {
+        toast.success(
+          'Compte créé ! Un email de vérification vous a été envoyé. Cliquez sur le lien pour valider votre adresse.',
+          { duration: 8000 }
+        );
+      } else {
+        toast.success('Compte créé avec succès !');
+      }
       navigate('/');
     }
   };
