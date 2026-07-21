@@ -18,6 +18,7 @@ export default function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
