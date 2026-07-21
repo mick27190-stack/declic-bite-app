@@ -60,16 +60,16 @@ function DeliveryEstimateControl({ order, onSubmit }: { order: Order; onSubmit: 
 export default function AdminOrdersPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { canManageOrders, isSiteAdminConches, isSiteAdminBeaumont, isSuperAdmin, loading: adminLoading } = useAdmin();
+  const { canManageOrders, isSiteAdminConches, isSiteAdminBeaumont, isSecondaryAdminConches, isSecondaryAdminBeaumont, isSuperAdmin, loading: adminLoading } = useAdmin();
   const { orders, loading: ordersLoading, updateOrderStatus, setDeliveryEstimate, refetch } = useOrders();
   const { data: companyData } = useCompanyInfo();
   
   const { toast } = useToast();
   const forcedSite: 'conches' | 'beaumont' | null = isSuperAdmin
     ? null
-    : isSiteAdminConches
+    : (isSiteAdminConches || isSecondaryAdminConches)
       ? 'conches'
-      : isSiteAdminBeaumont
+      : (isSiteAdminBeaumont || isSecondaryAdminBeaumont)
         ? 'beaumont'
         : null;
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>(forcedSite ?? 'all');
