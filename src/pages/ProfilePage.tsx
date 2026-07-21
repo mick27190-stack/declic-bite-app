@@ -35,6 +35,16 @@ import { useUserOrders } from '@/hooks/useOrders';
 import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
 import { statusLabels, statusColors } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 function CurrentOrders() {
   const { orders, loading, respondToOrder } = useUserOrders();
