@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +14,8 @@ const passwordSchema = z.string().min(6, 'Le mot de passe doit contenir au moins
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const { updatePassword } = useAuth();
+
+  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [ready, setReady] = useState(false);
   const [checking, setChecking] = useState(true);
