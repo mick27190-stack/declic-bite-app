@@ -129,7 +129,20 @@ export default function ResetPasswordPage() {
         </div>
 
         <div className="w-full max-w-md glass-card p-6 rounded-2xl">
-          {checking ? (
+          {success ? (
+            <div className="text-center py-6 space-y-4">
+              <div className="flex justify-center">
+                <CheckCircle className="w-14 h-14 text-green-500" />
+              </div>
+              <p className="text-foreground font-medium text-lg">Mot de passe mis à jour !</p>
+              <p className="text-muted-foreground text-sm">
+                Votre nouveau mot de passe est enregistré. Vous allez être redirigé vers la page de connexion pour vous reconnecter.
+              </p>
+              <Button className="w-full" variant="warm" onClick={() => navigate('/auth')}>
+                Se connecter maintenant
+              </Button>
+            </div>
+          ) : checking ? (
             <div className="flex flex-col items-center justify-center py-8 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <p className="text-muted-foreground text-sm">Vérification du lien...</p>
