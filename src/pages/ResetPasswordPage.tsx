@@ -82,14 +82,24 @@ export default function ResetPasswordPage() {
 
     setLoading(true);
     const { error } = await updatePassword(password);
-    setLoading(false);
 
     if (error) {
+      setLoading(false);
       toast.error(error.message || "Lien invalide ou expiré. Veuillez recommencer.");
-    } else {
-      toast.success('Mot de passe mis à jour avec succès !');
-      navigate('/');
+      return;
     }
+
+    // Sign out the recovery session so the user must log in with the new
+    // password — this both confirms it works and avoids leaving a stale
+    // recovery session behind.
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.error('Sign out after password reset failed:', e);
+    }
+    setLoading(false);
+    toast.success('Mot de passe mis à jour ! Connectez-vous avec votre nouveau mot de passe.');
+    navigate('/auth');
   };
 
   return (
