@@ -154,6 +154,28 @@ export default function AdminInvoicesPage() {
     }
   };
 
+  const handleDelete = async (inv: InvoiceRow) => {
+    setBusyId(inv.id);
+    try {
+      // Best-effort remove of the stored PDF; ignore errors so a missing
+      // object doesn't block deletion of the row.
+      if (inv.storage_path) {
+        await supabase.storage.from('invoices').remove([inv.storage_path]);
+      }
+      const { error } = await supabase.from('invoices').delete().eq('id', inv.id);
+      if (error) throw error;
+      setInvoices((prev) => prev.filter((i) => i.id !== inv.id));
+      toast({
+        title: '🗑️ Facture supprimée',
+        description: `Facture ${inv.invoice_number} supprimée de l'historique.`,
+      });
+    } catch (e: any) {
+      toast({ title: 'Erreur', description: e?.message ?? 'Suppression impossible', variant: 'destructive' });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
