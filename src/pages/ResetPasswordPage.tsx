@@ -65,6 +65,12 @@ export default function ResetPasswordPage() {
     };
 
     establishSession();
+
+    return () => {
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
+      }
+    };
   }, []);
 
 
