@@ -65,7 +65,20 @@ export default function AdminOrdersPage() {
   const { data: companyData } = useCompanyInfo();
   
   const { toast } = useToast();
-  const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>('all');
+  const forcedSite: 'conches' | 'beaumont' | null = isSuperAdmin
+    ? null
+    : isSiteAdminConches
+      ? 'conches'
+      : isSiteAdminBeaumont
+        ? 'beaumont'
+        : null;
+  const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>(forcedSite ?? 'all');
+
+  useEffect(() => {
+    if (forcedSite && filterSite !== forcedSite) {
+      setFilterSite(forcedSite);
+    }
+  }, [forcedSite]);
   const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
   const [orderToPrint, setOrderToPrint] = useState<Order | null>(null);
   const [chatOrder, setChatOrder] = useState<Order | null>(null);
