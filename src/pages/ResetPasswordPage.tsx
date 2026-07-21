@@ -112,7 +112,7 @@ export default function ResetPasswordPage() {
     toast.success('Mot de passe réinitialisé avec succès ! Redirection vers la connexion...');
 
     // Let the user see the confirmation before redirecting to the login page.
-    setTimeout(() => {
+    redirectTimeoutRef.current = setTimeout(() => {
       navigate('/auth');
     }, 2500);
   };
