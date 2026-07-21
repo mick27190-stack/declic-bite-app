@@ -81,6 +81,8 @@ const App = () => {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/auth/confirm" element={<AuthConfirmPage />} />
+                <Route path="/auth/callback" element={<AuthConfirmPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/livreur" element={<LivreurOrdersPage />} />
                 <Route path="/admin" element={<AdminDashboard />} />
