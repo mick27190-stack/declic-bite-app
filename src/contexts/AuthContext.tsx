@@ -96,7 +96,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // a new password.
         if (event === 'PASSWORD_RECOVERY') {
           if (window.location.pathname !== '/reset-password') {
-            window.location.assign('/reset-password');
+            // Preserve the recovery tokens (hash / query) so the reset page
+            // can re-establish the exact recovery session and never update
+            // the wrong account's password.
+            const preserved = `${window.location.search}${window.location.hash}`;
+            window.location.replace(`/reset-password${preserved}`);
             return;
           }
         }
