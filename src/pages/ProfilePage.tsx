@@ -782,14 +782,32 @@ export default function ProfilePage() {
                         className="h-auto p-0 text-xs"
                         onClick={async () => {
                           const target = profile?.email || user?.email;
-                          if (!target) return;
-                          const { error } = await supabase.auth.updateUser(
-                            { email: target },
-                            { emailRedirectTo: `${window.location.origin}/auth/confirm` }
-                          );
+                          if (!target) {
+                            toast.error("Renseignez d'abord une adresse email dans votre profil.");
+                            return;
+                          }
+                          // If the email is not yet attached to the auth account
+                          // (legacy accounts created before email verification),
+                          // attach it via updateUser — this sends the confirmation.
+                          if (!user?.email || user.email !== target) {
+                            const { error } = await supabase.auth.updateUser(
+                              { email: target },
+                              { emailRedirectTo: `${window.location.origin}/auth/confirm` }
+                            );
+                            if (error) toast.error(error.message);
+                            else toast.success('Email de vérification envoyé. Vérifiez votre boîte de réception.');
+                            return;
+                          }
+                          // Email already attached but unconfirmed → resend signup confirmation.
+                          const { error } = await supabase.auth.resend({
+                            type: 'signup',
+                            email: target,
+                            options: { emailRedirectTo: `${window.location.origin}/auth/confirm` },
+                          });
                           if (error) toast.error(error.message);
-                          else toast.success('Email de vérification renvoyé');
+                          else toast.success('Email de vérification renvoyé. Vérifiez votre boîte de réception.');
                         }}
+
                       >
                         Renvoyer le lien
                       </Button>
