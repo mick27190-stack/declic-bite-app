@@ -13,6 +13,7 @@ import {
   Phone, 
   MapPin, 
   LogOut, 
+  Trash2, 
   Plus, 
   Trash2, 
   Star, 
