@@ -9,6 +9,12 @@ const SITE_NAME = 'Déclic Pizza'
 const SENDER_DOMAIN = 'notify.declicpizza.fr'
 const FROM_DOMAIN = 'notify.declicpizza.fr'
 
+function generateToken(): string {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 const json = (payload: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(payload), {
     status,
@@ -153,6 +159,31 @@ Deno.serve(async (req) => {
     const messageId = crypto.randomUUID()
     const templateName = kind === 'email_change' ? 'email_change' : 'signup'
 
+    const normalizedEmail = targetEmail.toLowerCase()
+    let unsubscribeToken = generateToken()
+    const { data: existingToken } = await admin
+      .from('email_unsubscribe_tokens')
+      .select('token, used_at')
+      .eq('email', normalizedEmail)
+      .maybeSingle()
+
+    if (existingToken && !existingToken.used_at) {
+      unsubscribeToken = existingToken.token as string
+    } else {
+      await admin
+        .from('email_unsubscribe_tokens')
+        .upsert(
+          { token: unsubscribeToken, email: normalizedEmail },
+          { onConflict: 'email', ignoreDuplicates: true },
+        )
+      const { data: storedToken } = await admin
+        .from('email_unsubscribe_tokens')
+        .select('token')
+        .eq('email', normalizedEmail)
+        .maybeSingle()
+      if (storedToken?.token) unsubscribeToken = storedToken.token as string
+    }
+
     await admin.from('email_send_log').insert({
       message_id: messageId,
       template_name: templateName,
@@ -170,9 +201,10 @@ Deno.serve(async (req) => {
         subject: kind === 'email_change' ? 'Confirmez votre nouvelle adresse email' : 'Confirmez votre adresse email',
         html,
         text,
-        purpose: 'auth',
+        purpose: 'transactional',
         label: templateName,
         idempotency_key: `verify-${callerId}-${targetEmail}-${Date.now()}`,
+        unsubscribe_token: unsubscribeToken,
         queued_at: new Date().toISOString(),
       },
     })
