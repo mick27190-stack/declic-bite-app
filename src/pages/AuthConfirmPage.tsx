@@ -97,7 +97,7 @@ const AuthConfirmPage = () => {
       }
     };
     run();
-  }, [params, navigate]);
+  }, [params, navigate, refreshProfile]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-background flex items-center justify-center p-6">
