@@ -1,5 +1,13 @@
+import * as React from 'npm:react@18.3.1'
+import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { SignupEmail } from '../_shared/email-templates/signup.tsx'
+import { EmailChangeEmail } from '../_shared/email-templates/email-change.tsx'
+
+const SITE_NAME = 'Déclic Pizza'
+const SENDER_DOMAIN = 'notify.declicpizza.fr'
+const FROM_DOMAIN = 'notify.declicpizza.fr'
 
 const json = (payload: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -124,6 +132,91 @@ Deno.serve(async (req) => {
     return { ok: true, message: null }
   }
 
+  const enqueueManualVerificationEmail = async (kind: 'signup' | 'email_change') => {
+    const currentEmailForLink = (caller.user.email ?? targetEmail).toLowerCase()
+    const linkParams =
+      kind === 'email_change'
+        ? {
+            type: 'email_change_new' as const,
+            email: currentEmailForLink,
+            newEmail: targetEmail,
+            options: redirectTo ? { redirectTo } : undefined,
+          }
+        : {
+            type: 'signup' as const,
+            email: targetEmail,
+            options: redirectTo ? { redirectTo } : undefined,
+          }
+
+    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink(linkParams)
+    if (linkError || !linkData?.properties?.action_link) {
+      const message = linkError?.message || 'Impossible de générer un nouveau lien de vérification'
+      console.error('generateLink failed:', message)
+      return { ok: false, message }
+    }
+
+    const confirmationUrl = linkData.properties.action_link
+    const templateProps =
+      kind === 'email_change'
+        ? {
+            siteName: SITE_NAME,
+            oldEmail: currentEmailForLink,
+            email: targetEmail,
+            newEmail: targetEmail,
+            confirmationUrl,
+          }
+        : {
+            siteName: SITE_NAME,
+            siteUrl: redirectTo ? new URL(redirectTo).origin : 'https://declicpizza.fr',
+            recipient: targetEmail,
+            confirmationUrl,
+          }
+    const component = kind === 'email_change' ? EmailChangeEmail : SignupEmail
+    const html = await renderAsync(React.createElement(component, templateProps))
+    const text = await renderAsync(React.createElement(component, templateProps), { plainText: true })
+    const messageId = crypto.randomUUID()
+    const templateName = kind === 'email_change' ? 'email_change' : 'signup'
+
+    await admin.from('email_send_log').insert({
+      message_id: messageId,
+      template_name: templateName,
+      recipient_email: targetEmail,
+      status: 'pending',
+    })
+
+    const { error: enqueueError } = await admin.rpc('enqueue_email', {
+      queue_name: 'auth_emails',
+      payload: {
+        message_id: messageId,
+        to: targetEmail,
+        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        sender_domain: SENDER_DOMAIN,
+        subject: kind === 'email_change' ? 'Confirmez votre nouvelle adresse email' : 'Confirmez votre adresse email',
+        html,
+        text,
+        purpose: 'transactional',
+        label: templateName,
+        idempotency_key: `verify-${callerId}-${targetEmail}-${Date.now()}`,
+        queued_at: new Date().toISOString(),
+      },
+    })
+
+    if (enqueueError) {
+      console.error('manual verification enqueue failed:', enqueueError.message)
+      await admin.from('email_send_log').insert({
+        message_id: messageId,
+        template_name: templateName,
+        recipient_email: targetEmail,
+        status: 'failed',
+        error_message: 'Failed to enqueue manual verification email',
+      })
+      return { ok: false, message: "Impossible d'envoyer le lien de vérification" }
+    }
+
+    console.log('Manual verification email enqueued', { templateName, email: targetEmail })
+    return { ok: true, message: null }
+  }
+
   const currentEmail = (caller.user.email ?? '').toLowerCase()
   const pendingEmail = ((caller.user as unknown as { new_email?: string }).new_email ?? '').toLowerCase()
   const alreadyAttached = currentEmail === targetEmail
@@ -153,6 +246,14 @@ Deno.serve(async (req) => {
         ok: false,
         status: 'verification_send_failed',
         message: friendlyProviderMessage(resend.message ?? ''),
+      })
+    }
+    const manualEmail = await enqueueManualVerificationEmail(alreadyPending ? 'email_change' : 'signup')
+    if (!manualEmail.ok) {
+      return json({
+        ok: false,
+        status: 'verification_send_failed',
+        message: friendlyProviderMessage(manualEmail.message ?? ''),
       })
     }
     await syncProfileEmail()
@@ -262,6 +363,14 @@ Deno.serve(async (req) => {
             }),
           })
           if (retry.ok) {
+            const manualEmail = await enqueueManualVerificationEmail('email_change')
+            if (!manualEmail.ok) {
+              return json({
+                ok: false,
+                status: 'verification_send_failed',
+                message: friendlyProviderMessage(manualEmail.message ?? ''),
+              })
+            }
             await syncProfileEmail()
             return json({
               ok: true,
@@ -287,6 +396,15 @@ Deno.serve(async (req) => {
       ok: false,
       status: 'verification_send_failed',
       message: friendlyProviderMessage(msg),
+    })
+  }
+
+  const manualEmail = await enqueueManualVerificationEmail('email_change')
+  if (!manualEmail.ok) {
+    return json({
+      ok: false,
+      status: 'verification_send_failed',
+      message: friendlyProviderMessage(manualEmail.message ?? ''),
     })
   }
 
