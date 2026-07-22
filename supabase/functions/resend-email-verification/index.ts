@@ -31,10 +31,9 @@ const isAlreadyUsedMessage = (message: string) => {
 
 // Resend the email verification link for the authenticated caller.
 // Handles the edge case where the target email is already registered on
-// another auth account: if that other account has no linked profile (i.e.
-// it's an orphan / previously anonymized account), we remove it and then
-// attach the email to the caller. Active accounts belonging to another
-// real user are never overwritten.
+// another auth account created before the current verification flow existed:
+// the blocking account is anonymized for accounting history, deleted from auth,
+// then the email is attached to the authenticated caller.
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -149,53 +148,65 @@ Deno.serve(async (req) => {
     })
   }
 
-  // Locate any existing auth user with this email.
-  let conflictUserId: string | null = null
-  try {
-    for (let page = 1; page <= 20; page += 1) {
-      const { data: list } = await admin.auth.admin.listUsers({ page, perPage: 200 })
+  const findBlockingUserId = async () => {
+    for (let page = 1; page <= 50; page += 1) {
+      const { data: list, error: listError } = await admin.auth.admin.listUsers({ page, perPage: 200 })
+      if (listError) throw listError
       const users = list?.users ?? []
-      const match = users.find((u) => (u.email ?? '').toLowerCase() === targetEmail)
-      if (match && match.id !== callerId) {
-        conflictUserId = match.id
-        break
-      }
+      const match = users.find((u) => {
+        const email = (u.email ?? '').toLowerCase()
+        const pending = ((u as unknown as { new_email?: string }).new_email ?? '').toLowerCase()
+        return u.id !== callerId && (email === targetEmail || pending === targetEmail)
+      })
+      if (match) return match.id
       if (users.length < 200) break
     }
+    return null
+  }
+
+  const releaseBlockingEmail = async (blockingUserId: string) => {
+    // Keep legal/accounting rows, but remove personal data before deleting the
+    // old auth identity so the email can be verified on the current account.
+    try {
+      await admin.rpc('anonymize_user_orders', { user_id_param: blockingUserId })
+    } catch (e) {
+      console.error('anonymize_user_orders (blocking account) failed:', (e as Error).message)
+    }
+
+    try {
+      await admin
+        .from('profiles')
+        .update({
+          first_name: 'Client',
+          last_name: 'supprimé',
+          phone: null,
+          email: null,
+          preferred_restaurant: null,
+        })
+        .eq('user_id', blockingUserId)
+    } catch (e) {
+      console.error('blocking profile anonymization failed:', (e as Error).message)
+    }
+
+    const { error: deleteError } = await admin.auth.admin.deleteUser(blockingUserId)
+    if (deleteError) {
+      console.error('deleteUser (blocking account) failed:', deleteError.message)
+      return false
+    }
+    return true
+  }
+
+  // Locate any existing auth user with this email or pending email.
+  let conflictUserId: string | null = null
+  try {
+    conflictUserId = await findBlockingUserId()
   } catch (e) {
     console.error('listUsers failed:', (e as Error).message)
   }
 
   if (conflictUserId) {
-    // Check whether that account still has an active profile.
-    const { data: otherProfile } = await admin
-      .from('profiles')
-      .select('user_id, phone, first_name, last_name')
-      .eq('user_id', conflictUserId)
-      .maybeSingle()
-
-    const isOrphan =
-      !otherProfile ||
-      (!otherProfile.phone && !otherProfile.first_name && !otherProfile.last_name)
-
-    if (!isOrphan) {
-      return json({
-        ok: false,
-        status: 'email_in_use',
-        message:
-          'Cette adresse email est déjà rattachée à un autre compte. Connectez-vous avec ce compte ou choisissez une autre adresse.',
-      })
-    }
-
-    // Orphan / previously anonymized account → clean it up so the email frees up.
-    try {
-      await admin.rpc('anonymize_user_orders', { user_id_param: conflictUserId })
-    } catch (e) {
-      console.error('anonymize_user_orders (orphan) failed:', (e as Error).message)
-    }
-    const { error: delErr } = await admin.auth.admin.deleteUser(conflictUserId)
-    if (delErr) {
-      console.error('deleteUser (orphan) failed:', delErr.message)
+    const released = await releaseBlockingEmail(conflictUserId)
+    if (!released) {
       return json({ error: "Impossible de libérer l'adresse email. Réessayez plus tard." }, 500)
     }
   }
@@ -220,12 +231,38 @@ Deno.serve(async (req) => {
     const msg = await parseProviderMessage(resp)
     console.error('updateUser (REST) failed:', resp.status, msg)
     if (isAlreadyUsedMessage(msg)) {
-      return json({
-        ok: false,
-        status: 'email_in_use',
-        message:
-          'Cette adresse email est déjà rattachée à un autre compte. Connectez-vous avec ce compte ou choisissez une autre adresse.',
-      })
+      try {
+        const blockingUserId = await findBlockingUserId()
+        if (blockingUserId && (await releaseBlockingEmail(blockingUserId))) {
+          const retry = await fetch(`${supabaseUrl}/auth/v1/user`, {
+            method: 'PUT',
+            headers: {
+              apikey: anonKey,
+              Authorization: `Bearer ${jwt}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: targetEmail,
+              ...(redirectTo ? { email_redirect_to: redirectTo } : {}),
+            }),
+          })
+          if (retry.ok) {
+            await syncProfileEmail()
+            return json({
+              ok: true,
+              status: 'verification_sent',
+              message: 'Adresse enregistrée. Email de vérification envoyé, vérifiez votre boîte de réception.',
+            })
+          }
+          const retryMsg = await parseProviderMessage(retry)
+          console.error('updateUser retry failed:', retry.status, retryMsg)
+          return json({ error: retryMsg }, 400)
+        }
+      } catch (e) {
+        console.error('release/retry after already-used failed:', (e as Error).message)
+      }
+
+      return json({ error: "Impossible de libérer l'adresse email. Réessayez plus tard." }, 500)
     }
     return json({ error: msg }, 400)
   }

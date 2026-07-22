@@ -620,6 +620,12 @@ export default function ProfilePage() {
     );
   }
 
+  const displayedEmail = (profile?.email || user?.email || '').trim();
+  const displayedEmailVerified =
+    !!displayedEmail &&
+    !!user.email_confirmed_at &&
+    displayedEmail.toLowerCase() === (user.email || '').trim().toLowerCase();
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -648,7 +654,7 @@ export default function ProfilePage() {
               <h2 className="font-semibold text-lg">
                 {profile?.first_name || 'Utilisateur'} {profile?.last_name || ''}
               </h2>
-              <p className="text-muted-foreground text-sm">{user.email}</p>
+              <p className="text-muted-foreground text-sm">{displayedEmail || user.email}</p>
             </div>
           </div>
         </div>
@@ -764,9 +770,9 @@ export default function ProfilePage() {
               </div>
               <div className="flex items-center gap-3 text-sm flex-wrap">
                 <Mail className="w-4 h-4 text-muted-foreground" />
-                <span>{profile?.email || user?.email || 'Non renseigné'}</span>
-                {(profile?.email || user?.email) && (
-                  user?.email_confirmed_at ? (
+                <span>{displayedEmail || 'Non renseigné'}</span>
+                {displayedEmail && (
+                  displayedEmailVerified ? (
                     <span className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full bg-green-100 text-green-700">
                       <Check className="w-3 h-3" /> Email vérifié
                     </span>
@@ -781,7 +787,7 @@ export default function ProfilePage() {
                         size="sm"
                         className="h-auto p-0 text-xs"
                         onClick={async () => {
-                          const target = (profile?.email || user?.email || '').trim();
+                          const target = displayedEmail;
                           if (!target) {
                             toast.error("Renseignez d'abord une adresse email dans votre profil.");
                             return;
