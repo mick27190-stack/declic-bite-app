@@ -798,13 +798,22 @@ export default function ProfilePage() {
                               },
                             }
                           );
+                          const response = data as {
+                            ok?: boolean;
+                            status?: string;
+                            message?: string;
+                            error?: string;
+                          } | null;
                           const errMsg =
                             (error as { message?: string } | null)?.message ||
-                            (data as { error?: string } | null)?.error;
+                            response?.error ||
+                            (response?.ok === false ? response.message : undefined);
                           if (errMsg) {
                             toast.error(errMsg);
+                          } else if (response?.status === 'already_verified') {
+                            toast.success(response.message || 'Votre adresse email est déjà vérifiée.');
                           } else {
-                            toast.success('Email de vérification envoyé. Vérifiez votre boîte de réception.');
+                            toast.success(response?.message || 'Email de vérification envoyé. Vérifiez votre boîte de réception.');
                           }
                         }}
 

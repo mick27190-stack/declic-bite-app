@@ -245,7 +245,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(profileUpdates)
       .eq('user_id', user.id);
 
     if (error) {
@@ -269,7 +269,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await fetchProfile(user.id);
         return {
           error: new Error(
-            "Adresse enregistrée, mais l'email de confirmation n'a pas pu être envoyé : " +
+            "L'adresse email n'a pas été changée : " +
               (response?.message || response?.error || emailError?.message || 'adresse email indisponible')
           ),
         };
