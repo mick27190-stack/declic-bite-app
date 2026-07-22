@@ -29,6 +29,17 @@ const isAlreadyUsedMessage = (message: string) => {
   )
 }
 
+const friendlyProviderMessage = (message: string) => {
+  const normalized = message.toLowerCase()
+  if (normalized.includes('email rate limit') || normalized.includes('rate limit')) {
+    return "Trop de demandes d'email ont été envoyées en peu de temps. Réessayez dans quelques minutes."
+  }
+  if (isAlreadyUsedMessage(message)) {
+    return 'Cette adresse email était déjà utilisée. Réessayez : nous allons la rattacher à votre compte actuel.'
+  }
+  return message || "Impossible d'envoyer le lien de vérification"
+}
+
 // Resend the email verification link for the authenticated caller.
 // Handles the edge case where the target email is already registered on
 // another auth account created before the current verification flow existed:
@@ -138,7 +149,11 @@ Deno.serve(async (req) => {
             'Cette adresse email est déjà rattachée à un autre compte. Connectez-vous avec ce compte ou choisissez une autre adresse.',
         })
       }
-      return json({ error: resend.message || "Impossible d'envoyer le lien de vérification" }, 400)
+      return json({
+        ok: false,
+        status: 'verification_send_failed',
+        message: friendlyProviderMessage(resend.message ?? ''),
+      })
     }
     await syncProfileEmail()
     return json({
@@ -256,7 +271,11 @@ Deno.serve(async (req) => {
           }
           const retryMsg = await parseProviderMessage(retry)
           console.error('updateUser retry failed:', retry.status, retryMsg)
-          return json({ error: retryMsg }, 400)
+          return json({
+            ok: false,
+            status: 'verification_send_failed',
+            message: friendlyProviderMessage(retryMsg),
+          })
         }
       } catch (e) {
         console.error('release/retry after already-used failed:', (e as Error).message)
@@ -264,7 +283,11 @@ Deno.serve(async (req) => {
 
       return json({ error: "Impossible de libérer l'adresse email. Réessayez plus tard." }, 500)
     }
-    return json({ error: msg }, 400)
+    return json({
+      ok: false,
+      status: 'verification_send_failed',
+      message: friendlyProviderMessage(msg),
+    })
   }
 
   await syncProfileEmail()

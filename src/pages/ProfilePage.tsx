@@ -46,6 +46,26 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+const getFunctionErrorMessage = async (error: unknown) => {
+  const context = (error as { context?: Response } | null)?.context;
+  if (context) {
+    try {
+      const payload = await context.clone().json();
+      if (payload?.message || payload?.error) {
+        return String(payload.message || payload.error);
+      }
+    } catch {
+      // Ignore malformed responses and fall back below.
+    }
+  }
+
+  const message = (error as { message?: string } | null)?.message;
+  if (!message || message.includes('non-2xx')) {
+    return "Impossible d'envoyer le lien de vérification pour le moment. Réessayez dans quelques minutes.";
+  }
+  return message;
+};
+
 function CurrentOrders() {
   const { orders, loading, respondToOrder } = useUserOrders();
 
@@ -810,10 +830,11 @@ export default function ProfilePage() {
                             message?: string;
                             error?: string;
                           } | null;
+                          const functionMessage = error ? await getFunctionErrorMessage(error) : null;
                           const errMsg =
-                            (error as { message?: string } | null)?.message ||
                             response?.error ||
-                            (response?.ok === false ? response.message : undefined);
+                            (response?.ok === false ? response.message : undefined) ||
+                            functionMessage;
                           if (errMsg) {
                             toast.error(errMsg);
                           } else if (response?.status === 'already_verified') {
