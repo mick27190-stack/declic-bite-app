@@ -397,14 +397,6 @@ Deno.serve(async (req) => {
             }),
           })
           if (retry.ok) {
-            const manualEmail = await enqueueManualVerificationEmail('email_change')
-            if (!manualEmail.ok) {
-              return json({
-                ok: false,
-                status: 'verification_send_failed',
-                message: friendlyProviderMessage(manualEmail.message ?? ''),
-              })
-            }
             await syncProfileEmail()
             return json({
               ok: true,
@@ -430,15 +422,6 @@ Deno.serve(async (req) => {
       ok: false,
       status: 'verification_send_failed',
       message: friendlyProviderMessage(msg),
-    })
-  }
-
-  const manualEmail = await enqueueManualVerificationEmail('email_change')
-  if (!manualEmail.ok) {
-    return json({
-      ok: false,
-      status: 'verification_send_failed',
-      message: friendlyProviderMessage(manualEmail.message ?? ''),
     })
   }
 
