@@ -70,6 +70,19 @@ const AuthConfirmPage = () => {
           }
         }
 
+        // Refresh the local session so the AuthContext picks up the newly
+        // confirmed email (and email_confirmed_at) without a manual sign-in.
+        try {
+          await supabase.auth.refreshSession();
+        } catch (e) {
+          console.error('Session refresh failed:', e);
+        }
+        try {
+          await refreshProfile();
+        } catch (e) {
+          console.error('Profile refresh failed:', e);
+        }
+
         setStatus('success');
         setMessage('Votre adresse email est vérifiée.');
         toast.success('Email vérifié avec succès !');
