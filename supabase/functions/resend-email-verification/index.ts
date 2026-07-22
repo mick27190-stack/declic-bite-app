@@ -137,7 +137,12 @@ Deno.serve(async (req) => {
       return { ok: false, message }
     }
 
-    const confirmationUrl = linkData.properties.action_link
+    const redirectUrl = redirectTo || 'https://declicpizza.fr/auth/confirm'
+    const tokenHash = linkData.properties.hashed_token
+    const confirmationType = kind === 'email_change' ? 'email_change' : 'signup'
+    const confirmationUrl = tokenHash
+      ? `${redirectUrl}${redirectUrl.includes('?') ? '&' : '?'}token_hash=${encodeURIComponent(tokenHash)}&type=${confirmationType}`
+      : linkData.properties.action_link
     const templateProps =
       kind === 'email_change'
         ? {
