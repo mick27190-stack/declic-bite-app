@@ -108,30 +108,6 @@ Deno.serve(async (req) => {
     }
   }
 
-  const sendVerificationAgain = async (type: 'signup' | 'email_change' = 'signup') => {
-    const resp = await fetch(`${supabaseUrl}/auth/v1/resend`, {
-      method: 'POST',
-      headers: {
-        apikey: anonKey,
-        Authorization: `Bearer ${anonKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type,
-        email: targetEmail,
-        ...(redirectTo ? { options: { email_redirect_to: redirectTo } } : {}),
-      }),
-    })
-
-    if (!resp.ok) {
-      const msg = await parseProviderMessage(resp)
-      console.error(`resend ${type} failed:`, resp.status, msg)
-      return { ok: false, message: msg }
-    }
-
-    return { ok: true, message: null }
-  }
-
   const enqueueManualVerificationEmail = async (kind: 'signup' | 'email_change') => {
     const currentEmailForLink = (caller.user.email ?? targetEmail).toLowerCase()
     const linkParams =
@@ -232,22 +208,6 @@ Deno.serve(async (req) => {
   }
 
   if (alreadyAttached || alreadyPending) {
-    const resend = await sendVerificationAgain(alreadyPending ? 'email_change' : 'signup')
-    if (!resend.ok) {
-      if (isAlreadyUsedMessage(resend.message ?? '')) {
-        return json({
-          ok: false,
-          status: 'email_in_use',
-          message:
-            'Cette adresse email est déjà rattachée à un autre compte. Connectez-vous avec ce compte ou choisissez une autre adresse.',
-        })
-      }
-      return json({
-        ok: false,
-        status: 'verification_send_failed',
-        message: friendlyProviderMessage(resend.message ?? ''),
-      })
-    }
     const manualEmail = await enqueueManualVerificationEmail(alreadyPending ? 'email_change' : 'signup')
     if (!manualEmail.ok) {
       return json({
