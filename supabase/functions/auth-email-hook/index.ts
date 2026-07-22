@@ -41,6 +41,46 @@ const SENDER_DOMAIN = "notify.declicpizza.fr"
 const ROOT_DOMAIN = "declicpizza.fr"
 const FROM_DOMAIN = "notify.declicpizza.fr" // Domain shown in From address (may be root or sender subdomain)
 
+function generateToken(): string {
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
+async function getUnsubscribeToken(
+  supabase: ReturnType<typeof createClient>,
+  email: string
+): Promise<string> {
+  const normalizedEmail = email.toLowerCase()
+  let unsubscribeToken = generateToken()
+
+  const { data: existingToken } = await supabase
+    .from('email_unsubscribe_tokens')
+    .select('token, used_at')
+    .eq('email', normalizedEmail)
+    .maybeSingle()
+
+  if (existingToken && !existingToken.used_at) {
+    return existingToken.token as string
+  }
+
+  await supabase
+    .from('email_unsubscribe_tokens')
+    .upsert(
+      { token: unsubscribeToken, email: normalizedEmail },
+      { onConflict: 'email', ignoreDuplicates: true },
+    )
+
+  const { data: storedToken } = await supabase
+    .from('email_unsubscribe_tokens')
+    .select('token')
+    .eq('email', normalizedEmail)
+    .maybeSingle()
+
+  if (storedToken?.token) unsubscribeToken = storedToken.token as string
+  return unsubscribeToken
+}
+
 // Sample data for preview mode ONLY (not used in actual email sending).
 // URLs are baked in at scaffold time from the project's real data.
 // The sample email uses a fixed placeholder (RFC 6761 .test TLD) so the Go backend
@@ -243,6 +283,7 @@ async function handleWebhook(req: Request): Promise<Response> {
   )
 
   const messageId = crypto.randomUUID()
+  const unsubscribeToken = await getUnsubscribeToken(supabase, payload.data.email)
 
   // Log pending BEFORE enqueue so we have a record even if enqueue crashes
   await supabase.from('email_send_log').insert({
@@ -263,8 +304,9 @@ async function handleWebhook(req: Request): Promise<Response> {
       subject: EMAIL_SUBJECTS[emailType] || 'Notification',
       html,
       text,
-      purpose: 'auth',
+      purpose: 'transactional',
       label: emailType,
+      unsubscribe_token: unsubscribeToken,
       queued_at: new Date().toISOString(),
     },
   })
