@@ -68,9 +68,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     // then load the resulting roles.
     const syncAndFetch = async () => {
       try {
-        await supabase.functions.invoke('assign-admin-role', {
-          body: { user_id: user.id, phone: user.phone },
-        });
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          await supabase.functions.invoke('assign-admin-role', {
+            body: { user_id: user.id, phone: user.phone },
+          });
+        }
       } catch (e) {
         console.error('Error syncing roles:', e);
       }
