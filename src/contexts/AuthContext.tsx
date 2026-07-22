@@ -229,29 +229,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return { error: new Error('Not authenticated') };
-    
-    // Save all fields (including email) to the profile first
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('user_id', user.id);
 
-    if (error) {
-      return { error };
+    const requestedEmail = updates.email?.trim().toLowerCase();
+    const currentAuthEmail = user.email?.trim().toLowerCase() || '';
+    const emailChanged = !!requestedEmail && requestedEmail !== currentAuthEmail;
+    const profileUpdates = { ...updates };
+    if (emailChanged) {
+      // Do not store a new profile email until the auth account accepts it.
+      // Otherwise a reused email would appear in the profile even though it
+      // cannot be confirmed for this account.
+      delete profileUpdates.email;
+    } else if (requestedEmail) {
+      profileUpdates.email = requestedEmail;
     }
 
-    // If the email changed, also update it on the auth account so password
-    // reset by email works. This sends a confirmation email to the new address.
-    if (updates.email && updates.email !== user.email) {
-      const { error: authError } = await supabase.auth.updateUser({
-        email: updates.email,
-      });
-      if (authError) {
+    if (Object.keys(profileUpdates).length > 0) {
+      const { error } = await supabase
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('user_id', user.id);
+
+      if (error) {
+        return { error };
+      }
+    }
+
+    // If the email changed, route through the backend helper. It handles
+    // already-used addresses without leaving the profile in a false state.
+    if (emailChanged) {
+      const { data, error: emailError } = await supabase.functions.invoke(
+        'resend-email-verification',
+        {
+          body: {
+            email: requestedEmail,
+            redirectTo: `${window.location.origin}/auth/confirm`,
+          },
+        }
+      );
+      const response = data as { ok?: boolean; message?: string; error?: string } | null;
+      if (emailError || response?.ok === false || response?.error) {
         await fetchProfile(user.id);
         return {
           error: new Error(
-            "Adresse enregistrée, mais l'email de confirmation n'a pas pu être envoyé : " +
-              authError.message
+            "L'adresse email n'a pas été changée : " +
+              (response?.message || response?.error || emailError?.message || 'adresse email indisponible')
           ),
         };
       }

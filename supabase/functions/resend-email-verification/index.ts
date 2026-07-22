@@ -1,6 +1,34 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 
+const json = (payload: Record<string, unknown>, status = 200) =>
+  new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+
+const parseProviderMessage = async (response: Response) => {
+  const text = await response.text()
+  try {
+    const parsed = JSON.parse(text)
+    return parsed.msg || parsed.error_description || parsed.message || parsed.error || text
+  } catch {
+    return text
+  }
+}
+
+const isAlreadyUsedMessage = (message: string) => {
+  const normalized = message.toLowerCase()
+  return (
+    normalized.includes('already registered') ||
+    normalized.includes('already been registered') ||
+    normalized.includes('already in use') ||
+    normalized.includes('already used') ||
+    normalized.includes('user already exists') ||
+    normalized.includes('email exists')
+  )
+}
+
 // Resend the email verification link for the authenticated caller.
 // Handles the edge case where the target email is already registered on
 // another auth account: if that other account has no linked profile (i.e.
@@ -14,10 +42,7 @@ Deno.serve(async (req) => {
 
   const authHeader = req.headers.get('Authorization') ?? ''
   if (!authHeader.toLowerCase().startsWith('bearer ')) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'Unauthorized' }, 401)
   }
   const jwt = authHeader.slice('bearer '.length).trim()
 
@@ -25,10 +50,7 @@ Deno.serve(async (req) => {
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY')
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   if (!supabaseUrl || !anonKey || !serviceKey) {
-    return new Response(JSON.stringify({ error: 'Server configuration error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'Server configuration error' }, 500)
   }
 
   let body: { email?: string; redirectTo?: string } = {}
@@ -40,10 +62,7 @@ Deno.serve(async (req) => {
   const targetEmail = (body.email ?? '').trim().toLowerCase()
   const redirectTo = body.redirectTo || undefined
   if (!targetEmail) {
-    return new Response(JSON.stringify({ error: 'Email requis' }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'Email requis' }, 400)
   }
 
   const authClient = createClient(supabaseUrl, anonKey, {
@@ -53,21 +72,96 @@ Deno.serve(async (req) => {
   const { data: claimsData, error: claimsError } = await authClient.auth.getClaims(jwt)
   const callerId = claimsData?.claims?.sub as string | undefined
   if (claimsError || !callerId) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return json({ error: 'Unauthorized' }, 401)
   }
 
   const admin = createClient(supabaseUrl, serviceKey)
 
+  const { data: caller, error: callerError } = await admin.auth.admin.getUserById(callerId)
+  if (callerError || !caller?.user) {
+    return json({ error: 'Utilisateur introuvable' }, 401)
+  }
+
+  const syncProfileEmail = async () => {
+    try {
+      await admin.from('profiles').update({ email: targetEmail }).eq('user_id', callerId)
+    } catch (e) {
+      console.error('profile email sync failed:', (e as Error).message)
+    }
+  }
+
+  const sendVerificationAgain = async (type: 'signup' | 'email_change' = 'signup') => {
+    const resp = await fetch(`${supabaseUrl}/auth/v1/resend`, {
+      method: 'POST',
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type,
+        email: targetEmail,
+        ...(redirectTo ? { options: { email_redirect_to: redirectTo } } : {}),
+      }),
+    })
+
+    if (!resp.ok) {
+      const msg = await parseProviderMessage(resp)
+      console.error(`resend ${type} failed:`, resp.status, msg)
+      return { ok: false, message: msg }
+    }
+
+    return { ok: true, message: null }
+  }
+
+  const currentEmail = (caller.user.email ?? '').toLowerCase()
+  const pendingEmail = ((caller.user as unknown as { new_email?: string }).new_email ?? '').toLowerCase()
+  const alreadyAttached = currentEmail === targetEmail
+  const alreadyPending = pendingEmail === targetEmail
+
+  if (alreadyAttached && caller.user.email_confirmed_at) {
+    await syncProfileEmail()
+    return json({
+      ok: true,
+      status: 'already_verified',
+      message: 'Votre adresse email est déjà vérifiée.',
+    })
+  }
+
+  if (alreadyAttached || alreadyPending) {
+    const resend = await sendVerificationAgain(alreadyPending ? 'email_change' : 'signup')
+    if (!resend.ok) {
+      if (isAlreadyUsedMessage(resend.message ?? '')) {
+        return json({
+          ok: false,
+          status: 'email_in_use',
+          message:
+            'Cette adresse email est déjà rattachée à un autre compte. Connectez-vous avec ce compte ou choisissez une autre adresse.',
+        })
+      }
+      return json({ error: resend.message || "Impossible d'envoyer le lien de vérification" }, 400)
+    }
+    await syncProfileEmail()
+    return json({
+      ok: true,
+      status: 'verification_sent',
+      message: 'Email de vérification envoyé. Vérifiez votre boîte de réception.',
+    })
+  }
+
   // Locate any existing auth user with this email.
   let conflictUserId: string | null = null
   try {
-    // listUsers supports filtering by email via query.
-    const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 })
-    const match = list?.users?.find((u) => (u.email ?? '').toLowerCase() === targetEmail)
-    if (match && match.id !== callerId) conflictUserId = match.id
+    for (let page = 1; page <= 20; page += 1) {
+      const { data: list } = await admin.auth.admin.listUsers({ page, perPage: 200 })
+      const users = list?.users ?? []
+      const match = users.find((u) => (u.email ?? '').toLowerCase() === targetEmail)
+      if (match && match.id !== callerId) {
+        conflictUserId = match.id
+        break
+      }
+      if (users.length < 200) break
+    }
   } catch (e) {
     console.error('listUsers failed:', (e as Error).message)
   }
@@ -85,13 +179,12 @@ Deno.serve(async (req) => {
       (!otherProfile.phone && !otherProfile.first_name && !otherProfile.last_name)
 
     if (!isOrphan) {
-      return new Response(
-        JSON.stringify({
-          error:
-            "Cette adresse email est déjà utilisée par un autre compte actif. Contactez le support si vous pensez qu'il s'agit d'une erreur.",
-        }),
-        { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
+      return json({
+        ok: false,
+        status: 'email_in_use',
+        message:
+          'Cette adresse email est déjà rattachée à un autre compte. Connectez-vous avec ce compte ou choisissez une autre adresse.',
+      })
     }
 
     // Orphan / previously anonymized account → clean it up so the email frees up.
@@ -103,81 +196,45 @@ Deno.serve(async (req) => {
     const { error: delErr } = await admin.auth.admin.deleteUser(conflictUserId)
     if (delErr) {
       console.error('deleteUser (orphan) failed:', delErr.message)
-      return new Response(
-        JSON.stringify({ error: "Impossible de libérer l'adresse email. Réessayez plus tard." }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      )
+      return json({ error: "Impossible de libérer l'adresse email. Réessayez plus tard." }, 500)
     }
   }
 
   // Attach (or re-attach) the email to the caller. This triggers the
   // confirmation email through the standard auth flow.
-  const { data: caller } = await admin.auth.admin.getUserById(callerId)
-  const currentEmail = (caller?.user?.email ?? '').toLowerCase()
-  const alreadyAttached = currentEmail === targetEmail
-
-  if (!alreadyAttached) {
-    // Call GoTrue REST directly with the user JWT so the confirmation email is sent.
-    // (SDK's auth.updateUser requires a persisted session which we don't have here.)
-    const resp = await fetch(`${supabaseUrl}/auth/v1/user`, {
-      method: 'PUT',
-      headers: {
-        apikey: anonKey,
-        Authorization: `Bearer ${jwt}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        email: targetEmail,
-        ...(redirectTo ? { email_redirect_to: redirectTo } : {}),
-      }),
-    })
-    if (!resp.ok) {
-      const errText = await resp.text()
-      console.error('updateUser (REST) failed:', resp.status, errText)
-      let msg = errText
-      try { msg = JSON.parse(errText).msg || JSON.parse(errText).error_description || errText } catch {}
-      return new Response(JSON.stringify({ error: msg }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  // Call GoTrue REST directly with the user JWT so the confirmation email is sent.
+  // (SDK's auth.updateUser requires a persisted session which we don't have here.)
+  const resp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    method: 'PUT',
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${jwt}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email: targetEmail,
+      ...(redirectTo ? { email_redirect_to: redirectTo } : {}),
+    }),
+  })
+  if (!resp.ok) {
+    const msg = await parseProviderMessage(resp)
+    console.error('updateUser (REST) failed:', resp.status, msg)
+    if (isAlreadyUsedMessage(msg)) {
+      return json({
+        ok: false,
+        status: 'email_in_use',
+        message:
+          'Cette adresse email est déjà rattachée à un autre compte. Connectez-vous avec ce compte ou choisissez une autre adresse.',
       })
     }
-  } else {
-    // Email already attached and unconfirmed → resend signup confirmation via REST.
-    const resp = await fetch(`${supabaseUrl}/auth/v1/resend`, {
-      method: 'POST',
-      headers: {
-        apikey: anonKey,
-        Authorization: `Bearer ${anonKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type: 'signup',
-        email: targetEmail,
-        ...(redirectTo ? { options: { email_redirect_to: redirectTo } } : {}),
-      }),
-    })
-    if (!resp.ok) {
-      const errText = await resp.text()
-      console.error('resend (REST) failed:', resp.status, errText)
-      let msg = errText
-      try { msg = JSON.parse(errText).msg || JSON.parse(errText).error_description || errText } catch {}
-      return new Response(JSON.stringify({ error: msg }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    return json({ error: msg }, 400)
   }
 
+  await syncProfileEmail()
 
-  // Persist to profile too.
-  try {
-    await admin.from('profiles').update({ email: targetEmail }).eq('user_id', callerId)
-  } catch (e) {
-    console.error('profile email sync failed:', (e as Error).message)
-  }
-
-  return new Response(JSON.stringify({ ok: true }), {
-    status: 200,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  return json({
+    ok: true,
+    status: 'verification_sent',
+    message: 'Email de vérification envoyé. Vérifiez votre boîte de réception.',
   })
 })
