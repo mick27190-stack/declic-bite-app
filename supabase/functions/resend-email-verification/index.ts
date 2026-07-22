@@ -170,7 +170,7 @@ Deno.serve(async (req) => {
         subject: kind === 'email_change' ? 'Confirmez votre nouvelle adresse email' : 'Confirmez votre adresse email',
         html,
         text,
-        purpose: 'transactional',
+        purpose: 'auth',
         label: templateName,
         idempotency_key: `verify-${callerId}-${targetEmail}-${Date.now()}`,
         queued_at: new Date().toISOString(),
