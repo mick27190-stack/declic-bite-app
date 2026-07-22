@@ -235,9 +235,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const emailChanged = !!requestedEmail && requestedEmail !== currentAuthEmail;
     const profileUpdates = { ...updates };
     if (emailChanged) {
-      // Do not store a new profile email until the auth account accepts it.
-      // Otherwise a reused email would appear in the profile even though it
-      // cannot be confirmed for this account.
+      // Wait until the auth API accepts the new email before writing it to
+      // the profile row — otherwise a rejected address (already used by an
+      // active account) would appear as the profile email.
       delete profileUpdates.email;
     } else if (requestedEmail) {
       profileUpdates.email = requestedEmail;
@@ -254,8 +254,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    // If the email changed, route through the backend helper. It handles
-    // already-used addresses without leaving the profile in a false state.
     if (emailChanged) {
       const { data, error: emailError } = await supabase.functions.invoke(
         'resend-email-verification',
@@ -275,6 +273,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               (response?.message || response?.error || emailError?.message || 'adresse email indisponible')
           ),
         };
+      }
+
+      // Auth accepted the change (verification email sent, or already
+      // attached). Persist the new address on the profile so the UI shows
+      // the pending email immediately — the "Vérifiée" badge stays off
+      // until the user clicks the confirmation link.
+      try {
+        await supabase
+          .from('profiles')
+          .update({ email: requestedEmail })
+          .eq('user_id', user.id);
+      } catch (e) {
+        console.error('Error persisting pending email to profile:', e);
       }
     }
 
