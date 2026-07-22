@@ -117,34 +117,57 @@ Deno.serve(async (req) => {
   const alreadyAttached = currentEmail === targetEmail
 
   if (!alreadyAttached) {
-    // Use the user-scoped client so the confirmation email is sent normally
-    // (admin.updateUserById does not send the confirmation email).
-    const { error } = await authClient.auth.updateUser(
-      { email: targetEmail },
-      redirectTo ? { emailRedirectTo: redirectTo } : undefined,
-    )
-    if (error) {
-      console.error('updateUser failed:', error.message)
-      return new Response(JSON.stringify({ error: error.message }), {
+    // Call GoTrue REST directly with the user JWT so the confirmation email is sent.
+    // (SDK's auth.updateUser requires a persisted session which we don't have here.)
+    const resp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'PUT',
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${jwt}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: targetEmail,
+        ...(redirectTo ? { email_redirect_to: redirectTo } : {}),
+      }),
+    })
+    if (!resp.ok) {
+      const errText = await resp.text()
+      console.error('updateUser (REST) failed:', resp.status, errText)
+      let msg = errText
+      try { msg = JSON.parse(errText).msg || JSON.parse(errText).error_description || errText } catch {}
+      return new Response(JSON.stringify({ error: msg }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
   } else {
-    // Email already attached and unconfirmed → resend signup confirmation.
-    const { error } = await authClient.auth.resend({
-      type: 'signup',
-      email: targetEmail,
-      options: redirectTo ? { emailRedirectTo: redirectTo } : undefined,
+    // Email already attached and unconfirmed → resend signup confirmation via REST.
+    const resp = await fetch(`${supabaseUrl}/auth/v1/resend`, {
+      method: 'POST',
+      headers: {
+        apikey: anonKey,
+        Authorization: `Bearer ${anonKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: 'signup',
+        email: targetEmail,
+        ...(redirectTo ? { options: { email_redirect_to: redirectTo } } : {}),
+      }),
     })
-    if (error) {
-      console.error('resend failed:', error.message)
-      return new Response(JSON.stringify({ error: error.message }), {
+    if (!resp.ok) {
+      const errText = await resp.text()
+      console.error('resend (REST) failed:', resp.status, errText)
+      let msg = errText
+      try { msg = JSON.parse(errText).msg || JSON.parse(errText).error_description || errText } catch {}
+      return new Response(JSON.stringify({ error: msg }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
   }
+
 
   // Persist to profile too.
   try {
