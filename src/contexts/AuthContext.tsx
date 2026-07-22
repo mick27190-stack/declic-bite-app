@@ -46,6 +46,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const getFunctionErrorMessage = async (error: unknown) => {
+  const context = (error as { context?: Response } | null)?.context;
+  if (context) {
+    try {
+      const payload = await context.clone().json();
+      if (payload?.message || payload?.error) {
+        return String(payload.message || payload.error);
+      }
+    } catch {
+      // Ignore malformed responses and fall back below.
+    }
+  }
+
+  const message = (error as { message?: string } | null)?.message;
+  if (!message || message.includes('non-2xx')) {
+    return "Impossible d'envoyer le lien de vérification pour le moment. Réessayez dans quelques minutes.";
+  }
+  return message;
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -266,11 +286,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       );
       const response = data as { ok?: boolean; message?: string; error?: string } | null;
       if (emailError || response?.ok === false || response?.error) {
+        const functionMessage = emailError ? await getFunctionErrorMessage(emailError) : null;
         await fetchProfile(user.id);
         return {
           error: new Error(
             "L'adresse email n'a pas été changée : " +
-              (response?.message || response?.error || emailError?.message || 'adresse email indisponible')
+              (response?.message || response?.error || functionMessage || 'adresse email indisponible')
           ),
         };
       }
