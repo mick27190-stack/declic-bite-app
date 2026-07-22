@@ -4,12 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 type Status = 'verifying' | 'success' | 'error';
 
 const AuthConfirmPage = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
   const [status, setStatus] = useState<Status>('verifying');
   const [message, setMessage] = useState<string>('');
 
@@ -68,6 +70,19 @@ const AuthConfirmPage = () => {
           }
         }
 
+        // Refresh the local session so the AuthContext picks up the newly
+        // confirmed email (and email_confirmed_at) without a manual sign-in.
+        try {
+          await supabase.auth.refreshSession();
+        } catch (e) {
+          console.error('Session refresh failed:', e);
+        }
+        try {
+          await refreshProfile();
+        } catch (e) {
+          console.error('Profile refresh failed:', e);
+        }
+
         setStatus('success');
         setMessage('Votre adresse email est vérifiée.');
         toast.success('Email vérifié avec succès !');
@@ -82,7 +97,7 @@ const AuthConfirmPage = () => {
       }
     };
     run();
-  }, [params, navigate]);
+  }, [params, navigate, refreshProfile]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-secondary to-background flex items-center justify-center p-6">
