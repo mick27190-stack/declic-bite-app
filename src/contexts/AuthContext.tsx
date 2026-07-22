@@ -243,13 +243,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       profileUpdates.email = requestedEmail;
     }
 
-    const { error } = await supabase
-      .from('profiles')
-      .update(profileUpdates)
-      .eq('user_id', user.id);
+    if (Object.keys(profileUpdates).length > 0) {
+      const { error } = await supabase
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('user_id', user.id);
 
-    if (error) {
-      return { error };
+      if (error) {
+        return { error };
+      }
     }
 
     // If the email changed, route through the backend helper. It handles
