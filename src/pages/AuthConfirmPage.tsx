@@ -29,7 +29,12 @@ const AuthConfirmPage = () => {
           | 'magiclink'
           | null;
 
-        if (tokenHash && type) {
+        const code = params.get('code');
+
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) throw error;
+        } else if (tokenHash && type) {
           const { error } = await supabase.auth.verifyOtp({
             token_hash: tokenHash,
             type,
