@@ -11,6 +11,7 @@ type Status = 'verifying' | 'success' | 'error';
 const AuthConfirmPage = () => {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const { refreshProfile } = useAuth();
   const [status, setStatus] = useState<Status>('verifying');
   const [message, setMessage] = useState<string>('');
 
