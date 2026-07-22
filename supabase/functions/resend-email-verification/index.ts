@@ -54,6 +54,43 @@ const friendlyProviderMessage = (message: string) => {
   return message || "Impossible d'envoyer le lien de vérification"
 }
 
+const extractActionLinkToken = (actionLink: string) => {
+  try {
+    const url = new URL(actionLink)
+    return url.searchParams.get('token') || url.searchParams.get('token_hash')
+  } catch {
+    return null
+  }
+}
+
+const buildAppConfirmationUrl = ({
+  actionLink,
+  fallbackTokenHash,
+  kind,
+  redirectTo,
+}: {
+  actionLink: string
+  fallbackTokenHash?: string | null
+  kind: 'signup' | 'email_change'
+  redirectTo?: string
+}) => {
+  const redirectUrl = redirectTo || 'https://declicpizza.fr/auth/confirm'
+
+  // Important: for `email_change_new`, GoTrue has returned an invalid
+  // `properties.hashed_token` in some versions. The action link contains the
+  // token actually stored for verification, so prefer that token and only use
+  // `hashed_token` as a signup fallback.
+  const tokenHash = extractActionLinkToken(actionLink) || (kind === 'signup' ? fallbackTokenHash : null)
+  if (!tokenHash) {
+    return actionLink
+  }
+
+  const confirmationType = kind === 'email_change' ? 'email_change' : 'signup'
+  return `${redirectUrl}${redirectUrl.includes('?') ? '&' : '?'}token_hash=${encodeURIComponent(
+    tokenHash,
+  )}&type=${confirmationType}`
+}
+
 // Resend the email verification link for the authenticated caller.
 // Handles the edge case where the target email is already registered on
 // another auth account created before the current verification flow existed:
@@ -137,12 +174,12 @@ Deno.serve(async (req) => {
       return { ok: false, message }
     }
 
-    const redirectUrl = redirectTo || 'https://declicpizza.fr/auth/confirm'
-    const tokenHash = linkData.properties.hashed_token
-    const confirmationType = kind === 'email_change' ? 'email_change' : 'signup'
-    const confirmationUrl = tokenHash
-      ? `${redirectUrl}${redirectUrl.includes('?') ? '&' : '?'}token_hash=${encodeURIComponent(tokenHash)}&type=${confirmationType}`
-      : linkData.properties.action_link
+    const confirmationUrl = buildAppConfirmationUrl({
+      actionLink: linkData.properties.action_link,
+      fallbackTokenHash: linkData.properties.hashed_token,
+      kind,
+      redirectTo,
+    })
     const templateProps =
       kind === 'email_change'
         ? {
@@ -360,14 +397,6 @@ Deno.serve(async (req) => {
             }),
           })
           if (retry.ok) {
-            const manualEmail = await enqueueManualVerificationEmail('email_change')
-            if (!manualEmail.ok) {
-              return json({
-                ok: false,
-                status: 'verification_send_failed',
-                message: friendlyProviderMessage(manualEmail.message ?? ''),
-              })
-            }
             await syncProfileEmail()
             return json({
               ok: true,
@@ -393,15 +422,6 @@ Deno.serve(async (req) => {
       ok: false,
       status: 'verification_send_failed',
       message: friendlyProviderMessage(msg),
-    })
-  }
-
-  const manualEmail = await enqueueManualVerificationEmail('email_change')
-  if (!manualEmail.ok) {
-    return json({
-      ok: false,
-      status: 'verification_send_failed',
-      message: friendlyProviderMessage(manualEmail.message ?? ''),
     })
   }
 

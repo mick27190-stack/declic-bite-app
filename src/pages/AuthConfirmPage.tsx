@@ -18,9 +18,21 @@ const AuthConfirmPage = () => {
   useEffect(() => {
     const run = async () => {
       try {
+        const hash = window.location.hash.startsWith('#')
+          ? window.location.hash.slice(1)
+          : window.location.hash;
+        const hashParams = new URLSearchParams(hash);
+
         // 1) Modern PKCE / token_hash flow (?token_hash=...&type=...)
-        const tokenHash = params.get('token_hash');
-        const type = params.get('type') as
+        const tokenHash =
+          params.get('token_hash') ||
+          params.get('token') ||
+          hashParams.get('token_hash') ||
+          hashParams.get('token');
+        const rawType = params.get('type') || hashParams.get('type');
+        const type = (rawType === 'email_change_new' || rawType === 'email_change_current'
+          ? 'email_change'
+          : rawType) as
           | 'signup'
           | 'email'
           | 'email_change'
@@ -42,10 +54,6 @@ const AuthConfirmPage = () => {
           if (error) throw error;
         } else {
           // 2) Legacy hash flow (#access_token=...&refresh_token=...&type=...)
-          const hash = window.location.hash.startsWith('#')
-            ? window.location.hash.slice(1)
-            : window.location.hash;
-          const hashParams = new URLSearchParams(hash);
           const accessToken = hashParams.get('access_token');
           const refreshToken = hashParams.get('refresh_token');
           if (accessToken && refreshToken) {
