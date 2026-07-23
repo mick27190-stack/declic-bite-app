@@ -49,6 +49,8 @@ export function PricingProvider({ children }: { children: ReactNode }) {
       price: Number(row.price),
       label: row.label,
       is_active: row.is_active,
+      recurrence: (row.recurrence ?? 'weekly') as 'weekly' | 'monthly',
+      week_of_month: row.week_of_month ?? null,
     }));
 
     const ipMap: Record<string, number> = { ...DEFAULT_ITEM_PRICES };

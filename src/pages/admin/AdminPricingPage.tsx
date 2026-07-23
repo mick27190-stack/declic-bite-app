@@ -43,6 +43,8 @@ export default function AdminPricingPage() {
   const [newSize, setNewSize] = useState<string>('senior');
   const [newPrice, setNewPrice] = useState<string>('');
   const [newLabel, setNewLabel] = useState<string>('');
+  const [newRecurrence, setNewRecurrence] = useState<'weekly' | 'monthly'>('weekly');
+  const [newWeekOfMonth, setNewWeekOfMonth] = useState<string>('1');
   const [addingPromo, setAddingPromo] = useState(false);
 
   useEffect(() => {
@@ -121,7 +123,9 @@ export default function AdminPricingPage() {
       price,
       label: newLabel || null,
       is_active: true,
-    });
+      recurrence: newRecurrence,
+      week_of_month: newRecurrence === 'monthly' ? parseInt(newWeekOfMonth, 10) : null,
+    } as any);
     setAddingPromo(false);
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
@@ -131,6 +135,21 @@ export default function AdminPricingPage() {
       toast({ title: 'Promotion ajoutée' });
       await refresh();
     }
+  };
+
+  const WEEK_OF_MONTH_LABEL: Record<number, string> = {
+    1: '1re semaine',
+    2: '2e semaine',
+    3: '3e semaine',
+    4: '4e semaine',
+    [-1]: 'dernière semaine',
+  };
+
+  const describeRecurrence = (p: { recurrence?: string; week_of_month?: number | null; day_of_week: number }) => {
+    if (p.recurrence === 'monthly' && p.week_of_month != null) {
+      return `${WEEK_OF_MONTH_LABEL[p.week_of_month] ?? p.week_of_month} du mois`;
+    }
+    return 'Toutes les semaines';
   };
 
   const togglePromo = async (id: string, is_active: boolean) => {
@@ -305,6 +324,34 @@ export default function AdminPricingPage() {
               </Button>
             </div>
 
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end">
+              <div className="space-y-2">
+                <Label>Récurrence</Label>
+                <Select value={newRecurrence} onValueChange={(v) => setNewRecurrence(v as 'weekly' | 'monthly')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="weekly">Tous les {DAY_NAMES[parseInt(newDay, 10)]?.toLowerCase()}</SelectItem>
+                    <SelectItem value="monthly">Un {DAY_NAMES[parseInt(newDay, 10)]?.toLowerCase()} précis du mois</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {newRecurrence === 'monthly' && (
+                <div className="space-y-2">
+                  <Label>Semaine du mois</Label>
+                  <Select value={newWeekOfMonth} onValueChange={setNewWeekOfMonth}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1re semaine (1er {DAY_NAMES[parseInt(newDay, 10)]?.toLowerCase()})</SelectItem>
+                      <SelectItem value="2">2e semaine</SelectItem>
+                      <SelectItem value="3">3e semaine</SelectItem>
+                      <SelectItem value="4">4e semaine</SelectItem>
+                      <SelectItem value="-1">Dernier {DAY_NAMES[parseInt(newDay, 10)]?.toLowerCase()} du mois</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2">
               {dayPromos.length === 0 && (
                 <p className="text-sm text-muted-foreground">Aucune promotion configurée.</p>
@@ -320,6 +367,9 @@ export default function AdminPricingPage() {
                     <div className="min-w-0">
                       <p className="font-medium">
                         {DAY_NAMES[p.day_of_week]} · {sizeName(p.size_id)} · {p.price}€
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {describeRecurrence(p)}
                       </p>
                       {p.label && (
                         <p className="text-sm text-muted-foreground truncate">{p.label}</p>
