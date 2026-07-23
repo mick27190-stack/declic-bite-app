@@ -14,7 +14,7 @@ export const DEFAULT_SIZE_PRICES: Record<string, number> = {
   'super-mega': 28,
 };
 
-export type PromoRecurrence = 'weekly' | 'monthly';
+export type PromoRecurrence = 'weekly' | 'monthly' | 'once';
 
 export interface DayPromo {
   id: string;
@@ -24,8 +24,10 @@ export interface DayPromo {
   label: string | null;
   is_active: boolean;
   recurrence: PromoRecurrence;
-  /** 1..4 pour la Nᵉ semaine, -1 pour la dernière du mois. null si weekly. */
+  /** 1..4 pour la Nᵉ semaine, -1 pour la dernière du mois. null si weekly/once. */
   week_of_month: number | null;
+  /** Date précise (YYYY-MM-DD) pour une promo ponctuelle. null sinon. */
+  specific_date: string | null;
 }
 
 /** 1st, 2nd, 3rd, 4th of month, or last (-1). */
@@ -39,8 +41,18 @@ function isLastWeekdayOfMonth(date: Date): boolean {
   return d.getMonth() !== date.getMonth();
 }
 
+function toLocalIsoDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
 export function promoMatchesDate(promo: DayPromo, date: Date): boolean {
   if (!promo.is_active) return false;
+  if (promo.recurrence === 'once') {
+    return !!promo.specific_date && promo.specific_date === toLocalIsoDate(date);
+  }
   if (promo.day_of_week !== date.getDay()) return false;
   if (promo.recurrence === 'weekly') return true;
   if (promo.recurrence === 'monthly') {
@@ -49,6 +61,7 @@ export function promoMatchesDate(promo: DayPromo, date: Date): boolean {
   }
   return false;
 }
+
 
 let _sizePrices: Record<string, number> = { ...DEFAULT_SIZE_PRICES };
 let _dayPromos: DayPromo[] = [];
