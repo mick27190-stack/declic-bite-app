@@ -43,9 +43,11 @@ export default function AdminPricingPage() {
   const [newSize, setNewSize] = useState<string>('senior');
   const [newPrice, setNewPrice] = useState<string>('');
   const [newLabel, setNewLabel] = useState<string>('');
-  const [newRecurrence, setNewRecurrence] = useState<'weekly' | 'monthly'>('weekly');
+  const [newRecurrence, setNewRecurrence] = useState<'weekly' | 'monthly' | 'once'>('weekly');
   const [newWeekOfMonth, setNewWeekOfMonth] = useState<string>('1');
+  const [newSpecificDate, setNewSpecificDate] = useState<string>('');
   const [addingPromo, setAddingPromo] = useState(false);
+
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
