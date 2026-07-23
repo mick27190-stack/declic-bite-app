@@ -296,7 +296,7 @@ export default function AdminPricingPage() {
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-5 items-end">
               <div className="space-y-2">
                 <Label>Jour</Label>
-                <Select value={newDay} onValueChange={setNewDay}>
+                <Select value={newDay} onValueChange={setNewDay} disabled={newRecurrence === 'once'}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {DAY_NAMES.map((name, idx) => (
@@ -304,7 +304,11 @@ export default function AdminPricingPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {newRecurrence === 'once' && (
+                  <p className="text-xs text-muted-foreground">Déterminé par la date choisie.</p>
+                )}
               </div>
+
               <div className="space-y-2">
                 <Label>Taille</Label>
                 <Select value={newSize} onValueChange={setNewSize}>
