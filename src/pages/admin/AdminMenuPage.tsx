@@ -108,9 +108,9 @@ export default function AdminMenuPage() {
   };
 
 
-  const handleToggleAvailability = async (id: string) => {
+  const handleToggleAvailability = async (id: string, site: 'conches' | 'beaumont') => {
     try {
-      await setAvailable(id, !isAvailable(id));
+      await setAvailable(id, site, !isAvailable(id, site));
     } catch (e) {
       toast.error("Impossible de mettre à jour la disponibilité");
     }
