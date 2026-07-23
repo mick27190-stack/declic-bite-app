@@ -128,7 +128,7 @@ export default function MenuPage() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           {filteredPizzas.map((pizza, index) => {
-            const unavailable = !isAvailable(pizza.id);
+            const unavailable = !isAvailable(pizza.id, selectedRestaurant?.id);
             return (
               <div
                 key={pizza.id}

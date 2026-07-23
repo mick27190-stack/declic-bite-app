@@ -108,9 +108,9 @@ export default function AdminMenuPage() {
   };
 
 
-  const handleToggleAvailability = async (id: string) => {
+  const handleToggleAvailability = async (id: string, site: 'conches' | 'beaumont') => {
     try {
-      await setAvailable(id, !isAvailable(id));
+      await setAvailable(id, site, !isAvailable(id, site));
     } catch (e) {
       toast.error("Impossible de mettre à jour la disponibilité");
     }
@@ -160,7 +160,8 @@ export default function AdminMenuPage() {
                   <TableHead>Nom</TableHead>
                   <TableHead>Catégorie</TableHead>
                   <TableHead>Ingrédients</TableHead>
-                  <TableHead>Disponible</TableHead>
+                  <TableHead>Disponible Conches</TableHead>
+                  <TableHead>Disponible Beaumont</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -187,8 +188,14 @@ export default function AdminMenuPage() {
                     </TableCell>
                     <TableCell>
                       <Switch
-                        checked={isAvailable(pizza.id)}
-                        onCheckedChange={() => handleToggleAvailability(pizza.id)}
+                        checked={isAvailable(pizza.id, 'conches')}
+                        onCheckedChange={() => handleToggleAvailability(pizza.id, 'conches')}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={isAvailable(pizza.id, 'beaumont')}
+                        onCheckedChange={() => handleToggleAvailability(pizza.id, 'beaumont')}
                       />
                     </TableCell>
                     <TableCell className="text-right">
