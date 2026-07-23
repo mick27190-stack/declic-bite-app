@@ -160,7 +160,8 @@ export default function AdminMenuPage() {
                   <TableHead>Nom</TableHead>
                   <TableHead>Catégorie</TableHead>
                   <TableHead>Ingrédients</TableHead>
-                  <TableHead>Disponible</TableHead>
+                  <TableHead>Disponible Conches</TableHead>
+                  <TableHead>Disponible Beaumont</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -187,8 +188,14 @@ export default function AdminMenuPage() {
                     </TableCell>
                     <TableCell>
                       <Switch
-                        checked={isAvailable(pizza.id)}
-                        onCheckedChange={() => handleToggleAvailability(pizza.id)}
+                        checked={isAvailable(pizza.id, 'conches')}
+                        onCheckedChange={() => handleToggleAvailability(pizza.id, 'conches')}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        checked={isAvailable(pizza.id, 'beaumont')}
+                        onCheckedChange={() => handleToggleAvailability(pizza.id, 'beaumont')}
                       />
                     </TableCell>
                     <TableCell className="text-right">
