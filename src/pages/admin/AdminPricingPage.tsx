@@ -43,6 +43,8 @@ export default function AdminPricingPage() {
   const [newSize, setNewSize] = useState<string>('senior');
   const [newPrice, setNewPrice] = useState<string>('');
   const [newLabel, setNewLabel] = useState<string>('');
+  const [newRecurrence, setNewRecurrence] = useState<'weekly' | 'monthly'>('weekly');
+  const [newWeekOfMonth, setNewWeekOfMonth] = useState<string>('1');
   const [addingPromo, setAddingPromo] = useState(false);
 
   useEffect(() => {
