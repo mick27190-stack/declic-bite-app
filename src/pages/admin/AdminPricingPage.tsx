@@ -118,15 +118,23 @@ export default function AdminPricingPage() {
       toast({ title: 'Prix invalide', variant: 'destructive' });
       return;
     }
+    if (newRecurrence === 'once' && !newSpecificDate) {
+      toast({ title: 'Date requise', description: 'Choisissez une date pour la promotion ponctuelle.', variant: 'destructive' });
+      return;
+    }
     setAddingPromo(true);
+    const dow = newRecurrence === 'once'
+      ? new Date(`${newSpecificDate}T12:00:00`).getDay()
+      : parseInt(newDay, 10);
     const { error } = await supabase.from('pizza_day_promos').insert({
-      day_of_week: parseInt(newDay, 10),
+      day_of_week: dow,
       size_id: newSize,
       price,
       label: newLabel || null,
       is_active: true,
       recurrence: newRecurrence,
       week_of_month: newRecurrence === 'monthly' ? parseInt(newWeekOfMonth, 10) : null,
+      specific_date: newRecurrence === 'once' ? newSpecificDate : null,
     } as any);
     setAddingPromo(false);
     if (error) {
@@ -134,6 +142,7 @@ export default function AdminPricingPage() {
     } else {
       setNewPrice('');
       setNewLabel('');
+      setNewSpecificDate('');
       toast({ title: 'Promotion ajoutée' });
       await refresh();
     }
@@ -147,12 +156,17 @@ export default function AdminPricingPage() {
     [-1]: 'dernière semaine',
   };
 
-  const describeRecurrence = (p: { recurrence?: string; week_of_month?: number | null; day_of_week: number }) => {
+  const describeRecurrence = (p: { recurrence?: string; week_of_month?: number | null; day_of_week: number; specific_date?: string | null }) => {
+    if (p.recurrence === 'once' && p.specific_date) {
+      const d = new Date(`${p.specific_date}T12:00:00`);
+      return `Ponctuelle · ${d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`;
+    }
     if (p.recurrence === 'monthly' && p.week_of_month != null) {
       return `${WEEK_OF_MONTH_LABEL[p.week_of_month] ?? p.week_of_month} du mois`;
     }
     return 'Toutes les semaines';
   };
+
 
   const togglePromo = async (id: string, is_active: boolean) => {
     const { error } = await supabase.from('pizza_day_promos').update({ is_active }).eq('id', id);
