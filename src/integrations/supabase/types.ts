@@ -674,8 +674,10 @@ export type Database = {
           is_active: boolean
           label: string | null
           price: number
+          recurrence: string
           size_id: string
           updated_at: string
+          week_of_month: number | null
         }
         Insert: {
           created_at?: string
@@ -684,8 +686,10 @@ export type Database = {
           is_active?: boolean
           label?: string | null
           price: number
+          recurrence?: string
           size_id: string
           updated_at?: string
+          week_of_month?: number | null
         }
         Update: {
           created_at?: string
@@ -694,8 +698,10 @@ export type Database = {
           is_active?: boolean
           label?: string | null
           price?: number
+          recurrence?: string
           size_id?: string
           updated_at?: string
+          week_of_month?: number | null
         }
         Relationships: []
       }
