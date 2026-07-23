@@ -123,7 +123,9 @@ export default function AdminPricingPage() {
       price,
       label: newLabel || null,
       is_active: true,
-    });
+      recurrence: newRecurrence,
+      week_of_month: newRecurrence === 'monthly' ? parseInt(newWeekOfMonth, 10) : null,
+    } as any);
     setAddingPromo(false);
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
@@ -133,6 +135,21 @@ export default function AdminPricingPage() {
       toast({ title: 'Promotion ajoutée' });
       await refresh();
     }
+  };
+
+  const WEEK_OF_MONTH_LABEL: Record<number, string> = {
+    1: '1re semaine',
+    2: '2e semaine',
+    3: '3e semaine',
+    4: '4e semaine',
+    [-1]: 'dernière semaine',
+  };
+
+  const describeRecurrence = (p: { recurrence?: string; week_of_month?: number | null; day_of_week: number }) => {
+    if (p.recurrence === 'monthly' && p.week_of_month != null) {
+      return `${WEEK_OF_MONTH_LABEL[p.week_of_month] ?? p.week_of_month} du mois`;
+    }
+    return 'Toutes les semaines';
   };
 
   const togglePromo = async (id: string, is_active: boolean) => {
