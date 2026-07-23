@@ -676,6 +676,7 @@ export type Database = {
           price: number
           recurrence: string
           size_id: string
+          specific_date: string | null
           updated_at: string
           week_of_month: number | null
         }
@@ -688,6 +689,7 @@ export type Database = {
           price: number
           recurrence?: string
           size_id: string
+          specific_date?: string | null
           updated_at?: string
           week_of_month?: number | null
         }
@@ -700,6 +702,7 @@ export type Database = {
           price?: number
           recurrence?: string
           size_id?: string
+          specific_date?: string | null
           updated_at?: string
           week_of_month?: number | null
         }
