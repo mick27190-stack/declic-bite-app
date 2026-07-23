@@ -43,9 +43,11 @@ export default function AdminPricingPage() {
   const [newSize, setNewSize] = useState<string>('senior');
   const [newPrice, setNewPrice] = useState<string>('');
   const [newLabel, setNewLabel] = useState<string>('');
-  const [newRecurrence, setNewRecurrence] = useState<'weekly' | 'monthly'>('weekly');
+  const [newRecurrence, setNewRecurrence] = useState<'weekly' | 'monthly' | 'once'>('weekly');
   const [newWeekOfMonth, setNewWeekOfMonth] = useState<string>('1');
+  const [newSpecificDate, setNewSpecificDate] = useState<string>('');
   const [addingPromo, setAddingPromo] = useState(false);
+
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -116,15 +118,23 @@ export default function AdminPricingPage() {
       toast({ title: 'Prix invalide', variant: 'destructive' });
       return;
     }
+    if (newRecurrence === 'once' && !newSpecificDate) {
+      toast({ title: 'Date requise', description: 'Choisissez une date pour la promotion ponctuelle.', variant: 'destructive' });
+      return;
+    }
     setAddingPromo(true);
+    const dow = newRecurrence === 'once'
+      ? new Date(`${newSpecificDate}T12:00:00`).getDay()
+      : parseInt(newDay, 10);
     const { error } = await supabase.from('pizza_day_promos').insert({
-      day_of_week: parseInt(newDay, 10),
+      day_of_week: dow,
       size_id: newSize,
       price,
       label: newLabel || null,
       is_active: true,
       recurrence: newRecurrence,
       week_of_month: newRecurrence === 'monthly' ? parseInt(newWeekOfMonth, 10) : null,
+      specific_date: newRecurrence === 'once' ? newSpecificDate : null,
     } as any);
     setAddingPromo(false);
     if (error) {
@@ -132,6 +142,7 @@ export default function AdminPricingPage() {
     } else {
       setNewPrice('');
       setNewLabel('');
+      setNewSpecificDate('');
       toast({ title: 'Promotion ajoutée' });
       await refresh();
     }
@@ -145,12 +156,17 @@ export default function AdminPricingPage() {
     [-1]: 'dernière semaine',
   };
 
-  const describeRecurrence = (p: { recurrence?: string; week_of_month?: number | null; day_of_week: number }) => {
+  const describeRecurrence = (p: { recurrence?: string; week_of_month?: number | null; day_of_week: number; specific_date?: string | null }) => {
+    if (p.recurrence === 'once' && p.specific_date) {
+      const d = new Date(`${p.specific_date}T12:00:00`);
+      return `Ponctuelle · ${d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`;
+    }
     if (p.recurrence === 'monthly' && p.week_of_month != null) {
       return `${WEEK_OF_MONTH_LABEL[p.week_of_month] ?? p.week_of_month} du mois`;
     }
     return 'Toutes les semaines';
   };
+
 
   const togglePromo = async (id: string, is_active: boolean) => {
     const { error } = await supabase.from('pizza_day_promos').update({ is_active }).eq('id', id);
@@ -280,7 +296,7 @@ export default function AdminPricingPage() {
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-5 items-end">
               <div className="space-y-2">
                 <Label>Jour</Label>
-                <Select value={newDay} onValueChange={setNewDay}>
+                <Select value={newDay} onValueChange={setNewDay} disabled={newRecurrence === 'once'}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {DAY_NAMES.map((name, idx) => (
@@ -288,7 +304,11 @@ export default function AdminPricingPage() {
                     ))}
                   </SelectContent>
                 </Select>
+                {newRecurrence === 'once' && (
+                  <p className="text-xs text-muted-foreground">Déterminé par la date choisie.</p>
+                )}
               </div>
+
               <div className="space-y-2">
                 <Label>Taille</Label>
                 <Select value={newSize} onValueChange={setNewSize}>
@@ -327,9 +347,10 @@ export default function AdminPricingPage() {
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end">
               <div className="space-y-2">
                 <Label>Récurrence</Label>
-                <Select value={newRecurrence} onValueChange={(v) => setNewRecurrence(v as 'weekly' | 'monthly')}>
+                <Select value={newRecurrence} onValueChange={(v) => setNewRecurrence(v as 'weekly' | 'monthly' | 'once')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="once">Aucune (promotion ponctuelle)</SelectItem>
                     <SelectItem value="weekly">Tous les {DAY_NAMES[parseInt(newDay, 10)]?.toLowerCase()}</SelectItem>
                     <SelectItem value="monthly">Un {DAY_NAMES[parseInt(newDay, 10)]?.toLowerCase()} précis du mois</SelectItem>
                   </SelectContent>
@@ -350,7 +371,18 @@ export default function AdminPricingPage() {
                   </Select>
                 </div>
               )}
+              {newRecurrence === 'once' && (
+                <div className="space-y-2">
+                  <Label>Date de la promotion</Label>
+                  <Input
+                    type="date"
+                    value={newSpecificDate}
+                    onChange={(e) => setNewSpecificDate(e.target.value)}
+                  />
+                </div>
+              )}
             </div>
+
 
             <div className="space-y-2">
               {dayPromos.length === 0 && (
