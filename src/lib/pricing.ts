@@ -124,8 +124,12 @@ export function getNonPizzaPrice(
 }
 
 function findDayPromo(sizeId: string, date: Date): DayPromo | undefined {
-  return _dayPromos.find(
-    (p) => p.is_active && p.day_of_week === date.getDay() && p.size_id === sizeId,
+  const matches = _dayPromos.filter(
+    (p) => p.size_id === sizeId && promoMatchesDate(p, date),
+  );
+  // Une règle mensuelle (plus spécifique) prime sur une règle hebdomadaire.
+  return (
+    matches.find((p) => p.recurrence === 'monthly') ?? matches[0]
   );
 }
 
