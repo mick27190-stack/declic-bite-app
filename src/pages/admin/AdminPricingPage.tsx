@@ -347,9 +347,10 @@ export default function AdminPricingPage() {
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end">
               <div className="space-y-2">
                 <Label>Récurrence</Label>
-                <Select value={newRecurrence} onValueChange={(v) => setNewRecurrence(v as 'weekly' | 'monthly')}>
+                <Select value={newRecurrence} onValueChange={(v) => setNewRecurrence(v as 'weekly' | 'monthly' | 'once')}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="once">Aucune (promotion ponctuelle)</SelectItem>
                     <SelectItem value="weekly">Tous les {DAY_NAMES[parseInt(newDay, 10)]?.toLowerCase()}</SelectItem>
                     <SelectItem value="monthly">Un {DAY_NAMES[parseInt(newDay, 10)]?.toLowerCase()} précis du mois</SelectItem>
                   </SelectContent>
@@ -370,7 +371,18 @@ export default function AdminPricingPage() {
                   </Select>
                 </div>
               )}
+              {newRecurrence === 'once' && (
+                <div className="space-y-2">
+                  <Label>Date de la promotion</Label>
+                  <Input
+                    type="date"
+                    value={newSpecificDate}
+                    onChange={(e) => setNewSpecificDate(e.target.value)}
+                  />
+                </div>
+              )}
             </div>
+
 
             <div className="space-y-2">
               {dayPromos.length === 0 && (
