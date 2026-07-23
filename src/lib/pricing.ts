@@ -14,6 +14,8 @@ export const DEFAULT_SIZE_PRICES: Record<string, number> = {
   'super-mega': 28,
 };
 
+export type PromoRecurrence = 'weekly' | 'monthly';
+
 export interface DayPromo {
   id: string;
   day_of_week: number; // 0 = dimanche ... 6 = samedi
@@ -21,6 +23,31 @@ export interface DayPromo {
   price: number;
   label: string | null;
   is_active: boolean;
+  recurrence: PromoRecurrence;
+  /** 1..4 pour la Nᵉ semaine, -1 pour la dernière du mois. null si weekly. */
+  week_of_month: number | null;
+}
+
+/** 1st, 2nd, 3rd, 4th of month, or last (-1). */
+function nthWeekdayOfMonth(date: Date): number {
+  return Math.floor((date.getDate() - 1) / 7) + 1;
+}
+
+function isLastWeekdayOfMonth(date: Date): boolean {
+  const d = new Date(date);
+  d.setDate(d.getDate() + 7);
+  return d.getMonth() !== date.getMonth();
+}
+
+export function promoMatchesDate(promo: DayPromo, date: Date): boolean {
+  if (!promo.is_active) return false;
+  if (promo.day_of_week !== date.getDay()) return false;
+  if (promo.recurrence === 'weekly') return true;
+  if (promo.recurrence === 'monthly') {
+    if (promo.week_of_month === -1) return isLastWeekdayOfMonth(date);
+    return promo.week_of_month === nthWeekdayOfMonth(date);
+  }
+  return false;
 }
 
 let _sizePrices: Record<string, number> = { ...DEFAULT_SIZE_PRICES };
