@@ -23,10 +23,33 @@ export function useRestaurantClosures() {
       .order('created_at', { ascending: false });
 
     if (data) {
-      setClosures(data as RestaurantClosure[]);
+      const now = new Date();
+      const expiredActiveIds = (data as RestaurantClosure[])
+        .filter(c => c.is_active && c.end_at && new Date(c.end_at) <= now)
+        .map(c => c.id);
+
+      if (expiredActiveIds.length > 0) {
+        await supabase
+          .from('restaurant_closures')
+          .update({ is_active: false })
+          .in('id', expiredActiveIds);
+      }
+
+      const updated = (data as RestaurantClosure[]).map(c =>
+        expiredActiveIds.includes(c.id) ? { ...c, is_active: false } : c
+      );
+      setClosures(updated);
     }
     setLoading(false);
   }, []);
+
+  // Re-check periodically so an open admin page auto-deactivates expired blocks
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchClosures();
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchClosures]);
 
   const addClosure = async (closure: { site: string; reason: string; end_at?: string | null; created_by: string }) => {
     const { error } = await supabase
