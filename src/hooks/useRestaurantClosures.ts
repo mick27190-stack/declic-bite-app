@@ -85,6 +85,21 @@ export function useRestaurantClosures() {
 
   useEffect(() => {
     fetchClosures();
+
+    const channel = supabase
+      .channel('restaurant_closures_admin')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'restaurant_closures' },
+        () => {
+          fetchClosures();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [fetchClosures]);
 
   return { closures, loading, addClosure, toggleClosure, deleteClosure, refresh: fetchClosures };
