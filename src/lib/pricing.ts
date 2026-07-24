@@ -95,7 +95,7 @@ export const DEFAULT_ITEM_PRICES: Record<string, number> = {
 };
 
 export const MANAGED_ITEMS: { key: string; name: string }[] = [
-  { key: 'coca-cola-1-5l', name: 'Coca-Cola 1,5L' },
+  { key: 'coca-cola-1-5l', name: 'Coca-Cola' },
   { key: 'rose-bouteille', name: 'Bouteille de Rosé' },
   { key: 'panini-simple', name: 'Panini simple' },
   { key: 'panini-double', name: 'Panini double' },

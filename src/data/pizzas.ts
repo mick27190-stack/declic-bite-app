@@ -399,8 +399,8 @@ export const pizzas: Pizza[] = [
   // Boissons
   {
     id: 'coca-cola-1-5l',
-    name: 'Coca-Cola 1,5L',
-    description: 'Bouteille de Coca-Cola 1,5L',
+    name: 'Coca-Cola',
+    description: 'Bouteille de Coca-Cola',
     ingredients: [],
     image: boissonCoca,
     basePrice: 3,
