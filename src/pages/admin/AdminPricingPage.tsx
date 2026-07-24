@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { usePricing } from '@/contexts/PricingContext';
 import { supabase } from '@/integrations/supabase/client';
-import { DAY_NAMES, MANAGED_ITEMS } from '@/lib/pricing';
+import { DAY_NAMES, MANAGED_ITEMS, promoMatchesDate, type DayPromo } from '@/lib/pricing';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -112,6 +112,38 @@ export default function AdminPricingPage() {
     }
   };
 
+  const findOverlappingPromos = (candidate: {
+    size_id: string;
+    day_of_week: number;
+    recurrence: 'weekly' | 'monthly' | 'once';
+    week_of_month: number | null;
+    specific_date: string | null;
+  }) => {
+    return dayPromos.filter((p) => {
+      if (!p.is_active) return false;
+      if (p.size_id !== candidate.size_id) return false;
+
+      // Ponctuelle vs existant : tester si l'existant s'applique à cette date.
+      if (candidate.recurrence === 'once' && candidate.specific_date) {
+        const d = new Date(`${candidate.specific_date}T12:00:00`);
+        return promoMatchesDate(p, d);
+      }
+      // Existant ponctuel vs nouvelle récurrente : tester la date ponctuelle.
+      if (p.recurrence === 'once' && p.specific_date) {
+        const d = new Date(`${p.specific_date}T12:00:00`);
+        return promoMatchesDate(
+          { ...(candidate as any), is_active: true, id: '', label: null, price: 0 } as DayPromo,
+          d,
+        );
+      }
+      // Deux règles récurrentes : même jour de semaine requis.
+      if (p.day_of_week !== candidate.day_of_week) return false;
+      // weekly recouvre tout ; monthly identiques si même semaine.
+      if (p.recurrence === 'weekly' || candidate.recurrence === 'weekly') return true;
+      return p.week_of_month === candidate.week_of_month;
+    });
+  };
+
   const addPromo = async () => {
     const price = parseFloat(newPrice);
     if (isNaN(price)) {
@@ -122,10 +154,29 @@ export default function AdminPricingPage() {
       toast({ title: 'Date requise', description: 'Choisissez une date pour la promotion ponctuelle.', variant: 'destructive' });
       return;
     }
-    setAddingPromo(true);
     const dow = newRecurrence === 'once'
       ? new Date(`${newSpecificDate}T12:00:00`).getDay()
       : parseInt(newDay, 10);
+
+    const overlaps = findOverlappingPromos({
+      size_id: newSize,
+      day_of_week: dow,
+      recurrence: newRecurrence,
+      week_of_month: newRecurrence === 'monthly' ? parseInt(newWeekOfMonth, 10) : null,
+      specific_date: newRecurrence === 'once' ? newSpecificDate : null,
+    });
+
+    if (overlaps.length > 0) {
+      const details = overlaps
+        .map((p) => `• ${DAY_NAMES[p.day_of_week]} · ${sizeName(p.size_id)} · ${p.price}€ (${describeRecurrence(p)})`)
+        .join('\n');
+      const ok = window.confirm(
+        `⚠️ Chevauchement détecté avec ${overlaps.length} promotion(s) existante(s) :\n\n${details}\n\nSouhaitez-vous quand même ajouter cette promotion ?`,
+      );
+      if (!ok) return;
+    }
+
+    setAddingPromo(true);
     const { error } = await supabase.from('pizza_day_promos').insert({
       day_of_week: dow,
       size_id: newSize,
@@ -143,7 +194,10 @@ export default function AdminPricingPage() {
       setNewPrice('');
       setNewLabel('');
       setNewSpecificDate('');
-      toast({ title: 'Promotion ajoutée' });
+      toast({
+        title: 'Promotion ajoutée',
+        description: overlaps.length > 0 ? 'Chevauchement confirmé.' : undefined,
+      });
       await refresh();
     }
   };
