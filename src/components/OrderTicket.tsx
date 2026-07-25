@@ -171,6 +171,7 @@ ${lines
     const head = padLine(`${l.qty}x ${l.name}`, fmt(l.sub));
     const detail = `   PU ${fmt(l.unit)}`;
     const extras: string[] = [];
+    if (l.bambinoChoice) extras.push(`   >> Pizza : ${l.bambinoChoice}`);
     if (l.supplements) extras.push(`   + ${l.supplements}`);
     if (l.notes) extras.push(`   Note: ${l.notes}`);
     return [head, detail, ...extras].join('\n');
