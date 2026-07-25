@@ -591,6 +591,11 @@ export default function AdminOrdersPage() {
                         <div key={idx} className="flex justify-between text-sm">
                           <span>
                             {item?.quantity ?? 1}x {item?.pizza?.name ?? 'Produit'}{item?.pizza?.category !== 'boissons' && item?.size?.name ? ` (${item?.pizza?.category === 'bambino' ? 'Bambino' : item.size.name})` : ''}
+                            {item?.pizza?.hasBase !== false && item?.pizza?.category !== 'boissons' && item?.pizza?.category !== 'bambino' && item?.base && (
+                              <span className="block text-xs text-muted-foreground mt-0.5">
+                                Base {item.base === 'creme' ? 'crème' : 'tomate'}
+                              </span>
+                            )}
                             {item?.pizza?.category === 'bambino' && item?.pizza?.description && (
                               <span className="block text-xs font-medium text-primary mt-0.5">
                                 🍕 {item.pizza.description}
