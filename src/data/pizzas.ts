@@ -467,6 +467,7 @@ export const supplements: Supplement[] = [
   { id: 'oeuf', name: 'Œuf', price: 1 },
   { id: 'merguez', name: 'Merguez', price: 1 },
   { id: 'chevre', name: 'Chèvre', price: 1 },
+  { id: 'camembert', name: '+ Camembert', price: 1 },
   { id: 'lardons', name: 'Lardons', price: 1 },
   { id: 'oignons', name: 'Oignons', price: 1 },
   { id: 'poivrons', name: 'Poivrons', price: 1 },
