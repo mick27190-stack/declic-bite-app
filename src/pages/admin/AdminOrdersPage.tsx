@@ -590,7 +590,7 @@ export default function AdminOrdersPage() {
                       {(Array.isArray(order.items) ? order.items : []).map((item: any, idx: number) => (
                         <div key={idx} className="flex justify-between text-sm">
                           <span>
-                            {item?.quantity ?? 1}x {item?.pizza?.name ?? 'Produit'} ({item?.size?.name ?? '-'})
+                            {item?.quantity ?? 1}x {item?.pizza?.name ?? 'Produit'}{item?.pizza?.category !== 'boissons' && item?.size?.name ? ` (${item.size.name})` : ''}
                             {item?.pizza?.category === 'bambino' && item?.pizza?.description && (
                               <span className="block text-xs font-medium text-primary mt-0.5">
                                 🍕 {item.pizza.description}
