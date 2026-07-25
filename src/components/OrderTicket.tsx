@@ -74,17 +74,18 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
     const qty = item?.quantity ?? 1;
     const name = item?.pizza?.name ?? 'Produit';
     const sizeName = item?.size?.name;
+    const category = item?.pizza?.category;
     const supplements = Array.isArray(item?.supplements) ? item.supplements : [];
-    const isPizza = item?.pizza?.category && PIZZA_CATEGORIES.includes(item.pizza.category);
+    const isPizza = category && PIZZA_CATEGORIES.includes(category);
     const unitBase = isPizza
-      ? getPizzaSizePrice(item.size.id, item.pizza.category, date)
+      ? getPizzaSizePrice(item.size.id, category, date)
       : getNonPizzaPrice(item.pizza, item.size);
     const supTotal = supplements.reduce((s: number, sup: any) => s + (sup?.price ?? 0), 0);
     const unit = unitBase + supTotal;
     const sub = unit * qty;
     return {
       qty,
-      name: sizeName ? `${name} (${sizeName})` : name,
+      name: category !== 'boissons' && sizeName ? `${name} (${sizeName})` : name,
       supplements: supplements.map((s: any) => s.name).join(', '),
       notes: item?.notes,
       unit,
