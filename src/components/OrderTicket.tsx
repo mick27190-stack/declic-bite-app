@@ -111,12 +111,15 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
         : category === 'bambino' && desc && desc !== 'Pizza au choix + boisson + bonbon' && desc !== 'Pizza au choix en taille enfant'
           ? desc
           : '';
+    const hasBase = item?.pizza?.hasBase !== false && category !== 'boissons' && category !== 'bambino';
+    const baseLabel = hasBase && item?.base ? (item.base === 'creme' ? 'Crème' : 'Tomate') : '';
     return {
       qty,
       name: category !== 'boissons' && sizeName ? `${name} (${category === 'bambino' ? 'Bambino' : sizeName})` : name,
       supplements: supplements.map((s: any) => s.name).join(', '),
       notes: item?.notes,
       bambinoChoice,
+      baseLabel,
       unit,
       sub,
     };
