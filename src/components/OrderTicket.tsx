@@ -52,11 +52,31 @@ function centerLine(text: string, width = 32): string {
 
 
 function padLine(left: string, right: string, width = 32): string {
-  const l = left.length > width - right.length - 1
-    ? left.slice(0, width - right.length - 1)
-    : left;
-  const spaces = ' '.repeat(Math.max(1, width - l.length - right.length));
-  return l + spaces + right;
+  const rightLen = right.length;
+  const maxLeft = width - rightLen - 1;
+  if (left.length <= maxLeft) {
+    const spaces = ' '.repeat(Math.max(1, width - left.length - rightLen));
+    return left + spaces + right;
+  }
+  // Wrap long left text across multiple lines; price on first line.
+  const words = left.split(' ');
+  const rows: string[] = [];
+  let current = '';
+  const firstMax = maxLeft;
+  const contMax = width;
+  const flush = () => { if (current) { rows.push(current); current = ''; } };
+  for (const w of words) {
+    const limit = rows.length === 0 ? firstMax : contMax;
+    if (!current) { current = w; continue; }
+    if ((current + ' ' + w).length <= limit) current += ' ' + w;
+    else { flush(); current = w; }
+  }
+  flush();
+  if (!rows.length) return left + ' ' + right;
+  const first = rows[0];
+  const spaces = ' '.repeat(Math.max(1, width - first.length - rightLen));
+  const rest = rows.slice(1).join('\n');
+  return first + spaces + right + (rest ? '\n' + rest : '');
 }
 
 function orderTypeLabel(t: string) {
