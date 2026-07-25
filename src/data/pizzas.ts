@@ -462,7 +462,6 @@ export const paniniSizes: PizzaSize[] = [
 ];
 
 export const supplements: Supplement[] = [
-  { id: 'extra-fromage', name: 'Extra Fromage', price: 1 },
   { id: 'jambon', name: 'Jambon', price: 1 },
   { id: 'champignons', name: 'Champignons', price: 1 },
   { id: 'oeuf', name: 'Œuf', price: 1 },
