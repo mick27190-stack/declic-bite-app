@@ -50,6 +50,20 @@ function centerLine(text: string, width = 32): string {
   return ' '.repeat(pad) + t;
 }
 
+function wrapCenterLine(text: string, width = 32): string[] {
+  if (text.length <= width) return [centerLine(text, width)];
+  const words = text.split(' ');
+  const rows: string[] = [];
+  let current = '';
+  for (const w of words) {
+    if (!current) { current = w; continue; }
+    if ((current + ' ' + w).length <= width) current += ' ' + w;
+    else { rows.push(centerLine(current, width)); current = w; }
+  }
+  if (current) rows.push(centerLine(current, width));
+  return rows;
+}
+
 
 function padLine(left: string, right: string, width = 32): string {
   const rightLen = right.length;
