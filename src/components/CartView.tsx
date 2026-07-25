@@ -335,7 +335,7 @@ export function CartView() {
                 )}
                 {item.pizza.category !== 'boissons' && (
                   <p className="text-sm text-muted-foreground">
-                    {item.size.name} • Base {item.base}
+                    {item.pizza.category === 'bambino' ? 'Bambino' : item.size.name} • Base {item.base}
                   </p>
                 )}
 
