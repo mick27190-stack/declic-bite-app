@@ -333,9 +333,11 @@ export function CartView() {
                     🍕 {item.pizza.description.replace('Menu Bambino - ', '')}
                   </p>
                 )}
-                <p className="text-sm text-muted-foreground">
-                  {item.size.name} • Base {item.base}
-                </p>
+                {item.pizza.category !== 'boissons' && (
+                  <p className="text-sm text-muted-foreground">
+                    {item.size.name} • Base {item.base}
+                  </p>
+                )}
 
                 {item.supplements.length > 0 && (
                   <p className="text-xs text-primary">
