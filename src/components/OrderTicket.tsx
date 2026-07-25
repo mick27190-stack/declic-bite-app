@@ -157,11 +157,11 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
   const companyHeader = (() => {
     const parts: string[] = [];
     const title = company?.name || 'DÉCLIC PIZZA';
-    parts.push(centerLine(title.toUpperCase()));
-    if (!company?.name && order.restaurant) parts.push(centerLine(order.restaurant));
-    if (company?.address) parts.push(centerLine(company.address));
+    parts.push(...wrapCenterLine(title.toUpperCase()));
+    if (!company?.name && order.restaurant) parts.push(...wrapCenterLine(order.restaurant));
+    if (company?.address) parts.push(...wrapCenterLine(company.address));
     if (company?.phone) parts.push(centerLine('Tél : ' + company.phone));
-    if (company?.email) parts.push(centerLine(company.email));
+    if (company?.email) parts.push(...wrapCenterLine(company.email));
     if (company?.siret) parts.push(centerLine('SIRET : ' + company.siret));
     return parts.join('\n');
   })();
