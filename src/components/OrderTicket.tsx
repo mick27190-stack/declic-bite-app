@@ -105,7 +105,7 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
     const sub = unit * qty;
     return {
       qty,
-      name: category !== 'boissons' && sizeName ? `${name} (${sizeName})` : name,
+      name: category !== 'boissons' && sizeName ? `${name} (${category === 'bambino' ? 'Bambino' : sizeName})` : name,
       supplements: supplements.map((s: any) => s.name).join(', '),
       notes: item?.notes,
       unit,
