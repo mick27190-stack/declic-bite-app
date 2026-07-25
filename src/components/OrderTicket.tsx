@@ -87,7 +87,7 @@ function wrapCenterLine(text: string, width = 32): string[] {
 
 function padLine(left: string, right: string, width = 32): string {
   const rightLen = right.length;
-  const maxLeft = width - rightLen - 1;
+  const maxLeft = Math.max(1, width - rightLen - 1);
   if (left.length <= maxLeft) {
     const spaces = ' '.repeat(Math.max(1, width - left.length - rightLen));
     return left + spaces + right;
@@ -98,14 +98,24 @@ function padLine(left: string, right: string, width = 32): string {
   let current = '';
   const firstMax = maxLeft;
   const contMax = width;
-  const flush = () => { if (current) { rows.push(current); current = ''; } };
-  for (const w of words) {
+  const pushChunks = (text: string, limit: number) => {
+    if (text.length <= limit) rows.push(text);
+    else chunkWord(text, limit).forEach((c) => rows.push(c));
+  };
+  const flush = (limit: number) => {
+    if (!current) return;
+    pushChunks(current, limit);
+    current = '';
+  };
+  for (const raw of words) {
+    const w = raw.trim();
+    if (!w) continue;
     const limit = rows.length === 0 ? firstMax : contMax;
     if (!current) { current = w; continue; }
     if ((current + ' ' + w).length <= limit) current += ' ' + w;
-    else { flush(); current = w; }
+    else { flush(limit); current = w; }
   }
-  flush();
+  flush(rows.length === 0 ? firstMax : contMax);
   if (!rows.length) return left + ' ' + right;
   const first = rows[0];
   const spaces = ' '.repeat(Math.max(1, width - first.length - rightLen));
