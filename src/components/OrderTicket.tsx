@@ -103,11 +103,20 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
     const supTotal = supplements.reduce((s: number, sup: any) => s + (sup?.price ?? 0), 0);
     const unit = unitBase + supTotal;
     const sub = unit * qty;
+    const desc: string = item?.pizza?.description ?? '';
+    const bambinoChoice = category === 'bambino' && desc.startsWith('Menu Bambino - ')
+      ? desc.replace('Menu Bambino - ', '')
+      : category === 'bambino' && desc.startsWith('Pizza Seule Bambino - ')
+        ? desc.replace('Pizza Seule Bambino - ', '')
+        : category === 'bambino' && desc && desc !== 'Pizza au choix + boisson + bonbon' && desc !== 'Pizza au choix en taille enfant'
+          ? desc
+          : '';
     return {
       qty,
       name: category !== 'boissons' && sizeName ? `${name} (${category === 'bambino' ? 'Bambino' : sizeName})` : name,
       supplements: supplements.map((s: any) => s.name).join(', '),
       notes: item?.notes,
+      bambinoChoice,
       unit,
       sub,
     };
@@ -162,6 +171,7 @@ ${lines
     const head = padLine(`${l.qty}x ${l.name}`, fmt(l.sub));
     const detail = `   PU ${fmt(l.unit)}`;
     const extras: string[] = [];
+    if (l.bambinoChoice) extras.push(`   >> Pizza : ${l.bambinoChoice}`);
     if (l.supplements) extras.push(`   + ${l.supplements}`);
     if (l.notes) extras.push(`   Note: ${l.notes}`);
     return [head, detail, ...extras].join('\n');
