@@ -50,17 +50,37 @@ function centerLine(text: string, width = 32): string {
   return ' '.repeat(pad) + t;
 }
 
+function chunkWord(word: string, width: number): string[] {
+  const chunks: string[] = [];
+  for (let i = 0; i < word.length; i += width) {
+    chunks.push(word.slice(i, i + width));
+  }
+  return chunks;
+}
+
 function wrapCenterLine(text: string, width = 32): string[] {
   if (text.length <= width) return [centerLine(text, width)];
   const words = text.split(' ');
   const rows: string[] = [];
   let current = '';
-  for (const w of words) {
+  const pushCurrent = () => {
+    if (!current) return;
+    if (current.length <= width) {
+      rows.push(centerLine(current, width));
+    } else {
+      // Word longer than line width: split then center each chunk
+      chunkWord(current, width).forEach((c) => rows.push(centerLine(c, width)));
+    }
+    current = '';
+  };
+  for (const raw of words) {
+    const w = raw.trim();
+    if (!w) continue;
     if (!current) { current = w; continue; }
     if ((current + ' ' + w).length <= width) current += ' ' + w;
-    else { rows.push(centerLine(current, width)); current = w; }
+    else { pushCurrent(); current = w; }
   }
-  if (current) rows.push(centerLine(current, width));
+  pushCurrent();
   return rows;
 }
 
