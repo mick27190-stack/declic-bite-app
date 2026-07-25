@@ -50,6 +50,20 @@ function centerLine(text: string, width = 32): string {
   return ' '.repeat(pad) + t;
 }
 
+function wrapCenterLine(text: string, width = 32): string[] {
+  if (text.length <= width) return [centerLine(text, width)];
+  const words = text.split(' ');
+  const rows: string[] = [];
+  let current = '';
+  for (const w of words) {
+    if (!current) { current = w; continue; }
+    if ((current + ' ' + w).length <= width) current += ' ' + w;
+    else { rows.push(centerLine(current, width)); current = w; }
+  }
+  if (current) rows.push(centerLine(current, width));
+  return rows;
+}
+
 
 function padLine(left: string, right: string, width = 32): string {
   const rightLen = right.length;
@@ -143,11 +157,11 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
   const companyHeader = (() => {
     const parts: string[] = [];
     const title = company?.name || 'DÉCLIC PIZZA';
-    parts.push(centerLine(title.toUpperCase()));
-    if (!company?.name && order.restaurant) parts.push(centerLine(order.restaurant));
-    if (company?.address) parts.push(centerLine(company.address));
+    parts.push(...wrapCenterLine(title.toUpperCase()));
+    if (!company?.name && order.restaurant) parts.push(...wrapCenterLine(order.restaurant));
+    if (company?.address) parts.push(...wrapCenterLine(company.address));
     if (company?.phone) parts.push(centerLine('Tél : ' + company.phone));
-    if (company?.email) parts.push(centerLine(company.email));
+    if (company?.email) parts.push(...wrapCenterLine(company.email));
     if (company?.siret) parts.push(centerLine('SIRET : ' + company.siret));
     return parts.join('\n');
   })();
