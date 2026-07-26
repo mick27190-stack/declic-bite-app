@@ -157,3 +157,61 @@ Deno.test("cross-cut at 21h16: emporter open (last minute), livraison closed", a
   assert(!delivery.ok, "delivery must be closed from 21h16");
 });
 
+
+// ---------------------------------------------------------------------------
+// EMPORTER — pickup slot grid enforcement (18h45 → 21h30, 15 min steps).
+// The API must apply the same rules as the client regardless of the device
+// timezone: 18h30 is NEVER a valid take-away slot.
+// ---------------------------------------------------------------------------
+
+Deno.test("emporter: pickup_time 18:30 → refused (not on the 15-min grid)", async () => {
+  const r = await callCutoff("emporter", "18:30", m(18, 0));
+  assert(!r.ok, "18:30 must be rejected — it is not a valid take-away slot");
+  assert(
+    r.message.includes("Créneau à emporter invalide"),
+    `unexpected error: ${r.message}`,
+  );
+});
+
+Deno.test("emporter: pickup_time 18:45 at 18h00 Paris → accepted (first slot)", async () => {
+  const r = await callCutoff("emporter", "18:45", m(18, 0));
+  assertEquals(r.ok, true, `should accept 18:45 at 18h00, got: ${(!r.ok && r.message) || ""}`);
+});
+
+Deno.test("emporter: pickup_time 18:44 → refused (before first slot)", async () => {
+  const r = await callCutoff("emporter", "18:44", m(18, 0));
+  assert(!r.ok);
+});
+
+Deno.test("emporter: pickup_time 21:45 → refused (after last slot 21:30)", async () => {
+  const r = await callCutoff("emporter", "21:45", m(19, 0));
+  assert(!r.ok);
+});
+
+Deno.test("emporter: pickup_time 19:07 → refused (not on 15-min grid)", async () => {
+  const r = await callCutoff("emporter", "19:07", m(18, 30));
+  assert(!r.ok);
+});
+
+Deno.test("emporter: pickup_time 20:00 at 19h30 Paris → accepted (lead time OK)", async () => {
+  const r = await callCutoff("emporter", "20:00", m(19, 30));
+  assertEquals(r.ok, true);
+});
+
+Deno.test("emporter: pickup_time 19:00 at 18h50 Paris → refused (lead <15 min)", async () => {
+  // earliest_allowed = ceil((18h50 + 15) / 15) * 15 = 19h15 → 19h00 too early.
+  const r = await callCutoff("emporter", "19:00", m(18, 50));
+  assert(!r.ok);
+});
+
+Deno.test("emporter: late window 21h15 Paris → only 21:30 slot allowed", async () => {
+  const late = await callCutoff("emporter", "21:30", m(21, 15));
+  assertEquals(late.ok, true);
+  const others = await callCutoff("emporter", "21:15", m(21, 15));
+  assert(!others.ok, "only the 21:30 slot may be booked in the late window");
+});
+
+Deno.test("emporter: malformed pickup_time → refused", async () => {
+  const r = await callCutoff("emporter", "abc", m(19, 0));
+  assert(!r.ok);
+});
