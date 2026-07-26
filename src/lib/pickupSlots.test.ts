@@ -1,10 +1,42 @@
 import { describe, it, expect } from "vitest";
 import {
   computePickupSlotsFromMinutes,
+  computePickupSlotOptionsFromMinutes,
   earliestAllowedMinutes,
+  parisMinutes,
   FIRST_SLOT_MINUTES,
   LAST_SLOT_MINUTES,
 } from "./pickupSlots";
+
+describe("takeaway: no 18:30 slot, ASAP starts at 18:45 from 18:00", () => {
+  const atMin = (h: number, m: number) => h * 60 + m;
+
+  it("at 18:00 Paris, first proposed slot is 18:45", () => {
+    const slots = computePickupSlotsFromMinutes(atMin(18, 0));
+    expect(slots[0]).toBe("18:45");
+    expect(slots).not.toContain("18:30");
+  });
+
+  it("no 18:30 slot at any time of day", () => {
+    for (let m = 0; m < 24 * 60; m += 5) {
+      expect(computePickupSlotsFromMinutes(m)).not.toContain("18:30");
+    }
+  });
+
+  it("first enabled ASAP option at 18:00 is 18:45", () => {
+    const opts = computePickupSlotOptionsFromMinutes(atMin(18, 0));
+    const firstEnabled = opts.find((o) => !o.disabled);
+    expect(firstEnabled?.time).toBe("18:45");
+    expect(opts.some((o) => o.time === "18:30")).toBe(false);
+  });
+
+  it("parisMinutes converts UTC to Paris wall clock (device-TZ independent)", () => {
+    // 16:00 UTC == 18:00 Paris in July (CEST).
+    const utc = new Date("2026-07-15T16:00:00Z");
+    expect(parisMinutes(utc)).toBe(atMin(18, 0));
+    expect(computePickupSlotsFromMinutes(parisMinutes(utc))[0]).toBe("18:45");
+  });
+});
 
 // Helper: build "minutes since midnight" for a given hour/minute.
 const at = (h: number, m: number) => h * 60 + m;
