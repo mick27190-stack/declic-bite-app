@@ -55,20 +55,20 @@ describe("computePickupSlotsFromMinutes edge cases", () => {
 
   it("midnight (00h00) returns the full next-service slot list", () => {
     const slots = computePickupSlotsFromMinutes(at(0, 0));
-    expect(slots[0]).toBe("18:30");
+    expect(slots[0]).toBe("18:45");
     expect(slots[slots.length - 1]).toBe("21:30");
   });
 
   it("late night past closing (23h50) falls back to full next-service list", () => {
     // 23h50 + 15 rounds beyond the last slot -> no reachable slot -> full list.
     const slots = computePickupSlotsFromMinutes(at(23, 50));
-    expect(slots[0]).toBe("18:30");
+    expect(slots[0]).toBe("18:45");
     expect(slots[slots.length - 1]).toBe("21:30");
   });
 
-  it("before service (early afternoon) offers the full list starting at 18:30", () => {
+  it("before service (early afternoon) offers the full list starting at 18:45", () => {
     const slots = computePickupSlotsFromMinutes(at(15, 0));
-    expect(slots[0]).toBe("18:30");
+    expect(slots[0]).toBe("18:45");
   });
 
   it("never returns a slot earlier than the first or later than the last", () => {

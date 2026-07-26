@@ -1,7 +1,7 @@
 // Pure helpers for computing take-away pickup slots.
 // Extracted so the edge-case logic can be unit-tested.
 
-export const FIRST_SLOT_MINUTES = 18 * 60 + 30; // 18:30
+export const FIRST_SLOT_MINUTES = 18 * 60 + 45; // 18:45
 export const LAST_SLOT_MINUTES = 21 * 60 + 30; // 21:30
 export const SLOT_INTERVAL = 15; // minutes
 export const MIN_LEAD_MINUTES = 15; // minimum delay before the first available slot
