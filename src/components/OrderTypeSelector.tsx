@@ -36,9 +36,7 @@ export function OrderTypeSelector({ value, onChange, deliveryDisabled, takeawayD
           }`}>
             À Emporter
           </span>
-          <span className="text-xs text-muted-foreground">
-            {takeawayDisabledProp && !disabled ? 'Non disponible après 21h17' : 'Récupérez au restaurant'}
-          </span>
+          <span className="text-xs text-muted-foreground">Récupérez au restaurant</span>
         </button>
 
         <button
