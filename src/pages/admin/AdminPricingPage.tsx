@@ -394,6 +394,8 @@ export default function AdminPricingPage() {
                   min="0"
                   value={newPrice}
                   onChange={(e) => setNewPrice(e.target.value)}
+                  disabled={newPromoType !== 'fixed'}
+                  placeholder={newPromoType !== 'fixed' ? 'Calcul auto.' : ''}
                 />
               </div>
               <div className="space-y-2">
@@ -411,6 +413,22 @@ export default function AdminPricingPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end">
+              <div className="space-y-2">
+                <Label>Type de promotion</Label>
+                <Select value={newPromoType} onValueChange={(v) => setNewPromoType(v as 'fixed' | 'second_half' | 'bogo')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">Prix défini</SelectItem>
+                    <SelectItem value="second_half">2ᵉ pizza à moitié prix</SelectItem>
+                    <SelectItem value="bogo">1 pizza achetée = 1 offerte</SelectItem>
+                  </SelectContent>
+                </Select>
+                {newPromoType !== 'fixed' && (
+                  <p className="text-xs text-muted-foreground">
+                    Prix calculé automatiquement selon le tarif de référence de la taille choisie.
+                  </p>
+                )}
+              </div>
               <div className="space-y-2">
                 <Label>Récurrence</Label>
                 <Select value={newRecurrence} onValueChange={(v) => setNewRecurrence(v as 'weekly' | 'monthly' | 'once')}>
@@ -464,7 +482,7 @@ export default function AdminPricingPage() {
                   >
                     <div className="min-w-0">
                       <p className="font-medium">
-                        {DAY_NAMES[p.day_of_week]} · {sizeName(p.size_id)} · {p.price}€
+                        {DAY_NAMES[p.day_of_week]} · {sizeName(p.size_id)} · {describePromoValue(p)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {describeRecurrence(p)}
