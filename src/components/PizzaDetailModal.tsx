@@ -7,7 +7,7 @@ import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { useToast } from '@/hooks/use-toast';
-import { getPizzaSizePrice, getSizePriceInfo, getNonPizzaPrice } from '@/lib/pricing';
+import { getPizzaSizePrice, getSizePriceInfo, getNonPizzaPrice, getPairPromoForSize, computePairPromoLineTotal, getRawSizePrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
 
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
@@ -53,9 +53,16 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
     if (!showSize) {
       return getNonPizzaPrice(pizza) * quantity;
     }
-    const base = isPizza ? getPizzaSizePrice(selectedSize.id, pizza.category) : getNonPizzaPrice(pizza, selectedSize);
     const supps = selectedSupplements.reduce((sum, s) => sum + s.price, 0);
-    return (base + supps) * quantity;
+    if (isPizza) {
+      const pairPromo = getPairPromoForSize(selectedSize.id, pizza.category);
+      if (pairPromo) {
+        const ref = getRawSizePrice(selectedSize.id);
+        return computePairPromoLineTotal(pairPromo.promo_type, ref, quantity) + supps * quantity;
+      }
+      return (getPizzaSizePrice(selectedSize.id, pizza.category) + supps) * quantity;
+    }
+    return (getNonPizzaPrice(pizza, selectedSize) + supps) * quantity;
   };
 
   const handleAddToCart = () => {

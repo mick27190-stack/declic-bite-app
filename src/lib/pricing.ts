@@ -15,12 +15,13 @@ export const DEFAULT_SIZE_PRICES: Record<string, number> = {
 };
 
 export type PromoRecurrence = 'weekly' | 'monthly' | 'once';
+export type PromoType = 'fixed' | 'second_half' | 'bogo';
 
 export interface DayPromo {
   id: string;
   day_of_week: number; // 0 = dimanche ... 6 = samedi
   size_id: string;
-  price: number;
+  price: number | null;
   label: string | null;
   is_active: boolean;
   recurrence: PromoRecurrence;
@@ -28,6 +29,7 @@ export interface DayPromo {
   week_of_month: number | null;
   /** Date précise (YYYY-MM-DD) pour une promo ponctuelle. null sinon. */
   specific_date: string | null;
+  promo_type: PromoType;
 }
 
 /** 1st, 2nd, 3rd, 4th of month, or last (-1). */
@@ -161,12 +163,55 @@ export function getPizzaSizePrice(
 
   // Une promo configurée par l'admin est prioritaire.
   const promo = findDayPromo(sizeId, date);
-  if (promo) return promo.price;
+  if (promo) {
+    // Pour les promos à paire (2ᵉ demi, 1 achetée = 1 offerte), le prix unitaire
+    // reste le prix de référence ; la remise est appliquée au niveau du panier.
+    if (promo.promo_type === 'fixed' && promo.price != null) return promo.price;
+    return base;
+  }
 
   // Promo historique : Mardi, Senior à 10€.
   if (sizeId === 'senior' && isPromoDay(date)) return 10;
 
   return base;
+}
+
+/**
+ * Prix "de paire" pour les promos second_half / bogo appliquées au panier.
+ * Retourne null si aucune promo à paire n'est active pour cette taille/date.
+ */
+export function getPairPromoForSize(
+  sizeId: string,
+  category?: string,
+  date: Date = new Date(),
+): DayPromo | null {
+  const isPizzaCategory = !category || PIZZA_CATEGORIES.includes(category);
+  if (!isPizzaCategory) return null;
+  const promo = findDayPromo(sizeId, date);
+  if (!promo) return null;
+  if (promo.promo_type === 'second_half' || promo.promo_type === 'bogo') return promo;
+  return null;
+}
+
+/**
+ * Applique une remise "2ᵉ à moitié prix" ou "1 achetée = 1 offerte" sur
+ * `quantity` unités au prix de référence `refPrice`. Retourne le total base
+ * (hors suppléments) pour la ligne.
+ */
+export function computePairPromoLineTotal(
+  promoType: PromoType,
+  refPrice: number,
+  quantity: number,
+): number {
+  const pairs = Math.floor(quantity / 2);
+  const singles = quantity % 2;
+  if (promoType === 'second_half') {
+    return pairs * (refPrice + refPrice / 2) + singles * refPrice;
+  }
+  if (promoType === 'bogo') {
+    return (pairs + singles) * refPrice;
+  }
+  return refPrice * quantity;
 }
 
 export interface SizePriceInfo {
@@ -184,12 +229,16 @@ export function getSizePriceInfo(
   const base = getRawSizePrice(sizeId);
   const effective = getPizzaSizePrice(sizeId, category, date);
   const promo = findDayPromo(sizeId, date);
-  const promoLabel = promo
-    ? promo.label
-    : sizeId === 'senior' && isPromoDay(date)
-      ? 'Mardi : Senior à 10€ !'
-      : null;
-  return { base, effective, isPromo: effective < base, promoLabel };
+  let promoLabel: string | null = null;
+  if (promo) {
+    if (promo.label) promoLabel = promo.label;
+    else if (promo.promo_type === 'second_half') promoLabel = '2ᵉ à -50%';
+    else if (promo.promo_type === 'bogo') promoLabel = '1 achetée = 1 offerte';
+  } else if (sizeId === 'senior' && isPromoDay(date)) {
+    promoLabel = 'Mardi : Senior à 10€ !';
+  }
+  const isPairPromo = !!promo && (promo.promo_type === 'second_half' || promo.promo_type === 'bogo');
+  return { base, effective, isPromo: isPairPromo || effective < base, promoLabel };
 }
 
 export const DAY_NAMES = [

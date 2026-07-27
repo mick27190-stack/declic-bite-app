@@ -46,6 +46,7 @@ export default function AdminPricingPage() {
   const [newRecurrence, setNewRecurrence] = useState<'weekly' | 'monthly' | 'once'>('weekly');
   const [newWeekOfMonth, setNewWeekOfMonth] = useState<string>('1');
   const [newSpecificDate, setNewSpecificDate] = useState<string>('');
+  const [newPromoType, setNewPromoType] = useState<'fixed' | 'second_half' | 'bogo'>('fixed');
   const [addingPromo, setAddingPromo] = useState(false);
 
 
@@ -145,10 +146,14 @@ export default function AdminPricingPage() {
   };
 
   const addPromo = async () => {
-    const price = parseFloat(newPrice);
-    if (isNaN(price)) {
-      toast({ title: 'Prix invalide', variant: 'destructive' });
-      return;
+    let price: number | null = null;
+    if (newPromoType === 'fixed') {
+      const parsed = parseFloat(newPrice);
+      if (isNaN(parsed)) {
+        toast({ title: 'Prix invalide', variant: 'destructive' });
+        return;
+      }
+      price = parsed;
     }
     if (newRecurrence === 'once' && !newSpecificDate) {
       toast({ title: 'Date requise', description: 'Choisissez une date pour la promotion ponctuelle.', variant: 'destructive' });
@@ -168,7 +173,7 @@ export default function AdminPricingPage() {
 
     if (overlaps.length > 0) {
       const details = overlaps
-        .map((p) => `• ${DAY_NAMES[p.day_of_week]} · ${sizeName(p.size_id)} · ${p.price}€ (${describeRecurrence(p)})`)
+        .map((p) => `• ${DAY_NAMES[p.day_of_week]} · ${sizeName(p.size_id)} · ${describePromoValue(p)} (${describeRecurrence(p)})`)
         .join('\n');
       const ok = window.confirm(
         `⚠️ Chevauchement détecté avec ${overlaps.length} promotion(s) existante(s) :\n\n${details}\n\nSouhaitez-vous quand même ajouter cette promotion ?`,
@@ -186,6 +191,7 @@ export default function AdminPricingPage() {
       recurrence: newRecurrence,
       week_of_month: newRecurrence === 'monthly' ? parseInt(newWeekOfMonth, 10) : null,
       specific_date: newRecurrence === 'once' ? newSpecificDate : null,
+      promo_type: newPromoType,
     } as any);
     setAddingPromo(false);
     if (error) {
@@ -200,6 +206,12 @@ export default function AdminPricingPage() {
       });
       await refresh();
     }
+  };
+
+  const describePromoValue = (p: { promo_type?: string; price?: number | null }) => {
+    if (p.promo_type === 'second_half') return '2ᵉ à -50%';
+    if (p.promo_type === 'bogo') return '1 achetée = 1 offerte';
+    return `${p.price}€`;
   };
 
   const WEEK_OF_MONTH_LABEL: Record<number, string> = {
@@ -382,6 +394,8 @@ export default function AdminPricingPage() {
                   min="0"
                   value={newPrice}
                   onChange={(e) => setNewPrice(e.target.value)}
+                  disabled={newPromoType !== 'fixed'}
+                  placeholder={newPromoType !== 'fixed' ? 'Calcul auto.' : ''}
                 />
               </div>
               <div className="space-y-2">
@@ -399,6 +413,22 @@ export default function AdminPricingPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end">
+              <div className="space-y-2">
+                <Label>Type de promotion</Label>
+                <Select value={newPromoType} onValueChange={(v) => setNewPromoType(v as 'fixed' | 'second_half' | 'bogo')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fixed">Prix défini</SelectItem>
+                    <SelectItem value="second_half">2ᵉ pizza à moitié prix</SelectItem>
+                    <SelectItem value="bogo">1 pizza achetée = 1 offerte</SelectItem>
+                  </SelectContent>
+                </Select>
+                {newPromoType !== 'fixed' && (
+                  <p className="text-xs text-muted-foreground">
+                    Prix calculé automatiquement selon le tarif de référence de la taille choisie.
+                  </p>
+                )}
+              </div>
               <div className="space-y-2">
                 <Label>Récurrence</Label>
                 <Select value={newRecurrence} onValueChange={(v) => setNewRecurrence(v as 'weekly' | 'monthly' | 'once')}>
@@ -452,7 +482,7 @@ export default function AdminPricingPage() {
                   >
                     <div className="min-w-0">
                       <p className="font-medium">
-                        {DAY_NAMES[p.day_of_week]} · {sizeName(p.size_id)} · {p.price}€
+                        {DAY_NAMES[p.day_of_week]} · {sizeName(p.size_id)} · {describePromoValue(p)}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {describeRecurrence(p)}

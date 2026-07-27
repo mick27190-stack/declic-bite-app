@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { CartItem, Restaurant, OrderType } from '@/types/pizza';
 import { PIZZA_CATEGORIES } from '@/lib/promo';
-import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+import { getPizzaSizePrice, getNonPizzaPrice, getPairPromoForSize, computePairPromoLineTotal, getRawSizePrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
 
 const STORAGE_KEY = 'declic-cart-state';
@@ -122,11 +122,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const totalPrice = items.reduce((sum, item) => {
     const isPizza = PIZZA_CATEGORIES.includes(item.pizza.category);
-    const baseTotal = isPizza
-      ? getPizzaSizePrice(item.size.id, item.pizza.category)
-      : getNonPizzaPrice(item.pizza, item.size);
-    const supplementsTotal = item.supplements.reduce((s, sup) => s + sup.price, 0);
-    return sum + (baseTotal + supplementsTotal) * item.quantity;
+    let baseLineTotal: number;
+    if (isPizza) {
+      const pairPromo = getPairPromoForSize(item.size.id, item.pizza.category);
+      if (pairPromo) {
+        const ref = getRawSizePrice(item.size.id);
+        baseLineTotal = computePairPromoLineTotal(pairPromo.promo_type, ref, item.quantity);
+      } else {
+        baseLineTotal = getPizzaSizePrice(item.size.id, item.pizza.category) * item.quantity;
+      }
+    } else {
+      baseLineTotal = getNonPizzaPrice(item.pizza, item.size) * item.quantity;
+    }
+    const supplementsTotal = item.supplements.reduce((s, sup) => s + sup.price, 0) * item.quantity;
+    return sum + baseLineTotal + supplementsTotal;
   }, 0);
 
   return (

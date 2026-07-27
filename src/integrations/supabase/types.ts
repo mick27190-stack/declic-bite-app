@@ -673,7 +673,8 @@ export type Database = {
           id: string
           is_active: boolean
           label: string | null
-          price: number
+          price: number | null
+          promo_type: string
           recurrence: string
           size_id: string
           specific_date: string | null
@@ -686,7 +687,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           label?: string | null
-          price: number
+          price?: number | null
+          promo_type?: string
           recurrence?: string
           size_id: string
           specific_date?: string | null
@@ -699,7 +701,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           label?: string | null
-          price?: number
+          price?: number | null
+          promo_type?: string
           recurrence?: string
           size_id?: string
           specific_date?: string | null
