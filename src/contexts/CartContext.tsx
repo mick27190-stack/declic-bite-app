@@ -120,23 +120,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  const totalPrice = items.reduce((sum, item) => {
+  // Regroupement inter-lignes : pour les promos à paire (second_half / bogo),
+  // toutes les pizzas d'une même taille sont regroupées afin que la remise
+  // s'applique correctement, y compris pour un nombre impair de pizzas
+  // (3 unités = 1 paire remisée + 1 pizza au prix plein) qu'elles soient
+  // sur la même ligne ou réparties sur plusieurs lignes du panier.
+  const pairGroups: Record<string, { qty: number; ref: number; promoType: 'second_half' | 'bogo' }> = {};
+  let totalPrice = 0;
+  for (const item of items) {
     const isPizza = PIZZA_CATEGORIES.includes(item.pizza.category);
-    let baseLineTotal: number;
+    const supplementsTotal = item.supplements.reduce((s, sup) => s + sup.price, 0) * item.quantity;
+    totalPrice += supplementsTotal;
     if (isPizza) {
       const pairPromo = getPairPromoForSize(item.size.id, item.pizza.category);
       if (pairPromo) {
+        const key = `${item.size.id}|${pairPromo.promo_type}`;
         const ref = getRawSizePrice(item.size.id);
-        baseLineTotal = computePairPromoLineTotal(pairPromo.promo_type, ref, item.quantity);
+        if (!pairGroups[key]) pairGroups[key] = { qty: 0, ref, promoType: pairPromo.promo_type as 'second_half' | 'bogo' };
+        pairGroups[key].qty += item.quantity;
       } else {
-        baseLineTotal = getPizzaSizePrice(item.size.id, item.pizza.category) * item.quantity;
+        totalPrice += getPizzaSizePrice(item.size.id, item.pizza.category) * item.quantity;
       }
     } else {
-      baseLineTotal = getNonPizzaPrice(item.pizza, item.size) * item.quantity;
+      totalPrice += getNonPizzaPrice(item.pizza, item.size) * item.quantity;
     }
-    const supplementsTotal = item.supplements.reduce((s, sup) => s + sup.price, 0) * item.quantity;
-    return sum + baseLineTotal + supplementsTotal;
-  }, 0);
+  }
+  for (const g of Object.values(pairGroups)) {
+    totalPrice += computePairPromoLineTotal(g.promoType, g.ref, g.qty);
+  }
 
   return (
     <CartContext.Provider
