@@ -136,7 +136,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (pairPromo) {
         const key = `${item.size.id}|${pairPromo.promo_type}`;
         const ref = getRawSizePrice(item.size.id);
-        if (!pairGroups[key]) pairGroups[key] = { qty: 0, ref, promoType: pairPromo.promo_type };
+        if (!pairGroups[key]) pairGroups[key] = { qty: 0, ref, promoType: pairPromo.promo_type as 'second_half' | 'bogo' };
         pairGroups[key].qty += item.quantity;
       } else {
         totalPrice += getPizzaSizePrice(item.size.id, item.pizza.category) * item.quantity;
