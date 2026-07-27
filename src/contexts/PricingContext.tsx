@@ -46,13 +46,13 @@ export function PricingProvider({ children }: { children: ReactNode }) {
       id: row.id,
       day_of_week: row.day_of_week,
       size_id: row.size_id,
-      price: Number(row.price),
+      price: row.price != null ? Number(row.price) : null,
       label: row.label,
       is_active: row.is_active,
       recurrence: (row.recurrence ?? 'weekly') as 'weekly' | 'monthly' | 'once',
       week_of_month: row.week_of_month ?? null,
       specific_date: row.specific_date ?? null,
-
+      promo_type: (row.promo_type ?? 'fixed') as 'fixed' | 'second_half' | 'bogo',
     }));
 
     const ipMap: Record<string, number> = { ...DEFAULT_ITEM_PRICES };
