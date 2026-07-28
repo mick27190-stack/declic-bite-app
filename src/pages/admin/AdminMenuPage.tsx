@@ -286,7 +286,7 @@ export default function AdminMenuPage() {
         </Card>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingPizza ? 'Modifier la pizza' : 'Ajouter une pizza'}
@@ -297,6 +297,29 @@ export default function AdminMenuPage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
+                <Label htmlFor="photo">Photo {editingPizza ? '' : '*'}</Label>
+                <div className="flex items-center gap-3">
+                  <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
+                    {formData.image ? (
+                      <img src={formData.image} alt="Aperçu du produit" className="w-full h-full object-cover" />
+                    ) : (
+                      <Image className="h-6 w-6 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      id="photo"
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => handlePickImage(e.target.files?.[0])}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {uploading ? 'Chargement…' : 'JPG ou PNG — redimensionnée automatiquement'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="name">Nom *</Label>
                 <Input
                   id="name"
@@ -305,6 +328,7 @@ export default function AdminMenuPage() {
                   placeholder="Margherita"
                 />
               </div>
+
               {formData.category === 'boissons' ? (
                 <div className="space-y-2">
                   <Label htmlFor="capacity">Contenance</Label>
