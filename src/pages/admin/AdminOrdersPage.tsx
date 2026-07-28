@@ -614,7 +614,9 @@ export default function AdminOrdersPage() {
                             )}
                           </span>
                           <span className="font-medium">
-                            {(((item?.pizza?.basePrice ?? 0) + (item?.size?.price ?? 0) + (item?.supplements ?? []).reduce((s: number, sup: any) => s + (sup.price ?? 0), 0)) * (item?.quantity ?? 1)).toFixed(2)}€
+                            {((( ['classiques','speciales','vegetariennes','gourmandes'].includes(item?.pizza?.category)
+                              ? getPizzaSizePrice(item?.size?.id, item?.pizza?.category, new Date(order.created_at))
+                              : getNonPizzaPrice(item?.pizza, item?.size)) + (item?.supplements ?? []).reduce((s: number, sup: any) => s + (sup.price ?? 0), 0)) * (item?.quantity ?? 1)).toFixed(2)}€
                           </span>
                         </div>
                       ))}
