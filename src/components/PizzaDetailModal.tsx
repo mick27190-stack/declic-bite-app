@@ -5,6 +5,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Pizza, PizzaSize, Supplement, CartItem } from '@/types/pizza';
 import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
+import { ProductImage } from '@/components/ProductImage';
+
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { useToast } from '@/hooks/use-toast';
 import { getPizzaSizePrice, getSizePriceInfo, getNonPizzaPrice, getPairPromoForSize, computePairPromoLineTotal, getRawSizePrice } from '@/lib/pricing';
