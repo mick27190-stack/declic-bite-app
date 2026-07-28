@@ -5,6 +5,8 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { DeliveryZoneChecker } from '@/components/DeliveryZoneChecker';
+import { ProductImage } from '@/components/ProductImage';
+
 import { OrderTypeSelector } from '@/components/OrderTypeSelector';
 import { PickupTimeSelector } from '@/components/PickupTimeSelector';
 import { DeliveryTimeSelector } from '@/components/DeliveryTimeSelector';
@@ -318,11 +320,12 @@ export function CartView() {
 
           return (
             <div key={index} className="glass-card p-4 flex gap-4 mb-3">
-              <img
+              <ProductImage
                 src={item.pizza.image}
                 alt={item.pizza.name}
-                className="w-20 h-20 object-cover rounded-xl"
+                className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
               />
+
               
               <div className="flex-1 min-w-0">
                 <h3 className="font-display font-bold text-foreground truncate">

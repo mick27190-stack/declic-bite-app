@@ -20,6 +20,8 @@ import { useEffect } from 'react';
 import { useMenuAvailability } from '@/hooks/useMenuAvailability';
 import { useMenuOverrides, applyOverride } from '@/hooks/useMenuOverrides';
 import { fileToCompressedDataUrl } from '@/lib/imageResize';
+import { ProductImage } from '@/components/ProductImage';
+
 
 const CAPACITY_OPTIONS = ['0,25L', '0,33L', '0,5L', '0,75L', '1L', '1,25L', '1,5L', '1,75L', '2L'];
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
@@ -117,10 +119,7 @@ export default function AdminMenuPage() {
       return;
     }
     const creating = !editingPizza;
-    if (creating && !formData.image) {
-      toast.error('Veuillez ajouter une photo du produit');
-      return;
-    }
+
 
     const itemId = editingPizza
       ? editingPizza.id
@@ -230,13 +229,13 @@ export default function AdminMenuPage() {
                 {pizzaList.map((pizza) => (
                   <TableRow key={pizza.id}>
                     <TableCell>
-                      <div className="w-12 h-12 rounded-md overflow-hidden bg-muted">
-                        <img 
-                          src={pizza.image} 
-                          alt={pizza.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                      <ProductImage
+                        src={pizza.image}
+                        alt={pizza.name}
+                        className="w-12 h-12 rounded-md overflow-hidden object-cover"
+                        iconClassName="h-5 w-5"
+                      />
+
                     </TableCell>
                     <TableCell className="font-medium">{pizza.name}</TableCell>
                     <TableCell>
@@ -297,15 +296,15 @@ export default function AdminMenuPage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="photo">Photo {editingPizza ? '' : '*'}</Label>
+                <Label htmlFor="photo">Photo</Label>
                 <div className="flex items-center gap-3">
-                  <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
-                    {formData.image ? (
-                      <img src={formData.image} alt="Aperçu du produit" className="w-full h-full object-cover" />
-                    ) : (
-                      <Image className="h-6 w-6 text-muted-foreground" />
-                    )}
-                  </div>
+                  <ProductImage
+                    src={formData.image}
+                    alt="Aperçu du produit"
+                    className="w-20 h-20 rounded-md overflow-hidden object-cover flex-shrink-0"
+                    iconClassName="h-8 w-8"
+                  />
+
                   <div className="space-y-2">
                     <Input
                       id="photo"

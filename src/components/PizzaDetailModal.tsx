@@ -5,6 +5,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Pizza, PizzaSize, Supplement, CartItem } from '@/types/pizza';
 import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
+import { ProductImage } from '@/components/ProductImage';
+
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { useToast } from '@/hooks/use-toast';
 import { getPizzaSizePrice, getSizePriceInfo, getNonPizzaPrice, getPairPromoForSize, computePairPromoLineTotal, getRawSizePrice } from '@/lib/pricing';
@@ -101,11 +103,13 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
         </button>
 
         <div className="relative aspect-video">
-          <img
+          <ProductImage
             src={pizza.image}
             alt={pizza.name}
             className="w-full h-full object-cover"
+            iconClassName="h-16 w-16"
           />
+
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
         </div>
 
@@ -135,7 +139,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                         : 'border-border bg-muted/50 text-foreground hover:border-primary/50'
                     }`}
                   >
-                    <img src={p.image} alt={p.name} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+                    <ProductImage src={p.image} alt={p.name} className="w-8 h-8 rounded-md object-cover flex-shrink-0" iconClassName="h-4 w-4" />
                     <span className="truncate font-medium">{p.name}</span>
                     {selectedBambinoPizza?.id === p.id && <Check className="w-4 h-4 flex-shrink-0 ml-auto" />}
                   </button>

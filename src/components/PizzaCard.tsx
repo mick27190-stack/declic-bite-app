@@ -1,6 +1,8 @@
 import { Pizza } from '@/types/pizza';
 import { getSizePriceInfo, getNonPizzaPrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
+import { ProductImage } from '@/components/ProductImage';
+
 
 interface PizzaCardProps {
   pizza: Pizza;
@@ -26,13 +28,15 @@ export function PizzaCard({ pizza, onClick, unavailable = false }: PizzaCardProp
       }`}
     >
       <div className="relative aspect-square overflow-hidden">
-        <img
+        <ProductImage
           src={pizza.image}
           alt={pizza.name}
           className={`w-full h-full object-cover transition-transform duration-500 ${
             unavailable ? 'grayscale opacity-60' : 'group-hover:scale-110'
           }`}
+          iconClassName="h-12 w-12"
         />
+
         <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
 
         {!unavailable && (
