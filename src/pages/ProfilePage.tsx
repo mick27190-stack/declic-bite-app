@@ -33,6 +33,7 @@ import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useUserOrders } from '@/hooks/useOrders';
 import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
+import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { statusLabels, statusColors } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -122,10 +123,15 @@ function CurrentOrders() {
                 {order.items && order.items.length > 0 && (
                   <ul className="mt-2 space-y-1.5 border-t border-border pt-2">
                     {order.items.map((item, idx) => {
+                      const orderDate = new Date(order.created_at);
+                      const isPizzaCat = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'].includes(
+                        item.pizza?.category ?? '',
+                      );
+                      const unitBase = isPizzaCat
+                        ? getPizzaSizePrice(item.size?.id, item.pizza?.category, orderDate)
+                        : getNonPizzaPrice(item.pizza, item.size);
                       const unitPrice =
-                        (item.pizza?.basePrice ?? 0) +
-                        (item.size?.price ?? 0) +
-                        (item.supplements?.reduce((s, sup) => s + sup.price, 0) ?? 0);
+                        unitBase + (item.supplements?.reduce((s, sup) => s + sup.price, 0) ?? 0);
                       return (
                       <li key={idx} className="text-xs">
                         <div className="flex items-center justify-between gap-2">
