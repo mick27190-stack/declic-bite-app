@@ -83,6 +83,13 @@ function CurrentOrders() {
     // Suivi de commandes : uniquement les 5 dernières commandes.
     .slice(0, 5);
 
+  // Prix unitaires calculés par le backend (source unique de vérité).
+  const linePrices = useOrdersLinePrices(
+    activeOrders.map((o) => ({ id: o.id, items: o.items as any[], created_at: o.created_at })),
+  );
+
+
+
   return (
     <div className="glass-card p-4 rounded-xl">
       <h3 className="font-semibold flex items-center gap-2 mb-4">
