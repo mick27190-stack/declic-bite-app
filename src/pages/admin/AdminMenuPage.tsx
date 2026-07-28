@@ -384,6 +384,18 @@ export default function AdminMenuPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {!PIZZA_CATEGORIES.includes(formData.category) && (
+                <div className="space-y-2">
+                  <Label htmlFor="basePrice">Prix (€)</Label>
+                  <Input
+                    id="basePrice"
+                    inputMode="decimal"
+                    value={formData.basePrice}
+                    onChange={(e) => setFormData(prev => ({ ...prev, basePrice: e.target.value }))}
+                    placeholder="5,50"
+                  />
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Switch
                   checked={formData.isAvailable}
@@ -396,9 +408,10 @@ export default function AdminMenuPage() {
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Annuler
               </Button>
-              <Button onClick={handleSavePizza}>
+              <Button onClick={handleSavePizza} disabled={saving || uploading}>
                 {editingPizza ? 'Modifier' : 'Ajouter'}
               </Button>
+
             </DialogFooter>
           </DialogContent>
         </Dialog>
