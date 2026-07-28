@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+import { fetchOrderLinePrices } from '@/lib/orderPricing';
 import type { Order } from '@/types/order';
 import type { CompanyInfo } from '@/hooks/useCompanyInfo';
 
@@ -176,18 +176,15 @@ export function generateInvoicePdf(
   // Items table
   const orderDate = new Date(order.created_at);
   const items = Array.isArray(order.items) ? order.items : [];
-  const rows = items.map((item: any) => {
+  // Prix unitaires calculés par le backend (source unique de vérité).
+  const linePrices = await fetchOrderLinePrices(items, orderDate);
+  const rows = items.map((item: any, i: number) => {
     const qty = item?.quantity ?? 1;
     const name = item?.pizza?.name ?? 'Produit';
     const sizeName = item?.size?.name;
     const supplements = Array.isArray(item?.supplements) ? item.supplements : [];
-    const isPizza = item?.pizza?.category && PIZZA_CATEGORIES.includes(item.pizza.category);
-    const unitBase = isPizza
-      ? getPizzaSizePrice(item.size.id, item.pizza.category, orderDate)
-      : getNonPizzaPrice(item.pizza, item.size);
-    const supTotal = supplements.reduce((s: number, sup: any) => s + (sup?.price ?? 0), 0);
-    const unit = unitBase + supTotal;
-    const sub = unit * qty;
+    const unit = linePrices[i]?.unitPrice ?? 0;
+    const sub = linePrices[i]?.lineTotal ?? unit * qty;
     const suppLabel = supplements.map((s: any) => s.name).join(', ');
     const label = [
       sizeName ? `${name} (${sizeName})` : name,

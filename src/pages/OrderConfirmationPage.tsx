@@ -15,6 +15,8 @@ export default function OrderConfirmationPage() {
   const orderId = searchParams.get('id');
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  // Prix unitaires calculés par le backend (source unique de vérité).
+  const linePrices = useOrderLinePrices(order?.items as any[] | undefined, order?.created_at);
 
   useEffect(() => {
     const fetchOrder = async () => {
