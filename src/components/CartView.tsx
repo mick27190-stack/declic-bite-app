@@ -5,6 +5,8 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { DeliveryZoneChecker } from '@/components/DeliveryZoneChecker';
+import { ProductImage } from '@/components/ProductImage';
+
 import { OrderTypeSelector } from '@/components/OrderTypeSelector';
 import { PickupTimeSelector } from '@/components/PickupTimeSelector';
 import { DeliveryTimeSelector } from '@/components/DeliveryTimeSelector';
