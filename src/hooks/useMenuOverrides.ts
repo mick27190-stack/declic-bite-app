@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Pizza, ProductCategory } from '@/types/pizza';
 
@@ -9,6 +9,9 @@ export interface MenuOverride {
   ingredients: string[] | null;
   category: string | null;
   capacity: string | null;
+  image_url?: string | null;
+  is_custom?: boolean | null;
+  base_price?: number | null;
 }
 
 type OverrideMap = Record<string, MenuOverride>;
@@ -52,6 +55,25 @@ export function applyOverride(pizza: Pizza, o?: MenuOverride): Pizza {
     description: isDrink && o.capacity ? o.capacity : (o.description ?? pizza.description),
     ingredients: o.ingredients && o.ingredients.length > 0 ? o.ingredients : pizza.ingredients,
     category,
+    image: o.image_url || pizza.image,
+    basePrice: o.base_price ?? pizza.basePrice,
+  };
+}
+
+/** Construit un produit complet à partir d'une fiche créée manuellement en admin. */
+export function customToPizza(o: MenuOverride): Pizza {
+  const category = (o.category as ProductCategory) ?? 'classiques';
+  const isDrink = category === 'boissons';
+  const baseName = o.name ?? 'Nouveau produit';
+  return {
+    id: o.item_id,
+    name: isDrink && o.capacity ? `${baseName} – ${o.capacity}` : baseName,
+    description: isDrink ? (o.capacity ?? '') : (o.description ?? ''),
+    ingredients: o.ingredients ?? [],
+    image: o.image_url || '/placeholder.svg',
+    basePrice: o.base_price ?? 0,
+    category,
+    isAvailable: true,
   };
 }
 
@@ -67,17 +89,38 @@ export function useMenuOverrides() {
     };
   }, []);
 
-  const applyToList = useCallback(
-    (list: Pizza[]) => list.map((p) => applyOverride(p, overrides[p.id])),
+  const customPizzas = useMemo(
+    () =>
+      Object.values(overrides)
+        .filter((o) => o.is_custom)
+        .map(customToPizza),
     [overrides],
+  );
+
+  const applyToList = useCallback(
+    (list: Pizza[]) => [
+      ...list.map((p) => applyOverride(p, overrides[p.id])),
+      ...customPizzas,
+    ],
+    [overrides, customPizzas],
   );
 
   const upsert = useCallback(async (payload: Partial<MenuOverride> & { item_id: string }) => {
     const { error } = await supabase
       .from('menu_item_overrides')
-      .upsert(payload, { onConflict: 'item_id' });
+      .upsert(payload as any, { onConflict: 'item_id' });
     if (error) throw error;
+    await fetchAll();
   }, []);
 
-  return { overrides, applyToList, applyOverride, upsert };
+  const removeCustom = useCallback(async (itemId: string) => {
+    const { error } = await supabase
+      .from('menu_item_overrides')
+      .delete()
+      .eq('item_id', itemId);
+    if (error) throw error;
+    await fetchAll();
+  }, []);
+
+  return { overrides, customPizzas, applyToList, applyOverride, upsert, removeCustom };
 }
