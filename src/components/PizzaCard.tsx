@@ -1,6 +1,8 @@
 import { Pizza } from '@/types/pizza';
 import { getSizePriceInfo, getNonPizzaPrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
+import { ProductImage } from '@/components/ProductImage';
+
 
 interface PizzaCardProps {
   pizza: Pizza;
