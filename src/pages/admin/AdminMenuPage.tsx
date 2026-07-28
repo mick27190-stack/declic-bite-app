@@ -19,27 +19,37 @@ import { Pizza } from '@/types/pizza';
 import { useEffect } from 'react';
 import { useMenuAvailability } from '@/hooks/useMenuAvailability';
 import { useMenuOverrides, applyOverride } from '@/hooks/useMenuOverrides';
+import { fileToCompressedDataUrl } from '@/lib/imageResize';
 
 const CAPACITY_OPTIONS = ['0,25L', '0,33L', '0,5L', '0,75L', '1L', '1,25L', '1,5L', '1,75L', '2L'];
+const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
 export default function AdminMenuPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { canManageMenu, loading: adminLoading } = useAdmin();
   const { isAvailable, setAvailable } = useMenuAvailability();
-  const { overrides, upsert } = useMenuOverrides();
+  const { overrides, customPizzas, upsert, removeCustom } = useMenuOverrides();
 
-  const pizzaList: Pizza[] = initialPizzas.map((p) => applyOverride(p, overrides[p.id]));
+  const pizzaList: Pizza[] = [
+    ...initialPizzas.map((p) => applyOverride(p, overrides[p.id])),
+    ...customPizzas,
+  ];
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPizza, setEditingPizza] = useState<Pizza | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     ingredients: '',
     category: 'classiques',
     capacity: '',
-    isAvailable: true
+    isAvailable: true,
+    image: '',
+    basePrice: '',
   });
+
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
