@@ -139,7 +139,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                         : 'border-border bg-muted/50 text-foreground hover:border-primary/50'
                     }`}
                   >
-                    <img src={p.image} alt={p.name} className="w-8 h-8 rounded-md object-cover flex-shrink-0" />
+                    <ProductImage src={p.image} alt={p.name} className="w-8 h-8 rounded-md object-cover flex-shrink-0" iconClassName="h-4 w-4" />
                     <span className="truncate font-medium">{p.name}</span>
                     {selectedBambinoPizza?.id === p.id && <Check className="w-4 h-4 flex-shrink-0 ml-auto" />}
                   </button>
