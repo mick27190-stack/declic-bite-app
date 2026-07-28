@@ -919,6 +919,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      compute_order_line_prices: {
+        Args: { _items: Json; _now?: string }
+        Returns: Json
+      }
       compute_order_total: {
         Args: { _items: Json; _now?: string }
         Returns: number

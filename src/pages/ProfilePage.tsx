@@ -33,7 +33,7 @@ import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useUserOrders } from '@/hooks/useOrders';
 import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
-import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { statusLabels, statusColors } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -83,6 +83,13 @@ function CurrentOrders() {
     // Suivi de commandes : uniquement les 5 dernières commandes.
     .slice(0, 5);
 
+  // Prix unitaires calculés par le backend (source unique de vérité).
+  const linePrices = useOrdersLinePrices(
+    activeOrders.map((o) => ({ id: o.id, items: o.items as any[], created_at: o.created_at })),
+  );
+
+
+
   return (
     <div className="glass-card p-4 rounded-xl">
       <h3 className="font-semibold flex items-center gap-2 mb-4">
@@ -124,14 +131,7 @@ function CurrentOrders() {
                   <ul className="mt-2 space-y-1.5 border-t border-border pt-2">
                     {order.items.map((item, idx) => {
                       const orderDate = new Date(order.created_at);
-                      const isPizzaCat = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'].includes(
-                        item.pizza?.category ?? '',
-                      );
-                      const unitBase = isPizzaCat
-                        ? getPizzaSizePrice(item.size?.id, item.pizza?.category, orderDate)
-                        : getNonPizzaPrice(item.pizza, item.size);
-                      const unitPrice =
-                        unitBase + (item.supplements?.reduce((s, sup) => s + sup.price, 0) ?? 0);
+                      const { unitPrice } = linePriceAt(linePrices[order.id], idx, item, orderDate);
                       return (
                       <li key={idx} className="text-xs">
                         <div className="flex items-center justify-between gap-2">

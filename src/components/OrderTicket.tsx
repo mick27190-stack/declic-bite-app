@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+import { useOrderLinePrices, linePriceAt } from '@/lib/orderPricing';
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
 // TVA restauration à emporter / livraison en France = 10%
@@ -133,20 +133,18 @@ function orderTypeLabel(t: string) {
 const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true, company }, ref) => {
   const date = new Date(order.created_at);
   const items = Array.isArray(order.items) ? order.items : [];
+  // Prix unitaires calculés par le backend (source unique de vérité).
+  const linePrices = useOrderLinePrices(items, order.created_at);
 
-  const lines = items.map((item: any) => {
+  const lines = items.map((item: any, i: number) => {
     const qty = item?.quantity ?? 1;
     const name = item?.pizza?.name ?? 'Produit';
     const sizeName = item?.size?.name;
     const category = item?.pizza?.category;
     const supplements = Array.isArray(item?.supplements) ? item.supplements : [];
-    const isPizza = category && PIZZA_CATEGORIES.includes(category);
-    const unitBase = isPizza
-      ? getPizzaSizePrice(item.size.id, category, date)
-      : getNonPizzaPrice(item.pizza, item.size);
-    const supTotal = supplements.reduce((s: number, sup: any) => s + (sup?.price ?? 0), 0);
-    const unit = unitBase + supTotal;
-    const sub = unit * qty;
+    const priced = linePriceAt(linePrices, i, item, date);
+    const unit = priced.unitPrice;
+    const sub = priced.lineTotal;
     const desc: string = item?.pizza?.description ?? '';
     const bambinoChoice = category === 'bambino' && desc.startsWith('Menu Bambino - ')
       ? desc.replace('Menu Bambino - ', '')

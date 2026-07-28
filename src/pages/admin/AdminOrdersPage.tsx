@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { Order, OrderStatus, statusLabels, statusColors } from '@/types/order';
 
 function DeliveryEstimateControl({ order, onSubmit }: { order: Order; onSubmit: (value: string) => void }) {
@@ -182,6 +182,11 @@ export default function AdminOrdersPage() {
     return true;
   });
 
+  // Prix unitaires calculés par le backend (source unique de vérité).
+  const linePrices = useOrdersLinePrices(
+    filteredOrders.map((o) => ({ id: o.id, items: (o.items as any[]) ?? [], created_at: o.created_at })),
+  );
+
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     await updateOrderStatus(orderId, newStatus);
   };
@@ -306,7 +311,7 @@ export default function AdminOrdersPage() {
         }
       }
 
-      const { blob, totalTTC } = generateInvoicePdf(
+      const { blob, totalTTC } = await generateInvoicePdf(
         order,
         company,
         {
@@ -614,9 +619,7 @@ export default function AdminOrdersPage() {
                             )}
                           </span>
                           <span className="font-medium">
-                            {((( ['classiques','speciales','vegetariennes','gourmandes'].includes(item?.pizza?.category)
-                              ? getPizzaSizePrice(item?.size?.id, item?.pizza?.category, new Date(order.created_at))
-                              : getNonPizzaPrice(item?.pizza, item?.size)) + (item?.supplements ?? []).reduce((s: number, sup: any) => s + (sup.price ?? 0), 0)) * (item?.quantity ?? 1)).toFixed(2)}€
+                            {linePriceAt(linePrices[order.id], idx, item, new Date(order.created_at)).lineTotal.toFixed(2)}€
                           </span>
                         </div>
                       ))}
