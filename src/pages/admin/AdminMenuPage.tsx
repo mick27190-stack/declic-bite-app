@@ -72,6 +72,8 @@ export default function AdminMenuPage() {
         category: pizza.category,
         capacity: isDrink ? (pizza.description || '') : '',
         isAvailable: pizza.isAvailable,
+        image: pizza.image ?? '',
+        basePrice: pizza.basePrice ? String(pizza.basePrice) : '',
       });
     } else {
       setEditingPizza(null);
@@ -82,40 +84,89 @@ export default function AdminMenuPage() {
         category: 'classiques',
         capacity: '',
         isAvailable: true,
+        image: '',
+        basePrice: '',
       });
     }
     setIsDialogOpen(true);
   };
+
+  const handlePickImage = async (file?: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner un fichier image');
+      return;
+    }
+    setUploading(true);
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file);
+      setFormData((prev) => ({ ...prev, image: dataUrl }));
+      toast.success('Photo chargée');
+    } catch (e: any) {
+      toast.error(e.message || "Impossible de charger l'image");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const isCustom = (id: string) => Boolean(overrides[id]?.is_custom);
 
   const handleSavePizza = async () => {
     if (!formData.name || !formData.ingredients) {
       toast.error('Veuillez remplir tous les champs obligatoires');
       return;
     }
-    if (!editingPizza) {
-      toast.error("L'ajout de nouveaux produits n'est pas encore supporté.");
+    const creating = !editingPizza;
+    if (creating && !formData.image) {
+      toast.error('Veuillez ajouter une photo du produit');
       return;
     }
 
+    const itemId = editingPizza
+      ? editingPizza.id
+      : `custom-${formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}-${Date.now()
+          .toString(36)
+          .slice(-4)}`;
+
+    const priceValue = parseFloat(formData.basePrice.replace(',', '.'));
+    const isPizzaCat = PIZZA_CATEGORIES.includes(formData.category);
+
+    setSaving(true);
     try {
       await upsert({
-        item_id: editingPizza.id,
+        item_id: itemId,
         name: formData.name,
         description: formData.category === 'boissons' ? null : formData.description,
         ingredients: formData.ingredients.split(',').map((i) => i.trim()).filter(Boolean),
         category: formData.category,
         capacity: formData.category === 'boissons' ? (formData.capacity || null) : null,
+        image_url: formData.image || null,
+        base_price: !isPizzaCat && !isNaN(priceValue) ? priceValue : undefined,
+        ...(creating ? { is_custom: true } : {}),
       });
-      toast.success('Produit mis à jour');
+      toast.success(creating ? 'Produit ajouté au menu' : 'Produit mis à jour');
       setIsDialogOpen(false);
     } catch (e: any) {
       toast.error(e.message || 'Erreur lors de la sauvegarde');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleDeletePizza = (_id: string) => {
-    toast.info("La suppression définitive n'est pas disponible. Désactivez le produit à la place.");
+  const handleDeletePizza = async (id: string) => {
+    if (!isCustom(id)) {
+      toast.info("La suppression définitive n'est pas disponible. Désactivez le produit à la place.");
+      return;
+    }
+    if (!window.confirm('Supprimer définitivement ce produit du menu ?')) return;
+    try {
+      await removeCustom(id);
+      toast.success('Produit supprimé');
+    } catch (e: any) {
+      toast.error(e.message || 'Erreur lors de la suppression');
+    }
   };
+
 
 
   const handleToggleAvailability = async (id: string, site: 'conches' | 'beaumont') => {
