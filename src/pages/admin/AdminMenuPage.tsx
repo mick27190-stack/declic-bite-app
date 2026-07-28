@@ -117,10 +117,7 @@ export default function AdminMenuPage() {
       return;
     }
     const creating = !editingPizza;
-    if (creating && !formData.image) {
-      toast.error('Veuillez ajouter une photo du produit');
-      return;
-    }
+
 
     const itemId = editingPizza
       ? editingPizza.id
