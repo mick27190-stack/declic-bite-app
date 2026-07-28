@@ -294,15 +294,15 @@ export default function AdminMenuPage() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="photo">Photo {editingPizza ? '' : '*'}</Label>
+                <Label htmlFor="photo">Photo</Label>
                 <div className="flex items-center gap-3">
-                  <div className="w-20 h-20 rounded-md overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
-                    {formData.image ? (
-                      <img src={formData.image} alt="Aperçu du produit" className="w-full h-full object-cover" />
-                    ) : (
-                      <Image className="h-6 w-6 text-muted-foreground" />
-                    )}
-                  </div>
+                  <ProductImage
+                    src={formData.image}
+                    alt="Aperçu du produit"
+                    className="w-20 h-20 rounded-md overflow-hidden object-cover flex-shrink-0"
+                    iconClassName="h-8 w-8"
+                  />
+
                   <div className="space-y-2">
                     <Input
                       id="photo"
