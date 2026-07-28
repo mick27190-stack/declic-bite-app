@@ -311,7 +311,7 @@ export default function AdminOrdersPage() {
         }
       }
 
-      const { blob, totalTTC } = generateInvoicePdf(
+      const { blob, totalTTC } = await generateInvoicePdf(
         order,
         company,
         {

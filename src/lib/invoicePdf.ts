@@ -38,13 +38,13 @@ export function buildInvoiceNumber(order: Pick<Order, 'id' | 'created_at'>): str
   return `F-${y}${m}${day}-${order.id.slice(0, 6).toUpperCase()}`;
 }
 
-export function generateInvoicePdf(
+export async function generateInvoicePdf(
   order: Order,
   company: CompanyInfo | null,
   recipient: InvoiceRecipient,
   meta: InvoiceMeta,
   logoDataUrl?: string | null,
-): { blob: Blob; totalTTC: number; totalHT: number; tva: number } {
+): Promise<{ blob: Blob; totalTTC: number; totalHT: number; tva: number }> {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const marginX = 15;
