@@ -182,6 +182,11 @@ export default function AdminOrdersPage() {
     return true;
   });
 
+  // Prix unitaires calculés par le backend (source unique de vérité).
+  const linePrices = useOrdersLinePrices(
+    filteredOrders.map((o) => ({ id: o.id, items: (o.items as any[]) ?? [], created_at: o.created_at })),
+  );
+
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     await updateOrderStatus(orderId, newStatus);
   };
