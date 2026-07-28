@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { Order, statusLabels } from '@/types/order';
 import { CartItem } from '@/types/pizza';
-import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+import { useOrderLinePrices, linePriceAt } from '@/lib/orderPricing';
 
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
@@ -143,12 +143,7 @@ export default function OrderConfirmationPage() {
           <div className="space-y-3">
             {order.items.map((item, index) => {
               const orderDate = new Date(order.created_at);
-              const isPizza = PIZZA_CATEGORIES.includes(item.pizza.category);
-              const unitBase = isPizza
-                ? getPizzaSizePrice(item.size.id, item.pizza.category, orderDate)
-                : getNonPizzaPrice(item.pizza, item.size);
-              const supplementsTotal = item.supplements.reduce((s, sup) => s + sup.price, 0);
-              const lineTotal = (unitBase + supplementsTotal) * item.quantity;
+              const { lineTotal } = linePriceAt(linePrices, index, item, orderDate);
               return (
                 <div key={index} className="flex justify-between text-sm">
                   <span className="text-muted-foreground">

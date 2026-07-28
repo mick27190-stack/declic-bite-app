@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+import { useOrderLinePrices, linePriceAt } from '@/lib/orderPricing';
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
 // TVA restauration à emporter / livraison en France = 10%
@@ -140,13 +140,9 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
     const sizeName = item?.size?.name;
     const category = item?.pizza?.category;
     const supplements = Array.isArray(item?.supplements) ? item.supplements : [];
-    const isPizza = category && PIZZA_CATEGORIES.includes(category);
-    const unitBase = isPizza
-      ? getPizzaSizePrice(item.size.id, category, date)
-      : getNonPizzaPrice(item.pizza, item.size);
-    const supTotal = supplements.reduce((s: number, sup: any) => s + (sup?.price ?? 0), 0);
-    const unit = unitBase + supTotal;
-    const sub = unit * qty;
+    const priced = linePriceAt(linePrices, i, item, date);
+    const unit = priced.unitPrice;
+    const sub = priced.lineTotal;
     const desc: string = item?.pizza?.description ?? '';
     const bambinoChoice = category === 'bambino' && desc.startsWith('Menu Bambino - ')
       ? desc.replace('Menu Bambino - ', '')
