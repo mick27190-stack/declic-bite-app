@@ -227,13 +227,13 @@ export default function AdminMenuPage() {
                 {pizzaList.map((pizza) => (
                   <TableRow key={pizza.id}>
                     <TableCell>
-                      <div className="w-12 h-12 rounded-md overflow-hidden bg-muted">
-                        <img 
-                          src={pizza.image} 
-                          alt={pizza.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                      <ProductImage
+                        src={pizza.image}
+                        alt={pizza.name}
+                        className="w-12 h-12 rounded-md overflow-hidden object-cover"
+                        iconClassName="h-5 w-5"
+                      />
+
                     </TableCell>
                     <TableCell className="font-medium">{pizza.name}</TableCell>
                     <TableCell>
