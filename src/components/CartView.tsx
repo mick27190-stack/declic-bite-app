@@ -318,11 +318,12 @@ export function CartView() {
 
           return (
             <div key={index} className="glass-card p-4 flex gap-4 mb-3">
-              <img
+              <ProductImage
                 src={item.pizza.image}
                 alt={item.pizza.name}
-                className="w-20 h-20 object-cover rounded-xl"
+                className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
               />
+
               
               <div className="flex-1 min-w-0">
                 <h3 className="font-display font-bold text-foreground truncate">
