@@ -133,8 +133,10 @@ function orderTypeLabel(t: string) {
 const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true, company }, ref) => {
   const date = new Date(order.created_at);
   const items = Array.isArray(order.items) ? order.items : [];
+  // Prix unitaires calculés par le backend (source unique de vérité).
+  const linePrices = useOrderLinePrices(items, order.created_at);
 
-  const lines = items.map((item: any) => {
+  const lines = items.map((item: any, i: number) => {
     const qty = item?.quantity ?? 1;
     const name = item?.pizza?.name ?? 'Produit';
     const sizeName = item?.size?.name;
