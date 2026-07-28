@@ -103,11 +103,13 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
         </button>
 
         <div className="relative aspect-video">
-          <img
+          <ProductImage
             src={pizza.image}
             alt={pizza.name}
             className="w-full h-full object-cover"
+            iconClassName="h-16 w-16"
           />
+
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
         </div>
 
