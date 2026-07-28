@@ -491,31 +491,40 @@ export type Database = {
       }
       menu_item_overrides: {
         Row: {
+          base_price: number | null
           capacity: string | null
           category: string | null
           created_at: string
           description: string | null
+          image_url: string | null
           ingredients: string[] | null
+          is_custom: boolean
           item_id: string
           name: string | null
           updated_at: string
         }
         Insert: {
+          base_price?: number | null
           capacity?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
+          image_url?: string | null
           ingredients?: string[] | null
+          is_custom?: boolean
           item_id: string
           name?: string | null
           updated_at?: string
         }
         Update: {
+          base_price?: number | null
           capacity?: string | null
           category?: string | null
           created_at?: string
           description?: string | null
+          image_url?: string | null
           ingredients?: string[] | null
+          is_custom?: boolean
           item_id?: string
           name?: string | null
           updated_at?: string
