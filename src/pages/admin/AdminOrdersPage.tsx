@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { Order, OrderStatus, statusLabels, statusColors } from '@/types/order';
 
 function DeliveryEstimateControl({ order, onSubmit }: { order: Order; onSubmit: (value: string) => void }) {
@@ -614,9 +614,7 @@ export default function AdminOrdersPage() {
                             )}
                           </span>
                           <span className="font-medium">
-                            {((( ['classiques','speciales','vegetariennes','gourmandes'].includes(item?.pizza?.category)
-                              ? getPizzaSizePrice(item?.size?.id, item?.pizza?.category, new Date(order.created_at))
-                              : getNonPizzaPrice(item?.pizza, item?.size)) + (item?.supplements ?? []).reduce((s: number, sup: any) => s + (sup.price ?? 0), 0)) * (item?.quantity ?? 1)).toFixed(2)}€
+                            {linePriceAt(linePrices[order.id], idx, item, new Date(order.created_at)).lineTotal.toFixed(2)}€
                           </span>
                         </div>
                       ))}
