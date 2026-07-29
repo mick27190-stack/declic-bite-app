@@ -91,6 +91,15 @@ export function DeliveryTimeSelector({ value, onChange, disabled }: DeliveryTime
         </div>
       )}
 
+      {error && (
+        <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-start gap-2">
+          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-destructive">{error}</p>
+        </div>
+      )}
+
+
+
       {value && !isAsapSelected && (
         <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
           <p className="text-sm text-foreground">
