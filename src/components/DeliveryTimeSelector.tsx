@@ -26,7 +26,8 @@ export function DeliveryTimeSelector({ value, onChange, disabled }: DeliveryTime
     // the 30-min lead time.
     const check = validateDeliverySlot(time, new Date());
     if (!check.valid) {
-      setError(check.error);
+      setError(check.error ?? null);
+
       // Fall back to the earliest bookable slot so the customer is never stuck.
       setSlots(computeDeliverySlots(new Date()));
       return;
