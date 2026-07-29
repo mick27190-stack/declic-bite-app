@@ -109,7 +109,11 @@ export function CartView() {
     if (orderType === 'emporter' && cutoff.isTakeawayCutoff) return false;
     if (orderType === 'livraison' && !deliveryAddress) return false;
     if (orderType === 'livraison' && !pickupTime) return false;
+    // Mirror the backend rule: the delivery slot must be on the 18h45 → 21h45
+    // grid and never before max(now + 30 min, 18h45).
+    if (orderType === 'livraison' && !validateDeliverySlot(pickupTime, now).valid) return false;
     if (orderType === 'livraison' && cutoff.isDeliveryCutoff) return false;
+
     if (belowMinimum) return false;
     return true;
   };
