@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Clock, Info } from 'lucide-react';
+import { Clock, Info, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { computeDeliverySlots, DeliverySlots } from '@/lib/pickupSlots';
+import { computeDeliverySlots, DeliverySlots, validateDeliverySlot } from '@/lib/pickupSlots';
 
 interface DeliveryTimeSelectorProps {
   value: string | null;
@@ -11,6 +11,7 @@ interface DeliveryTimeSelectorProps {
 
 export function DeliveryTimeSelector({ value, onChange, disabled }: DeliveryTimeSelectorProps) {
   const [slots, setSlots] = useState<DeliverySlots>(() => computeDeliverySlots(new Date()));
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const refresh = () => setSlots(computeDeliverySlots(new Date()));
@@ -21,11 +22,22 @@ export function DeliveryTimeSelector({ value, onChange, disabled }: DeliveryTime
 
   const handleSelect = (time: string) => {
     if (disabled) return;
+    // Same rule as the backend: never accept a slot before 18h45 nor before
+    // the 30-min lead time.
+    const check = validateDeliverySlot(time, new Date());
+    if (!check.valid) {
+      setError(check.error);
+      // Fall back to the earliest bookable slot so the customer is never stuck.
+      setSlots(computeDeliverySlots(new Date()));
+      return;
+    }
+    setError(null);
     onChange(time);
   };
 
   const asap = slots.asap;
   const isAsapSelected = value === asap;
+
 
   return (
     <div className={`space-y-4 ${disabled ? 'opacity-50' : ''}`}>
