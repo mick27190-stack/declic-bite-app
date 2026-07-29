@@ -2,11 +2,16 @@ import { describe, it, expect } from "vitest";
 import {
   computePickupSlotsFromMinutes,
   computePickupSlotOptionsFromMinutes,
+  computeDeliverySlotsFromMinutes,
+  computeDeliverySlots,
   earliestAllowedMinutes,
   parisMinutes,
   FIRST_SLOT_MINUTES,
   LAST_SLOT_MINUTES,
+  DELIVERY_FIRST_SLOT_MINUTES,
+  DELIVERY_LAST_SLOT_MINUTES,
 } from "./pickupSlots";
+
 
 describe("takeaway: no 18:30 slot, ASAP starts at 18:45 from 18:00", () => {
   const atMin = (h: number, m: number) => h * 60 + m;
