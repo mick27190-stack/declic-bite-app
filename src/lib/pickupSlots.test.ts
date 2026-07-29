@@ -4,6 +4,8 @@ import {
   computePickupSlotOptionsFromMinutes,
   computeDeliverySlotsFromMinutes,
   computeDeliverySlots,
+  validateDeliverySlot,
+  validateDeliverySlotFromMinutes,
   earliestAllowedMinutes,
   parisMinutes,
   FIRST_SLOT_MINUTES,
@@ -184,4 +186,56 @@ describe("delivery: ASAP never before 18:45", () => {
   });
 });
 
+});
+
+describe("validateDeliverySlotFromMinutes (mirrors the backend rule)", () => {
+  it("rejects a missing or malformed slot", () => {
+    expect(validateDeliverySlotFromMinutes(null, at(19, 0)).valid).toBe(false);
+    expect(validateDeliverySlotFromMinutes("", at(19, 0)).valid).toBe(false);
+    expect(validateDeliverySlotFromMinutes("19h00", at(19, 0)).valid).toBe(false);
+  });
+
+  it("rejects 18:30 at 18:00 Paris (never below the 18h45 floor)", () => {
+    const r = validateDeliverySlotFromMinutes("18:30", at(18, 0));
+    expect(r.valid).toBe(false);
+    expect(r.error).toContain("18h45");
+  });
+
+  it("accepts 18:45 at 18:00 Paris", () => {
+    expect(validateDeliverySlotFromMinutes("18:45", at(18, 0)).valid).toBe(true);
+  });
+
+  it("rejects any slot before 18:45 at any time of day", () => {
+    for (const slot of ["17:45", "18:00", "18:15", "18:30"]) {
+      for (let m = 0; m < 24 * 60; m += 30) {
+        expect(validateDeliverySlotFromMinutes(slot, m).valid).toBe(false);
+      }
+    }
+  });
+
+  it("rejects off-grid and out-of-window slots", () => {
+    expect(validateDeliverySlotFromMinutes("19:07", at(18, 0)).valid).toBe(false);
+    expect(validateDeliverySlotFromMinutes("22:00", at(18, 0)).valid).toBe(false);
+  });
+
+  it("enforces the 30-min lead after 18:00", () => {
+    expect(validateDeliverySlotFromMinutes("18:45", at(18, 20)).valid).toBe(false);
+    expect(validateDeliverySlotFromMinutes("19:00", at(18, 20)).valid).toBe(true);
+  });
+
+  it("always accepts the ASAP slot proposed by the selector", () => {
+    for (let m = 0; m < 24 * 60; m += 1) {
+      const { asap } = computeDeliverySlotsFromMinutes(m);
+      // Past the delivery cut-off the clamped ASAP can be unreachable; the
+      // cut-off blocks checkout there, so only assert during bookable hours.
+      if (m > 21 * 60 + 15) continue;
+      expect(validateDeliverySlotFromMinutes(asap, m).valid).toBe(true);
+    }
+  });
+
+  it("validateDeliverySlot uses the Paris clock", () => {
+    const utc = new Date("2026-07-15T16:00:00Z"); // 18:00 Paris
+    expect(validateDeliverySlot("18:30", utc).valid).toBe(false);
+    expect(validateDeliverySlot("18:45", utc).valid).toBe(true);
+  });
 });

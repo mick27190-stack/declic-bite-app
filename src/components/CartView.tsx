@@ -14,6 +14,8 @@ import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
+import { validateDeliverySlot } from '@/lib/pickupSlots';
+
 import {
   getCutoffState,
   getCutoffButtonLabel,
@@ -109,7 +111,11 @@ export function CartView() {
     if (orderType === 'emporter' && cutoff.isTakeawayCutoff) return false;
     if (orderType === 'livraison' && !deliveryAddress) return false;
     if (orderType === 'livraison' && !pickupTime) return false;
+    // Mirror the backend rule: the delivery slot must be on the 18h45 → 21h45
+    // grid and never before max(now + 30 min, 18h45).
+    if (orderType === 'livraison' && !validateDeliverySlot(pickupTime, now).valid) return false;
     if (orderType === 'livraison' && cutoff.isDeliveryCutoff) return false;
+
     if (belowMinimum) return false;
     return true;
   };
@@ -126,6 +132,22 @@ export function CartView() {
     }
 
     if (!canCheckout() || !selectedRestaurant) return;
+
+    if (orderType === 'livraison') {
+      // Re-check against the live Paris clock right before sending, so a slot
+      // that expired while the cart was open is caught here and not by the API.
+      const slotCheck = validateDeliverySlot(pickupTime, new Date());
+      if (!slotCheck.valid) {
+        toast({
+          title: 'Créneau de livraison indisponible',
+          description: slotCheck.error,
+          variant: 'destructive',
+        });
+        setPickupTime('');
+        return;
+      }
+    }
+
 
     setIsSubmitting(true);
     try {
