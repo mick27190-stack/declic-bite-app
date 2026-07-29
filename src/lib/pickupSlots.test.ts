@@ -2,11 +2,16 @@ import { describe, it, expect } from "vitest";
 import {
   computePickupSlotsFromMinutes,
   computePickupSlotOptionsFromMinutes,
+  computeDeliverySlotsFromMinutes,
+  computeDeliverySlots,
   earliestAllowedMinutes,
   parisMinutes,
   FIRST_SLOT_MINUTES,
   LAST_SLOT_MINUTES,
+  DELIVERY_FIRST_SLOT_MINUTES,
+  DELIVERY_LAST_SLOT_MINUTES,
 } from "./pickupSlots";
+
 
 describe("takeaway: no 18:30 slot, ASAP starts at 18:45 from 18:00", () => {
   const atMin = (h: number, m: number) => h * 60 + m;
@@ -113,5 +118,70 @@ describe("computePickupSlotsFromMinutes edge cases", () => {
       expect(toMin(s)).toBeGreaterThanOrEqual(FIRST_SLOT_MINUTES);
       expect(toMin(s)).toBeLessThanOrEqual(LAST_SLOT_MINUTES);
     }
+});
+
+describe("delivery: ASAP never before 18:45", () => {
+  const toMin = (s: string) => {
+    const [h, m] = s.split(":").map(Number);
+    return h * 60 + m;
+  };
+
+  it("at 18:00 Paris, ASAP is 18:45 (not 18:30)", () => {
+    const { asap } = computeDeliverySlotsFromMinutes(at(18, 0));
+    expect(asap).toBe("18:45");
   });
+
+  it("before opening (e.g. 15:00), ASAP is 18:45", () => {
+    expect(computeDeliverySlotsFromMinutes(at(15, 0)).asap).toBe("18:45");
+    expect(computeDeliverySlotsFromMinutes(at(0, 0)).asap).toBe("18:45");
+  });
+
+  it("between 18:00 and 18:15, ASAP stays 18:45", () => {
+    for (let m = at(18, 0); m <= at(18, 15); m += 1) {
+      expect(computeDeliverySlotsFromMinutes(m).asap).toBe("18:45");
+    }
+  });
+
+  it("ASAP is never before 18:45 nor after 21:45, at any minute of the day", () => {
+    for (let m = 0; m < 24 * 60; m += 1) {
+      const { asap } = computeDeliverySlotsFromMinutes(m);
+      expect(toMin(asap)).toBeGreaterThanOrEqual(DELIVERY_FIRST_SLOT_MINUTES);
+      expect(toMin(asap)).toBeLessThanOrEqual(DELIVERY_LAST_SLOT_MINUTES);
+    }
+  });
+
+  it("grid slots are always strictly after ASAP and within the window", () => {
+    for (let m = 0; m < 24 * 60; m += 5) {
+      const { asap, slots } = computeDeliverySlotsFromMinutes(m);
+      for (const s of slots) {
+        expect(toMin(s)).toBeGreaterThan(toMin(asap));
+        expect(toMin(s)).toBeLessThanOrEqual(DELIVERY_LAST_SLOT_MINUTES);
+      }
+    }
+  });
+
+  it("at 18:00 Paris, the grid starts at 19:00 (right after ASAP)", () => {
+    const { slots } = computeDeliverySlotsFromMinutes(at(18, 0));
+    expect(slots[0]).toBe("19:00");
+    expect(slots).not.toContain("18:30");
+    expect(slots).not.toContain("18:45");
+  });
+
+  it("after 18:00 the 30-min lead still applies (19:23 -> 20:00)", () => {
+    expect(computeDeliverySlotsFromMinutes(at(19, 23)).asap).toBe("20:00");
+    expect(computeDeliverySlotsFromMinutes(at(20, 32)).asap).toBe("21:15");
+  });
+
+  it("ASAP is clamped to the last slot late in the service", () => {
+    expect(computeDeliverySlotsFromMinutes(at(21, 40)).asap).toBe("21:45");
+  });
+
+  it("uses Paris wall clock regardless of device timezone", () => {
+    // 16:00 UTC == 18:00 Paris in July (CEST).
+    const utc = new Date("2026-07-15T16:00:00Z");
+    expect(parisMinutes(utc)).toBe(at(18, 0));
+    expect(computeDeliverySlots(utc).asap).toBe("18:45");
+  });
+});
+
 });
