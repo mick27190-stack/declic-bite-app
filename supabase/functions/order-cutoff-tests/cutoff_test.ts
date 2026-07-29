@@ -107,6 +107,33 @@ Deno.test("livraison: 18h00 Paris with the very first slot (18h45) → accepted"
   assertEquals(r.ok, true);
 });
 
+Deno.test("livraison: 18h00 Paris with 18:30 → refused (never below the 18h45 first slot)", async () => {
+  const r = await callCutoff("livraison", "18:30", m(18, 0));
+  assert(!r.ok, "18:30 must never be accepted as a delivery slot");
+  assert(r.message.includes("Créneau de livraison invalide"), `got: ${r.message}`);
+});
+
+Deno.test("livraison: no slot before 18:45 is ever accepted, whatever the Paris time", async () => {
+  for (const slot of ["17:45", "18:00", "18:15", "18:30"]) {
+    for (const now of [m(0, 0), m(17, 0), m(18, 0), m(18, 10), m(19, 0)]) {
+      const r = await callCutoff("livraison", slot, now);
+      assert(!r.ok, `slot ${slot} at ${now} min must be refused`);
+    }
+  }
+});
+
+Deno.test("livraison: 18h05/18h15 Paris → 18:45 still accepted (lead clamped to first slot)", async () => {
+  assertEquals((await callCutoff("livraison", "18:45", m(18, 5))).ok, true);
+  assertEquals((await callCutoff("livraison", "18:45", m(18, 15))).ok, true);
+});
+
+Deno.test("livraison: 18h20 Paris → 18:45 refused (lead pushes past the first slot)", async () => {
+  // ceil((1100 + 30) / 15) * 15 = 1140 → 19:00.
+  const r = await callCutoff("livraison", "18:45", m(18, 20));
+  assert(!r.ok);
+});
+
+
 // ---------------------------------------------------------------------------
 // EMPORTER — 21h16 last acceptance / 21h17 cut-off
 // ---------------------------------------------------------------------------
