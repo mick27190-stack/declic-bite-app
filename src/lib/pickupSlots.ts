@@ -177,7 +177,7 @@ export const DELIVERY_SLOT_RANGE_MESSAGE =
 export const DELIVERY_SLOT_TOO_EARLY_MESSAGE =
   "Ce créneau de livraison n'est plus disponible. Merci d'en choisir un autre.";
 
-export type DeliverySlotValidation = { valid: true } | { valid: false; error: string };
+export type DeliverySlotValidation = { valid: boolean; error?: string };
 
 /**
  * Earliest delivery time actually bookable, clamped so it never falls below
