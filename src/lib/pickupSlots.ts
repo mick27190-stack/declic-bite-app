@@ -141,14 +141,17 @@ export interface DeliverySlots {
 }
 
 export function computeDeliverySlotsFromMinutes(nowMinutes: number): DeliverySlots {
-  // Before service opens, ASAP is fixed at 18:30 (opening + lead).
   const openingMinutes = 18 * 60; // 18:00
   const rawEarliest = nowMinutes < openingMinutes
     ? openingMinutes + DELIVERY_LEAD_MINUTES
     : earliestDeliveryMinutes(nowMinutes);
 
-  // Clamp ASAP to last slot so we never propose an unreachable time.
-  const asapMinutes = Math.min(rawEarliest, DELIVERY_LAST_SLOT_MINUTES);
+  // Never propose a delivery before the first slot (18:45), and never after the last one.
+  const asapMinutes = Math.min(
+    Math.max(rawEarliest, DELIVERY_FIRST_SLOT_MINUTES),
+    DELIVERY_LAST_SLOT_MINUTES,
+  );
+
 
   const slots: string[] = [];
   for (let m = DELIVERY_FIRST_SLOT_MINUTES; m <= DELIVERY_LAST_SLOT_MINUTES; m += SLOT_INTERVAL) {
