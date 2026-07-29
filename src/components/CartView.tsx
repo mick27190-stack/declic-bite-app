@@ -133,6 +133,22 @@ export function CartView() {
 
     if (!canCheckout() || !selectedRestaurant) return;
 
+    if (orderType === 'livraison') {
+      // Re-check against the live Paris clock right before sending, so a slot
+      // that expired while the cart was open is caught here and not by the API.
+      const slotCheck = validateDeliverySlot(pickupTime, new Date());
+      if (!slotCheck.valid) {
+        toast({
+          title: 'Créneau de livraison indisponible',
+          description: slotCheck.error,
+          variant: 'destructive',
+        });
+        setPickupTime('');
+        return;
+      }
+    }
+
+
     setIsSubmitting(true);
     try {
       const order = await createOrder({
