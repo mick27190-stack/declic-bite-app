@@ -183,17 +183,8 @@ export function CartView() {
       {/* Closed alerts (shared across menu / cart / checkout, live-updating) */}
       <OrdersClosedBanner />
 
-      {!manualClosure && !isMonday && isOutsideHours && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-destructive text-sm">Hors horaires d'ouverture</p>
-            <p className="text-sm text-foreground mt-1">
-              Nos pizzerias sont ouvertes de <strong className="text-primary">18h à 22h</strong>. Revenez pendant nos horaires d'ouverture pour commander ! 🕐
-            </p>
-          </div>
-        </div>
-      )}
+
+
       {selectedRestaurant && (
         <div className="glass-card p-4 mb-2">
           <p className="text-sm text-muted-foreground">Commande pour</p>
