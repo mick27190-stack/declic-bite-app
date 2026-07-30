@@ -18,10 +18,10 @@ import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { validateDeliverySlot } from '@/lib/pickupSlots';
 
 import {
-  getCutoffState,
   getCutoffButtonLabel,
   getCutoffWarningMinutesRemaining,
 } from '@/lib/orderCutoff';
+
 
 export function CartView() {
   const navigate = useNavigate();
