@@ -12,6 +12,8 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { isPromoDay, PROMO_LABEL } from '@/lib/promo';
 import { useMenuAvailability } from '@/hooks/useMenuAvailability';
 import { useMenuOverrides } from '@/hooks/useMenuOverrides';
+import { OrdersClosedBanner } from '@/components/OrdersClosedBanner';
+
 
 export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
