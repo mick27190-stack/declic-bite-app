@@ -12,7 +12,8 @@ import { PickupTimeSelector } from '@/components/PickupTimeSelector';
 import { DeliveryTimeSelector } from '@/components/DeliveryTimeSelector';
 import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
-import { useActiveClosures } from '@/hooks/useRestaurantClosures';
+import { useOrderingStatus } from '@/hooks/useOrderingStatus';
+import { OrdersClosedBanner } from '@/components/OrdersClosedBanner';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { validateDeliverySlot } from '@/lib/pickupSlots';
 
