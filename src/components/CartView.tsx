@@ -48,11 +48,37 @@ export function CartView() {
 
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    // Update the countdown every 30s so the CTA button reflects the remaining
-    // minutes until the 21h15 cut-off during the 21h00-21h15 warning window.
-    const id = setInterval(() => setNow(new Date()), 30000);
-    return () => clearInterval(id);
+    // Re-render exactly when the clock ticks over to a new minute, so the
+    // "commandes fermées" state (21h16 / 21h17) flips live without reloading
+    // the app. A self-correcting timeout avoids the drift of setInterval.
+    let timeoutId: number | undefined;
+    const schedule = () => {
+      const current = new Date();
+      setNow(current);
+      // +250ms safety margin so we land just after the minute boundary.
+      const delay = 60000 - (current.getSeconds() * 1000 + current.getMilliseconds()) + 250;
+      timeoutId = window.setTimeout(schedule, delay);
+    };
+    schedule();
+
+    // Also resync when the tab/app comes back to the foreground: background
+    // timers are throttled or frozen on mobile.
+    const resync = () => {
+      if (document.visibilityState === 'visible') {
+        if (timeoutId) window.clearTimeout(timeoutId);
+        schedule();
+      }
+    };
+    document.addEventListener('visibilitychange', resync);
+    window.addEventListener('focus', resync);
+
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId);
+      document.removeEventListener('visibilitychange', resync);
+      window.removeEventListener('focus', resync);
+    };
   }, []);
+
 
   const isMonday = now.getDay() === 1;
   const currentHour = now.getHours();
