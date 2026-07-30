@@ -20,8 +20,8 @@ export default function MenuPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPizza, setSelectedPizza] = useState<Pizza | null>(null);
   const { selectedRestaurant } = useCart();
-  const { getClosureForSite } = useActiveClosures();
-  const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
+
+
   const navigate = useNavigate();
   const { isAvailable } = useMenuAvailability();
   const { applyToList } = useMenuOverrides();
