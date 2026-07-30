@@ -44,57 +44,17 @@ export function CartView() {
     clearCart
   } = useCart();
 
-  const { getClosureForSite } = useActiveClosures();
-
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    // Re-render exactly when the clock ticks over to a new minute, so the
-    // "commandes fermées" state (21h16 / 21h17) flips live without reloading
-    // the app. A self-correcting timeout avoids the drift of setInterval.
-    let timeoutId: number | undefined;
-    const schedule = () => {
-      const current = new Date();
-      setNow(current);
-      // +250ms safety margin so we land just after the minute boundary.
-      const delay = 60000 - (current.getSeconds() * 1000 + current.getMilliseconds()) + 250;
-      timeoutId = window.setTimeout(schedule, delay);
-    };
-    schedule();
-
-    // Also resync when the tab/app comes back to the foreground: background
-    // timers are throttled or frozen on mobile.
-    const resync = () => {
-      if (document.visibilityState === 'visible') {
-        if (timeoutId) window.clearTimeout(timeoutId);
-        schedule();
-      }
-    };
-    document.addEventListener('visibilitychange', resync);
-    window.addEventListener('focus', resync);
-
-    return () => {
-      if (timeoutId) window.clearTimeout(timeoutId);
-      document.removeEventListener('visibilitychange', resync);
-      window.removeEventListener('focus', resync);
-    };
-  }, []);
-
-
-  const isMonday = now.getDay() === 1;
-  const currentHour = now.getHours();
-  const isOutsideHours = currentHour < 18 || currentHour >= 22;
-  const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
-  const isClosed = isMonday || isOutsideHours || !!manualClosure;
-  // Take-away is blocked after 21h30 (Paris) on open days, so the last valid
-  // pickup slot (21h30) can still be honoured before the kitchen closes at 22h.
-  // Delivery is blocked from 21h16 (Paris) — last accepted order at 21h15.
-  // From 21h00 to 21h15 the CTA shows a warning that orders close at 21h15.
-  const cutoff = getCutoffState(now, isClosed);
+  // Shared, live-updating closing state (menu / cart / checkout stay in sync).
+  const {
+    now,
+    isMonday,
+    isOutsideHours,
+    manualClosure,
+    isClosed,
+    cutoff,
+  } = useOrderingStatus();
   const warningMinutes = getCutoffWarningMinutesRemaining(now);
-  // Paris weekday: on Sunday evening the shops reopen on Tuesday (closed Monday).
-  const isSundayParis =
-    new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Paris', weekday: 'short' }).format(now) ===
-    'Sun';
+
 
 
   // Minimum order check for delivery outside the restaurant's own commune:
