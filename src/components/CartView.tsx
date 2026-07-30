@@ -65,6 +65,10 @@ export function CartView() {
   // From 21h00 to 21h15 the CTA shows a warning that orders close at 21h15.
   const cutoff = getCutoffState(now, isClosed);
   const warningMinutes = getCutoffWarningMinutesRemaining(now);
+  // Paris weekday: on Sunday evening the shops reopen on Tuesday (closed Monday).
+  const isSundayParis =
+    new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Paris', weekday: 'short' }).format(now) ===
+    'Sun';
 
 
   // Minimum order check for delivery outside the restaurant's own commune:
