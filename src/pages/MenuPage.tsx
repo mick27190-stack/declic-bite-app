@@ -8,18 +8,20 @@ import CustomerNotificationBell from '@/components/CustomerNotificationBell';
 import { pizzas, categories } from '@/data/pizzas';
 import { Pizza } from '@/types/pizza';
 import { useCart } from '@/contexts/CartContext';
-import { useActiveClosures } from '@/hooks/useRestaurantClosures';
+
 import { isPromoDay, PROMO_LABEL } from '@/lib/promo';
 import { useMenuAvailability } from '@/hooks/useMenuAvailability';
 import { useMenuOverrides } from '@/hooks/useMenuOverrides';
+import { OrdersClosedBanner } from '@/components/OrdersClosedBanner';
+
 
 export default function MenuPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPizza, setSelectedPizza] = useState<Pizza | null>(null);
   const { selectedRestaurant } = useCart();
-  const { getClosureForSite } = useActiveClosures();
-  const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
+
+
   const navigate = useNavigate();
   const { isAvailable } = useMenuAvailability();
   const { applyToList } = useMenuOverrides();
@@ -103,15 +105,8 @@ export default function MenuPage() {
 
       {/* Pizza Grid */}
       <main className="max-w-md mx-auto px-4 py-6">
-        {manualClosure && (
-          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-semibold text-destructive text-sm">Commandes bloquées</p>
-              <p className="text-sm text-foreground mt-1">{manualClosure.reason}</p>
-            </div>
-          </div>
-        )}
+        <OrdersClosedBanner className="mb-4" />
+
         {isPromoDay() && (
           <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-center">
             <p className="text-xs sm:text-sm font-bold text-green-600 text-balance leading-tight">🎉 {PROMO_LABEL}</p>

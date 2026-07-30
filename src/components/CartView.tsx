@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Minus, Plus, Trash2, ShoppingBag, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
@@ -12,15 +12,16 @@ import { PickupTimeSelector } from '@/components/PickupTimeSelector';
 import { DeliveryTimeSelector } from '@/components/DeliveryTimeSelector';
 import { useOrders } from '@/hooks/useOrders';
 import { useToast } from '@/hooks/use-toast';
-import { useActiveClosures } from '@/hooks/useRestaurantClosures';
+import { useOrderingStatus } from '@/hooks/useOrderingStatus';
+import { OrdersClosedBanner } from '@/components/OrdersClosedBanner';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { validateDeliverySlot } from '@/lib/pickupSlots';
 
 import {
-  getCutoffState,
   getCutoffButtonLabel,
   getCutoffWarningMinutesRemaining,
 } from '@/lib/orderCutoff';
+
 
 export function CartView() {
   const navigate = useNavigate();
@@ -44,57 +45,17 @@ export function CartView() {
     clearCart
   } = useCart();
 
-  const { getClosureForSite } = useActiveClosures();
-
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    // Re-render exactly when the clock ticks over to a new minute, so the
-    // "commandes fermées" state (21h16 / 21h17) flips live without reloading
-    // the app. A self-correcting timeout avoids the drift of setInterval.
-    let timeoutId: number | undefined;
-    const schedule = () => {
-      const current = new Date();
-      setNow(current);
-      // +250ms safety margin so we land just after the minute boundary.
-      const delay = 60000 - (current.getSeconds() * 1000 + current.getMilliseconds()) + 250;
-      timeoutId = window.setTimeout(schedule, delay);
-    };
-    schedule();
-
-    // Also resync when the tab/app comes back to the foreground: background
-    // timers are throttled or frozen on mobile.
-    const resync = () => {
-      if (document.visibilityState === 'visible') {
-        if (timeoutId) window.clearTimeout(timeoutId);
-        schedule();
-      }
-    };
-    document.addEventListener('visibilitychange', resync);
-    window.addEventListener('focus', resync);
-
-    return () => {
-      if (timeoutId) window.clearTimeout(timeoutId);
-      document.removeEventListener('visibilitychange', resync);
-      window.removeEventListener('focus', resync);
-    };
-  }, []);
-
-
-  const isMonday = now.getDay() === 1;
-  const currentHour = now.getHours();
-  const isOutsideHours = currentHour < 18 || currentHour >= 22;
-  const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
-  const isClosed = isMonday || isOutsideHours || !!manualClosure;
-  // Take-away is blocked after 21h30 (Paris) on open days, so the last valid
-  // pickup slot (21h30) can still be honoured before the kitchen closes at 22h.
-  // Delivery is blocked from 21h16 (Paris) — last accepted order at 21h15.
-  // From 21h00 to 21h15 the CTA shows a warning that orders close at 21h15.
-  const cutoff = getCutoffState(now, isClosed);
+  // Shared, live-updating closing state (menu / cart / checkout stay in sync).
+  const {
+    now,
+    isMonday,
+    isOutsideHours,
+    manualClosure,
+    isClosed,
+    cutoff,
+  } = useOrderingStatus();
   const warningMinutes = getCutoffWarningMinutesRemaining(now);
-  // Paris weekday: on Sunday evening the shops reopen on Tuesday (closed Monday).
-  const isSundayParis =
-    new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Paris', weekday: 'short' }).format(now) ===
-    'Sun';
+
 
 
   // Minimum order check for delivery outside the restaurant's own commune:
@@ -220,39 +181,11 @@ export function CartView() {
 
   return (
     <div className="space-y-4 pb-32">
-      {/* Closed alerts */}
-      {manualClosure && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-destructive text-sm">Commandes bloquées</p>
-            <p className="text-sm text-foreground mt-1">{manualClosure.reason}</p>
+      {/* Closed alerts (shared across menu / cart / checkout, live-updating) */}
+      <OrdersClosedBanner />
 
-          </div>
-        </div>
-      )}
-      {!manualClosure && isMonday && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-destructive text-sm">Fermé le lundi</p>
-            <p className="text-sm text-foreground mt-1">
-              Nos pizzerias sont fermées le lundi. Revenez dès demain mardi pour passer votre commande ! 🍕
-            </p>
-          </div>
-        </div>
-      )}
-      {!manualClosure && !isMonday && isOutsideHours && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-destructive text-sm">Hors horaires d'ouverture</p>
-            <p className="text-sm text-foreground mt-1">
-              Nos pizzerias sont ouvertes de <strong className="text-primary">18h à 22h</strong>. Revenez pendant nos horaires d'ouverture pour commander ! 🕐
-            </p>
-          </div>
-        </div>
-      )}
+
+
       {selectedRestaurant && (
         <div className="glass-card p-4 mb-2">
           <p className="text-sm text-muted-foreground">Commande pour</p>
@@ -333,19 +266,8 @@ export function CartView() {
         </div>
       )}
 
-      {/* Orders closed after the evening cut-off */}
-      {(cutoff.isTakeawayCutoff || cutoff.isDeliveryCutoff) && (
-        <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-yellow-700 text-sm">Commandes fermées</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Les commandes à emporter et en livraison sont fermées. Revenez{' '}
-              {isSundayParis ? 'mardi' : 'demain'} à partir de 18h00.
-            </p>
-          </div>
-        </div>
-      )}
+
+
 
       {/* Pickup Flow */}
       {orderType === 'emporter' && !cutoff.isTakeawayCutoff && (
