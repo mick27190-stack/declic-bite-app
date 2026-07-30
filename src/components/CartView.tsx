@@ -180,28 +180,9 @@ export function CartView() {
 
   return (
     <div className="space-y-4 pb-32">
-      {/* Closed alerts */}
-      {manualClosure && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-destructive text-sm">Commandes bloquées</p>
-            <p className="text-sm text-foreground mt-1">{manualClosure.reason}</p>
+      {/* Closed alerts (shared across menu / cart / checkout, live-updating) */}
+      <OrdersClosedBanner />
 
-          </div>
-        </div>
-      )}
-      {!manualClosure && isMonday && (
-        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-destructive text-sm">Fermé le lundi</p>
-            <p className="text-sm text-foreground mt-1">
-              Nos pizzerias sont fermées le lundi. Revenez dès demain mardi pour passer votre commande ! 🍕
-            </p>
-          </div>
-        </div>
-      )}
       {!manualClosure && !isMonday && isOutsideHours && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
