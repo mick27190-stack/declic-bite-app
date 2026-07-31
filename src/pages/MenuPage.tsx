@@ -107,11 +107,8 @@ export default function MenuPage() {
       <main className="max-w-md mx-auto px-4 py-6">
         <OrdersClosedBanner className="mb-4" />
 
-        {isPromoDay() && (
-          <div className="mb-4 p-3 rounded-xl bg-green-500/10 border border-green-500/30 text-center">
-            <p className="text-xs sm:text-sm font-bold text-green-600 text-balance leading-tight">🎉 {PROMO_LABEL}</p>
-          </div>
-        )}
+        <ActivePromoBanner className="mb-4" />
+
         <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
           <div>
