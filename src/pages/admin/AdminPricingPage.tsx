@@ -19,6 +19,8 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Save, Trash2, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { PromoBanner, defaultPromoMessage } from '@/components/ActivePromoBanner';
+
 
 const SIZES: { id: string; name: string }[] = [
   { id: 'senior', name: 'Senior' },
