@@ -49,6 +49,27 @@ export default function AdminPricingPage() {
   const [newPromoType, setNewPromoType] = useState<'fixed' | 'second_half' | 'bogo'>('fixed');
   const [addingPromo, setAddingPromo] = useState(false);
 
+  // Message de bannière par promo
+  const [labelDraft, setLabelDraft] = useState<Record<string, string>>({});
+  const [savingLabelId, setSavingLabelId] = useState<string | null>(null);
+
+  const savePromoLabel = async (id: string) => {
+    setSavingLabelId(id);
+    const value = (labelDraft[id] ?? '').trim();
+    const { error } = await supabase
+      .from('pizza_day_promos')
+      .update({ label: value || null })
+      .eq('id', id);
+    setSavingLabelId(null);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Message publié', description: 'La bannière client est mise à jour en temps réel.' });
+      await refresh();
+    }
+  };
+
+
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
