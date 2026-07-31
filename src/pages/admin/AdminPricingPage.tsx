@@ -19,6 +19,8 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Save, Trash2, Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { PromoBanner, defaultPromoMessage } from '@/components/ActivePromoBanner';
+
 
 const SIZES: { id: string; name: string }[] = [
   { id: 'senior', name: 'Senior' },
@@ -48,6 +50,27 @@ export default function AdminPricingPage() {
   const [newSpecificDate, setNewSpecificDate] = useState<string>('');
   const [newPromoType, setNewPromoType] = useState<'fixed' | 'second_half' | 'bogo'>('fixed');
   const [addingPromo, setAddingPromo] = useState(false);
+
+  // Message de bannière par promo
+  const [labelDraft, setLabelDraft] = useState<Record<string, string>>({});
+  const [savingLabelId, setSavingLabelId] = useState<string | null>(null);
+
+  const savePromoLabel = async (id: string) => {
+    setSavingLabelId(id);
+    const value = (labelDraft[id] ?? '').trim();
+    const { error } = await supabase
+      .from('pizza_day_promos')
+      .update({ label: value || null })
+      .eq('id', id);
+    setSavingLabelId(null);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Message publié', description: 'La bannière client est mise à jour en temps réel.' });
+      await refresh();
+    }
+  };
+
 
 
   useEffect(() => {
@@ -398,14 +421,30 @@ export default function AdminPricingPage() {
                   placeholder={newPromoType !== 'fixed' ? 'Calcul auto.' : ''}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Libellé (option.)</Label>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Message de la bannière client (option.)</Label>
                 <Input
                   value={newLabel}
                   onChange={(e) => setNewLabel(e.target.value)}
-                  placeholder="Ex: Lundi Méga 15€"
+                  placeholder={defaultPromoMessage({
+                    size_id: newSize,
+                    promo_type: newPromoType,
+                    price: newPromoType === 'fixed' ? parseFloat(newPrice) || null : null,
+                  })}
+                />
+                <p className="text-xs text-muted-foreground">Aperçu avant publication :</p>
+                <PromoBanner
+                  messages={[
+                    newLabel.trim() ||
+                      defaultPromoMessage({
+                        size_id: newSize,
+                        promo_type: newPromoType,
+                        price: newPromoType === 'fixed' ? parseFloat(newPrice) || null : null,
+                      }),
+                  ]}
                 />
               </div>
+
               <Button onClick={addPromo} disabled={addingPromo}>
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter
@@ -476,32 +515,72 @@ export default function AdminPricingPage() {
                 .slice()
                 .sort((a, b) => a.day_of_week - b.day_of_week)
                 .map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border p-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium">
-                        {DAY_NAMES[p.day_of_week]} · {sizeName(p.size_id)} · {describePromoValue(p)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {describeRecurrence(p)}
-                      </p>
-                      {p.label && (
-                        <p className="text-sm text-muted-foreground truncate">{p.label}</p>
-                      )}
+                  <div key={p.id} className="rounded-lg border p-3 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium">
+                          {DAY_NAMES[p.day_of_week]} · {sizeName(p.size_id)} · {describePromoValue(p)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {describeRecurrence(p)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <Switch
+                          checked={p.is_active}
+                          onCheckedChange={(v) => togglePromo(p.id, v)}
+                        />
+                        <Button variant="ghost" size="icon" onClick={() => deletePromo(p.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <Switch
-                        checked={p.is_active}
-                        onCheckedChange={(v) => togglePromo(p.id, v)}
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`msg-${p.id}`}>Message de la bannière client</Label>
+                      <Input
+                        id={`msg-${p.id}`}
+                        value={labelDraft[p.id] ?? p.label ?? ''}
+                        onChange={(e) => setLabelDraft((d) => ({ ...d, [p.id]: e.target.value }))}
+                        placeholder={defaultPromoMessage(p)}
                       />
-                      <Button variant="ghost" size="icon" onClick={() => deletePromo(p.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Aperçu avant publication (laisser vide pour le message automatique) :
+                      </p>
+                      <PromoBanner
+                        messages={[(labelDraft[p.id] ?? p.label ?? '').trim() || defaultPromoMessage(p)]}
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          disabled={
+                            savingLabelId === p.id ||
+                            (labelDraft[p.id] ?? p.label ?? '') === (p.label ?? '')
+                          }
+                          onClick={() => savePromoLabel(p.id)}
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Publier le message
+                        </Button>
+                        {(labelDraft[p.id] ?? p.label ?? '') !== (p.label ?? '') && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setLabelDraft((d) => ({ ...d, [p.id]: p.label ?? '' }))}
+                          >
+                            Annuler
+                          </Button>
+                        )}
+                      </div>
+                      {!p.is_active && (
+                        <p className="text-xs text-muted-foreground">
+                          La bannière ne s'affiche que lorsque la promotion est activée.
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
+
             </div>
           </CardContent>
         </Card>
