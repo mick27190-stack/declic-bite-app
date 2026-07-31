@@ -421,14 +421,30 @@ export default function AdminPricingPage() {
                   placeholder={newPromoType !== 'fixed' ? 'Calcul auto.' : ''}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Libellé (option.)</Label>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Message de la bannière client (option.)</Label>
                 <Input
                   value={newLabel}
                   onChange={(e) => setNewLabel(e.target.value)}
-                  placeholder="Ex: Lundi Méga 15€"
+                  placeholder={defaultPromoMessage({
+                    size_id: newSize,
+                    promo_type: newPromoType,
+                    price: newPromoType === 'fixed' ? parseFloat(newPrice) || null : null,
+                  })}
+                />
+                <p className="text-xs text-muted-foreground">Aperçu avant publication :</p>
+                <PromoBanner
+                  messages={[
+                    newLabel.trim() ||
+                      defaultPromoMessage({
+                        size_id: newSize,
+                        promo_type: newPromoType,
+                        price: newPromoType === 'fixed' ? parseFloat(newPrice) || null : null,
+                      }),
+                  ]}
                 />
               </div>
+
               <Button onClick={addPromo} disabled={addingPromo}>
                 <Plus className="h-4 w-4 mr-2" />
                 Ajouter
