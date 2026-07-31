@@ -476,32 +476,72 @@ export default function AdminPricingPage() {
                 .slice()
                 .sort((a, b) => a.day_of_week - b.day_of_week)
                 .map((p) => (
-                  <div
-                    key={p.id}
-                    className="flex items-center justify-between gap-3 rounded-lg border p-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium">
-                        {DAY_NAMES[p.day_of_week]} · {sizeName(p.size_id)} · {describePromoValue(p)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {describeRecurrence(p)}
-                      </p>
-                      {p.label && (
-                        <p className="text-sm text-muted-foreground truncate">{p.label}</p>
-                      )}
+                  <div key={p.id} className="rounded-lg border p-3 space-y-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium">
+                          {DAY_NAMES[p.day_of_week]} · {sizeName(p.size_id)} · {describePromoValue(p)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {describeRecurrence(p)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0">
+                        <Switch
+                          checked={p.is_active}
+                          onCheckedChange={(v) => togglePromo(p.id, v)}
+                        />
+                        <Button variant="ghost" size="icon" onClick={() => deletePromo(p.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <Switch
-                        checked={p.is_active}
-                        onCheckedChange={(v) => togglePromo(p.id, v)}
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`msg-${p.id}`}>Message de la bannière client</Label>
+                      <Input
+                        id={`msg-${p.id}`}
+                        value={labelDraft[p.id] ?? p.label ?? ''}
+                        onChange={(e) => setLabelDraft((d) => ({ ...d, [p.id]: e.target.value }))}
+                        placeholder={defaultPromoMessage(p)}
                       />
-                      <Button variant="ghost" size="icon" onClick={() => deletePromo(p.id)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Aperçu avant publication (laisser vide pour le message automatique) :
+                      </p>
+                      <PromoBanner
+                        messages={[(labelDraft[p.id] ?? p.label ?? '').trim() || defaultPromoMessage(p)]}
+                      />
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          disabled={
+                            savingLabelId === p.id ||
+                            (labelDraft[p.id] ?? p.label ?? '') === (p.label ?? '')
+                          }
+                          onClick={() => savePromoLabel(p.id)}
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Publier le message
+                        </Button>
+                        {(labelDraft[p.id] ?? p.label ?? '') !== (p.label ?? '') && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setLabelDraft((d) => ({ ...d, [p.id]: p.label ?? '' }))}
+                          >
+                            Annuler
+                          </Button>
+                        )}
+                      </div>
+                      {!p.is_active && (
+                        <p className="text-xs text-muted-foreground">
+                          La bannière ne s'affiche que lorsque la promotion est activée.
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
+
             </div>
           </CardContent>
         </Card>
