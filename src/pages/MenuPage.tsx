@@ -9,7 +9,7 @@ import { pizzas, categories } from '@/data/pizzas';
 import { Pizza } from '@/types/pizza';
 import { useCart } from '@/contexts/CartContext';
 
-import { isPromoDay, PROMO_LABEL } from '@/lib/promo';
+import { ActivePromoBanner } from '@/components/ActivePromoBanner';
 import { useMenuAvailability } from '@/hooks/useMenuAvailability';
 import { useMenuOverrides } from '@/hooks/useMenuOverrides';
 import { OrdersClosedBanner } from '@/components/OrdersClosedBanner';
