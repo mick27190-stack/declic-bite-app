@@ -60,6 +60,12 @@ export default function LandingPage() {
     isSecondaryAdminBeaumont,
   } = useAdmin();
   const navigate = useNavigate();
+  const { closures } = useActiveClosures();
+
+  const siteLabel = (site: string) => {
+    if (site === 'all') return 'Tous les sites';
+    return site.charAt(0).toUpperCase() + site.slice(1);
+  };
 
   const isSiteAdmin =
     isSiteAdminConches ||
