@@ -105,28 +105,56 @@ export function useRestaurantClosures() {
   return { closures, loading, addClosure, toggleClosure, deleteClosure, refresh: fetchClosures };
 }
 
-/** Customer-facing hook: fetch only active closures without auth */
+/** Customer-facing hook: fetch only active closures without auth (live-synced) */
 export function useActiveClosures() {
   const [closures, setClosures] = useState<RestaurantClosure[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from('restaurant_closures')
-        .select('*')
-        .eq('is_active', true);
+  const fetchActive = useCallback(async () => {
+    const { data } = await supabase
+      .from('restaurant_closures')
+      .select('*')
+      .eq('is_active', true);
 
-      if (data) {
-        // Filter out expired closures
-        const now = new Date();
-        const active = (data as RestaurantClosure[]).filter(c => !c.end_at || new Date(c.end_at) > now);
-        setClosures(active);
-      }
-      setLoading(false);
-    };
-    fetch();
+    if (data) {
+      // Filter out expired closures
+      const now = new Date();
+      const active = (data as RestaurantClosure[]).filter(c => !c.end_at || new Date(c.end_at) > now);
+      setClosures(active);
+    }
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    fetchActive();
+
+    // Instant sync when an admin creates/toggles/deletes a block
+    const channel = supabase
+      .channel('restaurant_closures_public')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'restaurant_closures' },
+        () => {
+          fetchActive();
+        }
+      )
+      .subscribe();
+
+    // Re-check expirations, and resync when the tab becomes visible again
+    const interval = setInterval(fetchActive, 30_000);
+    const onWake = () => {
+      if (document.visibilityState === 'visible') fetchActive();
+    };
+    document.addEventListener('visibilitychange', onWake);
+    window.addEventListener('focus', fetchActive);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onWake);
+      window.removeEventListener('focus', fetchActive);
+    };
+  }, [fetchActive]);
 
   const getClosureForSite = (site: string): RestaurantClosure | null => {
     // Check 'all' first, then specific site
