@@ -12,6 +12,86 @@ export interface RestaurantClosure {
   updated_at: string;
 }
 
+/**
+ * Subscribe to restaurant_closures changes with automatic reconnection and
+ * state resync after a Realtime disconnection (network drop, tab sleep, etc.).
+ * Returns a cleanup function.
+ */
+function subscribeWithReconnect(scope: string, resync: () => void) {
+  let channel: ReturnType<typeof supabase.channel> | null = null;
+  let retry = 0;
+  let retryTimer: ReturnType<typeof setTimeout> | null = null;
+  let disposed = false;
+
+  const clearRetry = () => {
+    if (retryTimer) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+  };
+
+  const scheduleReconnect = () => {
+    if (disposed || retryTimer) return;
+    const delay = Math.min(30_000, 1_000 * 2 ** retry);
+    retry += 1;
+    retryTimer = setTimeout(() => {
+      retryTimer = null;
+      connect();
+    }, delay);
+  };
+
+  const connect = () => {
+    if (disposed) return;
+    if (channel) {
+      supabase.removeChannel(channel);
+      channel = null;
+    }
+
+    channel = supabase
+      .channel(`restaurant_closures_${scope}_${Math.random().toString(36).slice(2)}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'restaurant_closures' },
+        () => resync()
+      )
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          retry = 0;
+          clearRetry();
+          // Resync: events may have been missed while disconnected
+          resync();
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          scheduleReconnect();
+        }
+      });
+  };
+
+  const reconnectNow = () => {
+    if (disposed) return;
+    retry = 0;
+    clearRetry();
+    resync();
+    connect();
+  };
+
+  const onOnline = () => reconnectNow();
+  const onVisible = () => {
+    if (document.visibilityState === 'visible') reconnectNow();
+  };
+
+  connect();
+  window.addEventListener('online', onOnline);
+  document.addEventListener('visibilitychange', onVisible);
+
+  return () => {
+    disposed = true;
+    clearRetry();
+    window.removeEventListener('online', onOnline);
+    document.removeEventListener('visibilitychange', onVisible);
+    if (channel) supabase.removeChannel(channel);
+  };
+}
+
 export function useRestaurantClosures() {
   const [closures, setClosures] = useState<RestaurantClosure[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,21 +165,7 @@ export function useRestaurantClosures() {
 
   useEffect(() => {
     fetchClosures();
-
-    const channel = supabase
-      .channel(`restaurant_closures_admin_${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'restaurant_closures' },
-        () => {
-          fetchClosures();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return subscribeWithReconnect('admin', fetchClosures);
   }, [fetchClosures]);
 
   return { closures, loading, addClosure, toggleClosure, deleteClosure, refresh: fetchClosures };
@@ -128,30 +194,16 @@ export function useActiveClosures() {
   useEffect(() => {
     fetchActive();
 
-    // Instant sync when an admin creates/toggles/deletes a block
-    const channel = supabase
-      .channel(`restaurant_closures_public_${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'restaurant_closures' },
-        () => {
-          fetchActive();
-        }
-      )
-      .subscribe();
+    // Instant sync + auto-reconnect/resync after a Realtime disconnection
+    const unsubscribe = subscribeWithReconnect('public', fetchActive);
 
-    // Re-check expirations, and resync when the tab becomes visible again
+    // Re-check expirations periodically
     const interval = setInterval(fetchActive, 30_000);
-    const onWake = () => {
-      if (document.visibilityState === 'visible') fetchActive();
-    };
-    document.addEventListener('visibilitychange', onWake);
     window.addEventListener('focus', fetchActive);
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
       clearInterval(interval);
-      document.removeEventListener('visibilitychange', onWake);
       window.removeEventListener('focus', fetchActive);
     };
   }, [fetchActive]);
