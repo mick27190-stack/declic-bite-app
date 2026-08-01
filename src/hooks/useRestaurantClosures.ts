@@ -194,30 +194,16 @@ export function useActiveClosures() {
   useEffect(() => {
     fetchActive();
 
-    // Instant sync when an admin creates/toggles/deletes a block
-    const channel = supabase
-      .channel(`restaurant_closures_public_${Math.random().toString(36).slice(2)}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'restaurant_closures' },
-        () => {
-          fetchActive();
-        }
-      )
-      .subscribe();
+    // Instant sync + auto-reconnect/resync after a Realtime disconnection
+    const unsubscribe = subscribeWithReconnect('public', fetchActive);
 
-    // Re-check expirations, and resync when the tab becomes visible again
+    // Re-check expirations periodically
     const interval = setInterval(fetchActive, 30_000);
-    const onWake = () => {
-      if (document.visibilityState === 'visible') fetchActive();
-    };
-    document.addEventListener('visibilitychange', onWake);
     window.addEventListener('focus', fetchActive);
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
       clearInterval(interval);
-      document.removeEventListener('visibilitychange', onWake);
       window.removeEventListener('focus', fetchActive);
     };
   }, [fetchActive]);
