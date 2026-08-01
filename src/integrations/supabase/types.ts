@@ -809,6 +809,7 @@ export type Database = {
       }
       restaurant_closures: {
         Row: {
+          closure_type: string
           created_at: string
           created_by: string
           end_at: string | null
@@ -819,6 +820,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          closure_type?: string
           created_at?: string
           created_by: string
           end_at?: string | null
@@ -829,6 +831,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          closure_type?: string
           created_at?: string
           created_by?: string
           end_at?: string | null
