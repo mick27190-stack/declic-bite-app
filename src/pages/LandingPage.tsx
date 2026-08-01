@@ -140,22 +140,29 @@ export default function LandingPage() {
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
         {!showRestaurantSelector && closures.length > 0 && (
           <div className="w-full max-w-md mb-8 space-y-3">
-            {closures.map((closure) => (
-              <div
-                key={closure.id}
-                className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3"
-              >
-                <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-destructive text-sm">
-                    Commandes bloquées{closure.site !== 'all' ? ` — ${siteLabel(closure.site)}` : ''}
-                  </p>
-                  <p className="text-sm text-foreground mt-1">{closure.reason}</p>
+            {closures.map((closure) => {
+              const type = closure.closure_type === 'site' ? 'site' : 'orders';
+              return (
+                <div
+                  key={closure.id}
+                  className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3"
+                >
+                  <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-destructive text-sm">
+                      {closureTitle(type)}
+                      {closure.site !== 'all' ? ` — ${siteLabel(closure.site)}` : ''}
+                    </p>
+                    <p className="text-sm text-foreground mt-1">
+                      {closureMessage(type, closure.reason)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
+
         {!showRestaurantSelector ? (
           <>
             {/* Logo/Hero Image */}
