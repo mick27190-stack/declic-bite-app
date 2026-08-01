@@ -138,7 +138,7 @@ export default function LandingPage() {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
-        {closures.length > 0 && (
+        {!showRestaurantSelector && closures.length > 0 && (
           <div className="w-full max-w-md mb-8 space-y-3">
             {closures.map((closure) => (
               <div
