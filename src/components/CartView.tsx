@@ -16,6 +16,8 @@ import { useOrderingStatus } from '@/hooks/useOrderingStatus';
 import { OrdersClosedBanner } from '@/components/OrdersClosedBanner';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { validateDeliverySlot } from '@/lib/pickupSlots';
+import { closureMessage, closureTitle } from '@/lib/closureMessages';
+
 
 import {
   getCutoffButtonLabel,
