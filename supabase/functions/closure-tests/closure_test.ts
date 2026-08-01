@@ -350,3 +350,18 @@ Deno.test({
     }
   },
 });
+
+// ---------------------------------------------------------------------------
+// Smoke test that always runs (no service role needed)
+// ---------------------------------------------------------------------------
+
+Deno.test("active_site_closure_type is reachable and returns 'site' | 'orders' | null", async () => {
+  const { data, error } = await anonClient().rpc("active_site_closure_type", {
+    _restaurant: CONCHES,
+  });
+  assertEquals(error, null, `RPC should be callable: ${error?.message ?? ""}`);
+  assert(
+    data === null || data === "site" || data === "orders",
+    `unexpected closure type: ${JSON.stringify(data)}`,
+  );
+});
