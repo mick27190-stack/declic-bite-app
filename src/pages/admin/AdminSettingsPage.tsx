@@ -99,11 +99,30 @@ export default function AdminSettingsPage() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-destructive" />
-              Bloquer les commandes
+              {newType === 'site' ? 'Fermeture du/des sites' : 'Bloquer les commandes'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
+              <Label>Type de blocage</Label>
+              <Select value={newType} onValueChange={(v) => setNewType(v as 'orders' | 'site')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="orders">Blocage des commandes</SelectItem>
+                  <SelectItem value="site">Fermeture du/des sites</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {newType === 'site'
+                  ? 'Commandes en ligne bloquées et bouton d’appel désactivé pour le(s) site(s) concerné(s).'
+                  : 'Commandes en ligne bloquées, les clients peuvent toujours appeler le site.'}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+
               <Label>Site concerné</Label>
               <Select value={newSite} onValueChange={setNewSite}>
                 <SelectTrigger>
