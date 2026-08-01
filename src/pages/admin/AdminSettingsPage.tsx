@@ -204,6 +204,10 @@ export default function AdminSettingsPage() {
                           <Badge variant="outline" className="text-xs capitalize">
                             {siteLabel(closure.site)}
                           </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {closure.closure_type === 'site' ? 'Fermeture du site' : 'Blocage des commandes'}
+                          </Badge>
+
                         </div>
                         <p className="text-sm text-foreground">{closure.reason}</p>
                         {closure.end_at && (
