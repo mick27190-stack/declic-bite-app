@@ -355,13 +355,13 @@ Deno.test({
 // Smoke test that always runs (no service role needed)
 // ---------------------------------------------------------------------------
 
-Deno.test("active_site_closure_type is reachable and returns 'site' | 'orders' | null", async () => {
-  const { data, error } = await anonClient().rpc("active_site_closure_type", {
-    _restaurant: CONCHES,
-  });
-  assertEquals(error, null, `RPC should be callable: ${error?.message ?? ""}`);
-  assert(
-    data === null || data === "site" || data === "orders",
-    `unexpected closure type: ${JSON.stringify(data)}`,
-  );
+Deno.test("anon cannot read or probe closures directly (RLS boundary)", async () => {
+  const sb = anonClient();
+  const { data, error } = await sb.from("restaurant_closures").select("id").limit(1);
+  assert(error || (data ?? []).length === 0, "anon must not read closure rows");
+
+  // The helper reads a RLS-protected table, so anon cannot probe it either;
+  // the closure guard lives in the insert trigger, which runs as definer.
+  const rpc = await sb.rpc("active_site_closure_type", { _restaurant: CONCHES });
+  assert(rpc.error !== null, "anon must not be able to call the closure helper");
 });
