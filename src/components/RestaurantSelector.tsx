@@ -1,4 +1,5 @@
 import { MapPin, Phone, Clock, AlertTriangle } from 'lucide-react';
+import { closureMessage, closureTitle } from '@/lib/closureMessages';
 import { Restaurant } from '@/types/pizza';
 import { restaurants } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
@@ -38,11 +39,11 @@ export function RestaurantSelector({ onSelect }: RestaurantSelectorProps) {
                 <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-destructive">
-                    {isSiteClosed ? 'Site fermé' : 'Commandes en ligne bloquées'}
+                    {closureTitle(isSiteClosed ? 'site' : 'orders')}
                   </p>
-                  {closure.reason && (
-                    <p className="text-sm text-muted-foreground mt-1">{closure.reason}</p>
-                  )}
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {closureMessage(isSiteClosed ? 'site' : 'orders', closure.reason)}
+                  </p>
                 </div>
               </div>
 
