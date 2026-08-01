@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface RestaurantClosure {
   id: string;
   site: string;
+  closure_type: 'orders' | 'site';
   is_active: boolean;
   reason: string;
   end_at: string | null;
@@ -131,11 +132,12 @@ export function useRestaurantClosures() {
     return () => clearInterval(interval);
   }, [fetchClosures]);
 
-  const addClosure = async (closure: { site: string; reason: string; end_at?: string | null; created_by: string }) => {
+  const addClosure = async (closure: { site: string; reason: string; closure_type?: 'orders' | 'site'; end_at?: string | null; created_by: string }) => {
     const { error } = await supabase
       .from('restaurant_closures')
       .insert({
         site: closure.site,
+        closure_type: closure.closure_type || 'orders',
         reason: closure.reason,
         end_at: closure.end_at || null,
         created_by: closure.created_by,
