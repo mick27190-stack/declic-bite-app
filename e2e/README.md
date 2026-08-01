@@ -43,3 +43,8 @@ bunx playwright test e2e/profile-site-sync.spec.ts
 - `profile-site-sync.spec.ts` — bascule le site depuis `/profile` et
   vérifie que `profiles.preferred_restaurant` **et** `customers.site` sont
   mis à jour (contrat du trigger `sync_customer_from_profile`).
+- `checkout-closure-block.spec.ts` — panier déjà rempli + fermeture simulée
+  (interception REST `restaurant_closures`) : vérifie le message client
+  « Commandes en ligne bloquées » / « Site fermé », le bouton de commande
+  désactivé et l'absence de POST vers `/rest/v1/orders`. Aucune session
+  requise. Si le Chromium système diffère, exposer `E2E_CHROME_PATH`.

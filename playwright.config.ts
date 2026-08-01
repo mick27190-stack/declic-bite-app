@@ -21,6 +21,9 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     headless: true,
+    launchOptions: process.env.E2E_CHROME_PATH
+      ? { executablePath: process.env.E2E_CHROME_PATH }
+      : {},
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
