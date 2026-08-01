@@ -55,6 +55,8 @@ export function CartView() {
     manualClosure,
     isClosed,
     cutoff,
+    closedMessage,
+
   } = useOrderingStatus();
   const warningMinutes = getCutoffWarningMinutesRemaining(now);
 
