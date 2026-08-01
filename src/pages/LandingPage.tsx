@@ -8,6 +8,8 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
+import { closureMessage, closureTitle } from '@/lib/closureMessages';
+
 import { Restaurant } from '@/types/pizza';
 import heroImage from '@/assets/declic-hero.jpeg';
 
