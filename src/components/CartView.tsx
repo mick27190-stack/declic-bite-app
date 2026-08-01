@@ -16,6 +16,8 @@ import { useOrderingStatus } from '@/hooks/useOrderingStatus';
 import { OrdersClosedBanner } from '@/components/OrdersClosedBanner';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { validateDeliverySlot } from '@/lib/pickupSlots';
+import { closureMessage, closureTitle } from '@/lib/closureMessages';
+
 
 import {
   getCutoffButtonLabel,
@@ -53,6 +55,8 @@ export function CartView() {
     manualClosure,
     isClosed,
     cutoff,
+    closedMessage,
+
   } = useOrderingStatus();
   const warningMinutes = getCutoffWarningMinutesRemaining(now);
 
@@ -112,6 +116,27 @@ export function CartView() {
   };
 
   const handleSubmitOrder = async () => {
+    // Blocage explicite au moment du checkout : même avec un panier déjà rempli,
+    // un blocage des commandes en ligne ou une fermeture du site interdit l'envoi.
+    if (manualClosure) {
+      const type = manualClosure.closure_type === 'site' ? 'site' : 'orders';
+      toast({
+        title: closureTitle(type),
+        description: closureMessage(type, manualClosure.reason),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (isClosed) {
+      toast({
+        title: 'Commandes fermées',
+        description: closedMessage,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!user) {
       toast({
         title: 'Connexion requise',
@@ -123,6 +148,7 @@ export function CartView() {
     }
 
     if (!canCheckout() || !selectedRestaurant) return;
+
 
     if (orderType === 'livraison') {
       // Re-check against the live Paris clock right before sending, so a slot
@@ -396,7 +422,7 @@ export function CartView() {
             ) : (
               getCutoffButtonLabel(cutoff, { orderType, canCheckout: canCheckout() }) ??
               (manualClosure ? (
-                'Commandes bloquées'
+                closureTitle(manualClosure.closure_type === 'site' ? 'site' : 'orders')
               ) : isMonday ? (
                 'Fermé le lundi'
               ) : isOutsideHours ? (
