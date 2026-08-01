@@ -27,6 +27,7 @@ export default function AdminSettingsPage() {
   const { closures, loading: closuresLoading, addClosure, toggleClosure, deleteClosure } = useRestaurantClosures();
 
   const [newSite, setNewSite] = useState('all');
+  const [newType, setNewType] = useState<'orders' | 'site'>('orders');
   const [newReason, setNewReason] = useState('');
   const [newEndAt, setNewEndAt] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -43,6 +44,7 @@ export default function AdminSettingsPage() {
     setSubmitting(true);
     await addClosure({
       site: newSite,
+      closure_type: newType,
       reason: newReason.trim(),
       end_at: newEndAt || null,
       created_by: user.id,
