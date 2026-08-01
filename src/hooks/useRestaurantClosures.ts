@@ -87,7 +87,7 @@ export function useRestaurantClosures() {
     fetchClosures();
 
     const channel = supabase
-      .channel('restaurant_closures_admin')
+      .channel(`restaurant_closures_admin_${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'restaurant_closures' },
@@ -130,7 +130,7 @@ export function useActiveClosures() {
 
     // Instant sync when an admin creates/toggles/deletes a block
     const channel = supabase
-      .channel('restaurant_closures_public')
+      .channel(`restaurant_closures_public_${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'restaurant_closures' },
