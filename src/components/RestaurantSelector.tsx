@@ -23,6 +23,7 @@ export function RestaurantSelector({ onSelect }: RestaurantSelectorProps) {
         const telHref = `tel:${restaurant.phone.replace(/[^0-9+]/g, '')}`;
 
         if (closure) {
+          const isSiteClosed = closure.closure_type === 'site';
           return (
             <div
               key={restaurant.id}
@@ -37,7 +38,7 @@ export function RestaurantSelector({ onSelect }: RestaurantSelectorProps) {
                 <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-destructive">
-                    Commandes en ligne bloquées
+                    {isSiteClosed ? 'Site fermé' : 'Commandes en ligne bloquées'}
                   </p>
                   {closure.reason && (
                     <p className="text-sm text-muted-foreground mt-1">{closure.reason}</p>
@@ -45,13 +46,20 @@ export function RestaurantSelector({ onSelect }: RestaurantSelectorProps) {
                 </div>
               </div>
 
-              <a
-                href={telHref}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-semibold py-3 px-4 transition-transform hover:-translate-y-0.5"
-              >
-                <Phone className="w-4 h-4" />
-                Appeler le {restaurant.phone}
-              </a>
+              {isSiteClosed ? (
+                <div className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-muted text-muted-foreground font-semibold py-3 px-4 cursor-not-allowed">
+                  <Phone className="w-4 h-4" />
+                  Site injoignable
+                </div>
+              ) : (
+                <a
+                  href={telHref}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground font-semibold py-3 px-4 transition-transform hover:-translate-y-0.5"
+                >
+                  <Phone className="w-4 h-4" />
+                  Appeler le {restaurant.phone}
+                </a>
+              )}
             </div>
           );
         }

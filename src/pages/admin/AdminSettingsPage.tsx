@@ -27,6 +27,7 @@ export default function AdminSettingsPage() {
   const { closures, loading: closuresLoading, addClosure, toggleClosure, deleteClosure } = useRestaurantClosures();
 
   const [newSite, setNewSite] = useState('all');
+  const [newType, setNewType] = useState<'orders' | 'site'>('orders');
   const [newReason, setNewReason] = useState('');
   const [newEndAt, setNewEndAt] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -43,6 +44,7 @@ export default function AdminSettingsPage() {
     setSubmitting(true);
     await addClosure({
       site: newSite,
+      closure_type: newType,
       reason: newReason.trim(),
       end_at: newEndAt || null,
       created_by: user.id,
@@ -97,11 +99,30 @@ export default function AdminSettingsPage() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-destructive" />
-              Bloquer les commandes
+              {newType === 'site' ? 'Fermeture du/des sites' : 'Bloquer les commandes'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
+              <Label>Type de blocage</Label>
+              <Select value={newType} onValueChange={(v) => setNewType(v as 'orders' | 'site')}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="orders">Blocage des commandes</SelectItem>
+                  <SelectItem value="site">Fermeture du/des sites</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {newType === 'site'
+                  ? 'Commandes en ligne bloquées et bouton d’appel désactivé pour le(s) site(s) concerné(s).'
+                  : 'Commandes en ligne bloquées, les clients peuvent toujours appeler le site.'}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+
               <Label>Site concerné</Label>
               <Select value={newSite} onValueChange={setNewSite}>
                 <SelectTrigger>
@@ -183,6 +204,10 @@ export default function AdminSettingsPage() {
                           <Badge variant="outline" className="text-xs capitalize">
                             {siteLabel(closure.site)}
                           </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {closure.closure_type === 'site' ? 'Fermeture du site' : 'Blocage des commandes'}
+                          </Badge>
+
                         </div>
                         <p className="text-sm text-foreground">{closure.reason}</p>
                         {closure.end_at && (
