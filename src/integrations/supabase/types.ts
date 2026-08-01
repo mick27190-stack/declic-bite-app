@@ -896,6 +896,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      active_site_closure_type: {
+        Args: { _restaurant: string }
+        Returns: string
+      }
       anonymize_user_orders: {
         Args: { user_id_param: string }
         Returns: undefined
