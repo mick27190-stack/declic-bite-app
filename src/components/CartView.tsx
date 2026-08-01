@@ -422,7 +422,7 @@ export function CartView() {
             ) : (
               getCutoffButtonLabel(cutoff, { orderType, canCheckout: canCheckout() }) ??
               (manualClosure ? (
-                'Commandes bloquées'
+                closureTitle(manualClosure.closure_type === 'site' ? 'site' : 'orders')
               ) : isMonday ? (
                 'Fermé le lundi'
               ) : isOutsideHours ? (
