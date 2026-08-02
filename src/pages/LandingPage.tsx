@@ -229,7 +229,7 @@ export default function LandingPage() {
           <div className="w-full fade-up">
             <button
               onClick={() => setShowRestaurantSelector(false)}
-              className="mb-6 inline-flex items-center gap-2 rounded-xl bg-card/80 border border-border/50 px-4 py-1.5 text-base font-semibold text-foreground shadow-card hover:bg-card hover:text-primary transition-colors"
+              className="mb-6 inline-flex items-center gap-2 rounded-xl bg-card/80 border border-border/50 px-4 py-1 text-base font-semibold text-foreground shadow-card hover:bg-card hover:text-primary transition-colors"
             >
               ← Retour
             </button>
