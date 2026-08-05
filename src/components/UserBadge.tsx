@@ -12,7 +12,7 @@ interface UserBadgeProps {
   className?: string;
 }
 
-const baseClasses = 'flex items-center gap-1 px-3 py-1.5 text-sm shadow-lg';
+const baseClasses = 'flex items-center gap-1 px-3 py-1 text-sm shadow-lg';
 
 export function UserBadge({ variant, label, onClick, className }: UserBadgeProps) {
   if (variant === 'account') {
@@ -22,7 +22,7 @@ export function UserBadge({ variant, label, onClick, className }: UserBadgeProps
         size="sm"
         onClick={onClick}
         className={cn(
-          'h-auto gap-1.5 px-3 py-1.5 text-sm font-semibold leading-none',
+          'h-auto gap-1.5 px-3 py-1 text-sm font-semibold leading-none',
           className
         )}
       >
