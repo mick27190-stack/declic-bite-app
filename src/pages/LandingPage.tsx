@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, User, ExternalLink, Store, Bike, Shield, AlertTriangle } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, Store, ExternalLink, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
+import { UserBadge } from '@/components/UserBadge';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
