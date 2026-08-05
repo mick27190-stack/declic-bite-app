@@ -111,26 +111,16 @@ export default function LandingPage() {
       {/* Auth Button */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
         {isSiteAdmin && pizzeriaOpen && (
-          <Badge className="bg-primary hover:bg-primary text-primary-foreground flex items-center gap-1 px-3 py-1.5 shadow-lg">
-            <Shield className="w-4 h-4" />
-            Admin site
-          </Badge>
+          <UserBadge variant="admin" label="Admin site" />
         )}
         {isAnyLivreur && livreurOpen && (
-          <Badge className="bg-amber-500 hover:bg-amber-500 text-white flex items-center gap-1 px-3 py-1.5 shadow-lg">
-            <Bike className="w-4 h-4" />
-            Livreur
-          </Badge>
+          <UserBadge variant="livreur" label="Livreur" />
         )}
-        <Button
-          variant="glass"
-          size="sm"
+        <UserBadge
+          variant="account"
+          label={user ? (profile?.first_name || 'Profil') : 'Connexion'}
           onClick={() => navigate(user ? '/profile' : '/auth')}
-          className="flex items-center gap-1.5 px-3 py-1.5 h-auto text-sm"
-        >
-          <User className="w-4 h-4" />
-          <span className="leading-none">{user ? (profile?.first_name || 'Profil') : 'Connexion'}</span>
-        </Button>
+        />
       </div>
 
       
