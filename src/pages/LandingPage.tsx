@@ -126,10 +126,10 @@ export default function LandingPage() {
           variant="glass"
           size="sm"
           onClick={() => navigate(user ? '/profile' : '/auth')}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1.5 px-3 py-1.5 h-auto text-sm"
         >
           <User className="w-4 h-4" />
-          {user ? (profile?.first_name || 'Profil') : 'Connexion'}
+          <span className="leading-none">{user ? (profile?.first_name || 'Profil') : 'Connexion'}</span>
         </Button>
       </div>
 
