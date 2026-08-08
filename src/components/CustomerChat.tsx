@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
-import { MessageSquare, Send, X, LogIn, ArrowDown } from 'lucide-react';
+import { MessageSquare, Send, X, LogIn, ArrowDown, AlertTriangle, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -7,6 +7,7 @@ import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { useChatClosure } from '@/hooks/useChatClosure';
 import { useNavigate } from 'react-router-dom';
 function formatReadAt(iso: string): string {
   const d = new Date(iso);
@@ -63,6 +64,14 @@ export default function CustomerChat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages, loading, sendMessage, markMessagesRead } = useCustomerChat();
   const { isOnline } = useAdminPresenceWatch();
+  const chatSite = selectedRestaurant?.id ?? selectedRestaurant?.name ?? profile?.preferred_restaurant;
+  const {
+    isChatBlocked,
+    type: closureType,
+    phone: closurePhone,
+    title: closureTitle,
+    message: closureMsg,
+  } = useChatClosure(chatSite);
 
   const [isAtBottom, setIsAtBottom] = useState(true);
   const [newCount, setNewCount] = useState(0);
@@ -184,7 +193,7 @@ export default function CustomerChat() {
   }, [open, messages, markMessagesRead]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isChatBlocked) return;
     const msg = input.trim();
     setInput('');
     forceScrollRef.current = true;
@@ -289,17 +298,36 @@ export default function CustomerChat() {
                 )}
               </div>
 
+              {isChatBlocked && (
+                <div className="mx-3 mt-3 rounded-xl border border-destructive/30 bg-destructive/10 p-3 flex items-start gap-2" role="alert">
+                  <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                  <div className="space-y-2">
+                    <p className="font-semibold text-destructive text-sm">{closureTitle}</p>
+                    <p className="text-xs text-foreground">{closureMsg}</p>
+                    {closureType === 'orders' && closurePhone && (
+                      <Button asChild size="sm" variant="outline">
+                        <a href={`tel:${closurePhone.replace(/\s/g, '')}`}>
+                          <Phone className="h-4 w-4 mr-2" />
+                          Appeler le restaurant
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Input */}
               <div className="border-t border-border p-3 flex gap-2">
                 <Input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Votre message..."
+                  placeholder={isChatBlocked ? 'Chat indisponible pendant le blocage' : 'Votre message...'}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                   className="text-sm"
+                  disabled={isChatBlocked}
+                  aria-label="Votre message"
                 />
-                <Button size="icon" onClick={handleSend} disabled={!input.trim()}>
+                <Button size="icon" onClick={handleSend} disabled={isChatBlocked || !input.trim()} aria-label="Envoyer le message">
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
