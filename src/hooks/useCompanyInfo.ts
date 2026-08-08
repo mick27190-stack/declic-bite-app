@@ -32,7 +32,7 @@ export function useCompanyInfo() {
   useEffect(() => {
     fetchAll();
     const ch = supabase
-      .channel('company_info_changes')
+      .channel(`company_info_changes_${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'company_info' }, () => fetchAll())
       .subscribe();
     return () => { supabase.removeChannel(ch); };
