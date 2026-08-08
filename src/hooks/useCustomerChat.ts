@@ -187,7 +187,7 @@ export function useCustomerChat() {
         hidden_for_admin_at: null,
       })
       .eq('id', convId);
-  }, [user, conversationId, lookupConversation, createConversation, resolveSite]);
+  }, [user, isChatBlocked, conversationId, lookupConversation, createConversation, resolveSite]);
 
   // Init & realtime
   useEffect(() => {
