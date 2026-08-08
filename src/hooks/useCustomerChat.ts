@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
+import { useChatClosure } from '@/hooks/useChatClosure';
 import { requestNotificationPermission, showWebNotification } from '@/lib/webNotifications';
 import { playChatSound } from '@/lib/notificationSounds';
 import type { ChatMessage } from './useChat';
@@ -9,6 +10,8 @@ import type { ChatMessage } from './useChat';
 export function useCustomerChat() {
   const { user, profile } = useAuth();
   const { selectedRestaurant } = useCart();
+  const chatSite = selectedRestaurant?.id ?? selectedRestaurant?.name ?? profile?.preferred_restaurant;
+  const { isChatBlocked } = useChatClosure(chatSite);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -150,9 +153,10 @@ export function useCustomerChat() {
     }
   }, [conversationId, fetchMessages]);
 
-  // Send message
+  // Send message. Keep the closure guard here as the final protection so
+  // programmatic callers cannot bypass the disabled chat controls.
   const sendMessage = useCallback(async (content: string) => {
-    if (!user) return;
+    if (!user || isChatBlocked || !content.trim()) return;
 
     const site = resolveSite();
     if (!site) return;
@@ -183,7 +187,7 @@ export function useCustomerChat() {
         hidden_for_admin_at: null,
       })
       .eq('id', convId);
-  }, [user, conversationId, lookupConversation, createConversation, resolveSite]);
+  }, [user, isChatBlocked, conversationId, lookupConversation, createConversation, resolveSite]);
 
   // Init & realtime
   useEffect(() => {
