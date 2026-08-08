@@ -23,8 +23,10 @@ import {
   X,
   MessageSquare,
   Send,
-  ArrowDown
+  ArrowDown,
+  AlertTriangle
 } from 'lucide-react';
+import { useChatClosure } from '@/hooks/useChatClosure';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import CustomerNotificationBell from '@/components/CustomerNotificationBell';
 import PushTestPanel from '@/components/PushTestPanel';
@@ -233,6 +235,13 @@ function ProfileChat() {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages, loading, sendMessage, markMessagesRead, site } = useCustomerChat();
+  const {
+    isChatBlocked,
+    type: closureType,
+    phone: closurePhone,
+    title: closureTitle,
+    message: closureMsg,
+  } = useChatClosure(site);
   const { isOnline } = useAdminPresenceWatch();
 
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -328,7 +337,7 @@ function ProfileChat() {
   }, [messages, markMessagesRead]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isChatBlocked) return;
     const msg = input.trim();
     setInput('');
     forceScrollRef.current = true;
@@ -452,18 +461,37 @@ function ProfileChat() {
         )}
       </div>
 
-      <div className="flex gap-2">
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Votre message..."
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          className="text-sm"
-        />
-        <Button size="icon" onClick={handleSend} disabled={!input.trim()}>
-          <Send className="h-4 w-4" />
-        </Button>
-      </div>
+      {isChatBlocked ? (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+          <div className="space-y-2">
+            <p className="font-semibold text-destructive text-sm">{closureTitle}</p>
+            <p className="text-sm text-foreground">{closureMsg}</p>
+            {closureType === 'orders' && closurePhone && (
+              <Button asChild size="sm" variant="outline">
+                <a href={`tel:${closurePhone.replace(/\s/g, '')}`}>
+                  <Phone className="h-4 w-4 mr-2" />
+                  Appeler {siteName}
+                </a>
+              </Button>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Votre message..."
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            className="text-sm"
+          />
+          <Button size="icon" onClick={handleSend} disabled={!input.trim()}>
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
     </div>
   );
 }
