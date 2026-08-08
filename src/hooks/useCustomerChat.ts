@@ -10,6 +10,8 @@ import type { ChatMessage } from './useChat';
 export function useCustomerChat() {
   const { user, profile } = useAuth();
   const { selectedRestaurant } = useCart();
+  const chatSite = selectedRestaurant?.id ?? selectedRestaurant?.name ?? profile?.preferred_restaurant;
+  const { isChatBlocked } = useChatClosure(chatSite);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
