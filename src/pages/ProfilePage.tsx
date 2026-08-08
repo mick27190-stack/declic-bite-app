@@ -337,7 +337,7 @@ function ProfileChat() {
   }, [messages, markMessagesRead]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isChatBlocked) return;
     const msg = input.trim();
     setInput('');
     forceScrollRef.current = true;
