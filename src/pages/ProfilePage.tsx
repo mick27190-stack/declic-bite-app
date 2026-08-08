@@ -235,6 +235,13 @@ function ProfileChat() {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const { messages, loading, sendMessage, markMessagesRead, site } = useCustomerChat();
+  const {
+    isChatBlocked,
+    type: closureType,
+    phone: closurePhone,
+    title: closureTitle,
+    message: closureMsg,
+  } = useChatClosure(site);
   const { isOnline } = useAdminPresenceWatch();
 
   const [isAtBottom, setIsAtBottom] = useState(true);
