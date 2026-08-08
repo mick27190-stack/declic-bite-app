@@ -153,9 +153,10 @@ export function useCustomerChat() {
     }
   }, [conversationId, fetchMessages]);
 
-  // Send message
+  // Send message. Keep the closure guard here as the final protection so
+  // programmatic callers cannot bypass the disabled chat controls.
   const sendMessage = useCallback(async (content: string) => {
-    if (!user) return;
+    if (!user || isChatBlocked || !content.trim()) return;
 
     const site = resolveSite();
     if (!site) return;
