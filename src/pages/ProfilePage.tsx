@@ -24,7 +24,10 @@ import {
   MessageSquare,
   Send,
   ArrowDown
+  ArrowDown,
+  AlertTriangle
 } from 'lucide-react';
+import { useChatClosure } from '@/hooks/useChatClosure';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import CustomerNotificationBell from '@/components/CustomerNotificationBell';
 import PushTestPanel from '@/components/PushTestPanel';
