@@ -23,7 +23,6 @@ import {
   X,
   MessageSquare,
   Send,
-  ArrowDown
   ArrowDown,
   AlertTriangle
 } from 'lucide-react';
