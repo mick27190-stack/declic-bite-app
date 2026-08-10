@@ -237,6 +237,7 @@ function ProfileChat() {
   const { messages, loading, sendMessage, markMessagesRead, site } = useCustomerChat();
   const {
     isChatBlocked,
+    isMonday,
     type: closureType,
     phone: closurePhone,
     title: closureTitle,
