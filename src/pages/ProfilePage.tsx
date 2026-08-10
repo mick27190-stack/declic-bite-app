@@ -237,6 +237,7 @@ function ProfileChat() {
   const { messages, loading, sendMessage, markMessagesRead, site } = useCustomerChat();
   const {
     isChatBlocked,
+    isMonday,
     type: closureType,
     phone: closurePhone,
     title: closureTitle,
@@ -468,12 +469,19 @@ function ProfileChat() {
             <p className="font-semibold text-destructive text-sm">{closureTitle}</p>
             <p className="text-sm text-foreground">{closureMsg}</p>
             {closureType === 'orders' && closurePhone && (
-              <Button asChild size="sm" variant="outline">
-                <a href={`tel:${closurePhone.replace(/\s/g, '')}`}>
+              isMonday ? (
+                <Button type="button" size="sm" variant="outline" disabled aria-label="Fermé le lundi">
                   <Phone className="h-4 w-4 mr-2" />
-                  Appeler {siteName}
-                </a>
-              </Button>
+                  Fermé le lundi
+                </Button>
+              ) : (
+                <Button asChild size="sm" variant="outline">
+                  <a href={`tel:${closurePhone.replace(/\s/g, '')}`}>
+                    <Phone className="h-4 w-4 mr-2" />
+                    Appeler {siteName}
+                  </a>
+                </Button>
+              )
             )}
           </div>
         </div>
