@@ -20,6 +20,11 @@ export function useChatClosure(site?: string | null) {
     }).format(now),
   );
   const isServiceWindow = parisHour >= 18 && parisHour < 22;
+  const isMonday =
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Europe/Paris',
+      weekday: 'short',
+    }).format(now) === 'Mon';
 
   const closure = site ? getClosureForSite(site) : null;
   const type: 'orders' | 'site' | null = closure
@@ -41,5 +46,5 @@ export function useChatClosure(site?: string | null) {
       ? "Le site est actuellement fermé : le chat est indisponible. Merci de réessayer à la réouverture."
       : "Les commandes en ligne sont momentanément bloquées et le chat est indisponible. Merci de contacter directement le restaurant par téléphone.";
 
-  return { isChatBlocked, closure, type, phone, title, message };
+  return { isChatBlocked, isMonday, closure, type, phone, title, message };
 }
