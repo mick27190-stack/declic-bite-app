@@ -95,6 +95,11 @@ export default function LandingPage() {
     navigate('/menu');
   };
 
+  const handleViewMenuOnly = (restaurant: Restaurant) => {
+    setRestaurant(restaurant);
+    navigate('/menu');
+  };
+
   const handleDiscoverMenu = () => {
     if (selectedRestaurant) {
       navigate('/menu');
@@ -223,7 +228,7 @@ export default function LandingPage() {
             >
               ← Retour
             </button>
-            <RestaurantSelector onSelect={handleRestaurantSelect} />
+            <RestaurantSelector onSelect={handleRestaurantSelect} onViewMenu={handleViewMenuOnly} />
             
             <div className="mt-8 w-full max-w-md mx-auto">
               <a

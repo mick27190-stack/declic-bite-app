@@ -1,4 +1,4 @@
-import { MapPin, Phone, Clock, AlertTriangle } from 'lucide-react';
+import { MapPin, Phone, Clock, AlertTriangle, BookOpen } from 'lucide-react';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 import { Restaurant } from '@/types/pizza';
 import { restaurants } from '@/data/pizzas';
@@ -7,9 +7,11 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 
 interface RestaurantSelectorProps {
   onSelect: (restaurant: Restaurant) => void;
+  /** Consultation du menu autorisée même quand le site est bloqué/fermé. */
+  onViewMenu?: (restaurant: Restaurant) => void;
 }
 
-export function RestaurantSelector({ onSelect }: RestaurantSelectorProps) {
+export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorProps) {
   const { selectedRestaurant } = useCart();
   const { getClosureForSite } = useActiveClosures();
 
@@ -60,6 +62,17 @@ export function RestaurantSelector({ onSelect }: RestaurantSelectorProps) {
                   <Phone className="w-4 h-4" />
                   Appeler le {restaurant.phone}
                 </a>
+              )}
+
+              {onViewMenu && (
+                <button
+                  type="button"
+                  onClick={() => onViewMenu(restaurant)}
+                  className="w-full mt-3 inline-flex items-center justify-center gap-2 rounded-xl border border-border/60 bg-card/80 text-foreground font-semibold py-3 px-4 transition-colors hover:text-primary hover:border-primary/50"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  Consulter le menu
+                </button>
               )}
             </div>
           );
