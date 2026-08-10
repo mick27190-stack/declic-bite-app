@@ -4,6 +4,7 @@ import { Restaurant } from '@/types/pizza';
 import { restaurants } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
+import { useLiveParisTime } from '@/hooks/useLiveParisTime';
 
 interface RestaurantSelectorProps {
   onSelect: (restaurant: Restaurant) => void;
@@ -14,6 +15,12 @@ interface RestaurantSelectorProps {
 export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorProps) {
   const { selectedRestaurant } = useCart();
   const { getClosureForSite } = useActiveClosures();
+  const now = useLiveParisTime();
+
+  // Les sites sont fermés tous les lundis : aucun appel possible ce jour-là.
+  const isMonday =
+    new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Paris', weekday: 'short' }).format(now) ===
+    'Mon';
 
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
