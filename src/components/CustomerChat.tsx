@@ -67,6 +67,7 @@ export default function CustomerChat() {
   const chatSite = selectedRestaurant?.id ?? selectedRestaurant?.name ?? profile?.preferred_restaurant;
   const {
     isChatBlocked,
+    isMonday,
     type: closureType,
     phone: closurePhone,
     title: closureTitle,
@@ -305,12 +306,19 @@ export default function CustomerChat() {
                     <p className="font-semibold text-destructive text-sm">{closureTitle}</p>
                     <p className="text-xs text-foreground">{closureMsg}</p>
                     {closureType === 'orders' && closurePhone && (
-                      <Button asChild size="sm" variant="outline">
-                        <a href={`tel:${closurePhone.replace(/\s/g, '')}`}>
+                      isMonday ? (
+                        <Button type="button" size="sm" variant="outline" disabled aria-label="Fermé le lundi">
                           <Phone className="h-4 w-4 mr-2" />
-                          Appeler le restaurant
-                        </a>
-                      </Button>
+                          Fermé le lundi
+                        </Button>
+                      ) : (
+                        <Button asChild size="sm" variant="outline">
+                          <a href={`tel:${closurePhone.replace(/\s/g, '')}`}>
+                            <Phone className="h-4 w-4 mr-2" />
+                            Appeler le restaurant
+                          </a>
+                        </Button>
+                      )
                     )}
                   </div>
                 </div>
