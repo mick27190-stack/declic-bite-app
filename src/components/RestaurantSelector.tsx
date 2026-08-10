@@ -56,10 +56,10 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
                 </div>
               </div>
 
-              {isSiteClosed ? (
+              {isSiteClosed || isMonday ? (
                 <div className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-muted text-muted-foreground font-semibold py-3 px-4 cursor-not-allowed">
                   <Phone className="w-4 h-4" />
-                  Site injoignable
+                  {isSiteClosed ? 'Site injoignable' : 'Fermé le lundi'}
                 </div>
               ) : (
                 <a
