@@ -400,50 +400,52 @@ export function CartView() {
               {totalPrice.toFixed(2)}€
             </span>
           </div>
-          <Button 
-            variant="hero" 
-            size="lg" 
-            className="w-full h-auto min-h-14 py-2 px-3 sm:px-6 whitespace-normal text-sm sm:text-base lg:text-lg leading-tight text-balance"
-            disabled={!canCheckout() || isSubmitting}
-            onClick={handleSubmitOrder}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Envoi en cours...
-              </>
-            ) : cutoff.isCutoffWarning && warningMinutes !== null ? (
-              <span className="flex flex-col items-center justify-center gap-0.5">
-                <span>Commandes jusqu’à 21h15</span>
-                <span className="text-xs sm:text-sm opacity-90 font-normal">
-                  encore {warningMinutes} min
+          {!isClosed && (
+            <Button 
+              variant="hero" 
+              size="lg" 
+              className="w-full h-auto min-h-14 py-2 px-3 sm:px-6 whitespace-normal text-sm sm:text-base lg:text-lg leading-tight text-balance"
+              disabled={!canCheckout() || isSubmitting}
+              onClick={handleSubmitOrder}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Envoi en cours...
+                </>
+              ) : cutoff.isCutoffWarning && warningMinutes !== null ? (
+                <span className="flex flex-col items-center justify-center gap-0.5">
+                  <span>Commandes jusqu’à 21h15</span>
+                  <span className="text-xs sm:text-sm opacity-90 font-normal">
+                    encore {warningMinutes} min
+                  </span>
                 </span>
-              </span>
-            ) : (
-              getCutoffButtonLabel(cutoff, { orderType, canCheckout: canCheckout() }) ??
-              (manualClosure ? (
-                closureTitle(manualClosure.closure_type === 'site' ? 'site' : 'orders')
-              ) : isMonday ? (
-                'Fermé le lundi'
-              ) : isOutsideHours ? (
-                'Ouvert de 18h à 22h'
-              ) : !selectedRestaurant ? (
-                'Choisissez un restaurant'
-              ) : !user ? (
-                'Se connecter pour commander'
-              ) : orderType === 'livraison' && !deliveryAddress ? (
-                'Vérifiez votre adresse'
-              ) : belowMinimum ? (
-                'Min. 2 Senior ou 1 Méga'
-              ) : orderType === 'emporter' && !pickupTime ? (
-                'Choisissez une heure'
-              ) : orderType === 'livraison' && !pickupTime ? (
-                'Choisissez une heure'
               ) : (
-                'Commander maintenant'
-              ))
-            )}
-          </Button>
+                getCutoffButtonLabel(cutoff, { orderType, canCheckout: canCheckout() }) ??
+                (manualClosure ? (
+                  closureTitle(manualClosure.closure_type === 'site' ? 'site' : 'orders')
+                ) : isMonday ? (
+                  'Fermé le lundi'
+                ) : isOutsideHours ? (
+                  'Ouvert de 18h à 22h'
+                ) : !selectedRestaurant ? (
+                  'Choisissez un restaurant'
+                ) : !user ? (
+                  'Se connecter pour commander'
+                ) : orderType === 'livraison' && !deliveryAddress ? (
+                  'Vérifiez votre adresse'
+                ) : belowMinimum ? (
+                  'Min. 2 Senior ou 1 Méga'
+                ) : orderType === 'emporter' && !pickupTime ? (
+                  'Choisissez une heure'
+                ) : orderType === 'livraison' && !pickupTime ? (
+                  'Choisissez une heure'
+                ) : (
+                  'Commander maintenant'
+                ))
+              )}
+            </Button>
+          )}
         </div>
       </div>
     </div>
