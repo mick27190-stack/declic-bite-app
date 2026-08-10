@@ -7,7 +7,7 @@ import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
 import { ProductImage } from '@/components/ProductImage';
 
-import { useActiveClosures } from '@/hooks/useRestaurantClosures';
+import { useOrderingStatus } from '@/hooks/useOrderingStatus';
 import { useToast } from '@/hooks/use-toast';
 import { getPizzaSizePrice, getSizePriceInfo, getNonPizzaPrice, getPairPromoForSize, computePairPromoLineTotal, getRawSizePrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
@@ -37,11 +37,11 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   const [selectedBambinoPizza, setSelectedBambinoPizza] = useState<Pizza | null>(null);
   const [itemNotes, setItemNotes] = useState('');
   
-  const { addItem, selectedRestaurant } = useCart();
+  const { addItem } = useCart();
   usePricing();
-  const { getClosureForSite } = useActiveClosures();
-  const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
+  const { manualClosure, isOrderingClosed } = useOrderingStatus();
   const { toast } = useToast();
+  const isOrderingBlocked = isOrderingClosed || !!manualClosure;
 
   const toggleSupplement = (supplement: Supplement) => {
     setSelectedSupplements((prev) =>
@@ -68,6 +68,8 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   };
 
   const handleAddToCart = () => {
+    if (isOrderingBlocked) return;
+
     const cartPizza = isBambino && selectedBambinoPizza
       ? { ...pizza, description: `Menu Bambino - ${selectedBambinoPizza.name}` }
       : pizza;
@@ -276,24 +278,28 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             </div>
           </div>
 
-          {manualClosure && (
-            <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+          {isOrderingBlocked && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-destructive text-sm">Commandes bloquées</p>
-                <p className="text-sm text-foreground mt-1">{manualClosure.reason}</p>
+                <p className="font-semibold text-destructive text-sm">Commandes indisponibles</p>
+                <p className="text-sm text-foreground mt-1">
+                  {manualClosure?.reason ?? 'La commande est momentanément indisponible.'}
+                </p>
               </div>
             </div>
           )}
-          <Button
-            variant="hero"
-            size="xl"
-            className="w-full"
-            onClick={handleAddToCart}
-            disabled={(isBambino && !selectedBambinoPizza) || !!manualClosure}
-          >
-            {manualClosure ? 'Commandes indisponibles' : `Ajouter au panier • ${calculateTotal().toFixed(2)}€`}
-          </Button>
+          {!isOrderingBlocked && (
+            <Button
+              variant="hero"
+              size="xl"
+              className="w-full"
+              onClick={handleAddToCart}
+              disabled={isBambino && !selectedBambinoPizza}
+            >
+              Ajouter au panier • {calculateTotal().toFixed(2)}€
+            </Button>
+          )}
         </div>
       </div>
     </div>
