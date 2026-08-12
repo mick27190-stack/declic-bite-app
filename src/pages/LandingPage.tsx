@@ -11,7 +11,9 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import heroImage from '@/assets/declic-hero.jpeg';
+import heroAsset from '@/assets/declic-hero-logo.png.asset.json';
+
+const heroImage = heroAsset.url;
 
 
 // La badge "Livreur" n'est visible que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
