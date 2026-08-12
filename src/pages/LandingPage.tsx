@@ -11,7 +11,7 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import heroAsset from '@/assets/declic-hero-logo.png.asset.json';
+import heroAsset from '@/assets/declic-logo-2026.png.asset.json';
 
 const heroImage = heroAsset.url;
 
@@ -168,8 +168,8 @@ export default function LandingPage() {
             <div className="relative w-full max-w-sm mb-8 animate-float">
               <img
                 src={heroImage}
-                alt="Déclic Pizza"
-                className="w-full h-auto rounded-3xl shadow-2xl shadow-primary/20"
+                alt="Déclic Pizza - pizzas artisanales"
+                className="w-full h-auto bg-transparent drop-shadow-[0_10px_30px_hsl(25_95%_53%_/_0.35)]"
               />
             </div>
 
