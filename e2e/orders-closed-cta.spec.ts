@@ -81,7 +81,7 @@ async function openFirstPizza(page: Page) {
   const card = page.locator("button.pizza-card").first();
   await expect(card).toBeVisible();
   await card.click();
-  await expect(page.getByRole("button", { name: /^$|.*/ }).first()).toBeVisible();
+  await expect(page.getByText("Quantité").first()).toBeVisible();
 }
 
 // Mardi 11 août 2026 : 19h00 Paris (UTC+2) et 23h00 Paris.
