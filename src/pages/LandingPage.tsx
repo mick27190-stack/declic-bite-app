@@ -11,7 +11,7 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import heroAsset from '@/assets/declic-logo-2026.png.asset.json';
+import heroAsset from '@/assets/declic-logo-transparent.png.asset.json';
 
 const heroImage = heroAsset.url;
 
