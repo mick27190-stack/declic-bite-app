@@ -48,3 +48,8 @@ bunx playwright test e2e/profile-site-sync.spec.ts
   « Commandes en ligne bloquées » / « Site fermé », le bouton de commande
   désactivé et l'absence de POST vers `/rest/v1/orders`. Aucune session
   requise. Si le Chromium système diffère, exposer `E2E_CHROME_PATH`.
+- `orders-closed-cta.spec.ts` — heure figée (API `clock`) + fermetures
+  simulées : vérifie que le bandeau rouge n'apparaît **que** lors d'un blocage
+  admin (« Commandes en ligne bloquées » / « Site fermé »), que le bouton
+  affiche « Commandes fermées » **uniquement** hors horaires, et qu'en
+  fonctionnement normal « Ajouter au panier » reste actif.
