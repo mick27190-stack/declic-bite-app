@@ -8,6 +8,7 @@ import { useCart } from '@/contexts/CartContext';
 import { ProductImage } from '@/components/ProductImage';
 
 import { useOrderingStatus } from '@/hooks/useOrderingStatus';
+import { closureMessage, closureTitle } from '@/lib/closureMessages';
 import { useToast } from '@/hooks/use-toast';
 import { getPizzaSizePrice, getSizePriceInfo, getNonPizzaPrice, getPairPromoForSize, computePairPromoLineTotal, getRawSizePrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
