@@ -169,7 +169,7 @@ export default function LandingPage() {
               <img
                 src={heroImage}
                 alt="Déclic Pizza - pizzas artisanales"
-                className="w-full h-auto bg-transparent drop-shadow-[0_10px_30px_hsl(25_95%_53%_/_0.35)]"
+                className="w-full h-auto bg-transparent"
               />
             </div>
 
