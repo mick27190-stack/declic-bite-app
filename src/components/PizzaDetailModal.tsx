@@ -8,6 +8,7 @@ import { useCart } from '@/contexts/CartContext';
 import { ProductImage } from '@/components/ProductImage';
 
 import { useOrderingStatus } from '@/hooks/useOrderingStatus';
+import { closureMessage, closureTitle } from '@/lib/closureMessages';
 import { useToast } from '@/hooks/use-toast';
 import { getPizzaSizePrice, getSizePriceInfo, getNonPizzaPrice, getPairPromoForSize, computePairPromoLineTotal, getRawSizePrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
@@ -278,18 +279,26 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             </div>
           </div>
 
-          {isOrderingBlocked && (
+          {manualClosure ? (
             <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-destructive text-sm">Commandes indisponibles</p>
+                <p className="font-semibold text-destructive text-sm">
+                  {closureTitle(manualClosure.closure_type === 'site' ? 'site' : 'orders')}
+                </p>
                 <p className="text-sm text-foreground mt-1">
-                  {manualClosure?.reason ?? 'La commande est momentanément indisponible.'}
+                  {closureMessage(
+                    manualClosure.closure_type === 'site' ? 'site' : 'orders',
+                    manualClosure.reason,
+                  )}
                 </p>
               </div>
             </div>
-          )}
-          {!isOrderingBlocked && (
+          ) : isOrderingClosed ? (
+            <Button variant="hero" size="xl" className="w-full" disabled>
+              Commandes fermées
+            </Button>
+          ) : (
             <Button
               variant="hero"
               size="xl"
