@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Pencil, Trash2, Image } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Image, FileSpreadsheet, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +21,7 @@ import { useMenuAvailability } from '@/hooks/useMenuAvailability';
 import { useMenuOverrides, applyOverride } from '@/hooks/useMenuOverrides';
 import { fileToCompressedDataUrl } from '@/lib/imageResize';
 import { ProductImage } from '@/components/ProductImage';
+import { exportMenuToCsv, exportMenuToPdf } from '@/lib/menuExport';
 
 
 const CAPACITY_OPTIONS = ['0,25L', '0,33L', '0,5L', '0,75L', '1L', '1,25L', '1,5L', '1,75L', '2L'];
@@ -186,6 +187,25 @@ export default function AdminMenuPage() {
     };
   }, [pizzaList]);
 
+  const handleExportCsv = () => {
+    try {
+      exportMenuToCsv(pizzaList, isAvailable);
+      toast.success('Menu exporté en CSV');
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de l'export CSV");
+    }
+  };
+
+  const handleExportPdf = () => {
+    try {
+      exportMenuToPdf(pizzaList, isAvailable);
+      toast.success('Menu exporté en PDF');
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de l'export PDF");
+    }
+  };
+
+
 
   if (authLoading || adminLoading) {
     return (
@@ -215,10 +235,20 @@ export default function AdminMenuPage() {
             <div className="min-w-0 flex-1 space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <CardTitle>Menu ({menuCounts.total})</CardTitle>
-                <Button size="sm" className="shrink-0 px-3 sm:hidden" onClick={() => handleOpenDialog()}>
-                  <Plus className="h-4 w-4" />
-                  <span className="sr-only">Ajouter une pizza</span>
-                </Button>
+                <div className="flex items-center gap-2 sm:hidden">
+                  <Button size="sm" variant="outline" className="shrink-0 px-3" onClick={handleExportCsv}>
+                    <FileSpreadsheet className="h-4 w-4" />
+                    <span className="sr-only">Exporter CSV</span>
+                  </Button>
+                  <Button size="sm" variant="outline" className="shrink-0 px-3" onClick={handleExportPdf}>
+                    <FileText className="h-4 w-4" />
+                    <span className="sr-only">Exporter PDF</span>
+                  </Button>
+                  <Button size="sm" className="shrink-0 px-3" onClick={() => handleOpenDialog()}>
+                    <Plus className="h-4 w-4" />
+                    <span className="sr-only">Ajouter une pizza</span>
+                  </Button>
+                </div>
               </div>
               <CardDescription className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="whitespace-nowrap">🍕 Pizzas : {menuCounts.pizzas}</Badge>
@@ -226,10 +256,20 @@ export default function AdminMenuPage() {
                 <Badge variant="secondary" className="whitespace-nowrap">🥤 Boissons : {menuCounts.boissons}</Badge>
               </CardDescription>
             </div>
-            <Button size="sm" className="hidden sm:inline-flex shrink-0 px-3" onClick={() => handleOpenDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter une pizza
-            </Button>
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
+              <Button size="sm" variant="outline" onClick={handleExportCsv}>
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                CSV
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleExportPdf}>
+                <FileText className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+              <Button size="sm" className="px-3" onClick={() => handleOpenDialog()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter une pizza
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
