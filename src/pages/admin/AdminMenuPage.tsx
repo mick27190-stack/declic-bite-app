@@ -186,6 +186,25 @@ export default function AdminMenuPage() {
     };
   }, [pizzaList]);
 
+  const handleExportCsv = () => {
+    try {
+      exportMenuToCsv(pizzaList, isAvailable);
+      toast.success('Menu exporté en CSV');
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de l'export CSV");
+    }
+  };
+
+  const handleExportPdf = () => {
+    try {
+      exportMenuToPdf(pizzaList, isAvailable);
+      toast.success('Menu exporté en PDF');
+    } catch (e: any) {
+      toast.error(e.message || "Erreur lors de l'export PDF");
+    }
+  };
+
+
 
   if (authLoading || adminLoading) {
     return (
