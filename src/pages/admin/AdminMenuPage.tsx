@@ -211,16 +211,16 @@ export default function AdminMenuPage() {
 
       <main className="container mx-auto px-4 py-8">
         <Card>
-          <CardHeader className="flex flex-row items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
+          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0 flex-1 space-y-2">
               <CardTitle>Menu ({menuCounts.total})</CardTitle>
-              <CardDescription className="flex flex-wrap gap-2 mt-2">
+              <CardDescription className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="whitespace-nowrap">🍕 Pizzas : {menuCounts.pizzas}</Badge>
                 <Badge variant="secondary" className="whitespace-nowrap">🥖 Paninis : {menuCounts.paninis}</Badge>
                 <Badge variant="secondary" className="whitespace-nowrap">🥤 Boissons : {menuCounts.boissons}</Badge>
               </CardDescription>
             </div>
-            <Button size="sm" className="shrink-0 px-3" onClick={() => handleOpenDialog()}>
+            <Button size="sm" className="shrink-0 px-3 self-start" onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 sm:mr-2" />
               <span className="hidden sm:inline">Ajouter une pizza</span>
               <span className="sr-only sm:hidden">Ajouter une pizza</span>
