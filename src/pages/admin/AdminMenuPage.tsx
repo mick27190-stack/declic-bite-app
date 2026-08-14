@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -176,6 +176,17 @@ export default function AdminMenuPage() {
     }
   };
 
+  const menuCounts = useMemo(() => {
+    const pizzaCats = ['classiques', 'speciales', 'vegetariennes', 'gourmandes', 'bambino'];
+    return {
+      total: pizzaList.length,
+      pizzas: pizzaList.filter((p) => pizzaCats.includes(p.category)).length,
+      paninis: pizzaList.filter((p) => p.category === 'paninis').length,
+      boissons: pizzaList.filter((p) => p.category === 'boissons').length,
+    };
+  }, [pizzaList]);
+
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -202,9 +213,11 @@ export default function AdminMenuPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Pizzas ({pizzaList.length})</CardTitle>
-              <CardDescription>
-                Gérez votre menu de pizzas
+              <CardTitle>Menu ({menuCounts.total})</CardTitle>
+              <CardDescription className="flex flex-wrap gap-2 mt-2">
+                <Badge variant="secondary">🍕 Pizzas : {menuCounts.pizzas}</Badge>
+                <Badge variant="secondary">🥖 Paninis : {menuCounts.paninis}</Badge>
+                <Badge variant="secondary">🥤 Boissons : {menuCounts.boissons}</Badge>
               </CardDescription>
             </div>
             <Button onClick={() => handleOpenDialog()}>
