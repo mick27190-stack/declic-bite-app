@@ -215,10 +215,20 @@ export default function AdminMenuPage() {
             <div className="min-w-0 flex-1 space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <CardTitle>Menu ({menuCounts.total})</CardTitle>
-                <Button size="sm" className="shrink-0 px-3 sm:hidden" onClick={() => handleOpenDialog()}>
-                  <Plus className="h-4 w-4" />
-                  <span className="sr-only">Ajouter une pizza</span>
-                </Button>
+                <div className="flex items-center gap-2 sm:hidden">
+                  <Button size="sm" variant="outline" className="shrink-0 px-3" onClick={handleExportCsv}>
+                    <FileSpreadsheet className="h-4 w-4" />
+                    <span className="sr-only">Exporter CSV</span>
+                  </Button>
+                  <Button size="sm" variant="outline" className="shrink-0 px-3" onClick={handleExportPdf}>
+                    <FileText className="h-4 w-4" />
+                    <span className="sr-only">Exporter PDF</span>
+                  </Button>
+                  <Button size="sm" className="shrink-0 px-3" onClick={() => handleOpenDialog()}>
+                    <Plus className="h-4 w-4" />
+                    <span className="sr-only">Ajouter une pizza</span>
+                  </Button>
+                </div>
               </div>
               <CardDescription className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="whitespace-nowrap">🍕 Pizzas : {menuCounts.pizzas}</Badge>
@@ -226,10 +236,20 @@ export default function AdminMenuPage() {
                 <Badge variant="secondary" className="whitespace-nowrap">🥤 Boissons : {menuCounts.boissons}</Badge>
               </CardDescription>
             </div>
-            <Button size="sm" className="hidden sm:inline-flex shrink-0 px-3" onClick={() => handleOpenDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter une pizza
-            </Button>
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
+              <Button size="sm" variant="outline" onClick={handleExportCsv}>
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                CSV
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleExportPdf}>
+                <FileText className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+              <Button size="sm" className="px-3" onClick={() => handleOpenDialog()}>
+                <Plus className="h-4 w-4 mr-2" />
+                Ajouter une pizza
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <Table>
