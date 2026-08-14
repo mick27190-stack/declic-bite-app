@@ -211,19 +211,24 @@ export default function AdminMenuPage() {
 
       <main className="container mx-auto px-4 py-8">
         <Card>
-          <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <div className="min-w-0 flex-1 space-y-2">
-              <CardTitle>Menu ({menuCounts.total})</CardTitle>
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle>Menu ({menuCounts.total})</CardTitle>
+                <Button size="sm" className="shrink-0 px-3 sm:hidden" onClick={() => handleOpenDialog()}>
+                  <Plus className="h-4 w-4" />
+                  <span className="sr-only">Ajouter une pizza</span>
+                </Button>
+              </div>
               <CardDescription className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="whitespace-nowrap">🍕 Pizzas : {menuCounts.pizzas}</Badge>
                 <Badge variant="secondary" className="whitespace-nowrap">🥖 Paninis : {menuCounts.paninis}</Badge>
                 <Badge variant="secondary" className="whitespace-nowrap">🥤 Boissons : {menuCounts.boissons}</Badge>
               </CardDescription>
             </div>
-            <Button size="sm" className="shrink-0 px-3 self-start" onClick={() => handleOpenDialog()}>
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Ajouter une pizza</span>
-              <span className="sr-only sm:hidden">Ajouter une pizza</span>
+            <Button size="sm" className="hidden sm:inline-flex shrink-0 px-3" onClick={() => handleOpenDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter une pizza
             </Button>
           </CardHeader>
           <CardContent>
