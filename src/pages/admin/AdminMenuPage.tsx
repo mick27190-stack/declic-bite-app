@@ -21,6 +21,7 @@ import { useMenuAvailability } from '@/hooks/useMenuAvailability';
 import { useMenuOverrides, applyOverride } from '@/hooks/useMenuOverrides';
 import { fileToCompressedDataUrl } from '@/lib/imageResize';
 import { ProductImage } from '@/components/ProductImage';
+import { exportMenuToCsv, exportMenuToPdf } from '@/lib/menuExport';
 
 
 const CAPACITY_OPTIONS = ['0,25L', '0,33L', '0,5L', '0,75L', '1L', '1,25L', '1,5L', '1,75L', '2L'];
