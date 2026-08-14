@@ -176,6 +176,17 @@ export default function AdminMenuPage() {
     }
   };
 
+  const menuCounts = useMemo(() => {
+    const pizzaCats = ['classiques', 'speciales', 'vegetariennes', 'gourmandes', 'bambino'];
+    return {
+      total: pizzaList.length,
+      pizzas: pizzaList.filter((p) => pizzaCats.includes(p.category)).length,
+      paninis: pizzaList.filter((p) => p.category === 'paninis').length,
+      boissons: pizzaList.filter((p) => p.category === 'boissons').length,
+    };
+  }, [pizzaList]);
+
+
   if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
