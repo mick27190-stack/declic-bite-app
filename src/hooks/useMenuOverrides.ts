@@ -12,6 +12,7 @@ export interface MenuOverride {
   image_url?: string | null;
   is_custom?: boolean | null;
   base_price?: number | null;
+  sort_order?: number | null;
 }
 
 type OverrideMap = Record<string, MenuOverride>;
