@@ -1,0 +1,1 @@
+ALTER TABLE public.menu_item_overrides ADD COLUMN IF NOT EXISTS sort_order integer;
