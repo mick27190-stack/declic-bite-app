@@ -32,12 +32,28 @@ export default function AdminMenuPage() {
   const { user, loading: authLoading } = useAuth();
   const { canManageMenu, loading: adminLoading } = useAdmin();
   const { isAvailable, setAvailable } = useMenuAvailability();
-  const { overrides, customPizzas, upsert, removeCustom } = useMenuOverrides();
+  const { overrides, customPizzas, upsert, removeCustom, sortList, saveOrder } = useMenuOverrides();
 
-  const pizzaList: Pizza[] = [
+  const pizzaList: Pizza[] = sortList([
     ...initialPizzas.map((p) => applyOverride(p, overrides[p.id])),
     ...customPizzas,
-  ];
+  ]);
+  const [reordering, setReordering] = useState(false);
+
+  const handleMove = async (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= pizzaList.length) return;
+    const ids = pizzaList.map((p) => p.id);
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    setReordering(true);
+    try {
+      await saveOrder(ids);
+    } catch (e: any) {
+      toast.error(e.message || "Impossible de réorganiser le menu");
+    } finally {
+      setReordering(false);
+    }
+  };
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPizza, setEditingPizza] = useState<Pizza | null>(null);
   const [uploading, setUploading] = useState(false);
