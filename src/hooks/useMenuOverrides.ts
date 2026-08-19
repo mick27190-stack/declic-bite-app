@@ -149,5 +149,5 @@ export function useMenuOverrides() {
     await fetchAll();
   }, []);
 
-  return { overrides, customPizzas, applyToList, applyOverride, upsert, removeCustom };
+  return { overrides, customPizzas, applyToList, applyOverride, sortList, saveOrder, upsert, removeCustom };
 }
