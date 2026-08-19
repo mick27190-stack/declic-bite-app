@@ -302,8 +302,32 @@ export default function AdminMenuPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pizzaList.map((pizza) => (
+                {pizzaList.map((pizza, index) => (
                   <TableRow key={pizza.id}>
+                    <TableCell>
+                      <div className="flex flex-col items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label={`Monter ${pizza.name}`}
+                          disabled={reordering || index === 0}
+                          onClick={() => handleMove(index, -1)}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label={`Descendre ${pizza.name}`}
+                          disabled={reordering || index === pizzaList.length - 1}
+                          onClick={() => handleMove(index, 1)}
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <ProductImage
                         src={pizza.image}
