@@ -12,6 +12,7 @@ export interface MenuOverride {
   image_url?: string | null;
   is_custom?: boolean | null;
   base_price?: number | null;
+  sort_order?: number | null;
 }
 
 type OverrideMap = Record<string, MenuOverride>;
@@ -97,13 +98,39 @@ export function useMenuOverrides() {
     [overrides],
   );
 
-  const applyToList = useCallback(
-    (list: Pizza[]) => [
-      ...list.map((p) => applyOverride(p, overrides[p.id])),
-      ...customPizzas,
-    ],
-    [overrides, customPizzas],
+  /** Trie une liste de produits selon l'ordre défini en admin (sort_order), sinon l'ordre d'origine. */
+  const sortList = useCallback(
+    (list: Pizza[]) =>
+      list
+        .map((p, index) => ({
+          p,
+          key: overrides[p.id]?.sort_order ?? (p.id.startsWith('custom-') ? 100000 + index : index),
+          index,
+        }))
+        .sort((a, b) => a.key - b.key || a.index - b.index)
+        .map((e) => e.p),
+    [overrides],
   );
+
+  const applyToList = useCallback(
+    (list: Pizza[]) =>
+      sortList([
+        ...list.map((p) => applyOverride(p, overrides[p.id])),
+        ...customPizzas,
+      ]),
+    [overrides, customPizzas, sortList],
+  );
+
+  /** Persiste l'ordre complet des produits (index séquentiel). */
+  const saveOrder = useCallback(async (orderedIds: string[]) => {
+    const rows = orderedIds.map((item_id, i) => ({ item_id, sort_order: i }));
+    const { error } = await supabase
+      .from('menu_item_overrides')
+      .upsert(rows as any, { onConflict: 'item_id' });
+    if (error) throw error;
+    await fetchAll();
+  }, []);
+
 
   const upsert = useCallback(async (payload: Partial<MenuOverride> & { item_id: string }) => {
     const { error } = await supabase
@@ -122,5 +149,5 @@ export function useMenuOverrides() {
     await fetchAll();
   }, []);
 
-  return { overrides, customPizzas, applyToList, applyOverride, upsert, removeCustom };
+  return { overrides, customPizzas, applyToList, applyOverride, sortList, saveOrder, upsert, removeCustom };
 }

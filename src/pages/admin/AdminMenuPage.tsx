@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, Pencil, Trash2, Image, FileSpreadsheet, FileText } from 'lucide-react';
+import { ArrowLeft, Plus, Pencil, Trash2, Image, FileSpreadsheet, FileText, ChevronUp, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,12 +32,28 @@ export default function AdminMenuPage() {
   const { user, loading: authLoading } = useAuth();
   const { canManageMenu, loading: adminLoading } = useAdmin();
   const { isAvailable, setAvailable } = useMenuAvailability();
-  const { overrides, customPizzas, upsert, removeCustom } = useMenuOverrides();
+  const { overrides, customPizzas, upsert, removeCustom, sortList, saveOrder } = useMenuOverrides();
 
-  const pizzaList: Pizza[] = [
+  const pizzaList: Pizza[] = sortList([
     ...initialPizzas.map((p) => applyOverride(p, overrides[p.id])),
     ...customPizzas,
-  ];
+  ]);
+  const [reordering, setReordering] = useState(false);
+
+  const handleMove = async (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= pizzaList.length) return;
+    const ids = pizzaList.map((p) => p.id);
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    setReordering(true);
+    try {
+      await saveOrder(ids);
+    } catch (e: any) {
+      toast.error(e.message || "Impossible de réorganiser le menu");
+    } finally {
+      setReordering(false);
+    }
+  };
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPizza, setEditingPizza] = useState<Pizza | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -275,6 +291,7 @@ export default function AdminMenuPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[70px]">Ordre</TableHead>
                   <TableHead>Image</TableHead>
                   <TableHead>Nom</TableHead>
                   <TableHead>Catégorie</TableHead>
@@ -285,8 +302,32 @@ export default function AdminMenuPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {pizzaList.map((pizza) => (
+                {pizzaList.map((pizza, index) => (
                   <TableRow key={pizza.id}>
+                    <TableCell>
+                      <div className="flex flex-col items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label={`Monter ${pizza.name}`}
+                          disabled={reordering || index === 0}
+                          onClick={() => handleMove(index, -1)}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7"
+                          aria-label={`Descendre ${pizza.name}`}
+                          disabled={reordering || index === pizzaList.length - 1}
+                          onClick={() => handleMove(index, 1)}
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <ProductImage
                         src={pizza.image}
