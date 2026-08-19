@@ -291,6 +291,7 @@ export default function AdminMenuPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-[70px]">Ordre</TableHead>
                   <TableHead>Image</TableHead>
                   <TableHead>Nom</TableHead>
                   <TableHead>Catégorie</TableHead>
