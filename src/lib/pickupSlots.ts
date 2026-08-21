@@ -174,12 +174,12 @@ export function computeDeliverySlots(now: Date = new Date()): DeliverySlots {
 // ---------------- Delivery slot validation (mirrors the backend) ----------------
 // Same rules as public.check_order_creation_cutoff for 'livraison':
 //  - a slot is required and must be formatted HH:MM,
-//  - it must sit on the 15-min grid between 18:45 and 21:45,
-//  - it must be >= max(now + 30 min rounded up, 18:45) — the 18h45 floor is the
+//  - it must sit on the 15-min grid between 18:45 and 22:00,
+//  - it must be >= max(now + 45 min with 8-min grace, 18:45) — the 18h45 floor is the
 //    same clamp the backend applies, so 18:30 is never valid, even at 18h00.
 export const DELIVERY_SLOT_REQUIRED_MESSAGE = 'Merci de choisir un créneau de livraison.';
 export const DELIVERY_SLOT_RANGE_MESSAGE =
-  'Créneau de livraison invalide. Choisissez un créneau entre 18h45 et 21h45.';
+  'Créneau de livraison invalide. Choisissez un créneau entre 18h45 et 22h00.';
 export const DELIVERY_SLOT_TOO_EARLY_MESSAGE =
   "Ce créneau de livraison n'est plus disponible. Merci d'en choisir un autre.";
 
