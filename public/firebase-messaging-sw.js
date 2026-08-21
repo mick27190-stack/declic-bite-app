@@ -27,8 +27,8 @@ messaging.onBackgroundMessage((payload) => {
   const title = payload.notification?.title || payload.data?.title || "Déclic Pizza";
   const options = {
     body: payload.notification?.body || payload.data?.body || "",
-    icon: "/favicon.ico",
-    badge: "/favicon.ico",
+    icon: "/icon-192.png?v=1ccba9db",
+    badge: "/icon-192.png?v=1ccba9db",
     tag: payload.data?.reference_id || undefined,
     data: payload.data || {},
   };
