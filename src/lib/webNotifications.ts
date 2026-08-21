@@ -24,8 +24,8 @@ export function showWebNotification(title: string, body: string, tag?: string) {
     const notification = new Notification(title, {
       body,
       tag,
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
+      icon: '/icon-192.png?v=1ccba9db',
+      badge: '/icon-192.png?v=1ccba9db',
     });
     notification.onclick = () => {
       window.focus();

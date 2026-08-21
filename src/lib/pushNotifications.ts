@@ -85,8 +85,8 @@ export async function setupPushNotifications(
         if (reg) {
           await reg.showNotification(title, {
             body,
-            icon: "/favicon.ico",
-            badge: "/favicon.ico",
+            icon: "/icon-192.png?v=1ccba9db",
+            badge: "/icon-192.png?v=1ccba9db",
             tag,
           });
         } else {
