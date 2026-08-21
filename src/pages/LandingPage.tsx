@@ -12,10 +12,10 @@ import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
 import heroAsset from '@/assets/declic-logo-transparent.png.asset.json';
-import heroVideoAsset from '@/assets/declic-anim.webm.asset.json';
+import heroAnimAsset from '@/assets/declic-anim.webp.asset.json';
 
 const heroImage = heroAsset.url;
-const heroVideo = heroVideoAsset.url;
+const heroAnim = heroAnimAsset.url;
 
 
 
