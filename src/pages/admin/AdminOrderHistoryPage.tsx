@@ -71,6 +71,8 @@ interface HistoryWeek {
   order_count: number;
   total_revenue: number;
   orders: HistoryOrder[];
+  /** One entry per archived site row backing this week (site-scoped rows). */
+  parts?: { id: string; site: string }[];
 }
 
 
@@ -331,7 +333,17 @@ export default function AdminOrderHistoryPage() {
   };
 
   const handleDeleteOrder = async (week: HistoryWeek, orderId: string) => {
-    const remaining = (week.orders || []).filter((o) => o.id !== orderId);
+    const target = (week.orders || []).find((o) => o.id === orderId);
+    const site = target ? orderSite(target.restaurant) : null;
+    const parts = week.parts && week.parts.length > 0
+      ? week.parts
+      : [{ id: week.id, site: site || 'conches' }];
+    const part = parts.find((p) => p.site === site) || parts[0];
+
+    // Only rewrite the site row that actually holds this order.
+    const remaining = (week.orders || []).filter(
+      (o) => o.id !== orderId && orderSite(o.restaurant) === part.site
+    );
     const total = remaining.reduce(
       (sum, o) => sum + (o.status === 'cancelled' ? 0 : Number(o.total_price) || 0),
       0
@@ -343,7 +355,7 @@ export default function AdminOrderHistoryPage() {
         order_count: remaining.length,
         total_revenue: total,
       })
-      .eq('id', week.id);
+      .eq('id', part.id);
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
@@ -353,7 +365,9 @@ export default function AdminOrderHistoryPage() {
   };
 
   const handleDeleteWeek = async (weekId: string) => {
-    const { error } = await supabase.from('order_history').delete().eq('id', weekId);
+    const week = weeks.find((w) => w.id === weekId);
+    const ids = week?.parts?.length ? week.parts.map((p) => p.id) : [weekId];
+    const { error } = await supabase.from('order_history').delete().in('id', ids);
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
@@ -361,6 +375,7 @@ export default function AdminOrderHistoryPage() {
       fetchHistory();
     }
   };
+
 
 
   const normalizedSearch = customerSearch
@@ -425,7 +440,31 @@ export default function AdminOrderHistoryPage() {
       return;
     }
 
-    const rawWeeks = (data || []) as unknown as HistoryWeek[];
+    const rows = (data || []) as unknown as (HistoryWeek & { site?: string })[];
+
+    // History is now archived per site (one row per week and per site).
+    // Merge the rows of a same week so the UI keeps showing one card per week.
+    const byWeek = new Map<string, HistoryWeek>();
+    rows.forEach((row) => {
+      const existing = byWeek.get(row.week_start);
+      const part = { id: row.id, site: row.site || 'conches' };
+      if (existing) {
+        existing.orders = [...(existing.orders || []), ...(row.orders || [])];
+        existing.order_count += row.order_count || 0;
+        existing.total_revenue = Number(existing.total_revenue) + Number(row.total_revenue || 0);
+        existing.parts = [...(existing.parts || []), part];
+      } else {
+        byWeek.set(row.week_start, {
+          ...row,
+          orders: [...(row.orders || [])],
+          parts: [part],
+        });
+      }
+    });
+
+    const rawWeeks = Array.from(byWeek.values()).sort((a, b) =>
+      b.week_start.localeCompare(a.week_start)
+    );
 
     // Archived orders JSON has no customer name/phone (not columns on `orders`).
     // Enrich from profiles via user_id so the detail view can display them.
@@ -451,17 +490,20 @@ export default function AdminOrderHistoryPage() {
 
     const enriched = rawWeeks.map((w) => ({
       ...w,
-      orders: (w.orders || []).map((o) => {
-        const p = o.user_id ? profileMap.get(o.user_id) : undefined;
-        return {
-          ...o,
-          customer_name: o.customer_name || p?.name || undefined,
-          customer_phone: o.customer_phone || p?.phone || undefined,
-        };
-      }),
+      orders: (w.orders || [])
+        .map((o) => {
+          const p = o.user_id ? profileMap.get(o.user_id) : undefined;
+          return {
+            ...o,
+            customer_name: o.customer_name || p?.name || undefined,
+            customer_phone: o.customer_phone || p?.phone || undefined,
+          };
+        })
+        .sort((a, b) => (a.created_at || '').localeCompare(b.created_at || '')),
     }));
 
     setWeeks(enriched);
+
     setLoading(false);
   }, [toast]);
 

@@ -603,6 +603,7 @@ export type Database = {
           id: string
           order_count: number
           orders: Json
+          site: string
           total_revenue: number
           week_end: string
           week_start: string
@@ -612,6 +613,7 @@ export type Database = {
           id?: string
           order_count?: number
           orders?: Json
+          site: string
           total_revenue?: number
           week_end: string
           week_start: string
@@ -621,6 +623,7 @@ export type Database = {
           id?: string
           order_count?: number
           orders?: Json
+          site?: string
           total_revenue?: number
           week_end?: string
           week_start?: string
