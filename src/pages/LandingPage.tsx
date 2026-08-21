@@ -222,7 +222,7 @@ export default function LandingPage() {
                   <div className="absolute inset-6 rounded-full bg-foreground/5 animate-pulse" aria-hidden="true" />
                 )}
                 <img
-                  src={heroAnim}
+                  src={heroPoster}
                   alt="Déclic Pizza - pizzas artisanales livrées"
                   decoding="async"
                   loading="eager"
@@ -230,8 +230,18 @@ export default function LandingPage() {
                   draggable={false}
                   onLoad={() => setHeroLoaded(true)}
                   onError={() => setHeroLoaded(true)}
-                  className={`block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] [will-change:opacity] transition-opacity duration-500 ${heroLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  className={`block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] transition-opacity duration-500 ${heroLoaded ? 'opacity-100' : 'opacity-0'}`}
                 />
+                {animSrc && (
+                  <img
+                    src={animSrc}
+                    alt=""
+                    aria-hidden="true"
+                    decoding="async"
+                    draggable={false}
+                    className={`absolute inset-0 block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] transition-opacity duration-300 ${animReady ? 'opacity-100' : 'opacity-0'}`}
+                  />
+                )}
               </div>
 
 
