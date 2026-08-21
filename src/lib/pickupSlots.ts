@@ -190,7 +190,10 @@ export type DeliverySlotValidation = { valid: boolean; error?: string };
  * the 18h45 first slot (identical to the backend's GREATEST(..., 18h45)).
  */
 export function earliestBookableDeliveryMinutes(nowMinutes: number): number {
-  return Math.max(earliestDeliveryMinutes(nowMinutes), DELIVERY_FIRST_SLOT_MINUTES);
+  return Math.min(
+    Math.max(earliestDeliveryMinutes(nowMinutes), DELIVERY_FIRST_SLOT_MINUTES),
+    DELIVERY_LAST_SLOT_MINUTES,
+  );
 }
 
 export function validateDeliverySlotFromMinutes(
