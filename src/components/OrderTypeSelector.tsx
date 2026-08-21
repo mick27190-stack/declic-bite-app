@@ -59,7 +59,7 @@ export function OrderTypeSelector({ value, onChange, deliveryDisabled, takeawayD
           }`}>
             Livraison
           </span>
-          <span className="text-xs text-muted-foreground">Chez vous en ~30 min</span>
+          <span className="text-xs text-muted-foreground">Chez vous en ~45 min</span>
         </button>
       </div>
     </div>

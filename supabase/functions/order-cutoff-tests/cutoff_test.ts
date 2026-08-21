@@ -55,13 +55,13 @@ const m = (h: number, min: number) => h * 60 + min;
 // ---------------------------------------------------------------------------
 
 Deno.test("livraison: 21h15 Paris → still accepted with a valid slot", async () => {
-  // At 21h15 the earliest reachable slot is ceil((21h15 + 30) / 15) = 21h45.
-  const r = await callCutoff("livraison", "21:45", m(21, 15));
+  // At 21h15 the earliest reachable slot is 21h15 + 45 = 22h00.
+  const r = await callCutoff("livraison", "22:00", m(21, 15));
   assertEquals(r.ok, true, `should accept at 21h15, got: ${(!r.ok && r.message) || ""}`);
 });
 
 Deno.test("livraison: 21h16 Paris → refused by the cut-off", async () => {
-  const r = await callCutoff("livraison", "21:45", m(21, 16));
+  const r = await callCutoff("livraison", "22:00", m(21, 16));
   assert(!r.ok, "delivery must be blocked from 21h16");
   assert(
     r.message.includes("livraison ne sont plus acceptées"),
@@ -70,7 +70,7 @@ Deno.test("livraison: 21h16 Paris → refused by the cut-off", async () => {
 });
 
 Deno.test("livraison: 21h30 Paris → still refused (already past 21h16)", async () => {
-  const r = await callCutoff("livraison", "21:45", m(21, 30));
+  const r = await callCutoff("livraison", "22:00", m(21, 30));
   assert(!r.ok, "delivery must remain blocked past 21h16");
 });
 
@@ -85,21 +85,27 @@ Deno.test("livraison: 20h00 Paris with malformed pickup_time → refused", async
   assert(!r.ok);
 });
 
-Deno.test("livraison: 20h00 Paris with out-of-window slot (22h00) → refused", async () => {
-  const r = await callCutoff("livraison", "22:00", m(20, 0));
+Deno.test("livraison: 20h00 Paris with out-of-window slot (22h15) → refused", async () => {
+  const r = await callCutoff("livraison", "22:15", m(20, 0));
   assert(!r.ok);
   assert(r.message.includes("Créneau de livraison invalide"), `got: ${r.message}`);
 });
 
-Deno.test("livraison: 20h00 Paris with too-early slot (20h15) → refused (30 min lead)", async () => {
-  // Earliest reachable at 20h00 = ceil((1200 + 30) / 15) * 15 = 1230 → 20h30.
-  const r = await callCutoff("livraison", "20:15", m(20, 0));
-  assert(!r.ok, "slot before the 30 min lead must be refused");
+Deno.test("livraison: 20h00 Paris with too-early slot (20h30) → refused (45 min lead)", async () => {
+  // Earliest reachable at 20h00 = 20h00 + 45 = 20h45.
+  const r = await callCutoff("livraison", "20:30", m(20, 0));
+  assert(!r.ok, "slot before the 45 min lead must be refused");
 });
 
-Deno.test("livraison: 20h00 Paris with earliest valid slot (20h30) → accepted", async () => {
-  const r = await callCutoff("livraison", "20:30", m(20, 0));
+Deno.test("livraison: 20h00 Paris with earliest valid slot (20h45) → accepted", async () => {
+  const r = await callCutoff("livraison", "20:45", m(20, 0));
   assertEquals(r.ok, true);
+});
+
+Deno.test("livraison: grâce de 8 min — 20h08 accepte 20h45, 20h09 non", async () => {
+  assertEquals((await callCutoff("livraison", "20:45", m(20, 8))).ok, true);
+  assert(!(await callCutoff("livraison", "20:45", m(20, 9))).ok);
+  assertEquals((await callCutoff("livraison", "21:00", m(20, 9))).ok, true);
 });
 
 Deno.test("livraison: 18h00 Paris with the very first slot (18h45) → accepted", async () => {
@@ -179,7 +185,7 @@ Deno.test("emporter: 18h30 Paris → accepted (no pickup_time required)", async 
 Deno.test("cross-cut at 21h16: emporter open (last minute), livraison closed", async () => {
   const t = m(21, 16);
   const takeaway = await callCutoff("emporter", null, t);
-  const delivery = await callCutoff("livraison", "21:45", t);
+  const delivery = await callCutoff("livraison", "22:00", t);
   assertEquals(takeaway.ok, true, "take-away must still accept at 21h16");
   assert(!delivery.ok, "delivery must be closed from 21h16");
 });
