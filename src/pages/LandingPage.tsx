@@ -167,8 +167,8 @@ export default function LandingPage() {
 
         {!showRestaurantSelector ? (
           <>
-            {/* Logo/Hero Image */}
-            <div className="relative w-full max-w-sm mb-8 animate-float">
+            {/* Logo/Hero Animation */}
+            <div className="relative w-full flex justify-center mb-6 sm:mb-8 animate-float">
               <video
                 src={heroVideo}
                 poster={heroImage}
@@ -176,10 +176,12 @@ export default function LandingPage() {
                 loop
                 muted
                 playsInline
+                disablePictureInPicture
                 aria-label="Déclic Pizza - pizzas artisanales"
-                className="w-full h-auto bg-transparent"
+                className="block w-[min(88vw,22rem)] sm:w-[min(70vw,26rem)] lg:w-[min(45vw,30rem)] max-h-[38vh] sm:max-h-[42vh] h-auto object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden]"
               />
             </div>
+
 
 
             {/* Welcome Text */}
