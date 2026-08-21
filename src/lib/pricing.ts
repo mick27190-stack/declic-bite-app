@@ -5,6 +5,8 @@
  * aux calculs synchrones (panier) de lire les prix les plus récents.
  */
 import { isPromoDay, PIZZA_CATEGORIES } from './promo';
+import { parisCivilDate } from './parisTime';
+
 
 export type SizeId = 'senior' | 'mega' | 'super-mega';
 

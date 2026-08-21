@@ -3,8 +3,10 @@
  * Exception : la promo est désactivée si le mardi tombe un jour férié français
  * fixe (1er mai, 8 mai, 14 juillet, 15 août, 1er novembre, 11 novembre).
  */
+import { parisCivilDate } from './parisTime';
 
 const PROMO_PRICE = 10;
+
 const PROMO_DAYS = [2]; // Mardi = 2
 
 // Jours fériés fixes (mois 1-12, jour) où la promo est suspendue.
