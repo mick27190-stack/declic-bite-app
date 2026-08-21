@@ -333,7 +333,17 @@ export default function AdminOrderHistoryPage() {
   };
 
   const handleDeleteOrder = async (week: HistoryWeek, orderId: string) => {
-    const remaining = (week.orders || []).filter((o) => o.id !== orderId);
+    const target = (week.orders || []).find((o) => o.id === orderId);
+    const site = target ? orderSite(target.restaurant) : null;
+    const parts = week.parts && week.parts.length > 0
+      ? week.parts
+      : [{ id: week.id, site: site || 'conches' }];
+    const part = parts.find((p) => p.site === site) || parts[0];
+
+    // Only rewrite the site row that actually holds this order.
+    const remaining = (week.orders || []).filter(
+      (o) => o.id !== orderId && orderSite(o.restaurant) === part.site
+    );
     const total = remaining.reduce(
       (sum, o) => sum + (o.status === 'cancelled' ? 0 : Number(o.total_price) || 0),
       0
@@ -345,7 +355,7 @@ export default function AdminOrderHistoryPage() {
         order_count: remaining.length,
         total_revenue: total,
       })
-      .eq('id', week.id);
+      .eq('id', part.id);
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
@@ -355,7 +365,9 @@ export default function AdminOrderHistoryPage() {
   };
 
   const handleDeleteWeek = async (weekId: string) => {
-    const { error } = await supabase.from('order_history').delete().eq('id', weekId);
+    const week = weeks.find((w) => w.id === weekId);
+    const ids = week?.parts?.length ? week.parts.map((p) => p.id) : [weekId];
+    const { error } = await supabase.from('order_history').delete().in('id', ids);
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     } else {
@@ -363,6 +375,7 @@ export default function AdminOrderHistoryPage() {
       fetchHistory();
     }
   };
+
 
 
   const normalizedSearch = customerSearch
