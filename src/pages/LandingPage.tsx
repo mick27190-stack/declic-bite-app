@@ -169,12 +169,18 @@ export default function LandingPage() {
           <>
             {/* Logo/Hero Image */}
             <div className="relative w-full max-w-sm mb-8 animate-float">
-              <img
-                src={heroImage}
-                alt="Déclic Pizza - pizzas artisanales"
+              <video
+                src={heroVideo}
+                poster={heroImage}
+                autoPlay
+                loop
+                muted
+                playsInline
+                aria-label="Déclic Pizza - pizzas artisanales"
                 className="w-full h-auto bg-transparent"
               />
             </div>
+
 
             {/* Welcome Text */}
             <div className="text-center mb-10 space-y-3">
