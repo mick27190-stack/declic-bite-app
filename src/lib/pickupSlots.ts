@@ -115,10 +115,12 @@ export function computePickupSlotOptions(now: Date = new Date()): PickupSlot[] {
 }
 
 // ---------------- Delivery slots ----------------
-// Delivery uses a 30-minute lead time and a 18:45 → 21:45 window.
+// Delivery uses a 45-minute lead time and a 18:45 → 22:00 window.
 export const DELIVERY_FIRST_SLOT_MINUTES = 18 * 60 + 45; // 18:45
-export const DELIVERY_LAST_SLOT_MINUTES = 21 * 60 + 45; // 21:45
-export const DELIVERY_LEAD_MINUTES = 30;
+export const DELIVERY_LAST_SLOT_MINUTES = 22 * 60; // 22:00
+export const DELIVERY_LEAD_MINUTES = 45;
+// A slot stays bookable during the first 8 minutes of each quarter-hour.
+export const DELIVERY_SLOT_GRACE_MINUTES = 8;
 
 function toLabel(m: number): string {
   const h = Math.floor(m / 60);
@@ -127,17 +129,21 @@ function toLabel(m: number): string {
 }
 
 /**
- * Earliest deliverable time (rounded up to the next 15 min slot),
- * respecting the 30-minute lead.
- * Ex: 18:00 -> 18:30, 19:23 -> 20:00, 20:32 -> 21:15.
+ * Earliest deliverable time, respecting the 45-minute lead with an 8-minute
+ * grace on the current quarter-hour.
+ * Ex: 20:08 -> 20:00 + 45 = 20:45 ; 20:09 -> 20:15 + 45 = 21:00.
  */
 export function earliestDeliveryMinutes(nowMinutes: number): number {
-  return Math.ceil((nowMinutes + DELIVERY_LEAD_MINUTES) / SLOT_INTERVAL) * SLOT_INTERVAL;
+  const quarter = Math.floor(nowMinutes / SLOT_INTERVAL) * SLOT_INTERVAL;
+  const base =
+    nowMinutes - quarter <= DELIVERY_SLOT_GRACE_MINUTES ? quarter : quarter + SLOT_INTERVAL;
+  return base + DELIVERY_LEAD_MINUTES;
 }
+
 
 export interface DeliverySlots {
   asap: string;      // "Dès que possible" target time (may be 18:30 before service)
-  slots: string[];   // fixed grid slots strictly after ASAP, capped at 21:45
+  slots: string[];   // fixed grid slots strictly after ASAP, capped at 22:00
 }
 
 export function computeDeliverySlotsFromMinutes(nowMinutes: number): DeliverySlots {
@@ -168,12 +174,12 @@ export function computeDeliverySlots(now: Date = new Date()): DeliverySlots {
 // ---------------- Delivery slot validation (mirrors the backend) ----------------
 // Same rules as public.check_order_creation_cutoff for 'livraison':
 //  - a slot is required and must be formatted HH:MM,
-//  - it must sit on the 15-min grid between 18:45 and 21:45,
-//  - it must be >= max(now + 30 min rounded up, 18:45) — the 18h45 floor is the
+//  - it must sit on the 15-min grid between 18:45 and 22:00,
+//  - it must be >= max(now + 45 min with 8-min grace, 18:45) — the 18h45 floor is the
 //    same clamp the backend applies, so 18:30 is never valid, even at 18h00.
 export const DELIVERY_SLOT_REQUIRED_MESSAGE = 'Merci de choisir un créneau de livraison.';
 export const DELIVERY_SLOT_RANGE_MESSAGE =
-  'Créneau de livraison invalide. Choisissez un créneau entre 18h45 et 21h45.';
+  'Créneau de livraison invalide. Choisissez un créneau entre 18h45 et 22h00.';
 export const DELIVERY_SLOT_TOO_EARLY_MESSAGE =
   "Ce créneau de livraison n'est plus disponible. Merci d'en choisir un autre.";
 

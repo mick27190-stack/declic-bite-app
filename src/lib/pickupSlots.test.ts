@@ -138,13 +138,13 @@ describe("delivery: ASAP never before 18:45", () => {
     expect(computeDeliverySlotsFromMinutes(at(0, 0)).asap).toBe("18:45");
   });
 
-  it("between 18:00 and 18:15, ASAP stays 18:45", () => {
-    for (let m = at(18, 0); m <= at(18, 15); m += 1) {
+  it("between 18:00 and 18:08, ASAP stays 18:45 (8 min de grâce)", () => {
+    for (let m = at(18, 0); m <= at(18, 8); m += 1) {
       expect(computeDeliverySlotsFromMinutes(m).asap).toBe("18:45");
     }
   });
 
-  it("ASAP is never before 18:45 nor after 21:45, at any minute of the day", () => {
+  it("ASAP is never before 18:45 nor after 22:00, at any minute of the day", () => {
     for (let m = 0; m < 24 * 60; m += 1) {
       const { asap } = computeDeliverySlotsFromMinutes(m);
       expect(toMin(asap)).toBeGreaterThanOrEqual(DELIVERY_FIRST_SLOT_MINUTES);
@@ -169,13 +169,14 @@ describe("delivery: ASAP never before 18:45", () => {
     expect(slots).not.toContain("18:45");
   });
 
-  it("after 18:00 the 30-min lead still applies (19:23 -> 20:00)", () => {
+  it("le délai de 45 min avec 8 min de grâce s'applique", () => {
+    expect(computeDeliverySlotsFromMinutes(at(20, 8)).asap).toBe("20:45");
+    expect(computeDeliverySlotsFromMinutes(at(20, 9)).asap).toBe("21:00");
     expect(computeDeliverySlotsFromMinutes(at(19, 23)).asap).toBe("20:00");
-    expect(computeDeliverySlotsFromMinutes(at(20, 32)).asap).toBe("21:15");
   });
 
   it("ASAP is clamped to the last slot late in the service", () => {
-    expect(computeDeliverySlotsFromMinutes(at(21, 40)).asap).toBe("21:45");
+    expect(computeDeliverySlotsFromMinutes(at(21, 40)).asap).toBe("22:00");
   });
 
   it("uses Paris wall clock regardless of device timezone", () => {
@@ -215,12 +216,14 @@ describe("validateDeliverySlotFromMinutes (mirrors the backend rule)", () => {
 
   it("rejects off-grid and out-of-window slots", () => {
     expect(validateDeliverySlotFromMinutes("19:07", at(18, 0)).valid).toBe(false);
-    expect(validateDeliverySlotFromMinutes("22:00", at(18, 0)).valid).toBe(false);
+    expect(validateDeliverySlotFromMinutes("22:15", at(18, 0)).valid).toBe(false);
   });
 
-  it("enforces the 30-min lead after 18:00", () => {
+  it("enforces the 45-min lead after 18:00", () => {
     expect(validateDeliverySlotFromMinutes("18:45", at(18, 20)).valid).toBe(false);
-    expect(validateDeliverySlotFromMinutes("19:00", at(18, 20)).valid).toBe(true);
+    expect(validateDeliverySlotFromMinutes("19:15", at(18, 20)).valid).toBe(true);
+    expect(validateDeliverySlotFromMinutes("20:45", at(20, 8)).valid).toBe(true);
+    expect(validateDeliverySlotFromMinutes("20:45", at(20, 9)).valid).toBe(false);
   });
 
   it("always accepts the ASAP slot proposed by the selector", () => {
