@@ -8,7 +8,11 @@
 // virtual "now" (Paris minutes) parsed from the querystring.
 
 import { useSearchParams } from 'react-router-dom';
-import { parisMinutes } from '@/lib/pickupSlots';
+import {
+  parisMinutes,
+  computeDeliverySlots,
+  validateDeliverySlot,
+} from '@/lib/pickupSlots';
 import {
   CUTOFF_ALERT_MESSAGE,
   BUTTON_LABEL_CUTOFF_WARNING,
