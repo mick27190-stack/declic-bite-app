@@ -3,8 +3,10 @@
  * Exception : la promo est désactivée si le mardi tombe un jour férié français
  * fixe (1er mai, 8 mai, 14 juillet, 15 août, 1er novembre, 11 novembre).
  */
+import { parisCivilDate } from './parisTime';
 
 const PROMO_PRICE = 10;
+
 const PROMO_DAYS = [2]; // Mardi = 2
 
 // Jours fériés fixes (mois 1-12, jour) où la promo est suspendue.
@@ -18,14 +20,16 @@ const PROMO_BLOCKED_HOLIDAYS: Array<[number, number]> = [
 ];
 
 export function isBlockedHoliday(date: Date = new Date()): boolean {
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
+  const paris = parisCivilDate(date);
+  const m = paris.getMonth() + 1;
+  const d = paris.getDate();
   return PROMO_BLOCKED_HOLIDAYS.some(([hm, hd]) => hm === m && hd === d);
 }
 
 export function isPromoDay(date: Date = new Date()): boolean {
-  return PROMO_DAYS.includes(date.getDay()) && !isBlockedHoliday(date);
+  return PROMO_DAYS.includes(parisCivilDate(date).getDay()) && !isBlockedHoliday(date);
 }
+
 
 /**
  * Returns the effective base price for a pizza given its size.

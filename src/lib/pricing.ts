@@ -5,6 +5,8 @@
  * aux calculs synchrones (panier) de lire les prix les plus récents.
  */
 import { isPromoDay, PIZZA_CATEGORIES } from './promo';
+import { parisCivilDate } from './parisTime';
+
 
 export type SizeId = 'senior' | 'mega' | 'super-mega';
 
@@ -52,14 +54,16 @@ function toLocalIsoDate(date: Date): string {
 
 export function promoMatchesDate(promo: DayPromo, date: Date): boolean {
   if (!promo.is_active) return false;
+  // Toutes les comparaisons calendaires se font en heure de Paris.
+  const paris = parisCivilDate(date);
   if (promo.recurrence === 'once') {
-    return !!promo.specific_date && promo.specific_date === toLocalIsoDate(date);
+    return !!promo.specific_date && promo.specific_date === toLocalIsoDate(paris);
   }
-  if (promo.day_of_week !== date.getDay()) return false;
+  if (promo.day_of_week !== paris.getDay()) return false;
   if (promo.recurrence === 'weekly') return true;
   if (promo.recurrence === 'monthly') {
-    if (promo.week_of_month === -1) return isLastWeekdayOfMonth(date);
-    return promo.week_of_month === nthWeekdayOfMonth(date);
+    if (promo.week_of_month === -1) return isLastWeekdayOfMonth(paris);
+    return promo.week_of_month === nthWeekdayOfMonth(paris);
   }
   return false;
 }
