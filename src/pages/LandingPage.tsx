@@ -217,7 +217,8 @@ export default function LandingPage() {
                   <div className="absolute inset-6 rounded-full bg-foreground/5 animate-pulse" aria-hidden="true" />
                 )}
                 <img
-                  src={heroAnim}
+                  ref={heroImgRef}
+                  src={frozenSrc ?? heroAnim}
                   alt="Déclic Pizza - pizzas artisanales livrées"
                   decoding="async"
                   loading="eager"
