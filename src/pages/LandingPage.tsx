@@ -11,20 +11,21 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import heroAnimAsset from '@/assets/declic-video-2026-08.webp.asset.json';
+import animMobileAsset from '@/assets/declic-anim-mobile.webp.asset.json';
+import animDesktopAsset from '@/assets/declic-anim-desktop.webp.asset.json';
+import posterAsset from '@/assets/declic-poster.webp.asset.json';
 
-const heroAnim = heroAnimAsset.url;
+const heroPoster = posterAsset.url;
 
-// Préchargement immédiat (dès l'évaluation du module) pour que l'animation
-// soit déjà en cache quand le composant monte : évite le "pop" et les saccades.
-if (typeof document !== 'undefined' && !document.getElementById('preload-hero-anim')) {
-  const link = document.createElement('link');
-  link.id = 'preload-hero-anim';
-  link.rel = 'preload';
-  link.as = 'image';
-  link.href = heroAnim;
-  link.setAttribute('fetchpriority', 'high');
-  document.head.appendChild(link);
+// L'animation (lourde) n'est jamais préchargée : seule l'image statique légère (~26 Ko)
+// est prioritaire au premier rendu. L'animation adaptée à l'écran est téléchargée
+// après le premier affichage, et jamais en mode économie de données / connexion lente.
+function pickHeroAnim(): string | null {
+  if (typeof window === 'undefined') return null;
+  const conn = (navigator as any).connection;
+  if (conn?.saveData) return null;
+  if (conn?.effectiveType && /2g/.test(conn.effectiveType)) return null;
+  return window.innerWidth < 640 ? animMobileAsset.url : animDesktopAsset.url;
 }
 
 
