@@ -11,7 +11,7 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import heroAnimAsset from '@/assets/declic-anim-once.webp.asset.json';
+import heroAnimAsset from '@/assets/declic-anim-5s.webp.asset.json';
 
 const heroAnim = heroAnimAsset.url;
 
@@ -69,8 +69,6 @@ function isPizzeriaOpen(): boolean {
 export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
   const [heroLoaded, setHeroLoaded] = useState(false);
-  const [frozenSrc, setFrozenSrc] = useState<string | null>(null);
-  const heroImgRef = useRef<HTMLImageElement>(null);
 
   const { setRestaurant, selectedRestaurant } = useCart();
   const { user, profile } = useAuth();
@@ -110,32 +108,9 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [isAnyLivreur, isSiteAdmin]);
 
-  // Stoppe l'animation d'accueil au bout de 5 secondes : on capture l'image
-  // actuellement affichée via un canvas et on remplace la source animée par
-  // cette image statique, ce qui fige l'animation sur place.
-  useEffect(() => {
-    if (frozenSrc || !heroLoaded) return;
-    const timer = window.setTimeout(() => {
-      const img = heroImgRef.current;
-      if (!img) return;
-      try {
-        const canvas = document.createElement('canvas');
-        const w = img.naturalWidth || img.width;
-        const h = img.naturalHeight || img.height;
-        if (!w || !h) return;
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        ctx.drawImage(img, 0, 0, w, h);
-        setFrozenSrc(canvas.toDataURL('image/webp'));
-      } catch {
-        // Si l'image est taintée ou indisponible, on laisse l'animation
-        // se figer naturellement à la fin du WebP.
-      }
-    }, 5000);
-    return () => window.clearTimeout(timer);
-  }, [frozenSrc, heroLoaded]);
+  // L'animation d'accueil dure exactement 5 s et ne boucle pas :
+  // elle se lance au chargement puis s'arrête d'elle-même sur sa dernière image.
+
 
   const handleRestaurantSelect = (restaurant: Restaurant) => {
     setRestaurant(restaurant);
@@ -217,8 +192,7 @@ export default function LandingPage() {
                   <div className="absolute inset-6 rounded-full bg-foreground/5 animate-pulse" aria-hidden="true" />
                 )}
                 <img
-                  ref={heroImgRef}
-                  src={frozenSrc ?? heroAnim}
+                  src={heroAnim}
                   alt="Déclic Pizza - pizzas artisanales livrées"
                   decoding="async"
                   loading="eager"
