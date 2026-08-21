@@ -6,8 +6,6 @@ import {
   CUTOFF_WARNING_END_MINUTES,
   CUTOFF_ALERT_MESSAGE,
   BUTTON_LABEL_TAKEAWAY_CLOSED,
-  BUTTON_LABEL_TAKEAWAY_HINT,
-  BUTTON_LABEL_ORDER_NOW,
   BUTTON_LABEL_CUTOFF_WARNING,
   getCutoffState,
   getCutoffButtonLabel,
@@ -37,8 +35,8 @@ function parisDate(h: number, m: number): Date {
 }
 
 describe('order cut-off constants', () => {
-  it('delivery cut-off is exactly 21h16 Paris', () => {
-    expect(DELIVERY_CUTOFF_MINUTES).toBe(21 * 60 + 16);
+  it('delivery cut-off is exactly 21h17 Paris (last order accepted at 21h16 → 22h00 slot)', () => {
+    expect(DELIVERY_CUTOFF_MINUTES).toBe(21 * 60 + 17);
   });
   it('takeaway cut-off is exactly 21h17 Paris (last order accepted at 21h16 → 21h30 slot)', () => {
     expect(TAKEAWAY_CUTOFF_MINUTES).toBe(21 * 60 + 17);
@@ -52,7 +50,7 @@ describe('order cut-off constants', () => {
   });
   it('alert message copy is the approved wording', () => {
     expect(CUTOFF_ALERT_MESSAGE).toBe(
-      'Commandes fermées pour la livraison à partir de 21h16 et pour les commandes à emporter à partir de 21h17. Revenez demain à 18h00.',
+      'Commandes fermées pour la livraison et pour les commandes à emporter à partir de 21h17. Revenez demain à 18h00.',
     );
   });
 });
@@ -79,9 +77,9 @@ describe('getCutoffState — boundary behavior', () => {
     expect(s.isCutoffWarning).toBe(true);
   });
 
-  it('21h16 Paris: delivery cut-off triggers, warning ends', () => {
+  it('21h16 Paris: still open (last accepted minute), warning ends', () => {
     const s = getCutoffState(parisDate(21, 16));
-    expect(s.isDeliveryCutoff).toBe(true);
+    expect(s.isDeliveryCutoff).toBe(false);
     expect(s.isTakeawayCutoff).toBe(false);
     expect(s.isCutoffWarning).toBe(false);
   });
@@ -142,21 +140,21 @@ describe('getCutoffButtonLabel — exact wording', () => {
     }
   });
 
-  it('at 21h16 with orderType=livraison: shows takeaway hint', () => {
+  it('at 21h16: no forced label, delivery and takeaway still accepted', () => {
     const s = getCutoffState(parisDate(21, 16));
     expect(
-      getCutoffButtonLabel(s, { orderType: 'livraison', canCheckout: false }),
-    ).toBe(BUTTON_LABEL_TAKEAWAY_HINT);
-    expect(BUTTON_LABEL_TAKEAWAY_HINT).toBe(
-      "commandes à emporter possibles jusqu'à 21h16",
-    );
-  });
-
-  it('at 21h16 with orderType=emporter and canCheckout: keeps "Commander maintenant"', () => {
-    const s = getCutoffState(parisDate(21, 16));
+      getCutoffButtonLabel(s, { orderType: 'livraison', canCheckout: true }),
+    ).toBeNull();
     expect(
       getCutoffButtonLabel(s, { orderType: 'emporter', canCheckout: true }),
-    ).toBe(BUTTON_LABEL_ORDER_NOW);
+    ).toBeNull();
+  });
+
+  it('at 21h17: delivery is closed', () => {
+    const s = getCutoffState(parisDate(21, 17));
+    expect(
+      getCutoffButtonLabel(s, { orderType: 'livraison', canCheckout: false }),
+    ).toBe(BUTTON_LABEL_TAKEAWAY_CLOSED);
   });
 
   it('at 21h17: all order types show "Commandes fermées"', () => {
