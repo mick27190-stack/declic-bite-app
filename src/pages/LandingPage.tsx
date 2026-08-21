@@ -15,6 +15,19 @@ import heroAnimAsset from '@/assets/declic-anim.webp.asset.json';
 
 const heroAnim = heroAnimAsset.url;
 
+// Préchargement immédiat (dès l'évaluation du module) pour que l'animation
+// soit déjà en cache quand le composant monte : évite le "pop" et les saccades.
+if (typeof document !== 'undefined' && !document.getElementById('preload-hero-anim')) {
+  const link = document.createElement('link');
+  link.id = 'preload-hero-anim';
+  link.rel = 'preload';
+  link.as = 'image';
+  link.href = heroAnim;
+  link.setAttribute('fetchpriority', 'high');
+  document.head.appendChild(link);
+}
+
+
 
 
 // La badge "Livreur" n'est visible que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
@@ -55,6 +68,8 @@ function isPizzeriaOpen(): boolean {
 
 export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
+  const [heroLoaded, setHeroLoaded] = useState(false);
+
   const { setRestaurant, selectedRestaurant } = useCart();
   const { user, profile } = useAuth();
   const {
@@ -167,13 +182,24 @@ export default function LandingPage() {
           <>
             {/* Logo/Hero Animation */}
             <div className="relative w-full flex justify-center mb-6 sm:mb-8 animate-float">
-              <img
-                src={heroAnim}
-                alt="Déclic Pizza - pizzas artisanales livrées"
-                decoding="async"
-                draggable={false}
-                className="block w-[min(88vw,22rem)] sm:w-[min(70vw,26rem)] lg:w-[min(45vw,30rem)] max-h-[38vh] sm:max-h-[42vh] h-auto object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden]"
-              />
+              {/* Espace réservé : évite tout décalage de mise en page pendant le chargement */}
+              <div className="relative w-[min(88vw,22rem)] sm:w-[min(70vw,26rem)] lg:w-[min(45vw,30rem)] h-[38vh] sm:h-[42vh] flex items-center justify-center">
+                {!heroLoaded && (
+                  <div className="absolute inset-6 rounded-full bg-foreground/5 animate-pulse" aria-hidden="true" />
+                )}
+                <img
+                  src={heroAnim}
+                  alt="Déclic Pizza - pizzas artisanales livrées"
+                  decoding="async"
+                  loading="eager"
+                  fetchPriority="high"
+                  draggable={false}
+                  onLoad={() => setHeroLoaded(true)}
+                  onError={() => setHeroLoaded(true)}
+                  className={`block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] [will-change:opacity] transition-opacity duration-500 ${heroLoaded ? 'opacity-100' : 'opacity-0'}`}
+                />
+              </div>
+
 
             </div>
 
