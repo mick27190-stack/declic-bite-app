@@ -51,7 +51,7 @@ async function callCutoff(
 const m = (h: number, min: number) => h * 60 + min;
 
 // ---------------------------------------------------------------------------
-// LIVRAISON — 21h16 boundary
+// LIVRAISON — 21h17 boundary (last order accepted at 21h16)
 // ---------------------------------------------------------------------------
 
 Deno.test("livraison: 21h15 Paris → still accepted with a valid slot", async () => {
@@ -60,18 +60,23 @@ Deno.test("livraison: 21h15 Paris → still accepted with a valid slot", async (
   assertEquals(r.ok, true, `should accept at 21h15, got: ${(!r.ok && r.message) || ""}`);
 });
 
-Deno.test("livraison: 21h16 Paris → refused by the cut-off", async () => {
+Deno.test("livraison: 21h16 Paris → still accepted on the 22h00 slot", async () => {
   const r = await callCutoff("livraison", "22:00", m(21, 16));
-  assert(!r.ok, "delivery must be blocked from 21h16");
+  assertEquals(r.ok, true, `should accept at 21h16, got: ${(!r.ok && r.message) || ""}`);
+});
+
+Deno.test("livraison: 21h17 Paris → refused by the cut-off", async () => {
+  const r = await callCutoff("livraison", "22:00", m(21, 17));
+  assert(!r.ok, "delivery must be blocked from 21h17");
   assert(
     r.message.includes("livraison ne sont plus acceptées"),
     `unexpected error: ${r.message}`,
   );
 });
 
-Deno.test("livraison: 21h30 Paris → still refused (already past 21h16)", async () => {
+Deno.test("livraison: 21h30 Paris → still refused (already past 21h17)", async () => {
   const r = await callCutoff("livraison", "22:00", m(21, 30));
-  assert(!r.ok, "delivery must remain blocked past 21h16");
+  assert(!r.ok, "delivery must remain blocked past 21h17");
 });
 
 Deno.test("livraison: 20h00 Paris with missing pickup_time → refused", async () => {
@@ -179,15 +184,15 @@ Deno.test("emporter: 18h30 Paris → accepted (no pickup_time required)", async 
 });
 
 // ---------------------------------------------------------------------------
-// Cross-cut at 21h16 Paris: livraison closed, emporter last accepted minute.
+// Cross-cut at 21h17 Paris: livraison closed, emporter still open.
 // ---------------------------------------------------------------------------
 
-Deno.test("cross-cut at 21h16: emporter open (last minute), livraison closed", async () => {
-  const t = m(21, 16);
+Deno.test("cross-cut at 21h17: emporter open, livraison closed", async () => {
+  const t = m(21, 17);
   const takeaway = await callCutoff("emporter", null, t);
   const delivery = await callCutoff("livraison", "22:00", t);
-  assertEquals(takeaway.ok, true, "take-away must still accept at 21h16");
-  assert(!delivery.ok, "delivery must be closed from 21h16");
+  assertEquals(takeaway.ok, true, "take-away must still accept at 21h17");
+  assert(!delivery.ok, "delivery must be closed from 21h17");
 });
 
 
