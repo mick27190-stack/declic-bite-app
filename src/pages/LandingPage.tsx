@@ -11,9 +11,9 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import heroAnimAsset from '@/assets/declic-anim-5s.webp.asset.json';
+import logoAsset from '@/assets/declic-logo-2026-08.png.asset.json';
 
-const heroAnim = heroAnimAsset.url;
+const heroAnim = logoAsset.url;
 
 // Préchargement immédiat (dès l'évaluation du module) pour que l'animation
 // soit déjà en cache quand le composant monte : évite le "pop" et les saccades.
