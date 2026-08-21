@@ -110,6 +110,33 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [isAnyLivreur, isSiteAdmin]);
 
+  // Stoppe l'animation d'accueil au bout de 5 secondes : on capture l'image
+  // actuellement affichée via un canvas et on remplace la source animée par
+  // cette image statique, ce qui fige l'animation sur place.
+  useEffect(() => {
+    if (frozenSrc || !heroLoaded) return;
+    const timer = window.setTimeout(() => {
+      const img = heroImgRef.current;
+      if (!img) return;
+      try {
+        const canvas = document.createElement('canvas');
+        const w = img.naturalWidth || img.width;
+        const h = img.naturalHeight || img.height;
+        if (!w || !h) return;
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, w, h);
+        setFrozenSrc(canvas.toDataURL('image/webp'));
+      } catch {
+        // Si l'image est taintée ou indisponible, on laisse l'animation
+        // se figer naturellement à la fin du WebP.
+      }
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [frozenSrc, heroLoaded]);
+
   const handleRestaurantSelect = (restaurant: Restaurant) => {
     setRestaurant(restaurant);
     navigate('/menu');
