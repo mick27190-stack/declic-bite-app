@@ -143,7 +143,7 @@ export function earliestDeliveryMinutes(nowMinutes: number): number {
 
 export interface DeliverySlots {
   asap: string;      // "Dès que possible" target time (may be 18:30 before service)
-  slots: string[];   // fixed grid slots strictly after ASAP, capped at 21:45
+  slots: string[];   // fixed grid slots strictly after ASAP, capped at 22:00
 }
 
 export function computeDeliverySlotsFromMinutes(nowMinutes: number): DeliverySlots {
