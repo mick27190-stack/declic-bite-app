@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, MapPin, Clock, Store, ExternalLink, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -69,6 +69,8 @@ function isPizzeriaOpen(): boolean {
 export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
   const [heroLoaded, setHeroLoaded] = useState(false);
+  const [frozenSrc, setFrozenSrc] = useState<string | null>(null);
+  const heroImgRef = useRef<HTMLImageElement>(null);
 
   const { setRestaurant, selectedRestaurant } = useCart();
   const { user, profile } = useAuth();
@@ -107,6 +109,33 @@ export default function LandingPage() {
     }, 60 * 1000);
     return () => clearInterval(interval);
   }, [isAnyLivreur, isSiteAdmin]);
+
+  // Stoppe l'animation d'accueil au bout de 5 secondes : on capture l'image
+  // actuellement affichée via un canvas et on remplace la source animée par
+  // cette image statique, ce qui fige l'animation sur place.
+  useEffect(() => {
+    if (frozenSrc || !heroLoaded) return;
+    const timer = window.setTimeout(() => {
+      const img = heroImgRef.current;
+      if (!img) return;
+      try {
+        const canvas = document.createElement('canvas');
+        const w = img.naturalWidth || img.width;
+        const h = img.naturalHeight || img.height;
+        if (!w || !h) return;
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, w, h);
+        setFrozenSrc(canvas.toDataURL('image/webp'));
+      } catch {
+        // Si l'image est taintée ou indisponible, on laisse l'animation
+        // se figer naturellement à la fin du WebP.
+      }
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [frozenSrc, heroLoaded]);
 
   const handleRestaurantSelect = (restaurant: Restaurant) => {
     setRestaurant(restaurant);
@@ -188,7 +217,8 @@ export default function LandingPage() {
                   <div className="absolute inset-6 rounded-full bg-foreground/5 animate-pulse" aria-hidden="true" />
                 )}
                 <img
-                  src={heroAnim}
+                  ref={heroImgRef}
+                  src={frozenSrc ?? heroAnim}
                   alt="Déclic Pizza - pizzas artisanales livrées"
                   decoding="async"
                   loading="eager"
