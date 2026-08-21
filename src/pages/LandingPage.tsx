@@ -11,7 +11,7 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import heroAnimAsset from '@/assets/declic-anim.webp.asset.json';
+import heroAnimAsset from '@/assets/declic-anim-once.webp.asset.json';
 
 const heroAnim = heroAnimAsset.url;
 
