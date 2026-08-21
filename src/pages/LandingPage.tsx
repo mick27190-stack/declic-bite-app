@@ -68,6 +68,8 @@ function isPizzeriaOpen(): boolean {
 
 export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
+  const [heroLoaded, setHeroLoaded] = useState(false);
+
   const { setRestaurant, selectedRestaurant } = useCart();
   const { user, profile } = useAuth();
   const {
