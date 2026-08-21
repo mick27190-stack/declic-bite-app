@@ -15,6 +15,19 @@ import heroAnimAsset from '@/assets/declic-anim.webp.asset.json';
 
 const heroAnim = heroAnimAsset.url;
 
+// Préchargement immédiat (dès l'évaluation du module) pour que l'animation
+// soit déjà en cache quand le composant monte : évite le "pop" et les saccades.
+if (typeof document !== 'undefined' && !document.getElementById('preload-hero-anim')) {
+  const link = document.createElement('link');
+  link.id = 'preload-hero-anim';
+  link.rel = 'preload';
+  link.as = 'image';
+  link.href = heroAnim;
+  link.setAttribute('fetchpriority', 'high');
+  document.head.appendChild(link);
+}
+
+
 
 
 // La badge "Livreur" n'est visible que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
