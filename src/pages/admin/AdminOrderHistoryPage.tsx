@@ -71,6 +71,8 @@ interface HistoryWeek {
   order_count: number;
   total_revenue: number;
   orders: HistoryOrder[];
+  /** One entry per archived site row backing this week (site-scoped rows). */
+  parts?: { id: string; site: string }[];
 }
 
 
