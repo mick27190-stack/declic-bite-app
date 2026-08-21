@@ -172,7 +172,7 @@ describe("delivery: ASAP never before 18:45", () => {
   it("le délai de 45 min avec 8 min de grâce s'applique", () => {
     expect(computeDeliverySlotsFromMinutes(at(20, 8)).asap).toBe("20:45");
     expect(computeDeliverySlotsFromMinutes(at(20, 9)).asap).toBe("21:00");
-    expect(computeDeliverySlotsFromMinutes(at(19, 23)).asap).toBe("20:15");
+    expect(computeDeliverySlotsFromMinutes(at(19, 23)).asap).toBe("20:00");
   });
 
   it("ASAP is clamped to the last slot late in the service", () => {
