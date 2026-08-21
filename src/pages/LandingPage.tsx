@@ -11,20 +11,21 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import heroAnimAsset from '@/assets/declic-video-2026-08.webp.asset.json';
+import animMobileAsset from '@/assets/declic-anim-mobile.webp.asset.json';
+import animDesktopAsset from '@/assets/declic-anim-desktop.webp.asset.json';
+import posterAsset from '@/assets/declic-poster.webp.asset.json';
 
-const heroAnim = heroAnimAsset.url;
+const heroPoster = posterAsset.url;
 
-// Préchargement immédiat (dès l'évaluation du module) pour que l'animation
-// soit déjà en cache quand le composant monte : évite le "pop" et les saccades.
-if (typeof document !== 'undefined' && !document.getElementById('preload-hero-anim')) {
-  const link = document.createElement('link');
-  link.id = 'preload-hero-anim';
-  link.rel = 'preload';
-  link.as = 'image';
-  link.href = heroAnim;
-  link.setAttribute('fetchpriority', 'high');
-  document.head.appendChild(link);
+// L'animation (lourde) n'est jamais préchargée : seule l'image statique légère (~26 Ko)
+// est prioritaire au premier rendu. L'animation adaptée à l'écran est téléchargée
+// après le premier affichage, et jamais en mode économie de données / connexion lente.
+function pickHeroAnim(): string | null {
+  if (typeof window === 'undefined') return null;
+  const conn = (navigator as any).connection;
+  if (conn?.saveData) return null;
+  if (conn?.effectiveType && /2g/.test(conn.effectiveType)) return null;
+  return window.innerWidth < 640 ? animMobileAsset.url : animDesktopAsset.url;
 }
 
 
@@ -108,8 +109,37 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [isAnyLivreur, isSiteAdmin]);
 
-  // L'animation d'accueil dure exactement 5 s et ne boucle pas :
-  // elle se lance au chargement puis s'arrête d'elle-même sur sa dernière image.
+  // Chargement différé de l'animation : le poster statique s'affiche immédiatement,
+  // l'animation (variante mobile ou desktop) est téléchargée après le premier rendu
+  // puis affichée seulement une fois entièrement décodée (aucune saccade).
+  const [animSrc, setAnimSrc] = useState<string | null>(null);
+  const [animReady, setAnimReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      const src = pickHeroAnim();
+      if (!src || cancelled) return;
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => {
+        if (!cancelled) {
+          setAnimSrc(src);
+          setAnimReady(true);
+        }
+      };
+      img.src = src;
+    };
+    const ric = (window as any).requestIdleCallback;
+    const id = ric ? ric(load, { timeout: 1500 }) : window.setTimeout(load, 300);
+    return () => {
+      cancelled = true;
+      if (ric && (window as any).cancelIdleCallback) (window as any).cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
+  }, []);
+
+
 
 
   const handleRestaurantSelect = (restaurant: Restaurant) => {
@@ -192,7 +222,7 @@ export default function LandingPage() {
                   <div className="absolute inset-6 rounded-full bg-foreground/5 animate-pulse" aria-hidden="true" />
                 )}
                 <img
-                  src={heroAnim}
+                  src={heroPoster}
                   alt="Déclic Pizza - pizzas artisanales livrées"
                   decoding="async"
                   loading="eager"
@@ -200,8 +230,18 @@ export default function LandingPage() {
                   draggable={false}
                   onLoad={() => setHeroLoaded(true)}
                   onError={() => setHeroLoaded(true)}
-                  className={`block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] [will-change:opacity] transition-opacity duration-500 ${heroLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  className={`block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] transition-opacity duration-500 ${heroLoaded ? 'opacity-100' : 'opacity-0'}`}
                 />
+                {animSrc && (
+                  <img
+                    src={animSrc}
+                    alt=""
+                    aria-hidden="true"
+                    decoding="async"
+                    draggable={false}
+                    className={`absolute inset-0 block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] transition-opacity duration-300 ${animReady ? 'opacity-100' : 'opacity-0'}`}
+                  />
+                )}
               </div>
 
 
