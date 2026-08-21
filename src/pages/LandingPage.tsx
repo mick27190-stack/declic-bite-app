@@ -109,8 +109,37 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [isAnyLivreur, isSiteAdmin]);
 
-  // L'animation d'accueil dure exactement 5 s et ne boucle pas :
-  // elle se lance au chargement puis s'arrête d'elle-même sur sa dernière image.
+  // Chargement différé de l'animation : le poster statique s'affiche immédiatement,
+  // l'animation (variante mobile ou desktop) est téléchargée après le premier rendu
+  // puis affichée seulement une fois entièrement décodée (aucune saccade).
+  const [animSrc, setAnimSrc] = useState<string | null>(null);
+  const [animReady, setAnimReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = () => {
+      const src = pickHeroAnim();
+      if (!src || cancelled) return;
+      const img = new Image();
+      img.decoding = 'async';
+      img.onload = () => {
+        if (!cancelled) {
+          setAnimSrc(src);
+          setAnimReady(true);
+        }
+      };
+      img.src = src;
+    };
+    const ric = (window as any).requestIdleCallback;
+    const id = ric ? ric(load, { timeout: 1500 }) : window.setTimeout(load, 300);
+    return () => {
+      cancelled = true;
+      if (ric && (window as any).cancelIdleCallback) (window as any).cancelIdleCallback(id);
+      else clearTimeout(id);
+    };
+  }, []);
+
+
 
 
   const handleRestaurantSelect = (restaurant: Restaurant) => {
