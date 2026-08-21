@@ -11,11 +11,9 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import heroAsset from '@/assets/declic-logo-transparent.png.asset.json';
-import heroVideoAsset from '@/assets/declic-anim.webm.asset.json';
+import heroAnimAsset from '@/assets/declic-anim.webp.asset.json';
 
-const heroImage = heroAsset.url;
-const heroVideo = heroVideoAsset.url;
+const heroAnim = heroAnimAsset.url;
 
 
 
@@ -169,17 +167,14 @@ export default function LandingPage() {
           <>
             {/* Logo/Hero Animation */}
             <div className="relative w-full flex justify-center mb-6 sm:mb-8 animate-float">
-              <video
-                src={heroVideo}
-                poster={heroImage}
-                autoPlay
-                loop
-                muted
-                playsInline
-                disablePictureInPicture
-                aria-label="Déclic Pizza - pizzas artisanales"
+              <img
+                src={heroAnim}
+                alt="Déclic Pizza - pizzas artisanales livrées"
+                decoding="async"
+                draggable={false}
                 className="block w-[min(88vw,22rem)] sm:w-[min(70vw,26rem)] lg:w-[min(45vw,30rem)] max-h-[38vh] sm:max-h-[42vh] h-auto object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden]"
               />
+
             </div>
 
 
