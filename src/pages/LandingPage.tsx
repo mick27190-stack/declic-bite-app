@@ -11,20 +11,26 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import animMobileAsset from '@/assets/declic-anim-mobile-v2.webp.asset.json';
-import animDesktopAsset from '@/assets/declic-anim-desktop-v2.webp.asset.json';
-import posterAsset from '@/assets/declic-poster-v2.webp.asset.json';
+import animMobileAsset from '@/assets/declic-anim-mobile-v3.webp.asset.json';
+import animDesktopAsset from '@/assets/declic-anim-desktop-v3.webp.asset.json';
+import posterAsset from '@/assets/declic-poster-v3.webp.asset.json';
 
 const heroPoster = posterAsset.url;
 
-// L'animation (lourde) n'est jamais préchargée : seule l'image statique légère (~26 Ko)
+// L'animation (lourde) n'est jamais préchargée : seule l'image statique légère
 // est prioritaire au premier rendu. L'animation adaptée à l'écran est téléchargée
-// après le premier affichage, et jamais en mode économie de données / connexion lente.
+// après le premier affichage, et jamais en mode économie de données / connexion lente
+// ni sur les appareils modestes (peu de mémoire ou de cœurs CPU), où le décodage
+// image par image provoquerait des saccades.
 function pickHeroAnim(): string | null {
   if (typeof window === 'undefined') return null;
-  const conn = (navigator as any).connection;
+  const nav = navigator as any;
+  const conn = nav.connection;
   if (conn?.saveData) return null;
-  if (conn?.effectiveType && /2g/.test(conn.effectiveType)) return null;
+  if (conn?.effectiveType && /2g|slow-2g|3g/.test(conn.effectiveType)) return null;
+  if (typeof nav.deviceMemory === 'number' && nav.deviceMemory <= 2) return null;
+  if (typeof nav.hardwareConcurrency === 'number' && nav.hardwareConcurrency <= 2) return null;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return null;
   return window.innerWidth < 640 ? animMobileAsset.url : animDesktopAsset.url;
 }
 
@@ -117,21 +123,27 @@ export default function LandingPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const load = () => {
+    const load = async () => {
       const src = pickHeroAnim();
       if (!src || cancelled) return;
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => {
-        if (!cancelled) {
-          setAnimSrc(src);
-          setAnimReady(true);
-        }
-      };
       img.src = src;
+      try {
+        // decode() effectue le décodage hors du thread de rendu : l'animation
+        // n'apparaît qu'une fois prête, sans blocage ni saccade à l'affichage.
+        if (img.decode) await img.decode();
+        else await new Promise((res) => { img.onload = res; img.onerror = res; });
+      } catch {
+        return;
+      }
+      if (!cancelled) {
+        setAnimSrc(src);
+        setAnimReady(true);
+      }
     };
     const ric = (window as any).requestIdleCallback;
-    const id = ric ? ric(load, { timeout: 1500 }) : window.setTimeout(load, 300);
+    const id = ric ? ric(load, { timeout: 2000 }) : window.setTimeout(load, 400);
     return () => {
       cancelled = true;
       if (ric && (window as any).cancelIdleCallback) (window as any).cancelIdleCallback(id);
@@ -224,22 +236,26 @@ export default function LandingPage() {
                 <img
                   src={heroPoster}
                   alt="Déclic Pizza - pizzas artisanales livrées"
+                  width={640}
+                  height={443}
                   decoding="async"
                   loading="eager"
                   fetchPriority="high"
                   draggable={false}
                   onLoad={() => setHeroLoaded(true)}
                   onError={() => setHeroLoaded(true)}
-                  className={`block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] transition-opacity duration-500 ${heroLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  className={`block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] [contain:paint] transition-opacity duration-500 ${heroLoaded && !animReady ? 'opacity-100' : ''} ${!heroLoaded ? 'opacity-0' : ''} ${animReady ? 'opacity-0' : ''}`}
                 />
                 {animSrc && (
                   <img
                     src={animSrc}
                     alt=""
                     aria-hidden="true"
+                    width={560}
+                    height={388}
                     decoding="async"
                     draggable={false}
-                    className={`absolute inset-0 block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] transition-opacity duration-300 ${animReady ? 'opacity-100' : 'opacity-0'}`}
+                    className={`absolute inset-0 block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] [contain:paint] transition-opacity duration-300 ${animReady ? 'opacity-100' : 'opacity-0'}`}
                   />
                 )}
               </div>
