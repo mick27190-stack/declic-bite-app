@@ -11,20 +11,26 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import animMobileAsset from '@/assets/declic-anim-mobile-v2.webp.asset.json';
-import animDesktopAsset from '@/assets/declic-anim-desktop-v2.webp.asset.json';
-import posterAsset from '@/assets/declic-poster-v2.webp.asset.json';
+import animMobileAsset from '@/assets/declic-anim-mobile-v3.webp.asset.json';
+import animDesktopAsset from '@/assets/declic-anim-desktop-v3.webp.asset.json';
+import posterAsset from '@/assets/declic-poster-v3.webp.asset.json';
 
 const heroPoster = posterAsset.url;
 
-// L'animation (lourde) n'est jamais préchargée : seule l'image statique légère (~26 Ko)
+// L'animation (lourde) n'est jamais préchargée : seule l'image statique légère
 // est prioritaire au premier rendu. L'animation adaptée à l'écran est téléchargée
-// après le premier affichage, et jamais en mode économie de données / connexion lente.
+// après le premier affichage, et jamais en mode économie de données / connexion lente
+// ni sur les appareils modestes (peu de mémoire ou de cœurs CPU), où le décodage
+// image par image provoquerait des saccades.
 function pickHeroAnim(): string | null {
   if (typeof window === 'undefined') return null;
-  const conn = (navigator as any).connection;
+  const nav = navigator as any;
+  const conn = nav.connection;
   if (conn?.saveData) return null;
-  if (conn?.effectiveType && /2g/.test(conn.effectiveType)) return null;
+  if (conn?.effectiveType && /2g|slow-2g|3g/.test(conn.effectiveType)) return null;
+  if (typeof nav.deviceMemory === 'number' && nav.deviceMemory <= 2) return null;
+  if (typeof nav.hardwareConcurrency === 'number' && nav.hardwareConcurrency <= 2) return null;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return null;
   return window.innerWidth < 640 ? animMobileAsset.url : animDesktopAsset.url;
 }
 
