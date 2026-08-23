@@ -11,28 +11,10 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import animMobileAsset from '@/assets/declic-anim-mobile-v3.webp.asset.json';
-import animDesktopAsset from '@/assets/declic-anim-desktop-v3.webp.asset.json';
-import posterAsset from '@/assets/declic-poster-v3.webp.asset.json';
+import { preloadHeroMedia, heroPosterUrl } from '@/lib/heroPreload';
 
-const heroPoster = posterAsset.url;
+const heroPoster = heroPosterUrl;
 
-// L'animation (lourde) n'est jamais préchargée : seule l'image statique légère
-// est prioritaire au premier rendu. L'animation adaptée à l'écran est téléchargée
-// après le premier affichage, et jamais en mode économie de données / connexion lente
-// ni sur les appareils modestes (peu de mémoire ou de cœurs CPU), où le décodage
-// image par image provoquerait des saccades.
-function pickHeroAnim(): string | null {
-  if (typeof window === 'undefined') return null;
-  const nav = navigator as any;
-  const conn = nav.connection;
-  if (conn?.saveData) return null;
-  if (conn?.effectiveType && /2g|slow-2g|3g/.test(conn.effectiveType)) return null;
-  if (typeof nav.deviceMemory === 'number' && nav.deviceMemory <= 2) return null;
-  if (typeof nav.hardwareConcurrency === 'number' && nav.hardwareConcurrency <= 2) return null;
-  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return null;
-  return window.innerWidth < 640 ? animMobileAsset.url : animDesktopAsset.url;
-}
 
 
 
@@ -115,41 +97,24 @@ export default function LandingPage() {
     return () => clearInterval(interval);
   }, [isAnyLivreur, isSiteAdmin]);
 
-  // Chargement différé de l'animation : le poster statique s'affiche immédiatement,
-  // l'animation (variante mobile ou desktop) est téléchargée après le premier rendu
-  // puis affichée seulement une fois entièrement décodée (aucune saccade).
+  // L'animation est préchargée dès le démarrage de l'application (voir main.tsx) :
+  // ici on se contente d'attendre la promesse partagée, déjà résolue la plupart
+  // du temps, puis on affiche l'animation une fois entièrement décodée.
   const [animSrc, setAnimSrc] = useState<string | null>(null);
   const [animReady, setAnimReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
-      const src = pickHeroAnim();
-      if (!src || cancelled) return;
-      const img = new Image();
-      img.decoding = 'async';
-      img.src = src;
-      try {
-        // decode() effectue le décodage hors du thread de rendu : l'animation
-        // n'apparaît qu'une fois prête, sans blocage ni saccade à l'affichage.
-        if (img.decode) await img.decode();
-        else await new Promise((res) => { img.onload = res; img.onerror = res; });
-      } catch {
-        return;
-      }
-      if (!cancelled) {
-        setAnimSrc(src);
-        setAnimReady(true);
-      }
-    };
-    const ric = (window as any).requestIdleCallback;
-    const id = ric ? ric(load, { timeout: 2000 }) : window.setTimeout(load, 400);
+    preloadHeroMedia().then((src) => {
+      if (cancelled || !src) return;
+      setAnimSrc(src);
+      setAnimReady(true);
+    });
     return () => {
       cancelled = true;
-      if (ric && (window as any).cancelIdleCallback) (window as any).cancelIdleCallback(id);
-      else clearTimeout(id);
     };
   }, []);
+
 
 
 
