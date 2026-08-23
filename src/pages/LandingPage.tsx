@@ -236,22 +236,26 @@ export default function LandingPage() {
                 <img
                   src={heroPoster}
                   alt="Déclic Pizza - pizzas artisanales livrées"
+                  width={640}
+                  height={443}
                   decoding="async"
                   loading="eager"
                   fetchPriority="high"
                   draggable={false}
                   onLoad={() => setHeroLoaded(true)}
                   onError={() => setHeroLoaded(true)}
-                  className={`block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] transition-opacity duration-500 ${heroLoaded ? 'opacity-100' : 'opacity-0'}`}
+                  className={`block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] [contain:paint] transition-opacity duration-500 ${heroLoaded && !animReady ? 'opacity-100' : ''} ${!heroLoaded ? 'opacity-0' : ''} ${animReady ? 'opacity-0' : ''}`}
                 />
                 {animSrc && (
                   <img
                     src={animSrc}
                     alt=""
                     aria-hidden="true"
+                    width={560}
+                    height={388}
                     decoding="async"
                     draggable={false}
-                    className={`absolute inset-0 block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] transition-opacity duration-300 ${animReady ? 'opacity-100' : 'opacity-0'}`}
+                    className={`absolute inset-0 block w-full h-full object-contain bg-transparent select-none pointer-events-none [backface-visibility:hidden] [contain:paint] transition-opacity duration-300 ${animReady ? 'opacity-100' : 'opacity-0'}`}
                   />
                 )}
               </div>
