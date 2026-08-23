@@ -123,21 +123,27 @@ export default function LandingPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const load = () => {
+    const load = async () => {
       const src = pickHeroAnim();
       if (!src || cancelled) return;
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => {
-        if (!cancelled) {
-          setAnimSrc(src);
-          setAnimReady(true);
-        }
-      };
       img.src = src;
+      try {
+        // decode() effectue le décodage hors du thread de rendu : l'animation
+        // n'apparaît qu'une fois prête, sans blocage ni saccade à l'affichage.
+        if (img.decode) await img.decode();
+        else await new Promise((res) => { img.onload = res; img.onerror = res; });
+      } catch {
+        return;
+      }
+      if (!cancelled) {
+        setAnimSrc(src);
+        setAnimReady(true);
+      }
     };
     const ric = (window as any).requestIdleCallback;
-    const id = ric ? ric(load, { timeout: 1500 }) : window.setTimeout(load, 300);
+    const id = ric ? ric(load, { timeout: 2000 }) : window.setTimeout(load, 400);
     return () => {
       cancelled = true;
       if (ric && (window as any).cancelIdleCallback) (window as any).cancelIdleCallback(id);
