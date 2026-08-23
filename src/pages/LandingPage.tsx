@@ -11,9 +11,9 @@ import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
-import animMobileAsset from '@/assets/declic-anim-mobile.webp.asset.json';
-import animDesktopAsset from '@/assets/declic-anim-desktop.webp.asset.json';
-import posterAsset from '@/assets/declic-poster.webp.asset.json';
+import animMobileAsset from '@/assets/declic-anim-mobile-v2.webp.asset.json';
+import animDesktopAsset from '@/assets/declic-anim-desktop-v2.webp.asset.json';
+import posterAsset from '@/assets/declic-poster-v2.webp.asset.json';
 
 const heroPoster = posterAsset.url;
 
