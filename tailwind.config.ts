@@ -16,7 +16,7 @@ export default {
       fontFamily: {
         display: ["Fredoka", "sans-serif"],
         body: ["Nunito", "sans-serif"],
-        brand: ["'Baloo 2'", "sans-serif"],
+        brand: ["'Fredoka'", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
