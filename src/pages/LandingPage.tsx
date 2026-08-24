@@ -232,9 +232,9 @@ export default function LandingPage() {
 
             {/* Welcome Text */}
             <div className="text-center mb-10 space-y-3">
-              <h1 className="text-4xl sm:text-5xl font-brand font-extrabold tracking-tight">
-                <span className="text-brand-cream">Déclic</span>{' '}
-                <span className="text-brand-green">Pizza</span>
+              <h1 className="text-4xl sm:text-5xl font-brand font-extrabold tracking-tight whitespace-nowrap text-center">
+                <span className="bg-gradient-to-b from-brand-cream to-brand-cream/85 bg-clip-text text-transparent">Déclic</span>{' '}
+                <span className="bg-gradient-to-b from-brand-green to-brand-green/85 bg-clip-text text-transparent">Pizza</span>
               </h1>
               <p className="text-lg text-muted-foreground max-w-xs mx-auto">
                 Des pizzas artisanales, fraîches et savoureuses, livrées chez vous !
