@@ -12,6 +12,7 @@ import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
 import { preloadHeroMedia, heroPosterUrl } from '@/lib/heroPreload';
+import wordmarkAsset from '@/assets/declic-wordmark.png.asset.json';
 
 const heroPoster = heroPosterUrl;
 
