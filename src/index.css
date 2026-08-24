@@ -49,6 +49,10 @@
     --pizza-green: 140 60% 45%;
     --pizza-dark: 20 15% 8%;
 
+    /* Brand wordmark (Déclic Pizza) */
+    --brand-cream: 35 30% 91%;
+    --brand-green: 140 39% 49%;
+
     /* Gradients */
     --gradient-hero: linear-gradient(180deg, hsl(25 95% 53% / 0.1) 0%, hsl(20 15% 8%) 50%);
     --gradient-warm: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(15 80% 45%) 100%);
