@@ -60,6 +60,10 @@ export default {
           green: "hsl(var(--pizza-green))",
           dark: "hsl(var(--pizza-dark))",
         },
+        brand: {
+          cream: "hsl(var(--brand-cream))",
+          green: "hsl(var(--brand-green))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
