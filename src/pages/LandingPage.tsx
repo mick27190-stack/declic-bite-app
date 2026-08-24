@@ -12,6 +12,7 @@ import { closureMessage, closureTitle } from '@/lib/closureMessages';
 
 import { Restaurant } from '@/types/pizza';
 import { preloadHeroMedia, heroPosterUrl } from '@/lib/heroPreload';
+import wordmarkAsset from '@/assets/declic-wordmark.png.asset.json';
 
 const heroPoster = heroPosterUrl;
 
@@ -232,9 +233,16 @@ export default function LandingPage() {
 
             {/* Welcome Text */}
             <div className="text-center mb-10 space-y-3">
-              <h1 className="text-4xl sm:text-5xl font-brand font-extrabold tracking-tight whitespace-nowrap text-center">
-                <span className="bg-gradient-to-b from-brand-cream to-brand-cream/[0.93] bg-clip-text text-transparent">Déclic</span>{' '}
-                <span className="bg-gradient-to-b from-brand-green to-brand-green/[0.93] bg-clip-text text-transparent">Pizza</span>
+              <h1 className="flex justify-center">
+                <img
+                  src={wordmarkAsset.url}
+                  alt="Déclic Pizza"
+                  width={1399}
+                  height={233}
+                  decoding="async"
+                  draggable={false}
+                  className="w-[min(80vw,20rem)] sm:w-[min(60vw,26rem)] h-auto select-none pointer-events-none"
+                />
               </h1>
               <p className="text-lg text-muted-foreground max-w-xs mx-auto">
                 Des pizzas artisanales, fraîches et savoureuses, livrées chez vous !
