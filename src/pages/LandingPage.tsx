@@ -241,7 +241,7 @@ export default function LandingPage() {
                   height={233}
                   decoding="async"
                   draggable={false}
-                  className="w-[min(80vw,20rem)] sm:w-[min(60vw,26rem)] h-auto select-none pointer-events-none"
+                  className="w-[min(68vw,16rem)] sm:w-[min(52vw,21rem)] h-auto select-none pointer-events-none"
                 />
               </h1>
               <p className="text-lg text-muted-foreground max-w-xs mx-auto">
