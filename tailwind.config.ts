@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         display: ["Fredoka", "sans-serif"],
         body: ["Nunito", "sans-serif"],
+        brand: ["'Baloo 2'", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -58,6 +59,10 @@ export default {
           cream: "hsl(var(--pizza-cream))",
           green: "hsl(var(--pizza-green))",
           dark: "hsl(var(--pizza-dark))",
+        },
+        brand: {
+          cream: "hsl(var(--brand-cream))",
+          green: "hsl(var(--brand-green))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
