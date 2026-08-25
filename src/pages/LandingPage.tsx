@@ -262,21 +262,21 @@ export default function LandingPage() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="w-full max-w-[17rem] space-y-4">
+            <div className="w-full max-w-[17rem] space-y-4 flex flex-col items-center">
               <Button
                 variant="hero"
-                size="xl"
+                size="lg"
                 className="w-full"
                 onClick={() => setShowRestaurantSelector(true)}
               >
                 Commander maintenant
                 <ChevronRight className="w-6 h-6" />
               </Button>
-              
+
               <Button
                 variant="glass"
                 size="default"
-                className="w-[88%] mx-auto bg-[#32B86C] text-black border-transparent hover:bg-[#2aa85f] hover:border-transparent hover:shadow-glow"
+                className="w-[88%] bg-[#32B86C] text-black border-transparent hover:bg-[#2aa85f] hover:border-transparent hover:shadow-glow"
                 onClick={handleDiscoverMenu}
               >
                 Découvrir le menu
