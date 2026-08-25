@@ -284,8 +284,9 @@ export default function LandingPage() {
             </div>
 
             {/* Opening Hours Note */}
-            <p className="text-sm text-muted-foreground mt-8 text-center">
-              🍕 Ouvert du mardi au dimanche
+            <p className="text-sm text-muted-foreground mt-8 text-center inline-flex items-center justify-center gap-1.5">
+              <Pizza className="w-4 h-4 text-[#32B86C]" />
+              Ouvert du mardi au dimanche
             </p>
           </>
         ) : (
