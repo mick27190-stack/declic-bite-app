@@ -276,7 +276,7 @@ export default function LandingPage() {
               <Button
                 variant="glass"
                 size="default"
-                className="w-[78%] bg-[#32B86C] text-black border-transparent hover:bg-[#2aa85f] hover:border-transparent hover:shadow-glow"
+                className="w-[70%] bg-[#32B86C] text-black border-transparent hover:bg-[#2aa85f] hover:border-transparent hover:shadow-glow"
                 onClick={handleDiscoverMenu}
               >
                 Découvrir le menu
