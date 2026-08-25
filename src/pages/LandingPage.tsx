@@ -262,7 +262,7 @@ export default function LandingPage() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="w-full max-w-xs space-y-4">
+            <div className="w-full max-w-[17rem] space-y-4">
               <Button
                 variant="hero"
                 size="xl"
