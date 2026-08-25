@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, Store, ExternalLink, AlertTriangle } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, Store, ExternalLink, AlertTriangle, Pizza } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
 import { UserBadge } from '@/components/UserBadge';
@@ -284,8 +284,9 @@ export default function LandingPage() {
             </div>
 
             {/* Opening Hours Note */}
-            <p className="text-sm text-muted-foreground mt-8 text-center">
-              🍕 Ouvert du mardi au dimanche
+            <p className="text-sm text-muted-foreground mt-8 text-center inline-flex items-center justify-center gap-1.5">
+              <Pizza className="w-4 h-4 text-[#32B86C]" />
+              Ouvert du mardi au dimanche
             </p>
           </>
         ) : (
