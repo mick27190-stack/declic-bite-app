@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Loader2, RefreshCw, Search, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Loader2, RefreshCw, Search, ShieldCheck } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -180,6 +182,68 @@ export default function AdminConsentsPage() {
     toast({ title: 'Export CSV généré', description: `${filtered.length} ligne(s) exportée(s).` });
   };
 
+  const handleExportPdf = () => {
+    if (filtered.length === 0) {
+      toast({ title: 'Aucun consentement à exporter', variant: 'destructive' });
+      return;
+    }
+
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const accepted = filtered.filter((r) => r.accepte).length;
+
+    doc.setFontSize(16);
+    doc.text('Registre des consentements RGPD', 14, 15);
+    doc.setFontSize(10);
+    doc.text(
+      `Édité le ${new Date().toLocaleDateString('fr-FR')} — Version : ${
+        versionFilter === 'all' ? 'toutes' : versionFilter
+      } · Type : ${typeFilter === 'all' ? 'tous' : TYPE_LABELS[typeFilter] ?? typeFilter} · ${
+        filtered.length
+      } ligne(s) · Acceptés : ${accepted} · Refusés : ${filtered.length - accepted}`,
+      14,
+      22,
+    );
+
+    autoTable(doc, {
+      startY: 28,
+      head: [['Client', 'Téléphone', 'Email', 'Type', 'Choix', 'Version', 'Date (Paris)', 'IP']],
+      body: filtered.map((r) => {
+        const p = profiles[r.client_id];
+        return [
+          [p?.first_name, p?.last_name].filter(Boolean).join(' ') || '—',
+          p?.phone ?? '',
+          p?.email ?? '',
+          TYPE_LABELS[r.type_consentement] ?? r.type_consentement,
+          r.accepte ? 'Accepté' : 'Refusé',
+          r.version_document ?? '—',
+          formatDate(r.date_consentement),
+          r.adresse_ip ?? '',
+        ];
+      }),
+      styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+      headStyles: { fillColor: [220, 80, 40], textColor: 255 },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 55 },
+        3: { cellWidth: 38 },
+        4: { cellWidth: 20, halign: 'center' },
+        5: { cellWidth: 28 },
+        6: { cellWidth: 38 },
+        7: { cellWidth: 26 },
+      },
+    });
+
+    doc.save(
+      `consentements_${versionFilter === 'all' ? 'toutes-versions' : versionFilter}_${new Date()
+        .toISOString()
+        .slice(0, 10)}.pdf`,
+    );
+    toast({ title: 'Export PDF généré', description: `${filtered.length} ligne(s) exportée(s).` });
+  };
+
+
+
   if (authLoading || adminLoading || !isSuperAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -218,6 +282,10 @@ export default function AdminConsentsPage() {
               <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
                 <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Actualiser
+              </Button>
+              <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={loading}>
+                <FileText className="h-4 w-4 mr-2" />
+                Exporter en PDF
               </Button>
               <Button size="sm" onClick={handleExportCsv} disabled={loading}>
                 <Download className="h-4 w-4 mr-2" />
