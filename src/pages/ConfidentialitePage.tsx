@@ -61,7 +61,7 @@ export default function ConfidentialitePage() {
           [
             'Paiement',
             'Données de carte bancaire',
-            'Traitées exclusivement par Stripe ; les exploitants n'ont jamais accès au numéro de carte complet',
+            "Traitées exclusivement par Stripe ; les exploitants n'ont jamais accès au numéro de carte complet",
           ],
           [
             'Communication marketing',
@@ -70,7 +70,7 @@ export default function ConfidentialitePage() {
           ],
           [
             'Navigation',
-            'Cookies techniques et de mesure d'audience',
+            "Cookies techniques et de mesure d'audience",
             'Fonctionnement du Site, statistiques de fréquentation',
           ],
         ]}
@@ -123,8 +123,8 @@ export default function ConfidentialitePage() {
           ],
           [
             'Google Analytics (Google Ireland Limited)',
-            'Mesure d'audience du Site',
-            'Traitement susceptible d'impliquer un transfert vers les États-Unis',
+            "Mesure d'audience du Site",
+            "Traitement susceptible d'impliquer un transfert vers les États-Unis",
           ],
           [
             'IONOS (IONOS SARL)',
@@ -217,12 +217,12 @@ export default function ConfidentialitePage() {
       </LegalP>
       <LegalList
         items={[
-          'Droit d'accès',
+          "Droit d'accès",
           'Droit de rectification',
-          'Droit à l'effacement',
+          "Droit à l'effacement",
           'Droit à la limitation du traitement',
           'Droit à la portabilité',
-          'Droit d'opposition (notamment à la prospection commerciale, y compris SMS)',
+          "Droit d'opposition (notamment à la prospection commerciale, y compris SMS)",
           'Droit de définir des directives relatives au sort de ses données après son décès',
         ]}
       />
