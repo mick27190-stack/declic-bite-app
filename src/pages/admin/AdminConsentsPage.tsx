@@ -63,6 +63,7 @@ export default function AdminConsentsPage() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'cgv_politique' | 'sms_marketing'>('all');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -283,13 +284,26 @@ export default function AdminConsentsPage() {
                 <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Actualiser
               </Button>
-              <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={loading}>
-                <FileText className="h-4 w-4 mr-2" />
-                Exporter en PDF
-              </Button>
-              <Button size="sm" onClick={handleExportCsv} disabled={loading}>
-                <Download className="h-4 w-4 mr-2" />
-                Exporter en CSV
+              <Select value={exportFormat} onValueChange={(v) => setExportFormat(v as 'csv' | 'pdf')}>
+                <SelectTrigger className="w-[140px] h-9">
+                  <SelectValue placeholder="Format" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="csv">CSV</SelectItem>
+                  <SelectItem value="pdf">PDF</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                size="sm"
+                onClick={exportFormat === 'csv' ? handleExportCsv : handleExportPdf}
+                disabled={loading}
+              >
+                {exportFormat === 'csv' ? (
+                  <Download className="h-4 w-4 mr-2" />
+                ) : (
+                  <FileText className="h-4 w-4 mr-2" />
+                )}
+                Exporter
               </Button>
             </div>
           </CardHeader>
