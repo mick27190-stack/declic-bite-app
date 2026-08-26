@@ -973,6 +973,14 @@ export type Database = {
         Args: { _items: Json; _now?: string }
         Returns: number
       }
+      consent_migration_stats: {
+        Args: { _version: string }
+        Returns: {
+          confirmed: number
+          pending: number
+          total_clients: number
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
