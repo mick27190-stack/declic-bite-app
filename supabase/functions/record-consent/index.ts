@@ -9,6 +9,7 @@ const BodySchema = z.object({
       z.object({
         type_consentement: z.enum(['cgv_politique', 'sms_marketing']),
         accepte: z.boolean(),
+        motif_refus: z.string().max(200).optional(),
       }),
     )
     .min(1)
@@ -64,6 +65,7 @@ Deno.serve(async (req) => {
       accepte: entry.accepte,
       version_document: parsed.data.version_document ?? null,
       adresse_ip: ip,
+      motif_refus: entry.accepte ? null : (entry.motif_refus ?? null),
     })),
   );
 
