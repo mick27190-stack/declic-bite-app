@@ -5,6 +5,8 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+
 import { toast } from 'sonner';
 import { Phone, Lock, User, ArrowLeft, Loader2, Mail } from 'lucide-react';
 import { z } from 'zod';
@@ -31,6 +33,10 @@ export default function AuthPage() {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [smsMarketing, setSmsMarketing] = useState(false);
+  
+
   
   // Errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -93,8 +99,14 @@ export default function AuthPage() {
     } catch (e) {
       if (e instanceof z.ZodError) newErrors.password = e.errors[0].message;
     }
-    
+
+    if (!acceptedTerms) {
+      newErrors.acceptedTerms =
+        "Vous devez accepter les Conditions Générales de Vente et la Politique de confidentialité pour créer un compte.";
+    }
+
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -129,11 +141,22 @@ export default function AuthPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateSignup()) return;
-    
+    if (!validateSignup()) {
+      if (!acceptedTerms) {
+        toast.error(
+          "Vous devez accepter les CGV et la Politique de confidentialité pour créer un compte."
+        );
+      }
+      return;
+    }
+
     setLoading(true);
-    const { error } = await signUpWithPhone(phone, password, firstName, lastName, email);
+    const { error } = await signUpWithPhone(phone, password, firstName, lastName, email, {
+      acceptedTerms,
+      smsMarketing,
+    });
     setLoading(false);
+
     
     if (error) {
       if (error.message.includes('already registered') || error.message.includes('User already registered')) {
@@ -142,6 +165,9 @@ export default function AuthPage() {
         toast.error(error.message);
       }
     } else {
+      setAcceptedTerms(false);
+      setSmsMarketing(false);
+
       if (email) {
         toast.success(
           'Compte créé ! Un email de vérification vous a été envoyé. Cliquez sur le lien pour valider votre adresse.',
@@ -404,9 +430,71 @@ export default function AuthPage() {
                 {errors.password && <p className="text-destructive text-sm mt-1">{errors.password}</p>}
               </div>
               
-              <Button type="submit" className="w-full" variant="warm" disabled={loading}>
+              {/* Consentement obligatoire — CGV + Politique de confidentialité */}
+              <div className="pt-2">
+                <div className="flex items-start gap-3 rounded-lg border border-border p-3">
+                  <Checkbox
+                    id="acceptTerms"
+                    checked={acceptedTerms}
+                    onCheckedChange={(checked) => {
+                      setAcceptedTerms(checked === true);
+                      if (checked === true) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.acceptedTerms;
+                          return next;
+                        });
+                      }
+                    }}
+                    className="mt-0.5"
+                    aria-required="true"
+                  />
+                  <Label htmlFor="acceptTerms" className="text-sm font-normal leading-snug text-foreground cursor-pointer">
+                    J'ai lu et j'accepte les{' '}
+                    <a
+                      href="/cgv"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline hover:text-primary/80"
+                    >
+                      Conditions Générales de Vente
+                    </a>{' '}
+                    et la{' '}
+                    <a
+                      href="/confidentialite"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary underline hover:text-primary/80"
+                    >
+                      Politique de confidentialité
+                    </a>
+                    <span className="text-destructive"> *</span>
+                  </Label>
+                </div>
+                {errors.acceptedTerms && (
+                  <p className="text-destructive text-sm mt-1">{errors.acceptedTerms}</p>
+                )}
+              </div>
+
+              {/* Consentement optionnel — SMS marketing */}
+              <div className="mt-6 flex items-start gap-3 rounded-lg bg-muted/40 p-3">
+                <Checkbox
+                  id="smsMarketing"
+                  checked={smsMarketing}
+                  onCheckedChange={(checked) => setSmsMarketing(checked === true)}
+                  className="mt-0.5"
+                />
+                <Label htmlFor="smsMarketing" className="text-sm font-normal leading-snug text-muted-foreground cursor-pointer">
+                  J'accepte de recevoir par SMS les offres promotionnelles et actualités de
+                  Déclic Pizza. Vous pouvez vous désinscrire à tout moment.{' '}
+                  <span className="text-xs">(facultatif)</span>
+                </Label>
+              </div>
+
+              <Button type="submit" className="w-full" variant="warm" disabled={loading || !acceptedTerms}>
                 {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Créer mon compte'}
               </Button>
+
               
               <p className="text-center text-sm text-muted-foreground mt-4">
                 Déjà un compte ?{' '}

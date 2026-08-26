@@ -236,6 +236,39 @@ export type Database = {
         }
         Relationships: []
       }
+      consentements: {
+        Row: {
+          accepte: boolean
+          adresse_ip: string | null
+          client_id: string
+          created_at: string
+          date_consentement: string
+          id: string
+          type_consentement: string
+          version_document: string | null
+        }
+        Insert: {
+          accepte: boolean
+          adresse_ip?: string | null
+          client_id: string
+          created_at?: string
+          date_consentement?: string
+          id?: string
+          type_consentement: string
+          version_document?: string | null
+        }
+        Update: {
+          accepte?: boolean
+          adresse_ip?: string | null
+          client_id?: string
+          created_at?: string
+          date_consentement?: string
+          id?: string
+          type_consentement?: string
+          version_document?: string | null
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null

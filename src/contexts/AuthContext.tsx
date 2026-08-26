@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { recordConsents } from '@/lib/consent';
+
 
 interface Profile {
   id: string;
@@ -31,7 +33,7 @@ interface AuthContextType {
   profile: Profile | null;
   addresses: Address[];
   loading: boolean;
-  signUpWithPhone: (phone: string, password: string, firstName: string, lastName: string, email?: string) => Promise<{ error: Error | null }>;
+  signUpWithPhone: (phone: string, password: string, firstName: string, lastName: string, email?: string, consents?: { acceptedTerms: boolean; smsMarketing: boolean }) => Promise<{ error: Error | null }>;
   signInWithPhone: (phone: string, password: string) => Promise<{ error: Error | null; isAdmin?: boolean }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: Error | null }>;
@@ -153,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUpWithPhone = async (phone: string, password: string, firstName: string, lastName: string, email?: string) => {
+  const signUpWithPhone = async (phone: string, password: string, firstName: string, lastName: string, email?: string, consents?: { acceptedTerms: boolean; smsMarketing: boolean }) => {
     const formattedPhone = phone.startsWith('0') ? `+33${phone.slice(1)}` : phone;
     const { data, error } = await supabase.auth.signUp({
       phone: formattedPhone,
@@ -167,6 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     });
+
 
     // Attach an email to the account so password reset by email works
     if (!error && data.user && email) {
@@ -185,7 +188,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    
+    // Consentements RGPD : une ligne par type, historisée, jamais modifiée.
+    if (!error && data.user && consents) {
+      try {
+        await recordConsents([
+          { type_consentement: 'cgv_politique', accepte: consents.acceptedTerms },
+          { type_consentement: 'sms_marketing', accepte: consents.smsMarketing },
+        ]);
+      } catch (e) {
+        console.error('Error recording consents:', e);
+      }
+    }
+
     // If successful, try to assign admin role based on phone
     if (!error && data.user) {
       try {
@@ -199,6 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     return { error };
   };
+
 
   const signInWithPhone = async (phone: string, password: string) => {
     const formattedPhone = phone.startsWith('0') ? `+33${phone.slice(1)}` : phone;

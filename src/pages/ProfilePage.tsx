@@ -31,6 +31,8 @@ import { BottomNavigation } from '@/components/BottomNavigation';
 import CustomerNotificationBell from '@/components/CustomerNotificationBell';
 import PushTestPanel from '@/components/PushTestPanel';
 import NotificationPermissionReminder from '@/components/NotificationPermissionReminder';
+import CommunicationPreferences from '@/components/CommunicationPreferences';
+
 import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useUserOrders } from '@/hooks/useOrders';
@@ -911,7 +913,11 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* Communication preferences */}
+        <CommunicationPreferences />
+
         {/* Addresses Section */}
+
         <div className="glass-card p-4 rounded-xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
