@@ -141,11 +141,22 @@ export default function AuthPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateSignup()) return;
-    
+    if (!validateSignup()) {
+      if (!acceptedTerms) {
+        toast.error(
+          "Vous devez accepter les CGV et la Politique de confidentialité pour créer un compte."
+        );
+      }
+      return;
+    }
+
     setLoading(true);
-    const { error } = await signUpWithPhone(phone, password, firstName, lastName, email);
+    const { error } = await signUpWithPhone(phone, password, firstName, lastName, email, {
+      acceptedTerms,
+      smsMarketing,
+    });
     setLoading(false);
+
     
     if (error) {
       if (error.message.includes('already registered') || error.message.includes('User already registered')) {
