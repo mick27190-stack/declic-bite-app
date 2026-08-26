@@ -99,8 +99,14 @@ export default function AuthPage() {
     } catch (e) {
       if (e instanceof z.ZodError) newErrors.password = e.errors[0].message;
     }
-    
+
+    if (!acceptedTerms) {
+      newErrors.acceptedTerms =
+        "Vous devez accepter les Conditions Générales de Vente et la Politique de confidentialité pour créer un compte.";
+    }
+
     setErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
