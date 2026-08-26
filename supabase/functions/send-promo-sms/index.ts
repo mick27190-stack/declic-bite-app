@@ -41,22 +41,25 @@ Deno.serve(async (req) => {
       (s: unknown): s is string => typeof s === 'string' && ALLOWED_SITES.includes(s),
     );
 
-    // Gather recipients from the customer file (service role to read all customers)
+    // Gather recipients from the customer file, excluding anyone whose most
+    // recent SMS marketing consent is a refusal (opt-out takes effect at once,
+    // and re-enabling the toggle puts the customer back in the list).
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
-    let query = admin.from('customers').select('phone, site').not('phone', 'is', null);
-    if (siteList.length > 0) {
-      // include customers matching a selected site OR with no site assigned
-      query = query.or(`site.in.(${siteList.join(',')}),site.is.null`);
-    }
-    const { data: rows, error: rowsErr } = await query;
+    const { data: rows, error: rowsErr } = await admin.rpc('sms_marketing_recipients', {
+      _sites: siteList.length > 0 ? siteList : null,
+    });
     if (rowsErr) return json({ error: 'Erreur lecture fichier client' }, 500);
 
     const phones = Array.from(
-      new Set((rows || []).map((r: { phone: string | null }) => r.phone?.trim()).filter(Boolean)),
+      new Set(
+        ((rows || []) as { phone: string | null }[])
+          .map((r) => r.phone?.trim())
+          .filter(Boolean),
+      ),
     ) as string[];
 
     if (phones.length === 0) {
-      return json({ error: 'Aucun client avec numéro de téléphone' }, 400);
+      return json({ error: 'Aucun client inscrit aux SMS promotionnels' }, 400);
     }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
