@@ -17,7 +17,8 @@ import {
   Tag,
   History,
   Building2,
-  FileText
+  FileText,
+  ShieldCheck
 
 
 } from 'lucide-react';
@@ -142,6 +143,13 @@ export default function AdminDashboard() {
       description: 'Historique des factures envoyées',
       icon: FileText,
       href: '/admin/invoices',
+      show: isSuperAdmin
+    },
+    {
+      title: 'Consentements RGPD',
+      description: 'Registre et export CSV des consentements',
+      icon: ShieldCheck,
+      href: '/admin/consents',
       show: isSuperAdmin
     }
   ];
