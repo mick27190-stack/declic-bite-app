@@ -165,6 +165,9 @@ export default function AuthPage() {
         toast.error(error.message);
       }
     } else {
+      setAcceptedTerms(false);
+      setSmsMarketing(false);
+
       if (email) {
         toast.success(
           'Compte créé ! Un email de vérification vous a été envoyé. Cliquez sur le lien pour valider votre adresse.',
