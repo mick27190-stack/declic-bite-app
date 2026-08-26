@@ -1034,6 +1034,13 @@ export type Database = {
         Args: { _category?: string; _site: string; _user_id: string }
         Returns: boolean
       }
+      sms_marketing_recipients: {
+        Args: { _sites?: string[] }
+        Returns: {
+          phone: string
+          site: string
+        }[]
+      }
     }
     Enums: {
       app_role:
