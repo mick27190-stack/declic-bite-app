@@ -153,7 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUpWithPhone = async (phone: string, password: string, firstName: string, lastName: string, email?: string) => {
+  const signUpWithPhone = async (phone: string, password: string, firstName: string, lastName: string, email?: string, consents?: { acceptedTerms: boolean; smsMarketing: boolean }) => {
     const formattedPhone = phone.startsWith('0') ? `+33${phone.slice(1)}` : phone;
     const { data, error } = await supabase.auth.signUp({
       phone: formattedPhone,
@@ -167,6 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     });
+
 
     // Attach an email to the account so password reset by email works
     if (!error && data.user && email) {
