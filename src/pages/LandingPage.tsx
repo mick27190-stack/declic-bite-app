@@ -325,7 +325,29 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 text-center py-6 px-4">
+      <footer className="relative z-10 text-center py-6 px-4 space-y-3">
+        <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs">
+          <Link
+            to="/mentions-legales"
+            className="text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
+          >
+            Mentions légales
+          </Link>
+          <span className="text-muted-foreground/40" aria-hidden="true">•</span>
+          <Link
+            to="/cgv"
+            className="text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
+          >
+            CGV
+          </Link>
+          <span className="text-muted-foreground/40" aria-hidden="true">•</span>
+          <Link
+            to="/confidentialite"
+            className="text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
+          >
+            Politique de confidentialité
+          </Link>
+        </nav>
         <p className="text-xs text-muted-foreground">
           © 2024 Déclic Pizza • Conches & Beaumont
         </p>
