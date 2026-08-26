@@ -104,6 +104,7 @@ const App = () => {
                 <Route path="/admin/pricing" element={<AdminPricingPage />} />
                 <Route path="/admin/company-info" element={<AdminCompanyInfoPage />} />
                 <Route path="/admin/invoices" element={<AdminInvoicesPage />} />
+                <Route path="/admin/consents" element={<AdminConsentsPage />} />
                 <Route path="/dev/cutoff-preview" element={<CutoffPreviewPage />} />
                 <Route path="/unsubscribe" element={<UnsubscribePage />} />
                 <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
