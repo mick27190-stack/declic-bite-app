@@ -1,0 +1,2 @@
+DELETE FROM public.consentements WHERE client_id IN ('056bb1ec-d4a3-43cb-8315-07a0ee05f6f4','4037a9b9-ba42-4ac1-9225-4d2de15a9754');
+DELETE FROM public.customers WHERE user_id IN ('056bb1ec-d4a3-43cb-8315-07a0ee05f6f4','4037a9b9-ba42-4ac1-9225-4d2de15a9754');
