@@ -33,6 +33,9 @@ import LivreurOrdersPage from "./pages/LivreurOrdersPage";
 import NotFound from "./pages/NotFound";
 import CutoffPreviewPage from "./pages/dev/CutoffPreviewPage";
 import UnsubscribePage from "./pages/UnsubscribePage";
+import MentionsLegalesPage from "./pages/MentionsLegalesPage";
+import CGVPage from "./pages/CGVPage";
+import ConfidentialitePage from "./pages/ConfidentialitePage";
 import { useEffect } from "react";
 import { initNotificationSounds } from "@/lib/notificationSounds";
 
@@ -100,6 +103,9 @@ const App = () => {
                 <Route path="/admin/invoices" element={<AdminInvoicesPage />} />
                 <Route path="/dev/cutoff-preview" element={<CutoffPreviewPage />} />
                 <Route path="/unsubscribe" element={<UnsubscribePage />} />
+                <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
+                <Route path="/cgv" element={<CGVPage />} />
+                <Route path="/confidentialite" element={<ConfidentialitePage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
