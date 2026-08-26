@@ -31,6 +31,10 @@ export default function AuthPage() {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [smsMarketing, setSmsMarketing] = useState(false);
+  
+
   
   // Errors
   const [errors, setErrors] = useState<Record<string, string>>({});
