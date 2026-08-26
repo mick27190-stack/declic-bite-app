@@ -38,6 +38,7 @@ import CGVPage from "./pages/CGVPage";
 import ConfidentialitePage from "./pages/ConfidentialitePage";
 import { useEffect } from "react";
 import { initNotificationSounds } from "@/lib/notificationSounds";
+import ConsentUpdateDialog from "@/components/ConsentUpdateDialog";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +77,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ConsentUpdateDialog />
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/menu" element={<MenuPage />} />

@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
+import ConsentMigrationStats from '@/components/admin/ConsentMigrationStats';
 
 type AppRole = 'super_admin' | 'secondary_super_admin' | 'site_admin_conches' | 'site_admin_beaumont' | 'secondary_admin_conches' | 'secondary_admin_beaumont' | 'livreur_conches' | 'livreur_beaumont';
 
@@ -202,6 +203,7 @@ export default function AdminUsersPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <ConsentMigrationStats />
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <div>

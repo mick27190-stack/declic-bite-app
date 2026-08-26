@@ -61,3 +61,21 @@ export async function getLatestConsent(
   if (error || !data) return null;
   return data.accepte;
 }
+
+/**
+ * Vrai si le client connecté a déjà accepté la version courante des CGV /
+ * de la Politique de confidentialité. `null` si la vérification échoue
+ * (réseau, RLS…) — dans ce cas on n'affiche pas la modal de régularisation.
+ */
+export async function hasCurrentLegalConsent(): Promise<boolean | null> {
+  const { data, error } = await supabase
+    .from('consentements')
+    .select('id')
+    .eq('type_consentement', 'cgv_politique')
+    .eq('version_document', LEGAL_DOCS_VERSION)
+    .eq('accepte', true)
+    .limit(1);
+
+  if (error) return null;
+  return (data?.length ?? 0) > 0;
+}
