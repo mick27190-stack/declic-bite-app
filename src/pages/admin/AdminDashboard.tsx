@@ -17,7 +17,8 @@ import {
   Tag,
   History,
   Building2,
-  FileText
+  FileText,
+  ShieldCheck
 
 
 } from 'lucide-react';
