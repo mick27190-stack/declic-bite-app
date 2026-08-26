@@ -63,6 +63,7 @@ export default function AdminConsentsPage() {
   const [typeFilter, setTypeFilter] = useState<'all' | 'cgv_politique' | 'sms_marketing'>('all');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
