@@ -265,7 +265,7 @@ export default function ConfidentialitePage() {
       <LegalList
         items={[
           'le recueil préalable du consentement exprès du destinataire (opt-in), aucune case pré-cochée ;',
-          'la mention claire de l'identité de l'expéditeur (Déclic Pizza) ;',
+          "la mention claire de l'identité de l'expéditeur (Déclic Pizza) ;",
           'une possibilité de désinscription simple et gratuite (STOP) à chaque envoi ;',
           'le respect des plages horaires autorisées pour la prospection commerciale par SMS en France.',
         ]}
