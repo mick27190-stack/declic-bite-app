@@ -24,6 +24,7 @@ interface ConsentRow {
   version_document: string | null;
   date_consentement: string;
   adresse_ip: string | null;
+  motif_refus: string | null;
 }
 
 interface ProfileInfo {
