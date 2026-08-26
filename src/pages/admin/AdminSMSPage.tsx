@@ -74,16 +74,16 @@ export default function AdminSMSPage() {
   const [isAddingCustomer, setIsAddingCustomer] = useState(false);
 
   const refreshRecipientCount = useCallback(async () => {
-    let query = supabase.from('customers').select('id', { count: 'exact', head: true }).not('phone', 'is', null);
     const selected: string[] = [];
     if (targetConches) selected.push('conches');
     if (targetBeaumont) selected.push('beaumont');
-    if (selected.length === 1) {
-      query = query.or(`site.eq.${selected[0]},site.is.null`);
-    }
-    const { count } = await query;
-    setRecipientCount(count ?? 0);
+    // Compte uniquement les clients opt-in SMS (les désinscrits sont exclus).
+    const { data } = await supabase.rpc('sms_marketing_recipient_count', {
+      _sites: selected.length === 1 ? selected : null,
+    });
+    setRecipientCount(data ?? 0);
   }, [targetConches, targetBeaumont]);
+
 
   useEffect(() => {
     if (canSendSMS) refreshRecipientCount();
@@ -353,7 +353,7 @@ export default function AdminSMSPage() {
               {recipientCount !== null && (
                 <p className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
                   <Users className="h-4 w-4" />
-                  {recipientCount} client(s) du fichier client seront contactés
+                  {recipientCount} client(s) inscrits aux SMS promotionnels seront contactés
                 </p>
               )}
             </div>
