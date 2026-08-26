@@ -24,6 +24,7 @@ interface ConsentRow {
   version_document: string | null;
   date_consentement: string;
   adresse_ip: string | null;
+  motif_refus: string | null;
 }
 
 interface ProfileInfo {
@@ -150,6 +151,7 @@ export default function AdminConsentsPage() {
       'ID client',
       'Type de consentement',
       'Accepté',
+      'Motif de refus',
       'Version du document',
       'Date de consentement (Paris)',
       'Adresse IP',
@@ -164,6 +166,7 @@ export default function AdminConsentsPage() {
         r.client_id,
         TYPE_LABELS[r.type_consentement] ?? r.type_consentement,
         r.accepte ? 'Oui' : 'Non',
+        r.accepte ? '' : (r.motif_refus ?? ''),
         r.version_document ?? '',
         formatDate(r.date_consentement),
         r.adresse_ip ?? '',
@@ -207,7 +210,7 @@ export default function AdminConsentsPage() {
 
     autoTable(doc, {
       startY: 28,
-      head: [['Client', 'Téléphone', 'Email', 'Type', 'Choix', 'Version', 'Date (Paris)', 'IP']],
+      head: [['Client', 'Téléphone', 'Email', 'Type', 'Choix', 'Motif de refus', 'Version', 'Date (Paris)', 'IP']],
       body: filtered.map((r) => {
         const p = profiles[r.client_id];
         return [
@@ -216,22 +219,24 @@ export default function AdminConsentsPage() {
           p?.email ?? '',
           TYPE_LABELS[r.type_consentement] ?? r.type_consentement,
           r.accepte ? 'Accepté' : 'Refusé',
+          r.accepte ? '—' : (r.motif_refus ?? '—'),
           r.version_document ?? '—',
           formatDate(r.date_consentement),
           r.adresse_ip ?? '',
         ];
       }),
-      styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+      styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
       headStyles: { fillColor: [220, 80, 40], textColor: 255 },
       columnStyles: {
-        0: { cellWidth: 40 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 55 },
-        3: { cellWidth: 38 },
-        4: { cellWidth: 20, halign: 'center' },
-        5: { cellWidth: 28 },
-        6: { cellWidth: 38 },
-        7: { cellWidth: 26 },
+        0: { cellWidth: 35 },
+        1: { cellWidth: 26 },
+        2: { cellWidth: 48 },
+        3: { cellWidth: 32 },
+        4: { cellWidth: 18, halign: 'center' },
+        5: { cellWidth: 40 },
+        6: { cellWidth: 24 },
+        7: { cellWidth: 34 },
+        8: { cellWidth: 22 },
       },
     });
 
@@ -279,7 +284,7 @@ export default function AdminConsentsPage() {
               <ShieldCheck className="h-5 w-5 text-primary" />
               Registre des consentements
             </CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
                 <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Actualiser

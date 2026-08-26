@@ -244,6 +244,7 @@ export type Database = {
           created_at: string
           date_consentement: string
           id: string
+          motif_refus: string | null
           type_consentement: string
           version_document: string | null
         }
@@ -254,6 +255,7 @@ export type Database = {
           created_at?: string
           date_consentement?: string
           id?: string
+          motif_refus?: string | null
           type_consentement: string
           version_document?: string | null
         }
@@ -264,6 +266,7 @@ export type Database = {
           created_at?: string
           date_consentement?: string
           id?: string
+          motif_refus?: string | null
           type_consentement?: string
           version_document?: string | null
         }

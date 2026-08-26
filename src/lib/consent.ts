@@ -8,6 +8,7 @@ export type ConsentType = 'cgv_politique' | 'sms_marketing';
 export interface ConsentEntry {
   type_consentement: ConsentType;
   accepte: boolean;
+  motif_refus?: string;
 }
 
 /**
@@ -42,6 +43,7 @@ export async function recordConsents(entries: ConsentEntry[]): Promise<void> {
       type_consentement: entry.type_consentement,
       accepte: entry.accepte,
       version_document: LEGAL_DOCS_VERSION,
+      motif_refus: entry.accepte ? null : (entry.motif_refus ?? null),
     })),
   );
 }
