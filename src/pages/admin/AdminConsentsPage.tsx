@@ -284,7 +284,7 @@ export default function AdminConsentsPage() {
               <ShieldCheck className="h-5 w-5 text-primary" />
               Registre des consentements
             </CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
                 <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                 Actualiser
