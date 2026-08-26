@@ -1,0 +1,1 @@
+ALTER TABLE public.consentements ADD COLUMN IF NOT EXISTS motif_refus text;
