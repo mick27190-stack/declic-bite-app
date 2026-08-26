@@ -143,6 +143,13 @@ export default function AdminDashboard() {
       icon: FileText,
       href: '/admin/invoices',
       show: isSuperAdmin
+    },
+    {
+      title: 'Consentements RGPD',
+      description: 'Registre et export CSV des consentements',
+      icon: ShieldCheck,
+      href: '/admin/consents',
+      show: isSuperAdmin
     }
   ];
 
