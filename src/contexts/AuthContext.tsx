@@ -186,7 +186,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    
+    // Consentements RGPD : une ligne par type, historisée, jamais modifiée.
+    if (!error && data.user && consents) {
+      try {
+        await recordConsents([
+          { type_consentement: 'cgv_politique', accepte: consents.acceptedTerms },
+          { type_consentement: 'sms_marketing', accepte: consents.smsMarketing },
+        ]);
+      } catch (e) {
+        console.error('Error recording consents:', e);
+      }
+    }
+
     // If successful, try to assign admin role based on phone
     if (!error && data.user) {
       try {
@@ -200,6 +211,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     return { error };
   };
+
 
   const signInWithPhone = async (phone: string, password: string) => {
     const formattedPhone = phone.startsWith('0') ? `+33${phone.slice(1)}` : phone;
