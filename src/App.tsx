@@ -28,6 +28,7 @@ import AdminPricingPage from "./pages/admin/AdminPricingPage";
 import AdminOrderHistoryPage from "./pages/admin/AdminOrderHistoryPage";
 import AdminCompanyInfoPage from "./pages/admin/AdminCompanyInfoPage";
 import AdminInvoicesPage from "./pages/admin/AdminInvoicesPage";
+import AdminConsentsPage from "./pages/admin/AdminConsentsPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
 import LivreurOrdersPage from "./pages/LivreurOrdersPage";
 import NotFound from "./pages/NotFound";
