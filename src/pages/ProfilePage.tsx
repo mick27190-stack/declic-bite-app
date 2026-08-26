@@ -911,7 +911,11 @@ export default function ProfilePage() {
           )}
         </div>
 
+        {/* Communication preferences */}
+        <CommunicationPreferences />
+
         {/* Addresses Section */}
+
         <div className="glass-card p-4 rounded-xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
