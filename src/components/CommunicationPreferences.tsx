@@ -78,6 +78,9 @@ export default function CommunicationPreferences() {
       setSmsOptIn(true);
       try {
         await recordConsents([{ type_consentement: 'sms_marketing', accepte: true }]);
+        // Relecture immédiate pour garantir la synchro avec la base.
+        const value = await getLatestConsent('sms_marketing');
+        setSmsOptIn(value);
         toast.success('Vous recevrez désormais nos offres par SMS.');
       } catch {
         setSmsOptIn(previous);
@@ -100,6 +103,9 @@ export default function CommunicationPreferences() {
       await recordConsents([
         { type_consentement: 'sms_marketing', accepte: false, motif_refus: motif ?? undefined },
       ]);
+      // Relecture immédiate : le statut « Refusé » s'affiche dès l'enregistrement.
+      const value = await getLatestConsent('sms_marketing');
+      setSmsOptIn(value);
       toast.success('Vous ne recevrez plus nos offres par SMS.');
       setShowRefusalForm(false);
       setRefusalReason('');
