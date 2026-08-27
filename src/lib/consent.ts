@@ -52,11 +52,17 @@ export async function recordConsents(entries: ConsentEntry[]): Promise<void> {
 export async function getLatestConsent(
   type: ConsentType,
 ): Promise<boolean | null> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return null;
+
   const { data, error } = await supabase
     .from('consentements')
     .select('accepte')
+    .eq('client_id', userId)
     .eq('type_consentement', type)
     .order('date_consentement', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
@@ -70,9 +76,14 @@ export async function getLatestConsent(
  * (réseau, RLS…) — dans ce cas on n'affiche pas la modal de régularisation.
  */
 export async function hasCurrentLegalConsent(): Promise<boolean | null> {
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return null;
+
   const { data, error } = await supabase
     .from('consentements')
     .select('id')
+    .eq('client_id', userId)
     .eq('type_consentement', 'cgv_politique')
     .eq('version_document', LEGAL_DOCS_VERSION)
     .eq('accepte', true)
@@ -81,3 +92,4 @@ export async function hasCurrentLegalConsent(): Promise<boolean | null> {
   if (error) return null;
   return (data?.length ?? 0) > 0;
 }
+
