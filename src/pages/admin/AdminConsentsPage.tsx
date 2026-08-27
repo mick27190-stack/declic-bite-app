@@ -25,6 +25,7 @@ interface ConsentRow {
   date_consentement: string;
   adresse_ip: string | null;
   motif_refus: string | null;
+  created_at?: string | null;
 }
 
 interface ProfileInfo {
@@ -79,7 +80,8 @@ export default function AdminConsentsPage() {
     const { data, error } = await supabase
       .from('consentements')
       .select('*')
-      .order('date_consentement', { ascending: false });
+      .order('date_consentement', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
@@ -126,7 +128,29 @@ export default function AdminConsentsPage() {
   };
 
   useEffect(() => {
-    if (isSuperAdmin) fetchData();
+    if (!isSuperAdmin) return;
+    fetchData();
+
+    // Toute nouvelle décision de consentement (ex. désinscription SMS depuis
+    // le profil client) se reflète immédiatement dans la vue admin.
+    const channel = supabase
+      .channel('admin-consentements')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'consentements' },
+        () => {
+          void fetchData();
+        },
+      )
+      .subscribe();
+
+    const onFocus = () => void fetchData();
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      void supabase.removeChannel(channel);
+    };
   }, [isSuperAdmin]);
 
   const versions = useMemo(() => {
@@ -138,11 +162,11 @@ export default function AdminConsentsPage() {
   // Choix actuel de chaque client (ligne la plus récente par client + type).
   const currentRows = useMemo(() => {
     const seen = new Set<string>();
+    const ts = (r: ConsentRow) =>
+      new Date(r.date_consentement).getTime() * 1000 +
+      (r.created_at ? new Date(r.created_at).getTime() % 1000 : 0);
     return [...rows]
-      .sort(
-        (a, b) =>
-          new Date(b.date_consentement).getTime() - new Date(a.date_consentement).getTime(),
-      )
+      .sort((a, b) => ts(b) - ts(a))
       .filter((r) => {
         const key = `${r.client_id}|${r.type_consentement}`;
         if (seen.has(key)) return false;
