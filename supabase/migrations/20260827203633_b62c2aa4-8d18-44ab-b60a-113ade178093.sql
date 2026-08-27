@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.skip_duplicate_consent() FROM PUBLIC, anon, authenticated;
