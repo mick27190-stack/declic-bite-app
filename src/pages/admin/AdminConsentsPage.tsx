@@ -65,6 +65,7 @@ export default function AdminConsentsPage() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
+  const [viewMode, setViewMode] = useState<'current' | 'history'>('current');
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
