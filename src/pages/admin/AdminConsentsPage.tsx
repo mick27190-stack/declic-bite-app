@@ -79,7 +79,8 @@ export default function AdminConsentsPage() {
     const { data, error } = await supabase
       .from('consentements')
       .select('*')
-      .order('date_consentement', { ascending: false });
+      .order('date_consentement', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (error) {
       toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
