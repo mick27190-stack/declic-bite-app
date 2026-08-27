@@ -25,6 +25,7 @@ interface ConsentRow {
   date_consentement: string;
   adresse_ip: string | null;
   motif_refus: string | null;
+  created_at?: string | null;
 }
 
 interface ProfileInfo {
