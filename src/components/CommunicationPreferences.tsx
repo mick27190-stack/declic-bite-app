@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getLatestConsent, recordConsents } from '@/lib/consent';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 const REFUSAL_REASONS = [
@@ -16,7 +17,7 @@ const REFUSAL_REASONS = [
 
 export default function CommunicationPreferences() {
   const { user } = useAuth();
-  const [smsOptIn, setSmsOptIn] = useState(false);
+  const [smsOptIn, setSmsOptIn] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showRefusalForm, setShowRefusalForm] = useState(false);
@@ -28,16 +29,44 @@ export default function CommunicationPreferences() {
       setLoading(true);
       return;
     }
-    setLoading(true);
-    (async () => {
+
+    const refresh = async () => {
       const value = await getLatestConsent('sms_marketing');
       if (!cancelled) {
-        setSmsOptIn(value === true);
+        setSmsOptIn(value);
         setLoading(false);
       }
-    })();
+    };
+
+    setLoading(true);
+    void refresh();
+
+    // Resynchronisation automatique : la désinscription/réinscription se
+    // reflète immédiatement si le consentement change depuis un autre écran.
+    const channel = supabase
+      .channel(`consent-sms-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'consentements',
+          filter: `client_id=eq.${user.id}`,
+        },
+        () => {
+          void refresh();
+        },
+      )
+      .subscribe();
+
+    // Rafraîchit aussi quand l'utilisateur revient sur l'onglet.
+    const onFocus = () => void refresh();
+    window.addEventListener('focus', onFocus);
+
     return () => {
       cancelled = true;
+      window.removeEventListener('focus', onFocus);
+      void supabase.removeChannel(channel);
     };
   }, [user]);
 
@@ -50,6 +79,9 @@ export default function CommunicationPreferences() {
       setSmsOptIn(true);
       try {
         await recordConsents([{ type_consentement: 'sms_marketing', accepte: true }]);
+        // Relecture immédiate pour garantir la synchro avec la base.
+        const value = await getLatestConsent('sms_marketing');
+        setSmsOptIn(value);
         toast.success('Vous recevrez désormais nos offres par SMS.');
       } catch {
         setSmsOptIn(previous);
@@ -72,6 +104,9 @@ export default function CommunicationPreferences() {
       await recordConsents([
         { type_consentement: 'sms_marketing', accepte: false, motif_refus: motif ?? undefined },
       ]);
+      // Relecture immédiate : le statut « Refusé » s'affiche dès l'enregistrement.
+      const value = await getLatestConsent('sms_marketing');
+      setSmsOptIn(value);
       toast.success('Vous ne recevrez plus nos offres par SMS.');
       setShowRefusalForm(false);
       setRefusalReason('');
@@ -105,8 +140,19 @@ export default function CommunicationPreferences() {
             Vous pouvez vous désinscrire à tout moment.
           </p>
           {!loading && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Statut actuel : {smsOptIn ? 'inscrit' : 'non inscrit'}
+            <p className="text-xs mt-2">
+              Statut actuel :{' '}
+              <span
+                className={
+                  smsOptIn === null
+                    ? 'text-muted-foreground'
+                    : smsOptIn
+                      ? 'text-green-500 font-medium'
+                      : 'text-red-500 font-medium'
+                }
+              >
+                {smsOptIn === null ? 'Non renseigné' : smsOptIn ? 'Accepté' : 'Refusé'}
+              </span>
             </p>
           )}
         </div>
@@ -114,7 +160,7 @@ export default function CommunicationPreferences() {
           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mt-1" />
         ) : (
           <Switch
-            checked={smsOptIn}
+            checked={smsOptIn === true}
             disabled={saving}
             onCheckedChange={handleToggle}
             aria-label="Recevoir les SMS promotionnels"
