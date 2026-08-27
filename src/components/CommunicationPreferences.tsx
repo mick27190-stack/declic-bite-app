@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { getLatestConsent, recordConsents } from '@/lib/consent';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 const REFUSAL_REASONS = [
@@ -139,8 +140,19 @@ export default function CommunicationPreferences() {
             Vous pouvez vous désinscrire à tout moment.
           </p>
           {!loading && (
-            <p className="text-xs text-muted-foreground mt-2">
-              Statut actuel : {smsOptIn ? 'inscrit' : 'non inscrit'}
+            <p className="text-xs mt-2">
+              Statut actuel :{' '}
+              <span
+                className={
+                  smsOptIn === null
+                    ? 'text-muted-foreground'
+                    : smsOptIn
+                      ? 'text-green-500 font-medium'
+                      : 'text-red-500 font-medium'
+                }
+              >
+                {smsOptIn === null ? 'Non renseigné' : smsOptIn ? 'Accepté' : 'Refusé'}
+              </span>
             </p>
           )}
         </div>
@@ -148,7 +160,7 @@ export default function CommunicationPreferences() {
           <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mt-1" />
         ) : (
           <Switch
-            checked={smsOptIn}
+            checked={smsOptIn === true}
             disabled={saving}
             onCheckedChange={handleToggle}
             aria-label="Recevoir les SMS promotionnels"
