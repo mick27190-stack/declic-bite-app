@@ -24,7 +24,11 @@ export default function CommunicationPreferences() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!user) return;
+    if (!user) {
+      setLoading(true);
+      return;
+    }
+    setLoading(true);
     (async () => {
       const value = await getLatestConsent('sms_marketing');
       if (!cancelled) {
@@ -36,6 +40,7 @@ export default function CommunicationPreferences() {
       cancelled = true;
     };
   }, [user]);
+
 
   const handleToggle = async (checked: boolean) => {
     if (checked) {
