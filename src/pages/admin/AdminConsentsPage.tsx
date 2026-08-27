@@ -135,12 +135,29 @@ export default function AdminConsentsPage() {
     return Array.from(set).sort().reverse();
   }, [rows]);
 
+  // Choix actuel de chaque client (ligne la plus récente par client + type).
+  const currentRows = useMemo(() => {
+    const seen = new Set<string>();
+    return [...rows]
+      .sort(
+        (a, b) =>
+          new Date(b.date_consentement).getTime() - new Date(a.date_consentement).getTime(),
+      )
+      .filter((r) => {
+        const key = `${r.client_id}|${r.type_consentement}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [rows]);
+
   const filtered = useMemo(() => {
     const q = normalize(search.trim());
     const fromTs = fromDate ? new Date(`${fromDate}T00:00:00`).getTime() : null;
     const toTs = toDate ? new Date(`${toDate}T23:59:59`).getTime() : null;
+    const source = viewMode === 'current' ? currentRows : rows;
 
-    return rows.filter((r) => {
+    return source.filter((r) => {
       if (versionFilter !== 'all' && (r.version_document ?? '') !== versionFilter) return false;
       if (typeFilter !== 'all' && r.type_consentement !== typeFilter) return false;
       const ts = new Date(r.date_consentement).getTime();
