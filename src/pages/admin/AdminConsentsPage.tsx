@@ -86,8 +86,23 @@ export default function AdminConsentsPage() {
       return;
     }
 
+    // Déduplication de sécurité : on conserve la ligne la plus récente
+    // pour un même client / type / choix / version / motif.
     const list = (data as ConsentRow[]) ?? [];
-    setRows(list);
+    const seen = new Set<string>();
+    const deduped = list.filter((r) => {
+      const key = [
+        r.client_id,
+        r.type_consentement,
+        r.accepte,
+        r.version_document ?? '',
+        r.motif_refus ?? '',
+      ].join('|');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    setRows(deduped);
 
     const ids = Array.from(new Set(list.map((r) => r.client_id)));
     if (ids.length > 0) {
