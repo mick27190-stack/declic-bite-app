@@ -178,15 +178,9 @@ export function useCustomerChat() {
       site,
     });
 
-    // Update conversation (and un-hide it for admin so the reply is visible again)
-    await supabase
-      .from('chat_conversations')
-      .update({
-        last_message: content,
-        last_message_at: new Date().toISOString(),
-        hidden_for_admin_at: null,
-      })
-      .eq('id', convId);
+    // L'aperçu de la conversation (last_message, last_message_at) et la
+    // ré-affichage côté admin sont mis à jour côté serveur par un trigger.
+
   }, [user, isChatBlocked, conversationId, lookupConversation, createConversation, resolveSite]);
 
   // Init & realtime
