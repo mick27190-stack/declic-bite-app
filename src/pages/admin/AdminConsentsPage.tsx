@@ -380,14 +380,27 @@ export default function AdminConsentsPage() {
                   <SelectItem value="sms_marketing">SMS marketing</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex gap-2">
+              <Select value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Affichage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="current">Choix actuels</SelectItem>
+                  <SelectItem value="history">Historique complet</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex gap-2 md:col-span-2">
                 <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
                 <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
               </div>
             </div>
 
             <p className="text-sm text-muted-foreground">
-              {filtered.length} consentement(s) affiché(s) sur {rows.length}
+              {filtered.length} consentement(s) affiché(s) sur{' '}
+              {viewMode === 'current' ? currentRows.length : rows.length}
+              {viewMode === 'current'
+                ? ' — dernier choix connu de chaque client'
+                : ' — historique complet des choix'}
             </p>
 
             {loading ? (
