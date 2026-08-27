@@ -65,6 +65,7 @@ export default function AdminConsentsPage() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
+  const [viewMode, setViewMode] = useState<'current' | 'history'>('current');
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -134,12 +135,29 @@ export default function AdminConsentsPage() {
     return Array.from(set).sort().reverse();
   }, [rows]);
 
+  // Choix actuel de chaque client (ligne la plus récente par client + type).
+  const currentRows = useMemo(() => {
+    const seen = new Set<string>();
+    return [...rows]
+      .sort(
+        (a, b) =>
+          new Date(b.date_consentement).getTime() - new Date(a.date_consentement).getTime(),
+      )
+      .filter((r) => {
+        const key = `${r.client_id}|${r.type_consentement}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+  }, [rows]);
+
   const filtered = useMemo(() => {
     const q = normalize(search.trim());
     const fromTs = fromDate ? new Date(`${fromDate}T00:00:00`).getTime() : null;
     const toTs = toDate ? new Date(`${toDate}T23:59:59`).getTime() : null;
+    const source = viewMode === 'current' ? currentRows : rows;
 
-    return rows.filter((r) => {
+    return source.filter((r) => {
       if (versionFilter !== 'all' && (r.version_document ?? '') !== versionFilter) return false;
       if (typeFilter !== 'all' && r.type_consentement !== typeFilter) return false;
       const ts = new Date(r.date_consentement).getTime();
@@ -152,7 +170,7 @@ export default function AdminConsentsPage() {
       );
       return hay.includes(q);
     });
-  }, [rows, profiles, search, versionFilter, typeFilter, fromDate, toDate]);
+  }, [rows, currentRows, viewMode, profiles, search, versionFilter, typeFilter, fromDate, toDate]);
 
   const handleExportCsv = () => {
     if (filtered.length === 0) {
@@ -362,14 +380,27 @@ export default function AdminConsentsPage() {
                   <SelectItem value="sms_marketing">SMS marketing</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="flex gap-2">
+              <Select value={viewMode} onValueChange={(v) => setViewMode(v as typeof viewMode)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Affichage" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="current">Choix actuels</SelectItem>
+                  <SelectItem value="history">Historique complet</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex gap-2 md:col-span-2">
                 <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
                 <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
               </div>
             </div>
 
             <p className="text-sm text-muted-foreground">
-              {filtered.length} consentement(s) affiché(s) sur {rows.length}
+              {filtered.length} consentement(s) affiché(s) sur{' '}
+              {viewMode === 'current' ? currentRows.length : rows.length}
+              {viewMode === 'current'
+                ? ' — dernier choix connu de chaque client'
+                : ' — historique complet des choix'}
             </p>
 
             {loading ? (
