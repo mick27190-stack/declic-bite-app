@@ -170,7 +170,7 @@ export default function AdminConsentsPage() {
       );
       return hay.includes(q);
     });
-  }, [rows, profiles, search, versionFilter, typeFilter, fromDate, toDate]);
+  }, [rows, currentRows, viewMode, profiles, search, versionFilter, typeFilter, fromDate, toDate]);
 
   const handleExportCsv = () => {
     if (filtered.length === 0) {
