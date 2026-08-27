@@ -16,7 +16,7 @@ const REFUSAL_REASONS = [
 
 export default function CommunicationPreferences() {
   const { user } = useAuth();
-  const [smsOptIn, setSmsOptIn] = useState(false);
+  const [smsOptIn, setSmsOptIn] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showRefusalForm, setShowRefusalForm] = useState(false);
@@ -28,16 +28,44 @@ export default function CommunicationPreferences() {
       setLoading(true);
       return;
     }
-    setLoading(true);
-    (async () => {
+
+    const refresh = async () => {
       const value = await getLatestConsent('sms_marketing');
       if (!cancelled) {
-        setSmsOptIn(value === true);
+        setSmsOptIn(value);
         setLoading(false);
       }
-    })();
+    };
+
+    setLoading(true);
+    void refresh();
+
+    // Resynchronisation automatique : la désinscription/réinscription se
+    // reflète immédiatement si le consentement change depuis un autre écran.
+    const channel = supabase
+      .channel(`consent-sms-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'consentements',
+          filter: `client_id=eq.${user.id}`,
+        },
+        () => {
+          void refresh();
+        },
+      )
+      .subscribe();
+
+    // Rafraîchit aussi quand l'utilisateur revient sur l'onglet.
+    const onFocus = () => void refresh();
+    window.addEventListener('focus', onFocus);
+
     return () => {
       cancelled = true;
+      window.removeEventListener('focus', onFocus);
+      void supabase.removeChannel(channel);
     };
   }, [user]);
 
