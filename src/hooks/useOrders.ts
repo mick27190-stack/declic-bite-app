@@ -411,9 +411,13 @@ export function useUserOrders() {
               delivery_address: newRecord.delivery_address as Order['delivery_address'],
             } as Order;
 
+            const authorized = isOrderPaymentAuthorized(newRecord);
+
             if (payload.eventType === 'INSERT') {
+              // N'apparaît côté client qu'une fois le paiement autorisé.
+              // Sinon la commande remontera via un UPDATE (webhook Stripe).
+              if (!authorized) return;
               setOrders(prev => {
-                // Avoid duplicates and keep only the 10 most recent orders
                 if (prev.find(o => o.id === updatedOrder.id)) return prev;
                 return trimOrders([updatedOrder, ...prev]);
               });
@@ -424,6 +428,11 @@ export function useUserOrders() {
             } else if (payload.eventType === 'UPDATE') {
               setOrders(prev => {
                 const exists = prev.find(o => o.id === updatedOrder.id);
+                if (!authorized) {
+                  // Paiement annulé/non autorisé : retirer la commande de l'historique.
+                  if (!exists) return prev;
+                  return trimOrders(prev.filter(o => o.id !== updatedOrder.id));
+                }
                 if (exists) {
                   toast({
                     title: 'Commande mise à jour',
@@ -431,7 +440,13 @@ export function useUserOrders() {
                   });
                   return trimOrders(prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
                 }
-                return prev;
+                // Commande nouvellement autorisée (passage du paiement) :
+                // elle apparaît maintenant dans l'historique.
+                toast({
+                  title: 'Nouvelle commande',
+                  description: `Votre commande #${updatedOrder.id.slice(0, 8)} a été créée`,
+                });
+                return trimOrders([updatedOrder, ...prev]);
               });
             } else if (payload.eventType === 'DELETE') {
               setOrders(prev => trimOrders(prev.filter(o => o.id !== payload.old.id)));
