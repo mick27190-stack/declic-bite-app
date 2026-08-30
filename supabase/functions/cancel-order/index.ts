@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    await sb
+    const { error: updErr } = await sb
       .from('orders')
       .update({
         order_status: 'cancelled',
@@ -53,6 +53,10 @@ Deno.serve(async (req) => {
         status: 'cancelled',
       })
       .eq('id', order.id);
+    if (updErr) {
+      throw new Error(`Pré-autorisation libérée mais mise à jour impossible : ${updErr.message}`);
+    }
+
 
     return new Response(JSON.stringify({ ok: true, already_captured: alreadyCaptured }), {
 
