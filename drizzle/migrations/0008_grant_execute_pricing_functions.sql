@@ -1,0 +1,2 @@
+GRANT EXECUTE ON FUNCTION public.compute_order_line_prices(jsonb, timestamp with time zone) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.compute_order_total(jsonb, timestamp with time zone) TO anon, authenticated, service_role;
