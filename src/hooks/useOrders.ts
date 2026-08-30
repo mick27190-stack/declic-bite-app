@@ -452,7 +452,7 @@ export function useUserOrders() {
                   .select('status, changed_at')
                   .eq('order_id', updatedOrder.id)
                   .order('changed_at', { ascending: true });
-                updatedOrder.status_history = (history || []) as Order['status_history'];
+                updatedOrder.status_history = (history || []) as unknown as Order['status_history'];
                 setOrders(prev => prev.map(o => o.id === updatedOrder.id ? { ...o, status_history: updatedOrder.status_history } : o));
               })();
               setOrders(prev => {
