@@ -59,7 +59,10 @@ export async function createPaymentIntent(
     'metadata[order_id]': opts.orderId,
     'metadata[site]': site,
     'metadata[order_type]': opts.orderType,
-    'payment_method_types[]': 'card',
+    // Automatic payment methods : active CB + Apple Pay + Google Pay
+    // (les wallets s'affichent automatiquement dans le PaymentElement
+    //  selon l'appareil/navigateur du client).
+    'automatic_payment_methods[enabled]': 'true',
   });
 }
 
