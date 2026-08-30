@@ -291,9 +291,10 @@ export default function AdminOrdersPage() {
 
     await updateOrderStatus(orderId, newStatus);
 
-    if (hasPending && shouldCapture && order?.capture_status === 'authorized') {
+    if (hasPending && shouldCapture) {
       await invokeStripeAction(orderId, 'confirm-order', 'Paiement encaissé (capture Stripe)');
     }
+
   };
 
   /** Appelle une Edge Function Stripe puis resynchronise la liste. */
