@@ -39,18 +39,25 @@ export default function AdminSettingsPage() {
   const [testMinutes, setTestMinutes] = useState('30');
   const [testSubmitting, setTestSubmitting] = useState(false);
   const [walletSubmitting, setWalletSubmitting] = useState(false);
-  const [walletReport, setWalletReport] = useState<string | null>(null);
+  type WalletRow = { domain: string; registered?: boolean; apple_pay?: string | null; google_pay?: string | null; error?: string };
+  const [walletReport, setWalletReport] = useState<Record<string, WalletRow[] | { error: string }> | null>(null);
 
   const registerWalletDomains = async () => {
     setWalletSubmitting(true);
     setWalletReport(null);
     try {
+      const domains = Array.from(new Set([
+        'declicpizza.fr',
+        'www.declicpizza.fr',
+        'declic-pizza-app.lovable.app',
+        window.location.hostname,
+      ]));
       const { data, error } = await supabase.functions.invoke('stripe-payment-domains', {
-        body: {},
+        body: { domains },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setWalletReport(JSON.stringify(data.report, null, 2));
+      setWalletReport(data.report as Record<string, WalletRow[]>);
       toast({
         title: 'Domaines Apple Pay / Google Pay enregistrés',
         description: 'Les wallets sont activés sur les comptes Conches et Beaumont.',
@@ -65,6 +72,7 @@ export default function AdminSettingsPage() {
       setWalletSubmitting(false);
     }
   };
+
 
   // Tick à la seconde pour le compte à rebours du mode test.
   const [nowTick, setNowTick] = useState(() => Date.now());
