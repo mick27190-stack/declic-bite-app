@@ -1,5 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { cancelPaymentIntent, capturePaymentIntent, resolveSite } from '../_shared/stripe.ts'
+
 
 const APP_URL = 'https://declicpizza.fr'
 
