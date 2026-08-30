@@ -164,6 +164,8 @@ export default function AdminOrdersPage() {
   const [chatSending, setChatSending] = useState(false);
   const [invoiceSendingId, setInvoiceSendingId] = useState<string | null>(null);
   const [respondingOrderId, setRespondingOrderId] = useState<string | null>(null);
+  const [stripeActionId, setStripeActionId] = useState<string | null>(null);
+
   // Persistent all-time total (archived weeks + current live orders).
   // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
   const [archivedCount, setArchivedCount] = useState(0);
@@ -274,9 +276,50 @@ export default function AdminOrdersPage() {
     filteredOrders.map((o) => ({ id: o.id, items: (o.items as any[]) ?? [], created_at: o.created_at })),
   );
 
+  /** Le passage de statut pilote aussi Stripe :
+   *  - « Confirmée » (ou tout statut aval) capture la pré-autorisation,
+   *  - « Annulée » libère la pré-autorisation. */
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
+    const order = orders.find((o) => o.id === orderId);
+    const hasPending = !!order?.stripe_payment_intent_id && order?.capture_status !== 'captured';
+    const shouldCapture = ['confirmed', 'preparing', 'ready', 'delivered'].includes(newStatus);
+
+    if (hasPending && newStatus === 'cancelled') {
+      await invokeStripeAction(orderId, 'cancel-order', 'Pré-autorisation Stripe annulée');
+      return;
+    }
+
     await updateOrderStatus(orderId, newStatus);
+
+    if (hasPending && shouldCapture && order?.capture_status === 'authorized') {
+      await invokeStripeAction(orderId, 'confirm-order', 'Paiement encaissé (capture Stripe)');
+    }
   };
+
+  /** Appelle une Edge Function Stripe puis resynchronise la liste. */
+  const invokeStripeAction = async (
+    orderId: string,
+    fn: 'confirm-order' | 'cancel-order',
+    successMessage: string,
+  ) => {
+    setStripeActionId(orderId);
+    try {
+      const { data, error } = await supabase.functions.invoke(fn, { body: { order_id: orderId } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({ title: '✅ Stripe', description: successMessage });
+    } catch (e) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur Stripe',
+        description: e instanceof Error ? e.message : 'Action Stripe impossible',
+      });
+    } finally {
+      setStripeActionId(null);
+      refetch();
+    }
+  };
+
 
   /** Confirme ou refuse la contre-proposition d'horaire au nom du client
    *  (appel téléphonique, client injoignable en ligne, etc.). L'Edge Function
@@ -751,7 +794,13 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
 
-                    <StripeStatusPanel order={order} />
+                    <StripeStatusPanel
+                      order={order}
+                      busy={stripeActionId === order.id}
+                      onCapture={() => invokeStripeAction(order.id, 'confirm-order', 'Paiement encaissé (capture Stripe)')}
+                      onCancelAuth={() => invokeStripeAction(order.id, 'cancel-order', 'Pré-autorisation Stripe annulée')}
+                    />
+
 
                     {order.order_type === 'livraison' && (
 

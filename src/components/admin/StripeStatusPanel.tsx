@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CreditCard, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
+import { CreditCard, ChevronDown, ChevronUp, Copy, Check, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Order } from '@/types/order';
 
@@ -71,10 +71,21 @@ function buildTimeline(order: Order): { label: string; at: string | null; done: 
   ].filter((step) => step.done || step.label === 'Autorisation bancaire confirmée');
 }
 
-export default function StripeStatusPanel({ order }: { order: Order }) {
+export default function StripeStatusPanel({
+  order,
+  busy,
+  onCapture,
+  onCancelAuth,
+}: {
+  order: Order;
+  busy?: boolean;
+  onCapture?: () => void;
+  onCancelAuth?: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+
 
   const capture = order.capture_status ?? null;
   const badge = capture ? captureLabels[capture] : null;
@@ -115,6 +126,26 @@ export default function StripeStatusPanel({ order }: { order: Order }) {
           Historique
         </Button>
       </div>
+
+      {capture === 'authorized' && (
+        <div className="rounded-md border border-blue-500/50 bg-blue-500/10 p-3 space-y-2">
+          <p className="text-xs text-blue-700 dark:text-blue-300">
+            Le paiement est <strong>pré-autorisé mais pas encore encaissé</strong> chez Stripe
+            (« non capturé »). Encaissez-le pour finaliser la commande.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" disabled={busy} onClick={onCapture}>
+              {busy ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Check className="h-4 w-4 mr-1.5" />}
+              Encaisser le paiement
+            </Button>
+            <Button size="sm" variant="destructive" disabled={busy} onClick={onCancelAuth}>
+              Annuler la pré-autorisation
+            </Button>
+          </div>
+        </div>
+      )}
+
+
 
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
         <span className="font-medium">PaymentIntent :</span>
