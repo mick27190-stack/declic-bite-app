@@ -369,6 +369,25 @@ export function useUserOrders() {
           delivery_address: order.delivery_address as Order['delivery_address'],
         }));
 
+        // Historique des changements de statut (timeline).
+        if (transformedOrders.length > 0) {
+          const { data: history } = await supabase
+            .from('order_status_history')
+            .select('order_id, status, changed_at')
+            .in('order_id', transformedOrders.map(o => o.id))
+            .order('changed_at', { ascending: true });
+
+          const historyMap = new Map<string, { status: OrderStatus; changed_at: string }[]>();
+          (history || []).forEach((h: any) => {
+            const list = historyMap.get(h.order_id) || [];
+            list.push({ status: h.status as OrderStatus, changed_at: h.changed_at });
+            historyMap.set(h.order_id, list);
+          });
+          transformedOrders.forEach(o => {
+            o.status_history = historyMap.get(o.id) || [];
+          });
+        }
+
         setOrders(transformedOrders);
       } catch (error) {
         console.error('Error fetching user orders:', error);
