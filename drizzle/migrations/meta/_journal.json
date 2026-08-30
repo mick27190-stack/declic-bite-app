@@ -15,6 +15,13 @@
       "when": 1788098206150,
       "tag": "0001_order_test_mode_bypass",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788099762610,
+      "tag": "0002_notify_new_order_on_payment_authorized",
+      "breakpoints": true
     }
   ]
 }
