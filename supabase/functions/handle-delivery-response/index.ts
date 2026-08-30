@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
   // Load current order state
   const { data: order } = await supabase
     .from('orders')
-    .select('id, delivery_response, status')
+    .select('id, delivery_response, status, restaurant, site, stripe_payment_intent_id, capture_status, delivery_time_proposed')
     .eq('id', tok.order_id)
     .maybeSingle()
 
@@ -55,15 +55,46 @@ Deno.serve(async (req) => {
     return redirect('already', order.id)
   }
 
+  // Stripe : capture si accepté, annulation de la pré-autorisation si refusé.
+  const site = resolveSite(order.site ?? order.restaurant)
+  const notCaptured = order.stripe_payment_intent_id && order.capture_status !== 'captured'
+  const accepted = tok.action === 'accepted'
+  try {
+    if (notCaptured && accepted) {
+      await capturePaymentIntent(site, order.stripe_payment_intent_id as string)
+    } else if (notCaptured && !accepted) {
+      await cancelPaymentIntent(site, order.stripe_payment_intent_id as string)
+    }
+  } catch (e) {
+    console.error('Stripe action failed:', (e as Error).message)
+    if (accepted) return redirect('error', order.id)
+  }
+
   const { error: updErr } = await supabase
     .from('orders')
-    .update({ delivery_response: tok.action })
+    .update(
+      accepted
+        ? {
+            delivery_response: 'accepted',
+            delivery_time_confirmed: order.delivery_time_proposed ?? new Date().toISOString(),
+            order_status: 'confirmed',
+            capture_status: notCaptured ? 'captured' : order.capture_status,
+            status: 'confirmed',
+          }
+        : {
+            delivery_response: 'refused',
+            order_status: 'cancelled',
+            capture_status: order.capture_status === 'captured' ? 'captured' : 'cancelled',
+            status: 'cancelled',
+          },
+    )
     .eq('id', tok.order_id)
 
   if (updErr) {
     console.error('delivery-response update failed', updErr)
     return redirect('error', tok.order_id)
   }
+
 
   // Mark all tokens for this order used
   await supabase.from('delivery_response_tokens')
