@@ -24,6 +24,8 @@ export interface Order {
   stripe_payment_intent_id?: string | null;
   delivery_time_requested?: string | null;
   delivery_time_proposed?: string | null;
+  delivery_time_confirmed?: string | null;
+
 
   created_at: string;
   updated_at: string;
