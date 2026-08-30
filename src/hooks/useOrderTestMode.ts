@@ -12,14 +12,20 @@ export function useOrderTestMode() {
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => Date.now());
 
+  const [rpcActive, setRpcActive] = useState(false);
+
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from('order_test_mode')
-      .select('active_until')
-      .maybeSingle();
+    // Le détail (date d'expiration, admin ayant activé) est réservé aux admins ;
+    // les clients n'obtiennent que le booléen via une fonction SECURITY DEFINER.
+    const [{ data }, { data: active }] = await Promise.all([
+      supabase.from('order_test_mode').select('active_until').maybeSingle(),
+      supabase.rpc('is_order_test_mode_active'),
+    ]);
     setActiveUntil(data?.active_until ?? null);
+    setRpcActive(!!active);
     setLoading(false);
   }, []);
+
 
   useEffect(() => {
     load();
