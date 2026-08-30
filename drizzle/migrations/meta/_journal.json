@@ -78,6 +78,13 @@
       "when": 1788103847400,
       "tag": "0010_scope_menu_availability_by_site",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788104252354,
+      "tag": "0011_allow_pending_capture_status",
+      "breakpoints": true
     }
   ]
 }

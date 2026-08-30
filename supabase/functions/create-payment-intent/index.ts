@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
       orderType: order.order_type,
     });
 
-    await sb
+    const { error: updateError } = await sb
       .from('orders')
       .update({
         stripe_payment_intent_id: pi.id as string,
@@ -52,6 +52,13 @@ Deno.serve(async (req) => {
       })
       .eq('id', order.id)
       .is('stripe_payment_intent_id', null);
+
+    if (updateError) {
+      // Sans ce lien, le webhook Stripe ne pourra jamais retrouver la commande.
+      console.error('Impossible de lier le PaymentIntent à la commande:', updateError.message);
+      throw new Error("Impossible d'enregistrer le paiement sur la commande");
+    }
+
 
     return new Response(
       JSON.stringify({ client_secret: pi.client_secret, payment_intent_id: pi.id }),
