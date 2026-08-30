@@ -291,13 +291,17 @@ export default function AdminOrdersPage() {
       return;
     }
 
-    await updateOrderStatus(orderId, newStatus);
-
+    // L'encaissement passe AVANT le changement de statut : si la capture Stripe
+    // échoue (pré-autorisation expirée/annulée), la commande ne doit surtout pas
+    // rester affichée comme confirmée alors qu'aucun paiement n'est encaissé.
     if (hasPending && shouldCapture) {
-      await invokeStripeAction(orderId, 'confirm-order', 'Paiement encaissé (capture Stripe)');
+      const ok = await invokeStripeAction(orderId, 'confirm-order', 'Paiement encaissé (capture Stripe)');
+      if (!ok) return;
     }
 
+    await updateOrderStatus(orderId, newStatus);
   };
+
 
   /** Appelle une Edge Function Stripe puis resynchronise la liste. */
   const invokeStripeAction = async (
