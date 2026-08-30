@@ -463,6 +463,23 @@ export function CartView() {
           )}
         </div>
       </div>
+
+      {/* Pré-autorisation bancaire (capture différée) */}
+      <StripePaymentDialog
+        open={!!pendingPayment}
+        orderId={pendingPayment?.orderId ?? null}
+        site={pendingPayment?.site ?? null}
+        orderType={pendingPayment?.orderType ?? 'emporter'}
+        amount={pendingPayment?.amount ?? totalPrice}
+        onSuccess={() => {
+          const orderId = pendingPayment?.orderId;
+          setPendingPayment(null);
+          clearCart();
+          if (orderId) navigate(`/order-confirmation?id=${orderId}`);
+        }}
+        onCancelled={() => setPendingPayment(null)}
+      />
     </div>
   );
 }
+
