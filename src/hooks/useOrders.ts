@@ -357,7 +357,11 @@ export function useUserOrders() {
 
         if (error) throw error;
 
-        const transformedOrders: Order[] = (data || []).map(order => ({
+        // Côté client, seules les commandes ayant passé l'étape du paiement
+        // (autorisation Stripe) sont affichées dans l'historique.
+        const transformedOrders: Order[] = (data || [])
+          .filter((o: any) => isOrderPaymentAuthorized(o))
+          .map(order => ({
           ...order,
           order_type: order.order_type as 'emporter' | 'livraison',
           delivery_response: order.delivery_response as Order['delivery_response'],
