@@ -64,6 +64,13 @@
       "when": 1788101957763,
       "tag": "0008_grant_execute_pricing_functions",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788102586007,
+      "tag": "0009_harden_chat_site_insert_policies",
+      "breakpoints": true
     }
   ]
 }
