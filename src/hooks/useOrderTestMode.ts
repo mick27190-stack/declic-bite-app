@@ -12,14 +12,20 @@ export function useOrderTestMode() {
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => Date.now());
 
+  const [rpcActive, setRpcActive] = useState(false);
+
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from('order_test_mode')
-      .select('active_until')
-      .maybeSingle();
+    // Le détail (date d'expiration, admin ayant activé) est réservé aux admins ;
+    // les clients n'obtiennent que le booléen via une fonction SECURITY DEFINER.
+    const [{ data }, { data: active }] = await Promise.all([
+      supabase.from('order_test_mode').select('active_until').maybeSingle(),
+      supabase.rpc('is_order_test_mode_active'),
+    ]);
     setActiveUntil(data?.active_until ?? null);
+    setRpcActive(!!active);
     setLoading(false);
   }, []);
+
 
   useEffect(() => {
     load();
@@ -35,14 +41,22 @@ export function useOrderTestMode() {
 
     // Tick pour que l'expiration soit prise en compte sans rechargement.
     const interval = window.setInterval(() => setNow(Date.now()), 1_000);
+    // Les clients ne reçoivent pas les évènements realtime (lecture réservée
+    // aux admins) : on rafraîchit le booléen périodiquement.
+    const poll = window.setInterval(() => load(), 30_000);
 
     return () => {
       supabase.removeChannel(channel);
       window.clearInterval(interval);
+      window.clearInterval(poll);
     };
+
   }, [load]);
 
-  const isTestModeActive = !!activeUntil && new Date(activeUntil).getTime() > now;
+  const isTestModeActive = activeUntil
+    ? new Date(activeUntil).getTime() > now
+    : rpcActive;
+
 
   const enable = useCallback(
     async (minutes: number, userId?: string) => {
