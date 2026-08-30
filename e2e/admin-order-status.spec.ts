@@ -161,7 +161,10 @@ test.describe("Back-office — livraison et contre-proposition d'horaire", () =>
     await openAdminOrders(page, base, [deliveryOrder]);
 
     await expect(page.getByText(/En attente de réponse du client/i).first()).toBeVisible();
-    await expect(page.getByRole("link", { name: /\+33600000000/ })).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Jean Client · \+33600000000/ }),
+    ).toBeVisible();
+
   });
 
   test("« Confirmer au nom du client » déclenche la capture via respond-to-delivery-time", async ({
