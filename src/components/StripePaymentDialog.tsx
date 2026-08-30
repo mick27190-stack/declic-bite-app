@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
+import {
+  Elements,
+  ExpressCheckoutElement,
+  PaymentElement,
+  useElements,
+  useStripe,
+} from '@stripe/react-stripe-js';
 import type { Stripe } from '@stripe/stripe-js';
 import { Loader2, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,6 +42,25 @@ function PaymentForm({
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [walletAvailable, setWalletAvailable] = useState(false);
+
+  const finalizeConfirmation = async () => {
+    if (!stripe || !elements) return;
+    setErrorMessage(null);
+    const { error, paymentIntent } = await stripe.confirmPayment({
+      elements,
+      redirect: 'if_required',
+    });
+    if (error) {
+      setErrorMessage(error.message ?? "Le paiement n'a pas pu être autorisé.");
+      return;
+    }
+    if (paymentIntent && ['requires_capture', 'succeeded'].includes(paymentIntent.status)) {
+      onSuccess();
+      return;
+    }
+    setErrorMessage("L'autorisation bancaire n'a pas abouti. Merci de réessayer.");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,23 +69,8 @@ function PaymentForm({
     setSubmitting(true);
     setErrorMessage(null);
     try {
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        redirect: 'if_required',
-      });
-
-      if (error) {
-        setErrorMessage(error.message ?? "Le paiement n'a pas pu être autorisé.");
-        return;
-      }
-
       // capture_method = manual : le statut attendu est requires_capture.
-      if (paymentIntent && ['requires_capture', 'succeeded'].includes(paymentIntent.status)) {
-        onSuccess();
-        return;
-      }
-
-      setErrorMessage("L'autorisation bancaire n'a pas abouti. Merci de réessayer.");
+      await finalizeConfirmation();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erreur de paiement';
       setErrorMessage(message);
@@ -90,7 +100,38 @@ function PaymentForm({
         </div>
       </div>
 
-      <PaymentElement options={{ layout: 'tabs' }} />
+      <div className={walletAvailable ? 'space-y-3' : 'hidden'}>
+        <ExpressCheckoutElement
+          options={{
+            buttonHeight: 48,
+            paymentMethods: { applePay: 'auto', googlePay: 'auto', link: 'never' },
+          }}
+          onReady={({ availablePaymentMethods }) => {
+            setWalletAvailable(Boolean(availablePaymentMethods));
+          }}
+          onConfirm={async () => {
+            setSubmitting(true);
+            try {
+              await finalizeConfirmation();
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+          onCancel={() => setSubmitting(false)}
+        />
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          ou payer par carte
+          <span className="h-px flex-1 bg-border" />
+        </div>
+      </div>
+
+      <PaymentElement
+        options={{
+          layout: 'tabs',
+          wallets: { applePay: 'auto', googlePay: 'auto' },
+        }}
+      />
 
       {errorMessage && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 flex items-start gap-2">
