@@ -20,9 +20,25 @@ Deno.serve(async (req) => {
       .eq('id', orderId)
       .single();
     if (error || !order) throw new Error('Commande introuvable');
-    if (order.user_id !== userId) throw new Error('Cette commande ne vous appartient pas');
 
     const site = resolveSite(order.site ?? order.restaurant);
+
+    if (order.user_id !== userId) {
+      // L'appelant n'est pas le client : il doit être admin du site de la commande
+      const { data: roles } = await sb
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+      const allowed = new Set([
+        'super_admin',
+        'secondary_super_admin',
+        `site_admin_${site}`,
+        `secondary_admin_${site}`,
+      ]);
+      if (!(roles ?? []).some((r) => allowed.has(r.role as string))) {
+        throw new Error('Cette commande ne vous appartient pas');
+      }
+    }
 
     if (response === 'accepted') {
       if (order.stripe_payment_intent_id && order.capture_status !== 'captured') {
