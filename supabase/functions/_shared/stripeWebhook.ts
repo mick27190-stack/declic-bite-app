@@ -29,10 +29,8 @@ export async function handleStripeWebhook(req: Request, site: StripeSite): Promi
     });
   }
 
-  const type = event.type as string;
-  const pi = (event.data as { object?: Record<string, unknown> })?.object ?? {};
-  const paymentIntentId = pi.id as string | undefined;
-  const orderId = (pi.metadata as Record<string, string> | undefined)?.order_id;
+  const resolved = stripeEventToOrderUpdate(event);
+  const { paymentIntentId, orderId, update } = resolved;
 
   if (!paymentIntentId) {
     return new Response(JSON.stringify({ received: true, ignored: 'no payment intent id' }), {
@@ -40,29 +38,14 @@ export async function handleStripeWebhook(req: Request, site: StripeSite): Promi
     });
   }
 
-  const sb = serviceClient();
-  let update: Record<string, unknown> | null = null;
-
-  switch (type) {
-    case 'payment_intent.amount_capturable_updated':
-      update = { capture_status: 'authorized' };
-      break;
-    case 'payment_intent.succeeded':
-      // Paiement encaissé : la commande est forcément confirmée côté pizzeria.
-      update = { capture_status: 'captured', order_status: 'confirmed' };
-      break;
-
-    case 'payment_intent.canceled':
-      update = { capture_status: 'cancelled', order_status: 'cancelled', status: 'cancelled' };
-      break;
-    case 'payment_intent.payment_failed':
-      update = { order_status: 'cancelled', status: 'cancelled' };
-      break;
-    default:
-      return new Response(JSON.stringify({ received: true, ignored: type }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+  if (!update) {
+    return new Response(JSON.stringify({ received: true, ignored: event.type }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
+
+  const sb = serviceClient();
+
 
   let query = sb.from('orders').update(update).eq('stripe_payment_intent_id', paymentIntentId);
   if (orderId) query = query.eq('id', orderId);
