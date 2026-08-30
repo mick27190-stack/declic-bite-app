@@ -17,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical, Power } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical, Power, Wallet } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { useOrderTestMode } from '@/hooks/useOrderTestMode';
 import { toast } from '@/hooks/use-toast';
@@ -37,6 +38,33 @@ export default function AdminSettingsPage() {
   const { activeUntil, isTestModeActive, enable: enableTestMode, disable: disableTestMode } = useOrderTestMode();
   const [testMinutes, setTestMinutes] = useState('30');
   const [testSubmitting, setTestSubmitting] = useState(false);
+  const [walletSubmitting, setWalletSubmitting] = useState(false);
+  const [walletReport, setWalletReport] = useState<string | null>(null);
+
+  const registerWalletDomains = async () => {
+    setWalletSubmitting(true);
+    setWalletReport(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-payment-domains', {
+        body: {},
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setWalletReport(JSON.stringify(data.report, null, 2));
+      toast({
+        title: 'Domaines Apple Pay / Google Pay enregistrés',
+        description: 'Les wallets sont activés sur les comptes Conches et Beaumont.',
+      });
+    } catch (err) {
+      toast({
+        title: 'Échec de l\'enregistrement',
+        description: err instanceof Error ? err.message : 'Erreur inconnue',
+        variant: 'destructive',
+      });
+    } finally {
+      setWalletSubmitting(false);
+    }
+  };
 
   // Tick à la seconde pour le compte à rebours du mode test.
   const [nowTick, setNowTick] = useState(() => Date.now());
@@ -226,6 +254,32 @@ export default function AdminSettingsPage() {
                   ⚠️ De vrais clients peuvent commander pendant cette fenêtre. Désactivez le mode
                   dès la fin du test.
                 </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {isSuperAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Wallet className="h-5 w-5 text-primary" />
+                Apple Pay / Google Pay
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Les wallets ne s'affichent au paiement que si les domaines du site sont enregistrés
+                sur les deux comptes de paiement. Lancez la vérification après chaque changement de
+                domaine.
+              </p>
+              <Button onClick={registerWalletDomains} disabled={walletSubmitting}>
+                {walletSubmitting ? 'Vérification...' : 'Activer / vérifier les wallets'}
+              </Button>
+              {walletReport && (
+                <pre className="max-h-64 overflow-auto rounded-lg bg-muted p-3 text-xs">
+                  {walletReport}
+                </pre>
               )}
             </CardContent>
           </Card>
