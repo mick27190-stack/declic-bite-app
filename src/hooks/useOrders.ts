@@ -274,22 +274,40 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
           };
 
           if (payload.eventType === 'INSERT') {
+            if (!isOrderPaymentAuthorized(payload.new as any)) return;
             void (async () => {
               const newOrder = await buildOrder(payload.new);
-              setOrders(prev => [newOrder, ...prev]);
+              setOrders(prev => prev.some(o => o.id === newOrder.id) ? prev : [newOrder, ...prev]);
               toast({
                 title: '🔔 Nouvelle commande !',
                 description: `Commande de ${newOrder.total_price.toFixed(2)}€`,
               });
             })();
           } else if (payload.eventType === 'UPDATE') {
+            const authorized = isOrderPaymentAuthorized(payload.new as any);
+            const wasAuthorized = isOrderPaymentAuthorized(payload.old as any);
+            if (!authorized) {
+              setOrders(prev => prev.filter(o => o.id !== (payload.new as any).id));
+              return;
+            }
             void (async () => {
               const updatedOrder = await buildOrder(payload.new);
-              setOrders(prev => prev.map(o =>
-                o.id === updatedOrder.id ? updatedOrder : o
-              ));
+              setOrders(prev => {
+                if (prev.some(o => o.id === updatedOrder.id)) {
+                  return prev.map(o => (o.id === updatedOrder.id ? updatedOrder : o));
+                }
+                return [updatedOrder, ...prev];
+              });
+              // Le paiement vient d'être autorisé : la commande arrive en cuisine.
+              if (!wasAuthorized) {
+                toast({
+                  title: '🔔 Nouvelle commande !',
+                  description: `Commande de ${updatedOrder.total_price.toFixed(2)}€`,
+                });
+              }
             })();
           } else if (payload.eventType === 'DELETE') {
+
             setOrders(prev => prev.filter(o => o.id !== payload.old.id));
           }
         }
