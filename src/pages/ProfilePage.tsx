@@ -151,7 +151,10 @@ function CurrentOrders() {
                           <span className="font-medium text-foreground">{(unitPrice * item.quantity).toFixed(2)}€</span>
                         </div>
                         <div className="text-muted-foreground">
-                          {item.base && <span>Base {item.base}</span>}
+                          {item.pizza?.hasBase !== false &&
+                            item.pizza?.category !== 'boissons' &&
+                            item.pizza?.category !== 'bambino' &&
+                            item.base && <span>Base {item.base === 'creme' ? 'crème' : 'tomate'}</span>}
                           {item.supplements && item.supplements.length > 0 && (
                             <span> • + {item.supplements.map((s) => s.name).join(', ')}</span>
                           )}
