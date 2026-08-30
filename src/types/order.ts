@@ -18,6 +18,11 @@ export interface Order {
   notes: string | null;
   delivery_estimate: string | null;
   delivery_response: 'accepted' | 'refused' | null;
+  // Flux de contre-proposition d'horaire (paiement Stripe)
+  order_status?: string | null;
+  delivery_time_requested?: string | null;
+  delivery_time_proposed?: string | null;
+  delivery_time_confirmed?: string | null;
   created_at: string;
   updated_at: string;
   // Joined data from profiles
