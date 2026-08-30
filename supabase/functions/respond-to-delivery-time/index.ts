@@ -1,5 +1,5 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { cancelPaymentIntent, capturePaymentIntent, resolveSite } from '../_shared/stripe.ts';
+import { cancelPaymentIntent, captureIfNeeded, resolveSite } from '../_shared/stripe.ts';
 import { requireUser, serviceClient } from '../_shared/orderAccess.ts';
 
 Deno.serve(async (req) => {
@@ -42,15 +42,16 @@ Deno.serve(async (req) => {
 
     if (response === 'accepted') {
       if (order.stripe_payment_intent_id && order.capture_status !== 'captured') {
-        await capturePaymentIntent(site, order.stripe_payment_intent_id);
+        await captureIfNeeded(site, order.stripe_payment_intent_id);
       }
-      await sb.from('orders').update({
+      const { error: updErr } = await sb.from('orders').update({
         delivery_response: 'accepted',
         delivery_time_confirmed: order.delivery_time_proposed ?? new Date().toISOString(),
         order_status: 'confirmed',
         capture_status: 'captured',
         status: 'confirmed',
       }).eq('id', order.id);
+      if (updErr) throw new Error(`Mise à jour de la commande impossible : ${updErr.message}`);
     } else {
       if (order.stripe_payment_intent_id && order.capture_status !== 'captured') {
         try {
