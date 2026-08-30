@@ -303,29 +303,33 @@ export default function AdminOrdersPage() {
   };
 
 
-  /** Appelle une Edge Function Stripe puis resynchronise la liste. */
+  /** Appelle une Edge Function Stripe puis resynchronise la liste.
+   *  Renvoie true si l'action Stripe a réussi. */
   const invokeStripeAction = async (
     orderId: string,
     fn: 'confirm-order' | 'cancel-order',
     successMessage: string,
-  ) => {
+  ): Promise<boolean> => {
     setStripeActionId(orderId);
     try {
       const { data, error } = await supabase.functions.invoke(fn, { body: { order_id: orderId } });
       if (error) throw new Error(await edgeErrorMessage(error, 'Action Stripe impossible'));
       if (data?.error) throw new Error(data.error);
       toast({ title: '✅ Stripe', description: successMessage });
+      return true;
     } catch (e) {
       toast({
         variant: 'destructive',
         title: 'Erreur Stripe',
         description: e instanceof Error ? e.message : 'Action Stripe impossible',
       });
+      return false;
     } finally {
       setStripeActionId(null);
       refetch();
     }
   };
+
 
 
 
