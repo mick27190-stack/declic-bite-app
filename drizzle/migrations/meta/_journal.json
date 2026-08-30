@@ -57,6 +57,13 @@
       "when": 1788101930060,
       "tag": "0007_server_side_price_validation",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788101957763,
+      "tag": "0008_grant_execute_pricing_functions",
+      "breakpoints": true
     }
   ]
 }
