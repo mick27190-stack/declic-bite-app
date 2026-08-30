@@ -71,6 +71,13 @@
       "when": 1788102586007,
       "tag": "0009_harden_chat_site_insert_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788103847400,
+      "tag": "0010_scope_menu_availability_by_site",
+      "breakpoints": true
     }
   ]
 }
