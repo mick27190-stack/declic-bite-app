@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
+import { edgeErrorMessage } from '@/lib/edgeError';
+
 import { Order, OrderStatus, statusLabels, statusColors } from '@/types/order';
 
 /** Une commande est « en attente de réponse client » quand un horaire a été
