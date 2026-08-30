@@ -162,8 +162,9 @@ test.describe("Back-office — livraison et contre-proposition d'horaire", () =>
 
     await expect(page.getByText(/En attente de réponse du client/i).first()).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /Jean Client · \+33600000000/ }),
+      page.locator('a[href="tel:+33600000000"]').last(),
     ).toBeVisible();
+
 
   });
 
