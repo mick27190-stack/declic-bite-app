@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
+import { edgeErrorMessage } from '@/lib/edgeError';
+
 import { Order, OrderStatus, statusLabels, statusColors } from '@/types/order';
 
 /** Une commande est « en attente de réponse client » quand un horaire a été
@@ -306,7 +308,7 @@ export default function AdminOrdersPage() {
     setStripeActionId(orderId);
     try {
       const { data, error } = await supabase.functions.invoke(fn, { body: { order_id: orderId } });
-      if (error) throw error;
+      if (error) throw new Error(await edgeErrorMessage(error, 'Action Stripe impossible'));
       if (data?.error) throw new Error(data.error);
       toast({ title: '✅ Stripe', description: successMessage });
     } catch (e) {
@@ -322,6 +324,7 @@ export default function AdminOrdersPage() {
   };
 
 
+
   /** Confirme ou refuse la contre-proposition d'horaire au nom du client
    *  (appel téléphonique, client injoignable en ligne, etc.). L'Edge Function
    *  met à jour order_status + capture/annulation Stripe automatiquement. */
@@ -331,8 +334,9 @@ export default function AdminOrdersPage() {
       const { data, error } = await supabase.functions.invoke('respond-to-delivery-time', {
         body: { order_id: order.id, response },
       });
-      if (error) throw error;
+      if (error) throw new Error(await edgeErrorMessage(error, 'Action impossible'));
       if (data?.error) throw new Error(data.error);
+
       toast({
         title: response === 'accepted' ? '✅ Horaire confirmé' : '❌ Horaire refusé',
         description:

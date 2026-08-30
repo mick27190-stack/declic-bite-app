@@ -78,6 +78,36 @@ export async function retrievePaymentIntent(site: StripeSite, paymentIntentId: s
   return stripeRequest(site, `/payment_intents/${paymentIntentId}`, 'GET');
 }
 
+/** Capture idempotente et tolérante aux états Stripe.
+ *  Renvoie l'état final ('captured' | 'cancelled') ou lève une erreur explicite en français. */
+export async function captureIfNeeded(
+  site: StripeSite,
+  paymentIntentId: string,
+): Promise<'captured' | 'cancelled'> {
+  const pi = await retrievePaymentIntent(site, paymentIntentId);
+  const status = String(pi.status ?? '');
+
+  switch (status) {
+    case 'succeeded':
+      return 'captured';
+    case 'requires_capture':
+      await capturePaymentIntent(site, paymentIntentId);
+      return 'captured';
+    case 'canceled':
+      throw new Error("La pré-autorisation Stripe a déjà été annulée : le paiement ne peut plus être encaissé.");
+    case 'processing':
+      throw new Error('Le paiement est encore en cours de traitement chez Stripe, réessayez dans quelques secondes.');
+    case 'requires_payment_method':
+    case 'requires_confirmation':
+    case 'requires_action':
+      throw new Error("Le paiement du client n'est pas encore autorisé : la commande ne peut pas être encaissée.");
+    default:
+      throw new Error(`État Stripe inattendu (${status}) : encaissement impossible.`);
+  }
+}
+
+
+
 // --- Webhook signature verification (v1, HMAC-SHA256) ---
 
 function hexToBytes(hex: string): Uint8Array {
