@@ -285,10 +285,36 @@ export default function AdminSettingsPage() {
                 {walletSubmitting ? 'Vérification...' : 'Activer / vérifier les wallets'}
               </Button>
               {walletReport && (
-                <pre className="max-h-64 overflow-auto rounded-lg bg-muted p-3 text-xs">
-                  {walletReport}
-                </pre>
+                <div className="space-y-3">
+                  {Object.entries(walletReport).map(([site, rows]) => (
+                    <div key={site} className="rounded-lg border p-3 space-y-2">
+                      <p className="text-sm font-semibold capitalize">{site}</p>
+                      {Array.isArray(rows) ? (
+                        rows.map((row) => (
+                          <div key={row.domain} className="flex flex-wrap items-center gap-2 text-xs">
+                            <span className="font-medium">{row.domain}</span>
+                            {row.error ? (
+                              <span className="text-destructive">{row.error}</span>
+                            ) : (
+                              <>
+                                <span className={row.apple_pay === 'active' ? 'text-primary' : 'text-muted-foreground'}>
+                                  Apple Pay : {row.apple_pay ?? 'inactif'}
+                                </span>
+                                <span className={row.google_pay === 'active' ? 'text-primary' : 'text-muted-foreground'}>
+                                  Google Pay : {row.google_pay ?? 'inactif'}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-destructive">{rows.error}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
+
             </CardContent>
           </Card>
         )}
