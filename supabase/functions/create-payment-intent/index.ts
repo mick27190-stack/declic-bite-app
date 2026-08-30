@@ -44,7 +44,9 @@ Deno.serve(async (req) => {
       .update({
         stripe_payment_intent_id: pi.id as string,
         order_status: 'pending_confirmation',
-        capture_status: 'authorized',
+        // L'autorisation n'est confirmée que via le webhook
+        // (payment_intent.amount_capturable_updated) -> 'authorized'
+        capture_status: 'pending',
         site,
         delivery_time_requested: order.order_type === 'livraison' ? new Date().toISOString() : null,
       })
