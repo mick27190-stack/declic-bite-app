@@ -794,7 +794,13 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
 
-                    <StripeStatusPanel order={order} />
+                    <StripeStatusPanel
+                      order={order}
+                      busy={stripeActionId === order.id}
+                      onCapture={() => invokeStripeAction(order.id, 'confirm-order', 'Paiement encaissé (capture Stripe)')}
+                      onCancelAuth={() => invokeStripeAction(order.id, 'cancel-order', 'Pré-autorisation Stripe annulée')}
+                    />
+
 
                     {order.order_type === 'livraison' && (
 
