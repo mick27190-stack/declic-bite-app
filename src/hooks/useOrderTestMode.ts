@@ -34,7 +34,7 @@ export function useOrderTestMode() {
       .subscribe();
 
     // Tick pour que l'expiration soit prise en compte sans rechargement.
-    const interval = window.setInterval(() => setNow(Date.now()), 15_000);
+    const interval = window.setInterval(() => setNow(Date.now()), 1_000);
 
     return () => {
       supabase.removeChannel(channel);
