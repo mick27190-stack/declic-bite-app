@@ -332,8 +332,9 @@ export default function AdminOrdersPage() {
       const { data, error } = await supabase.functions.invoke('respond-to-delivery-time', {
         body: { order_id: order.id, response },
       });
-      if (error) throw error;
+      if (error) throw new Error(await edgeErrorMessage(error, 'Action impossible'));
       if (data?.error) throw new Error(data.error);
+
       toast({
         title: response === 'accepted' ? '✅ Horaire confirmé' : '❌ Horaire refusé',
         description:
