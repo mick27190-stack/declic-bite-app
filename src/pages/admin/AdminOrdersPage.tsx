@@ -121,7 +121,7 @@ export default function AdminOrdersPage() {
       setFilterSite(forcedSite);
     }
   }, [forcedSite]);
-  const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus | 'awaiting_response'>('all');
   const [orderToPrint, setOrderToPrint] = useState<Order | null>(null);
   const [chatOrder, setChatOrder] = useState<Order | null>(null);
   const [chatMessage, setChatMessage] = useState('');
@@ -212,7 +212,9 @@ export default function AdminOrdersPage() {
     const site = getSiteFromRestaurant(order.restaurant);
     
     if (filterSite !== 'all' && site !== filterSite) return false;
-    if (filterStatus !== 'all' && order.status !== filterStatus) return false;
+    if (filterStatus === 'awaiting_response') {
+      if (!isAwaitingCustomerResponse(order)) return false;
+    } else if (filterStatus !== 'all' && order.status !== filterStatus) return false;
     
     // Filter by site if not super admin
     if (!isSuperAdmin) {
