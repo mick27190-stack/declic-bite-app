@@ -201,7 +201,7 @@ export default function AdminSettingsPage() {
                   {testSubmitting
                     ? 'Mise à jour…'
                     : isTestModeActive
-                      ? 'Désactiver le mode test'
+                      ? `Mode test actif — ${countdownLabel} restantes (désactiver)`
                       : `Activer le mode test pendant ${testMinutes === '60' ? '1 heure' : testMinutes === '120' ? '2 heures' : `${testMinutes} minutes`}`}
                 </Button>
 
