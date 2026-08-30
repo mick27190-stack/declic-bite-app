@@ -100,14 +100,23 @@ function PaymentForm({
         </div>
       </div>
 
-      <div className={walletAvailable ? 'space-y-3' : 'hidden'}>
+      {/* Le conteneur reste monté (jamais display:none) : Stripe a besoin d'un
+          conteneur mesurable pour détecter et afficher Apple Pay / Google Pay. */}
+      <div className={walletAvailable ? 'space-y-3' : 'h-0 overflow-hidden opacity-0 pointer-events-none'}>
         <ExpressCheckoutElement
           options={{
             buttonHeight: 48,
             paymentMethods: { applePay: 'auto', googlePay: 'auto', link: 'never' },
           }}
           onReady={({ availablePaymentMethods }) => {
-            setWalletAvailable(Boolean(availablePaymentMethods));
+            setWalletAvailable(
+              Boolean(availablePaymentMethods) &&
+              Object.values(availablePaymentMethods as Record<string, boolean>).some(Boolean),
+            );
+          }}
+          onLoadError={(e) => {
+            console.warn('ExpressCheckout indisponible', e);
+            setWalletAvailable(false);
           }}
           onConfirm={async () => {
             setSubmitting(true);
@@ -125,6 +134,7 @@ function PaymentForm({
           <span className="h-px flex-1 bg-border" />
         </div>
       </div>
+
 
       <PaymentElement
         options={{
