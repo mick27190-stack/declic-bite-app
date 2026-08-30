@@ -20,12 +20,16 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const { data: rawData, error } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      // Seules les commandes dont le paiement est autorisé remontent en admin.
+      const data = (rawData || []).filter((o: any) => isOrderPaymentAuthorized(o));
+
 
       // Fetch matching profiles separately (no FK relationship available)
       const userIds = Array.from(
