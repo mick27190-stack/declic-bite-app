@@ -167,7 +167,7 @@ function CurrentOrders() {
                   </ul>
                 )}
 
-
+                <OrderTimeline order={order} />
 
                 {order.order_type === 'livraison' && order.pickup_time && !order.delivery_estimate && (
                   <p className="mt-2 text-sm flex items-center gap-1.5">
