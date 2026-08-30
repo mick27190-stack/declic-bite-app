@@ -119,7 +119,73 @@ export default function AdminSettingsPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
+        {/* Mode test : ouverture temporaire hors horaires (super admin) */}
+        {isSuperAdmin && (
+          <Card className={isTestModeActive ? 'border-amber-500/50 bg-amber-500/5' : undefined}>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FlaskConical className="h-5 w-5 text-amber-600" />
+                Mode test (hors horaires)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Ouvre temporairement la création de commandes en dehors de 18h–22h (et le lundi)
+                pour tester le paiement en production. Les fermetures et blocages de site restent
+                appliqués. Le mode s'éteint automatiquement à la fin du délai.
+              </p>
+
+              <div className="space-y-2">
+                <Label>Durée</Label>
+                <Select value={testMinutes} onValueChange={setTestMinutes} disabled={isTestModeActive}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="15">15 minutes</SelectItem>
+                    <SelectItem value="30">30 minutes</SelectItem>
+                    <SelectItem value="60">1 heure</SelectItem>
+                    <SelectItem value="120">2 heures</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between rounded-lg border p-3">
+                <div>
+                  <p className="text-sm font-medium">
+                    {isTestModeActive ? 'Mode test actif' : 'Mode test désactivé'}
+                  </p>
+                  {isTestModeActive && activeUntil && (
+                    <p className="text-xs text-muted-foreground">
+                      Jusqu'à{' '}
+                      {new Date(activeUntil).toLocaleTimeString('fr-FR', {
+                        timeZone: 'Europe/Paris',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}{' '}
+                      (heure de Paris)
+                    </p>
+                  )}
+                </div>
+                <Switch
+                  checked={isTestModeActive}
+                  disabled={testSubmitting}
+                  onCheckedChange={handleToggleTestMode}
+                />
+              </div>
+
+              {isTestModeActive && (
+                <p className="text-xs text-amber-700">
+                  ⚠️ De vrais clients peuvent commander pendant cette fenêtre. Désactivez le mode
+                  dès la fin du test.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Add new closure */}
+
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
