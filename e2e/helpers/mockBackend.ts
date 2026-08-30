@@ -156,7 +156,12 @@ export async function mockBackend(
               site: "conches",
               ...payload,
             };
-        return json(route, [created], 201);
+        // `.single()` demande un objet (Accept: vnd.pgrst.object+json).
+        const wantsObject = (request.headers()["accept"] ?? "").includes(
+          "vnd.pgrst.object",
+        );
+        return json(route, wantsObject ? created : [created], 201);
+
       }
       if (method === "PATCH") {
         recorder.orderWrites.push({ method, url, body: parseBody(route) });
