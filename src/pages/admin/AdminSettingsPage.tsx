@@ -34,8 +34,28 @@ export default function AdminSettingsPage() {
   const [newReason, setNewReason] = useState('');
   const [newEndAt, setNewEndAt] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { activeUntil, isTestModeActive, enable: enableTestMode, disable: disableTestMode } = useOrderTestMode();
+  const [testMinutes, setTestMinutes] = useState('30');
+  const [testSubmitting, setTestSubmitting] = useState(false);
 
-  useEffect(() => {
+  const handleToggleTestMode = async (checked: boolean) => {
+    setTestSubmitting(true);
+    const error = checked
+      ? await enableTestMode(Number(testMinutes) || 30, user?.id)
+      : await disableTestMode();
+    setTestSubmitting(false);
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({
+      title: checked ? 'Mode test activé' : 'Mode test désactivé',
+      description: checked
+        ? `Les commandes sont ouvertes pendant ${Number(testMinutes) || 30} minutes.`
+        : 'Les horaires normaux (18h-22h) sont de nouveau appliqués.',
+    });
+  };
+
     if (!authLoading && !adminLoading) {
       if (!user) navigate('/auth');
       else if (!isAnyAdmin) navigate('/');
