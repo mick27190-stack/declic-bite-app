@@ -53,3 +53,29 @@ bunx playwright test e2e/profile-site-sync.spec.ts
   admin (« Commandes en ligne bloquées » / « Site fermé »), que le bouton
   affiche « Commandes fermées » **uniquement** hors horaires, et qu'en
   fonctionnement normal « Ajouter au panier » reste actif.
+- `checkout-payment-flow.spec.ts` — flux client complet **à emporter** et
+  **en livraison** avec backend simulé (`helpers/mockBackend.ts`) : création de
+  la commande (`order_type`, créneau, adresse), appel de
+  `create-payment-intent` (pré-autorisation), message de pré-autorisation
+  adapté, puis annulation via `cancel-order`. Aucune session ni clé Stripe
+  requise.
+- `admin-order-status.spec.ts` — back-office `/admin/orders` : le passage à
+  « Confirmée » (ou « Livrée ») appelle `confirm-order` **avant** le PATCH du
+  statut, un échec de capture laisse le statut inchangé, « Annulée » appelle
+  `cancel-order`, et les contre-propositions d'horaire (confirmer / refuser au
+  nom du client) appellent `respond-to-delivery-time`.
+
+## Backend simulé (`helpers/mockBackend.ts`)
+
+`mockBackend(page, options)` intercepte `auth/v1`, `rest/v1`, `rpc` et
+`functions/v1`, injecte des rôles admin, des lignes de tables et des réponses
+d'Edge Functions, et enregistre les appels (`functionCalls`, `orderWrites`)
+pour les assertions. `installFakeSession(page, base)` pose une session
+Supabase factice dans le `localStorage`. Stripe.js et le Realtime sont bloqués.
+
+Chromium local :
+
+```bash
+E2E_CHROME_PATH=/opt/ms-playwright/chromium-1194/chrome-linux/chrome bunx playwright test
+```
+
