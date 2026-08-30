@@ -36,6 +36,13 @@
       "when": 1788100498607,
       "tag": "0004_sales_revenue_on_confirmed_status",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1788101393795,
+      "tag": "0005_fix_chat_conversation_update_trigger",
+      "breakpoints": true
     }
   ]
 }
