@@ -50,6 +50,13 @@
       "when": 1788101423213,
       "tag": "0006_restrict_chat_conversation_update_to_admins",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1788101930060,
+      "tag": "0007_server_side_price_validation",
+      "breakpoints": true
     }
   ]
 }
