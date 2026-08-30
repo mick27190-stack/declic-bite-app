@@ -41,11 +41,16 @@ export function useOrderTestMode() {
 
     // Tick pour que l'expiration soit prise en compte sans rechargement.
     const interval = window.setInterval(() => setNow(Date.now()), 1_000);
+    // Les clients ne reçoivent pas les évènements realtime (lecture réservée
+    // aux admins) : on rafraîchit le booléen périodiquement.
+    const poll = window.setInterval(() => load(), 30_000);
 
     return () => {
       supabase.removeChannel(channel);
       window.clearInterval(interval);
+      window.clearInterval(poll);
     };
+
   }, [load]);
 
   const isTestModeActive = activeUntil
