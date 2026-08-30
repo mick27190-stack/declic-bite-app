@@ -1,5 +1,5 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { cancelPaymentIntent, resolveSite } from '../_shared/stripe.ts';
+import { cancelPaymentIntent, resolveSite, retrievePaymentIntent } from '../_shared/stripe.ts';
 import { requireAdminForSite, requireUser, serviceClient } from '../_shared/orderAccess.ts';
 
 Deno.serve(async (req) => {
@@ -28,26 +28,38 @@ Deno.serve(async (req) => {
       (order.order_status === null || order.order_status === 'pending_confirmation');
     if (!ownerMayCancel) await requireAdminForSite(req, site);
 
-
     // Annule le PaymentIntent seulement s'il n'a jamais été capturé
-    if (order.stripe_payment_intent_id && order.capture_status !== 'captured') {
+    let alreadyCaptured = order.capture_status === 'captured';
+    if (order.stripe_payment_intent_id && !alreadyCaptured) {
       try {
-        await cancelPaymentIntent(site, order.stripe_payment_intent_id);
+        const pi = await retrievePaymentIntent(site, order.stripe_payment_intent_id);
+        const st = String(pi.status ?? '');
+        if (st === 'succeeded') {
+          // Déjà encaissé côté Stripe : on ne prétend pas avoir libéré les fonds.
+          alreadyCaptured = true;
+        } else if (st !== 'canceled') {
+          await cancelPaymentIntent(site, order.stripe_payment_intent_id);
+        }
       } catch (e) {
         console.error('Stripe cancel failed (continuing):', (e as Error).message);
       }
     }
 
-    await sb
+    const { error: updErr } = await sb
       .from('orders')
       .update({
         order_status: 'cancelled',
-        capture_status: order.capture_status === 'captured' ? 'captured' : 'cancelled',
+        capture_status: alreadyCaptured ? 'captured' : 'cancelled',
         status: 'cancelled',
       })
       .eq('id', order.id);
+    if (updErr) {
+      throw new Error(`Pré-autorisation libérée mais mise à jour impossible : ${updErr.message}`);
+    }
 
-    return new Response(JSON.stringify({ ok: true }), {
+
+    return new Response(JSON.stringify({ ok: true, already_captured: alreadyCaptured }), {
+
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {

@@ -133,9 +133,12 @@ Deno.test("livraison: no slot before 18:45 is ever accepted, whatever the Paris 
   }
 });
 
-Deno.test("livraison: 18h05/18h15 Paris → 18:45 still accepted (lead clamped to first slot)", async () => {
+Deno.test("livraison: 18h05 Paris → 18:45 accepté (grâce de 8 min sur le quart d'heure)", async () => {
   assertEquals((await callCutoff("livraison", "18:45", m(18, 5))).ok, true);
-  assertEquals((await callCutoff("livraison", "18:45", m(18, 15))).ok, true);
+});
+
+Deno.test("livraison: 18h15 Paris → 18:45 refusé (45 min de délai depuis 18h15)", async () => {
+  assertEquals((await callCutoff("livraison", "18:45", m(18, 15))).ok, false);
 });
 
 Deno.test("livraison: 18h20 Paris → 18:45 refused (lead pushes past the first slot)", async () => {
@@ -146,7 +149,7 @@ Deno.test("livraison: 18h20 Paris → 18:45 refused (lead pushes past the first 
 
 
 // ---------------------------------------------------------------------------
-// EMPORTER — 21h16 last acceptance / 21h17 cut-off
+// EMPORTER — dernier créneau 21h30, cut-off à 21h31
 // ---------------------------------------------------------------------------
 
 Deno.test("emporter: 21h15 Paris → still accepted", async () => {
@@ -159,19 +162,25 @@ Deno.test("emporter: 21h16 Paris → still accepted (last acceptance minute)", a
   assertEquals(r.ok, true, `21h16 must remain within the take-away window`);
 });
 
-Deno.test("emporter: 21h17 Paris → refused by the cut-off", async () => {
+Deno.test("emporter: 21h17 Paris → toujours accepté (à emporter jusqu'à 21h30)", async () => {
   const r = await callCutoff("emporter", null, m(21, 17));
-  assert(!r.ok, "take-away must be blocked from 21h17");
+  assertEquals(r.ok, true);
+});
+
+Deno.test("emporter: 21h30 Paris → dernier créneau encore accepté", async () => {
+  const r = await callCutoff("emporter", null, m(21, 30));
+  assertEquals(r.ok, true);
+});
+
+Deno.test("emporter: 21h31 Paris → refusé par le cut-off", async () => {
+  const r = await callCutoff("emporter", null, m(21, 31));
+  assert(!r.ok);
   assert(
     r.message.includes("à emporter ne sont plus acceptées"),
     `unexpected error: ${r.message}`,
   );
 });
 
-Deno.test("emporter: 21h30 Paris → refused (past the 21h17 cut-off)", async () => {
-  const r = await callCutoff("emporter", null, m(21, 30));
-  assert(!r.ok);
-});
 
 Deno.test("emporter: 22h00 Paris → still refused", async () => {
   const r = await callCutoff("emporter", null, m(22, 0));

@@ -48,8 +48,10 @@ export async function handleStripeWebhook(req: Request, site: StripeSite): Promi
       update = { capture_status: 'authorized' };
       break;
     case 'payment_intent.succeeded':
-      update = { capture_status: 'captured' };
+      // Paiement encaissé : la commande est forcément confirmée côté pizzeria.
+      update = { capture_status: 'captured', order_status: 'confirmed' };
       break;
+
     case 'payment_intent.canceled':
       update = { capture_status: 'cancelled', order_status: 'cancelled', status: 'cancelled' };
       break;

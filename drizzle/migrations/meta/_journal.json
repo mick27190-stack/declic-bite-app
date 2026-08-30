@@ -92,6 +92,13 @@
       "when": 1788105592551,
       "tag": "0012_notify_new_order_only_when_payment_authorized",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1788108340188,
+      "tag": "0013_allow_payment_notification_types",
+      "breakpoints": true
     }
   ]
 }
