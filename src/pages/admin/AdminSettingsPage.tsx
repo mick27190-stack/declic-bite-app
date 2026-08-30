@@ -56,7 +56,9 @@ export default function AdminSettingsPage() {
     });
   };
 
+  useEffect(() => {
     if (!authLoading && !adminLoading) {
+
       if (!user) navigate('/auth');
       else if (!isAnyAdmin) navigate('/');
     }
