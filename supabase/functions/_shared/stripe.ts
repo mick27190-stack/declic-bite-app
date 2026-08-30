@@ -129,3 +129,27 @@ export async function verifyStripeSignature(
 
   return JSON.parse(rawBody);
 }
+
+// --- Payment method domains (Apple Pay / Google Pay) ---
+// Apple Pay ne s'affiche que si le domaine est enregistré sur le compte Stripe.
+
+export async function listPaymentMethodDomains(site: StripeSite): Promise<Record<string, unknown>> {
+  return stripeRequest(site, '/payment_method_domains?limit=100', 'GET');
+}
+
+export async function registerPaymentMethodDomain(
+  site: StripeSite,
+  domainName: string,
+): Promise<Record<string, unknown>> {
+  return stripeRequest(site, '/payment_method_domains', 'POST', {
+    domain_name: domainName,
+    enabled: 'true',
+  });
+}
+
+export async function validatePaymentMethodDomain(
+  site: StripeSite,
+  domainId: string,
+): Promise<Record<string, unknown>> {
+  return stripeRequest(site, `/payment_method_domains/${domainId}/validate`, 'POST', {});
+}
