@@ -17,6 +17,8 @@ import { OrdersClosedBanner } from '@/components/OrdersClosedBanner';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { validateDeliverySlot } from '@/lib/pickupSlots';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
+import { StripePaymentDialog } from '@/components/StripePaymentDialog';
+
 
 
 import {
@@ -31,6 +33,14 @@ export function CartView() {
   const { toast } = useToast();
   const { createOrder } = useOrders({ autoFetch: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Commande créée en base, en attente de la pré-autorisation bancaire.
+  const [pendingPayment, setPendingPayment] = useState<{
+    orderId: string;
+    site: string;
+    orderType: 'emporter' | 'livraison';
+    amount: number;
+  } | null>(null);
+
   
   const { 
     items, 
@@ -177,14 +187,21 @@ export function CartView() {
         delivery_address: deliveryAddress,
       });
 
-      clearCart();
-      navigate(`/order-confirmation?id=${order.id}`);
+      // La commande n'est transmise en cuisine qu'une fois la pré-autorisation
+      // bancaire obtenue (capture différée jusqu'à la confirmation pizzeria).
+      setPendingPayment({
+        orderId: order.id,
+        site: selectedRestaurant.id ?? selectedRestaurant.name,
+        orderType,
+        amount: Number(order.total_price ?? totalPrice),
+      });
     } catch (error) {
       console.error('Error submitting order:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   if (items.length === 0) {
     return (
@@ -448,6 +465,23 @@ export function CartView() {
           )}
         </div>
       </div>
+
+      {/* Pré-autorisation bancaire (capture différée) */}
+      <StripePaymentDialog
+        open={!!pendingPayment}
+        orderId={pendingPayment?.orderId ?? null}
+        site={pendingPayment?.site ?? null}
+        orderType={pendingPayment?.orderType ?? 'emporter'}
+        amount={pendingPayment?.amount ?? totalPrice}
+        onSuccess={() => {
+          const orderId = pendingPayment?.orderId;
+          setPendingPayment(null);
+          clearCart();
+          if (orderId) navigate(`/order-confirmation?id=${orderId}`);
+        }}
+        onCancelled={() => setPendingPayment(null)}
+      />
     </div>
   );
 }
+

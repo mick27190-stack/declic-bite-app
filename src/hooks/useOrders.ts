@@ -96,9 +96,10 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
       if (error) throw error;
 
       toast({
-        title: 'Commande envoyée !',
-        description: 'Votre commande a été transmise au restaurant',
+        title: 'Commande enregistrée',
+        description: 'Dernière étape : autorisez le paiement pour la transmettre au restaurant',
       });
+
 
       return data;
     } catch (error: any) {
