@@ -64,14 +64,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user) {
       setRoles([]);
-      setLoading(false);
+      setLoadedUserId(null);
       return;
     }
 
-    // Keep `loading` true until roles are fetched: the user can arrive after
-    // the first render (session restored asynchronously), and route guards
-    // must not evaluate permissions with a stale empty role set.
-    setLoading(true);
 
     // Re-sync roles against admin_phones so that any deactivation
     // (e.g. a livreur disabled in the admin section) is reflected immediately,
