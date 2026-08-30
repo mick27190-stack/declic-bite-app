@@ -520,6 +520,7 @@ export default function AdminOrdersPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous les statuts</SelectItem>
+              <SelectItem value="awaiting_response">⏳ En attente de réponse client</SelectItem>
               <SelectItem value="pending">En attente</SelectItem>
               <SelectItem value="confirmed">Confirmée</SelectItem>
               <SelectItem value="preparing">En préparation</SelectItem>
@@ -559,6 +560,11 @@ export default function AdminOrdersPage() {
                         <Badge variant="secondary">
                           {order.order_type === 'livraison' ? '🚗 Livraison' : '🏪 À emporter'}
                         </Badge>
+                        {order.order_type === 'livraison' && isAwaitingCustomerResponse(order) && (
+                          <Badge variant="outline" className="border-yellow-500 text-yellow-700 dark:text-yellow-400">
+                            ⏳ Réponse client en attente
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <Select 
