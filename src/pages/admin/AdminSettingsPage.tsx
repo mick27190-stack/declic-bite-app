@@ -17,8 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical } from 'lucide-react';
 import NotificationBell from '@/components/admin/NotificationBell';
+import { useOrderTestMode } from '@/hooks/useOrderTestMode';
+import { toast } from '@/hooks/use-toast';
+
 
 export default function AdminSettingsPage() {
   const navigate = useNavigate();
