@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send, FileText, Loader2, Check, X } from 'lucide-react';
 import OrderTicket from '@/components/OrderTicket';
+import StripeStatusPanel from '@/components/admin/StripeStatusPanel';
+
 import { generateInvoicePdf, buildInvoiceNumber } from '@/lib/invoicePdf';
 import { useCompanyInfo, resolveCompanyForRestaurant } from '@/hooks/useCompanyInfo';
 import { useToast } from '@/hooks/use-toast';
