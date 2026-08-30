@@ -306,7 +306,7 @@ export default function AdminOrdersPage() {
     setStripeActionId(orderId);
     try {
       const { data, error } = await supabase.functions.invoke(fn, { body: { order_id: orderId } });
-      if (error) throw error;
+      if (error) throw new Error(await edgeErrorMessage(error, 'Action Stripe impossible'));
       if (data?.error) throw new Error(data.error);
       toast({ title: '✅ Stripe', description: successMessage });
     } catch (e) {
@@ -320,6 +320,7 @@ export default function AdminOrdersPage() {
       refetch();
     }
   };
+
 
 
   /** Confirme ou refuse la contre-proposition d'horaire au nom du client
