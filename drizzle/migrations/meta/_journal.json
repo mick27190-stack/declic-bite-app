@@ -29,6 +29,13 @@
       "when": 1788099832338,
       "tag": "0003_notify_payment_canceled",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788100498607,
+      "tag": "0004_sales_revenue_on_confirmed_status",
+      "breakpoints": true
     }
   ]
 }

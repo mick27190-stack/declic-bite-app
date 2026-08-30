@@ -26,14 +26,13 @@ interface OrderRow {
   order_type: string;
 }
 
-// Only count an order in the revenue/stats once it has reached the relevant
-// "completed" status: 'delivered' for delivery orders, 'ready' (or beyond)
-// for take-away orders. Cancelled orders are never counted.
+// Le montant d'une commande est comptabilisé dans les ventes dès que l'admin
+// la passe au statut 'confirmée' (le paiement Stripe est alors capturé).
+// Les statuts ultérieurs (preparing, ready, delivered) comptent aussi ;
+// les commandes annulées ou en attente de paiement ne comptent jamais.
+const SALES_STATUSES = new Set(['confirmed', 'preparing', 'ready', 'delivered']);
 const countsForSales = (o: { status: string; order_type: string }) => {
-  if (o.status === 'cancelled') return false;
-  if (o.order_type === 'livraison') return o.status === 'delivered';
-  // emporter: counted once prepared and beyond
-  return o.status === 'ready' || o.status === 'delivered';
+  return SALES_STATUSES.has(o.status);
 };
 
 export default function AdminSalesPage() {
