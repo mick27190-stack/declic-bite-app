@@ -153,7 +153,6 @@ function CurrentOrders() {
                         <div className="text-muted-foreground">
                           {item.pizza?.hasBase !== false &&
                             item.pizza?.category !== 'boissons' &&
-                            item.pizza?.category !== 'bambino' &&
                             item.base && <span>Base {item.base === 'creme' ? 'crème' : 'tomate'}</span>}
                           {item.supplements && item.supplements.length > 0 && (
                             <span> • + {item.supplements.map((s) => s.name).join(', ')}</span>
