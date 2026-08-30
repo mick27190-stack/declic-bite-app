@@ -75,6 +75,30 @@ function DeliveryEstimateControl({ order, onSubmit }: { order: Order; onSubmit: 
           ) : (
             <p className="text-xs text-muted-foreground italic">Téléphone client non renseigné</p>
           )}
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button
+              size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white"
+              disabled={respondingOrderId === order.id}
+              onClick={() => onRespond?.(order, 'accepted')}
+            >
+              {respondingOrderId === order.id ? (
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4 mr-1.5" />
+              )}
+              Confirmer au nom du client
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              disabled={respondingOrderId === order.id}
+              onClick={() => onRespond?.(order, 'refused')}
+            >
+              <X className="h-4 w-4 mr-1.5" />
+              Refuser au nom du client
+            </Button>
+          </div>
         </div>
       )}
       <div className="flex gap-2">
