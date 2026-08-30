@@ -27,6 +27,9 @@ export interface Order {
   delivery_time_confirmed?: string | null;
 
 
+  // Historique des changements de statut (timeline client)
+  status_history?: { status: OrderStatus; changed_at: string }[];
+
   created_at: string;
   updated_at: string;
   // Joined data from profiles

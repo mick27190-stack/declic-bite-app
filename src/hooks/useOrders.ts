@@ -369,6 +369,25 @@ export function useUserOrders() {
           delivery_address: order.delivery_address as Order['delivery_address'],
         }));
 
+        // Historique des changements de statut (timeline).
+        if (transformedOrders.length > 0) {
+          const { data: history } = await supabase
+            .from('order_status_history' as any)
+            .select('order_id, status, changed_at')
+            .in('order_id', transformedOrders.map(o => o.id))
+            .order('changed_at', { ascending: true });
+
+          const historyMap = new Map<string, { status: OrderStatus; changed_at: string }[]>();
+          (history || []).forEach((h: any) => {
+            const list = historyMap.get(h.order_id) || [];
+            list.push({ status: h.status as OrderStatus, changed_at: h.changed_at });
+            historyMap.set(h.order_id, list);
+          });
+          transformedOrders.forEach(o => {
+            o.status_history = historyMap.get(o.id) || [];
+          });
+        }
+
         setOrders(transformedOrders);
       } catch (error) {
         console.error('Error fetching user orders:', error);
@@ -426,6 +445,16 @@ export function useUserOrders() {
                 description: `Votre commande #${updatedOrder.id.slice(0, 8)} a été créée`,
               });
             } else if (payload.eventType === 'UPDATE') {
+              // Récupère la timeline à jour pour cette commande.
+              void (async () => {
+                const { data: history } = await supabase
+                  .from('order_status_history' as any)
+                  .select('status, changed_at')
+                  .eq('order_id', updatedOrder.id)
+                  .order('changed_at', { ascending: true });
+                updatedOrder.status_history = (history || []) as unknown as Order['status_history'];
+                setOrders(prev => prev.map(o => o.id === updatedOrder.id ? { ...o, status_history: updatedOrder.status_history } : o));
+              })();
               setOrders(prev => {
                 const exists = prev.find(o => o.id === updatedOrder.id);
                 if (!authorized) {

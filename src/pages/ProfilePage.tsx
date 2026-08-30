@@ -36,6 +36,7 @@ import CommunicationPreferences from '@/components/CommunicationPreferences';
 import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
 import { useUserOrders } from '@/hooks/useOrders';
+import { OrderTimeline } from '@/components/OrderTimeline';
 import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
 import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { statusLabels, statusColors } from '@/types/order';
@@ -167,7 +168,7 @@ function CurrentOrders() {
                   </ul>
                 )}
 
-
+                <OrderTimeline order={order} />
 
                 {order.order_type === 'livraison' && order.pickup_time && !order.delivery_estimate && (
                   <p className="mt-2 text-sm flex items-center gap-1.5">
