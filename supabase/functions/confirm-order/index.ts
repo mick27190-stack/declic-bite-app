@@ -30,7 +30,22 @@ Deno.serve(async (req) => {
       });
     }
 
-    await captureIfNeeded(site, order.stripe_payment_intent_id);
+    try {
+      await captureIfNeeded(site, order.stripe_payment_intent_id);
+    } catch (e) {
+      const msg = (e as Error).message;
+      // La pré-autorisation n'existe plus côté Stripe : on resynchronise la
+      // commande en « annulée » pour ne jamais laisser une commande affichée
+      // comme confirmée alors qu'aucun paiement n'est encaissable.
+      if (/annulée/i.test(msg)) {
+        await sb
+          .from('orders')
+          .update({ capture_status: 'cancelled', order_status: 'cancelled', status: 'cancelled' })
+          .eq('id', order.id);
+      }
+      throw e;
+    }
+
 
     // Commande en livraison : confirmer l'horaire proposé (le cas échéant)
     // pour que le client et le back-office restent cohérents.
