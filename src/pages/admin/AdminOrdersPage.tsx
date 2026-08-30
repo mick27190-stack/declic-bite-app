@@ -20,22 +20,63 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { Order, OrderStatus, statusLabels, statusColors } from '@/types/order';
 
+/** Une commande est « en attente de réponse client » quand un horaire a été
+ *  proposé (order_status Stripe ou delivery_estimate legacy) sans réponse. */
+export function isAwaitingCustomerResponse(order: Order): boolean {
+  if (order.order_status === 'awaiting_customer_response') return true;
+  return !!order.delivery_estimate && !order.delivery_response;
+}
+
+function formatProposedTime(order: Order): string | null {
+  if (order.delivery_time_proposed) {
+    return new Date(order.delivery_time_proposed).toLocaleString('fr-FR', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+      timeZone: 'Europe/Paris',
+    });
+  }
+  return order.delivery_estimate;
+}
+
 function DeliveryEstimateControl({ order, onSubmit }: { order: Order; onSubmit: (value: string) => void }) {
   const [value, setValue] = useState(order.delivery_estimate ?? '');
 
+  const awaiting = isAwaitingCustomerResponse(order);
+  const proposedTime = formatProposedTime(order);
   const responseLabel = order.delivery_response === 'accepted'
     ? '✅ Accepté par le client'
     : order.delivery_response === 'refused'
       ? '❌ Refusé par le client'
-      : order.delivery_estimate
-        ? '⏳ En attente de réponse du client'
-        : null;
+      : null;
 
   return (
     <div className="mt-4 border-t pt-3 space-y-2">
       <p className="text-sm font-medium flex items-center gap-1">
         <Clock className="h-4 w-4" /> Horaire de livraison estimé
       </p>
+      {awaiting && (
+        <div className="rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 space-y-1.5">
+          <p className="text-sm font-semibold text-yellow-700 dark:text-yellow-400 flex items-center gap-1.5">
+            <Clock className="h-4 w-4" /> ⏳ En attente de réponse du client
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Horaire proposé : <strong>{proposedTime ?? '—'}</strong>
+            {order.pickup_time && (
+              <> · Demandé initialement : <strong>{order.pickup_time}</strong></>
+            )}
+          </p>
+          {order.customer_phone ? (
+            <a
+              href={`tel:${order.customer_phone.replace(/\s/g, '')}`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline underline-offset-2"
+            >
+              <Phone className="h-4 w-4" />
+              {order.customer_name ? `${order.customer_name} · ` : ''}{order.customer_phone}
+            </a>
+          ) : (
+            <p className="text-xs text-muted-foreground italic">Téléphone client non renseigné</p>
+          )}
+        </div>
+      )}
       <div className="flex gap-2">
         <Input
           value={value}
@@ -80,7 +121,7 @@ export default function AdminOrdersPage() {
       setFilterSite(forcedSite);
     }
   }, [forcedSite]);
-  const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | OrderStatus | 'awaiting_response'>('all');
   const [orderToPrint, setOrderToPrint] = useState<Order | null>(null);
   const [chatOrder, setChatOrder] = useState<Order | null>(null);
   const [chatMessage, setChatMessage] = useState('');
@@ -171,7 +212,9 @@ export default function AdminOrdersPage() {
     const site = getSiteFromRestaurant(order.restaurant);
     
     if (filterSite !== 'all' && site !== filterSite) return false;
-    if (filterStatus !== 'all' && order.status !== filterStatus) return false;
+    if (filterStatus === 'awaiting_response') {
+      if (!isAwaitingCustomerResponse(order)) return false;
+    } else if (filterStatus !== 'all' && order.status !== filterStatus) return false;
     
     // Filter by site if not super admin
     if (!isSuperAdmin) {
@@ -477,6 +520,7 @@ export default function AdminOrdersPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous les statuts</SelectItem>
+              <SelectItem value="awaiting_response">⏳ En attente de réponse client</SelectItem>
               <SelectItem value="pending">En attente</SelectItem>
               <SelectItem value="confirmed">Confirmée</SelectItem>
               <SelectItem value="preparing">En préparation</SelectItem>
@@ -516,6 +560,11 @@ export default function AdminOrdersPage() {
                         <Badge variant="secondary">
                           {order.order_type === 'livraison' ? '🚗 Livraison' : '🏪 À emporter'}
                         </Badge>
+                        {order.order_type === 'livraison' && isAwaitingCustomerResponse(order) && (
+                          <Badge variant="outline" className="border-yellow-500 text-yellow-700 dark:text-yellow-400">
+                            ⏳ Réponse client en attente
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <Select 
