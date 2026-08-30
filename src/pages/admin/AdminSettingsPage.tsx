@@ -59,6 +59,22 @@ export default function AdminSettingsPage() {
     .map((v) => String(v).padStart(2, '0'))
     .join(':');
 
+  // Désactivation automatique : dès que le compte à rebours atteint zéro,
+  // le mode redevient inactif (isTestModeActive repasse à false) et on
+  // confirme immédiatement. On distingue l'expiration (activeUntil encore
+  // renseigné) de la désactivation manuelle (activeUntil remis à null,
+  // déjà confirmée par un toast dans handleToggleTestMode).
+  const wasTestModeActive = useRef(false);
+  useEffect(() => {
+    if (wasTestModeActive.current && !isTestModeActive && activeUntil) {
+      toast({
+        title: 'Mode test terminé',
+        description: 'Le délai est écoulé : les horaires normaux (18h–22h) sont de nouveau appliqués.',
+      });
+    }
+    wasTestModeActive.current = isTestModeActive;
+  }, [isTestModeActive, activeUntil]);
+
   const handleToggleTestMode = async (checked: boolean) => {
     setTestSubmitting(true);
     const error = checked
