@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -17,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical, Power } from 'lucide-react';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { useOrderTestMode } from '@/hooks/useOrderTestMode';
 import { toast } from '@/hooks/use-toast';
@@ -150,7 +149,7 @@ export default function AdminSettingsPage() {
                 </Select>
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="rounded-lg border p-3">
                 <div>
                   <p className="text-sm font-medium">
                     {isTestModeActive ? 'Mode test actif' : 'Mode test désactivé'}
@@ -167,12 +166,22 @@ export default function AdminSettingsPage() {
                     </p>
                   )}
                 </div>
-                <Switch
-                  checked={isTestModeActive}
-                  disabled={testSubmitting}
-                  onCheckedChange={handleToggleTestMode}
-                />
               </div>
+
+              <Button
+                  type="button"
+                  variant={isTestModeActive ? 'destructive' : 'default'}
+                  className="w-full"
+                  disabled={testSubmitting}
+                  onClick={() => handleToggleTestMode(!isTestModeActive)}
+                >
+                  <Power className="h-4 w-4 mr-2" />
+                  {testSubmitting
+                    ? 'Mise à jour…'
+                    : isTestModeActive
+                      ? 'Désactiver le mode test'
+                      : `Activer le mode test pendant ${testMinutes === '60' ? '1 heure' : testMinutes === '120' ? '2 heures' : `${testMinutes} minutes`}`}
+                </Button>
 
               {isTestModeActive && (
                 <p className="text-xs text-amber-700">
