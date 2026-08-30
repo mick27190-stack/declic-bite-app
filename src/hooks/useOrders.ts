@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
  *  (capture_status renseigné par Stripe). Les commandes historiques, créées
  *  avant Stripe, restent visibles tant qu'elles ne sont pas en attente. */
 export function isOrderPaymentAuthorized(record: { capture_status?: string | null; status?: string | null }) {
+  // Autorisation annulée (Stripe) : la commande ne doit plus apparaître en admin.
+  if (record.capture_status === 'cancelled' || record.capture_status === 'canceled') return false;
   if (record.capture_status) return true;
   return record.status !== 'pending';
 }
