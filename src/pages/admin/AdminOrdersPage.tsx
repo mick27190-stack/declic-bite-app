@@ -749,7 +749,10 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
 
+                    <StripeStatusPanel order={order} />
+
                     {order.order_type === 'livraison' && (
+
                       <DeliveryEstimateControl
                         order={order}
                         onSubmit={(value) => setDeliveryEstimate(order.id, value)}
