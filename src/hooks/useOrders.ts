@@ -4,6 +4,14 @@ import { Order, OrderStatus, statusLabels } from '@/types/order';
 import { CartItem } from '@/types/pizza';
 import { useToast } from '@/hooks/use-toast';
 
+/** Une commande n'est visible côté admin qu'une fois le paiement autorisé
+ *  (capture_status renseigné par Stripe). Les commandes historiques, créées
+ *  avant Stripe, restent visibles tant qu'elles ne sont pas en attente. */
+export function isOrderPaymentAuthorized(record: { capture_status?: string | null; status?: string | null }) {
+  if (record.capture_status) return true;
+  return record.status !== 'pending';
+}
+
 export function useOrders(options: { autoFetch?: boolean } = {}) {
   const { autoFetch = true } = options;
   const [orders, setOrders] = useState<Order[]>([]);
@@ -12,12 +20,16 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
 
   const fetchOrders = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      const { data: rawData, error } = await supabase
         .from('orders')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      // Seules les commandes dont le paiement est autorisé remontent en admin.
+      const data = (rawData || []).filter((o: any) => isOrderPaymentAuthorized(o));
+
 
       // Fetch matching profiles separately (no FK relationship available)
       const userIds = Array.from(
@@ -262,22 +274,41 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
           };
 
           if (payload.eventType === 'INSERT') {
+            if (!isOrderPaymentAuthorized(payload.new as any)) return;
             void (async () => {
               const newOrder = await buildOrder(payload.new);
-              setOrders(prev => [newOrder, ...prev]);
+              setOrders(prev => prev.some(o => o.id === newOrder.id) ? prev : [newOrder, ...prev]);
               toast({
                 title: '🔔 Nouvelle commande !',
                 description: `Commande de ${newOrder.total_price.toFixed(2)}€`,
               });
             })();
           } else if (payload.eventType === 'UPDATE') {
+            if (!isOrderPaymentAuthorized(payload.new as any)) {
+              setOrders(prev => prev.filter(o => o.id !== (payload.new as any).id));
+              return;
+            }
             void (async () => {
               const updatedOrder = await buildOrder(payload.new);
-              setOrders(prev => prev.map(o =>
-                o.id === updatedOrder.id ? updatedOrder : o
-              ));
+              let isNewArrival = false;
+              setOrders(prev => {
+                if (prev.some(o => o.id === updatedOrder.id)) {
+                  return prev.map(o => (o.id === updatedOrder.id ? updatedOrder : o));
+                }
+                isNewArrival = true;
+                return [updatedOrder, ...prev];
+              });
+              // Le paiement vient d'être autorisé : la commande arrive en cuisine.
+              if (isNewArrival) {
+                toast({
+                  title: '🔔 Nouvelle commande !',
+                  description: `Commande de ${updatedOrder.total_price.toFixed(2)}€`,
+                });
+              }
             })();
+
           } else if (payload.eventType === 'DELETE') {
+
             setOrders(prev => prev.filter(o => o.id !== payload.old.id));
           }
         }

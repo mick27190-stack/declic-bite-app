@@ -185,8 +185,13 @@ export default function AdminOrdersPage() {
   const refreshCounters = async () => {
     const [{ data: history }, { count: live }] = await Promise.all([
       supabase.from('order_history').select('order_count'),
-      supabase.from('orders').select('*', { count: 'exact', head: true }),
+      // Ne compte que les commandes dont le paiement est autorisé (visibles ici).
+      supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .or('capture_status.not.is.null,status.neq.pending'),
     ]);
+
     const archived = (history || []).reduce((sum, r: any) => sum + (r.order_count || 0), 0);
     setArchivedCount(archived);
     setLiveCount(live ?? 0);
