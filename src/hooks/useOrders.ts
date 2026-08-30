@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 export function isOrderPaymentAuthorized(record: { capture_status?: string | null; status?: string | null }) {
   // Autorisation annulée (Stripe) : la commande ne doit plus apparaître en admin.
   if (record.capture_status === 'cancelled' || record.capture_status === 'canceled') return false;
+  // Paiement pas encore autorisé par la banque (en attente du webhook Stripe).
+  if (record.capture_status === 'pending') return false;
   if (record.capture_status) return true;
   return record.status !== 'pending';
 }
