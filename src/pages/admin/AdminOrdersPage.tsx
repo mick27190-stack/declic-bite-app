@@ -6,7 +6,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send, FileText, Loader2 } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send, FileText, Loader2, Check, X } from 'lucide-react';
 import OrderTicket from '@/components/OrderTicket';
 import { generateInvoicePdf, buildInvoiceNumber } from '@/lib/invoicePdf';
 import { useCompanyInfo, resolveCompanyForRestaurant } from '@/hooks/useCompanyInfo';
@@ -37,7 +37,17 @@ function formatProposedTime(order: Order): string | null {
   return order.delivery_estimate;
 }
 
-function DeliveryEstimateControl({ order, onSubmit }: { order: Order; onSubmit: (value: string) => void }) {
+function DeliveryEstimateControl({
+  order,
+  onSubmit,
+  onRespond,
+  respondingOrderId,
+}: {
+  order: Order;
+  onSubmit: (value: string) => void;
+  onRespond?: (order: Order, response: 'accepted' | 'refused') => void;
+  respondingOrderId?: string | null;
+}) {
   const [value, setValue] = useState(order.delivery_estimate ?? '');
 
   const awaiting = isAwaitingCustomerResponse(order);
@@ -151,6 +161,7 @@ export default function AdminOrdersPage() {
   const [chatMessage, setChatMessage] = useState('');
   const [chatSending, setChatSending] = useState(false);
   const [invoiceSendingId, setInvoiceSendingId] = useState<string | null>(null);
+  const [respondingOrderId, setRespondingOrderId] = useState<string | null>(null);
   // Persistent all-time total (archived weeks + current live orders).
   // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
   const [archivedCount, setArchivedCount] = useState(0);
@@ -256,6 +267,35 @@ export default function AdminOrdersPage() {
 
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     await updateOrderStatus(orderId, newStatus);
+  };
+
+  /** Confirme ou refuse la contre-proposition d'horaire au nom du client
+   *  (appel téléphonique, client injoignable en ligne, etc.). L'Edge Function
+   *  met à jour order_status + capture/annulation Stripe automatiquement. */
+  const handleDeliveryResponse = async (order: Order, response: 'accepted' | 'refused') => {
+    setRespondingOrderId(order.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('respond-to-delivery-time', {
+        body: { order_id: order.id, response },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({
+        title: response === 'accepted' ? '✅ Horaire confirmé' : '❌ Horaire refusé',
+        description:
+          response === 'accepted'
+            ? 'Commande confirmée, paiement capturé.'
+            : 'Commande annulée, pré-autorisation Stripe annulée.',
+      });
+    } catch (e) {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: e instanceof Error ? e.message : 'Action impossible',
+      });
+    } finally {
+      setRespondingOrderId(null);
+    }
   };
 
   const handleSendChat = async () => {
@@ -706,6 +746,8 @@ export default function AdminOrdersPage() {
                       <DeliveryEstimateControl
                         order={order}
                         onSubmit={(value) => setDeliveryEstimate(order.id, value)}
+                        onRespond={handleDeliveryResponse}
+                        respondingOrderId={respondingOrderId}
                       />
                     )}
 
