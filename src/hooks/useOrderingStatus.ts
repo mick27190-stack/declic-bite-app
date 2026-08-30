@@ -1,7 +1,9 @@
 import { useCart } from '@/contexts/CartContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { useLiveParisTime } from '@/hooks/useLiveParisTime';
+import { useOrderTestMode } from '@/hooks/useOrderTestMode';
 import { getCutoffState } from '@/lib/orderCutoff';
+
 
 /**
  * Single source of truth for the customer-facing "commandes fermées" state.
