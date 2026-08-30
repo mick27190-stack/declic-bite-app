@@ -4,6 +4,14 @@ import { Order, OrderStatus, statusLabels } from '@/types/order';
 import { CartItem } from '@/types/pizza';
 import { useToast } from '@/hooks/use-toast';
 
+/** Une commande n'est visible côté admin qu'une fois le paiement autorisé
+ *  (capture_status renseigné par Stripe). Les commandes historiques, créées
+ *  avant Stripe, restent visibles tant qu'elles ne sont pas en attente. */
+export function isOrderPaymentAuthorized(record: { capture_status?: string | null; status?: string | null }) {
+  if (record.capture_status) return true;
+  return record.status !== 'pending';
+}
+
 export function useOrders(options: { autoFetch?: boolean } = {}) {
   const { autoFetch = true } = options;
   const [orders, setOrders] = useState<Order[]>([]);
