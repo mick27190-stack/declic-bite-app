@@ -31,6 +31,14 @@ export function CartView() {
   const { toast } = useToast();
   const { createOrder } = useOrders({ autoFetch: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Commande créée en base, en attente de la pré-autorisation bancaire.
+  const [pendingPayment, setPendingPayment] = useState<{
+    orderId: string;
+    site: string;
+    orderType: 'emporter' | 'livraison';
+    amount: number;
+  } | null>(null);
+
   
   const { 
     items, 
