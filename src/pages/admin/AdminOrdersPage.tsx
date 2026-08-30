@@ -191,7 +191,7 @@ export default function AdminOrdersPage() {
         .from('orders')
         .select('*', { count: 'exact', head: true })
         .or('capture_status.not.is.null,status.neq.pending')
-        .not('capture_status', 'in', '("cancelled","canceled")'),
+        .not('capture_status', 'in', '("cancelled","canceled","pending")'),
     ]);
 
     const archived = (history || []).reduce((sum, r: any) => sum + (r.order_count || 0), 0);
