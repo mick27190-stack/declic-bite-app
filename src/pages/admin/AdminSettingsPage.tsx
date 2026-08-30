@@ -38,6 +38,27 @@ export default function AdminSettingsPage() {
   const [testMinutes, setTestMinutes] = useState('30');
   const [testSubmitting, setTestSubmitting] = useState(false);
 
+  // Tick à la seconde pour le compte à rebours du mode test.
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    if (!isTestModeActive) return;
+    const interval = window.setInterval(() => setNowTick(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [isTestModeActive]);
+
+  const remainingMs = isTestModeActive && activeUntil
+    ? Math.max(0, new Date(activeUntil).getTime() - nowTick)
+    : 0;
+  const totalSec = Math.floor(remainingMs / 1000);
+  const countdownLabel = [
+    totalSec >= 3600 ? Math.floor(totalSec / 3600) : null,
+    Math.floor((totalSec % 3600) / 60),
+    totalSec % 60,
+  ]
+    .filter((v): v is number => v !== null)
+    .map((v) => String(v).padStart(2, '0'))
+    .join(':');
+
   const handleToggleTestMode = async (checked: boolean) => {
     setTestSubmitting(true);
     const error = checked
@@ -180,7 +201,7 @@ export default function AdminSettingsPage() {
                   {testSubmitting
                     ? 'Mise à jour…'
                     : isTestModeActive
-                      ? 'Désactiver le mode test'
+                      ? `Mode test actif — ${countdownLabel} restantes (désactiver)`
                       : `Activer le mode test pendant ${testMinutes === '60' ? '1 heure' : testMinutes === '120' ? '2 heures' : `${testMinutes} minutes`}`}
                 </Button>
 
