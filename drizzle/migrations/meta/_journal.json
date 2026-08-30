@@ -85,6 +85,13 @@
       "when": 1788104252354,
       "tag": "0011_allow_pending_capture_status",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1788105592551,
+      "tag": "0012_notify_new_order_only_when_payment_authorized",
+      "breakpoints": true
     }
   ]
 }
