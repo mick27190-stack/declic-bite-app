@@ -1,5 +1,5 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { capturePaymentIntent, resolveSite } from '../_shared/stripe.ts';
+import { captureIfNeeded, resolveSite } from '../_shared/stripe.ts';
 import { requireAdminForSite, serviceClient } from '../_shared/orderAccess.ts';
 
 Deno.serve(async (req) => {
@@ -13,7 +13,9 @@ Deno.serve(async (req) => {
     const sb = serviceClient();
     const { data: order, error } = await sb
       .from('orders')
-      .select('id, restaurant, site, stripe_payment_intent_id, capture_status, order_status')
+      .select(
+        'id, restaurant, site, order_type, stripe_payment_intent_id, capture_status, order_status, delivery_response, delivery_time_proposed, delivery_time_confirmed',
+      )
       .eq('id', orderId)
       .single();
     if (error || !order) throw new Error('Commande introuvable');
@@ -28,16 +30,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    await capturePaymentIntent(site, order.stripe_payment_intent_id);
+    await captureIfNeeded(site, order.stripe_payment_intent_id);
 
-    await sb
-      .from('orders')
-      .update({
-        order_status: 'confirmed',
-        capture_status: 'captured',
-        status: 'confirmed',
-      })
-      .eq('id', order.id);
+    // Commande en livraison : confirmer l'horaire proposé (le cas échéant)
+    // pour que le client et le back-office restent cohérents.
+    const update: Record<string, unknown> = {
+      order_status: 'confirmed',
+      capture_status: 'captured',
+      status: 'confirmed',
+    };
+    if (order.order_type === 'livraison') {
+      if (!order.delivery_response && order.delivery_time_proposed) update.delivery_response = 'accepted';
+      if (!order.delivery_time_confirmed) {
+        update.delivery_time_confirmed = order.delivery_time_proposed ?? new Date().toISOString();
+      }
+    }
+
+    const { error: updErr } = await sb.from('orders').update(update).eq('id', order.id);
+    if (updErr) throw new Error(`Paiement encaissé mais mise à jour impossible : ${updErr.message}`);
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
