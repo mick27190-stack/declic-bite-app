@@ -372,7 +372,7 @@ export function useUserOrders() {
         // Historique des changements de statut (timeline).
         if (transformedOrders.length > 0) {
           const { data: history } = await supabase
-            .from('order_status_history')
+            .from('order_status_history' as any)
             .select('order_id, status, changed_at')
             .in('order_id', transformedOrders.map(o => o.id))
             .order('changed_at', { ascending: true });
@@ -448,7 +448,7 @@ export function useUserOrders() {
               // Récupère la timeline à jour pour cette commande.
               void (async () => {
                 const { data: history } = await supabase
-                  .from('order_status_history')
+                  .from('order_status_history' as any)
                   .select('status, changed_at')
                   .eq('order_id', updatedOrder.id)
                   .order('changed_at', { ascending: true });
