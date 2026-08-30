@@ -444,18 +444,20 @@ export function useUserOrders() {
 
   const respondToOrder = async (orderId: string, response: 'accepted' | 'refused') => {
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ delivery_response: response })
-        .eq('id', orderId);
-
+      // L'Edge Function pilote aussi Stripe : capture si accepté,
+      // annulation de la pré-autorisation si refusé.
+      const { data, error } = await supabase.functions.invoke('respond-to-delivery-time', {
+        body: { order_id: orderId, response },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       setOrders(prev => prev.map(o =>
         o.id === orderId
           ? { ...o, delivery_response: response }
           : o
       ));
+
 
       toast({
         title: response === 'accepted' ? 'Horaire accepté' : 'Commande refusée',
