@@ -8,6 +8,13 @@
       "when": 1788094799472,
       "tag": "0000_add_stripe_payment_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788098206150,
+      "tag": "0001_order_test_mode_bypass",
+      "breakpoints": true
     }
   ]
 }
