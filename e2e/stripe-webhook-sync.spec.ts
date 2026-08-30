@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mockBackend, installFakeSession, TEST_USER_ID, type BackendRecorder } from "./helpers/mockBackend";
-import { stripeEventToOrderUpdate } from "../supabase/functions/_shared/stripeWebhook";
+import { stripeEventToOrderUpdate } from "../supabase/functions/_shared/stripeEventMap";
 
 /**
  * E2E — Cohérence back-office ↔ webhooks Stripe
