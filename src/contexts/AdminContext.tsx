@@ -32,22 +32,27 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [roles, setRoles] = useState<AppRole[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
+
+  // `loading` is derived at render time (not via an effect) so route guards
+  // in child components never evaluate permissions with a stale empty role
+  // set while the roles for the current user have not been fetched yet.
+  const loading = authLoading || (!!user && loadedUserId !== user.id);
 
   const fetchRoles = async (userId: string) => {
     const { data, error } = await supabase
       .from('user_roles')
       .select('role')
       .eq('user_id', userId);
-    
+
     if (data && !error) {
       setRoles(data.map(r => r.role as AppRole));
     } else {
       setRoles([]);
     }
-    setLoading(false);
+    setLoadedUserId(userId);
   };
 
   const refreshRoles = async () => {
