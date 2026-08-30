@@ -185,14 +185,21 @@ export function CartView() {
         delivery_address: deliveryAddress,
       });
 
-      clearCart();
-      navigate(`/order-confirmation?id=${order.id}`);
+      // La commande n'est transmise en cuisine qu'une fois la pré-autorisation
+      // bancaire obtenue (capture différée jusqu'à la confirmation pizzeria).
+      setPendingPayment({
+        orderId: order.id,
+        site: selectedRestaurant.id ?? selectedRestaurant.name,
+        orderType,
+        amount: Number(order.total_price ?? totalPrice),
+      });
     } catch (error) {
       console.error('Error submitting order:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
 
   if (items.length === 0) {
     return (
