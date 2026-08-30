@@ -445,6 +445,16 @@ export function useUserOrders() {
                 description: `Votre commande #${updatedOrder.id.slice(0, 8)} a été créée`,
               });
             } else if (payload.eventType === 'UPDATE') {
+              // Récupère la timeline à jour pour cette commande.
+              void (async () => {
+                const { data: history } = await supabase
+                  .from('order_status_history')
+                  .select('status, changed_at')
+                  .eq('order_id', updatedOrder.id)
+                  .order('changed_at', { ascending: true });
+                updatedOrder.status_history = (history || []) as Order['status_history'];
+                setOrders(prev => prev.map(o => o.id === updatedOrder.id ? { ...o, status_history: updatedOrder.status_history } : o));
+              })();
               setOrders(prev => {
                 const exists = prev.find(o => o.id === updatedOrder.id);
                 if (!authorized) {
