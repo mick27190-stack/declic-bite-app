@@ -25,7 +25,7 @@ export function useOrderTestMode() {
     load();
 
     const channel = supabase
-      .channel('order-test-mode')
+      .channel(`order-test-mode-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'order_test_mode' },
