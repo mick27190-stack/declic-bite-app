@@ -164,6 +164,8 @@ export default function AdminOrdersPage() {
   const [chatSending, setChatSending] = useState(false);
   const [invoiceSendingId, setInvoiceSendingId] = useState<string | null>(null);
   const [respondingOrderId, setRespondingOrderId] = useState<string | null>(null);
+  const [stripeActionId, setStripeActionId] = useState<string | null>(null);
+
   // Persistent all-time total (archived weeks + current live orders).
   // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
   const [archivedCount, setArchivedCount] = useState(0);
