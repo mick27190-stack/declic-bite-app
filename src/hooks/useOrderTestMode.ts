@@ -48,7 +48,10 @@ export function useOrderTestMode() {
     };
   }, [load]);
 
-  const isTestModeActive = !!activeUntil && new Date(activeUntil).getTime() > now;
+  const isTestModeActive = activeUntil
+    ? new Date(activeUntil).getTime() > now
+    : rpcActive;
+
 
   const enable = useCallback(
     async (minutes: number, userId?: string) => {
