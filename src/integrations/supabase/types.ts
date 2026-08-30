@@ -668,49 +668,70 @@ export type Database = {
       }
       orders: {
         Row: {
+          capture_status: string | null
           created_at: string
           delivery_address: Json | null
           delivery_estimate: string | null
           delivery_response: string | null
+          delivery_time_confirmed: string | null
+          delivery_time_proposed: string | null
+          delivery_time_requested: string | null
           id: string
           items: Json
           notes: string | null
+          order_status: string | null
           order_type: string
           pickup_time: string | null
           restaurant: string
+          site: string | null
           status: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id: string | null
           total_price: number
           updated_at: string
           user_id: string
         }
         Insert: {
+          capture_status?: string | null
           created_at?: string
           delivery_address?: Json | null
           delivery_estimate?: string | null
           delivery_response?: string | null
+          delivery_time_confirmed?: string | null
+          delivery_time_proposed?: string | null
+          delivery_time_requested?: string | null
           id?: string
           items: Json
           notes?: string | null
+          order_status?: string | null
           order_type: string
           pickup_time?: string | null
           restaurant: string
+          site?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id?: string | null
           total_price: number
           updated_at?: string
           user_id: string
         }
         Update: {
+          capture_status?: string | null
           created_at?: string
           delivery_address?: Json | null
           delivery_estimate?: string | null
           delivery_response?: string | null
+          delivery_time_confirmed?: string | null
+          delivery_time_proposed?: string | null
+          delivery_time_requested?: string | null
           id?: string
           items?: Json
           notes?: string | null
+          order_status?: string | null
           order_type?: string
           pickup_time?: string | null
           restaurant?: string
+          site?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id?: string | null
           total_price?: number
           updated_at?: string
           user_id?: string
