@@ -666,6 +666,27 @@ export type Database = {
         }
         Relationships: []
       }
+      order_test_mode: {
+        Row: {
+          active_until: string | null
+          enabled_by: string | null
+          id: boolean
+          updated_at: string
+        }
+        Insert: {
+          active_until?: string | null
+          enabled_by?: string | null
+          id?: boolean
+          updated_at?: string
+        }
+        Update: {
+          active_until?: string | null
+          enabled_by?: string | null
+          id?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           capture_status: string | null
@@ -1034,6 +1055,7 @@ export type Database = {
         Args: { _site: string; _user_id: string }
         Returns: boolean
       }
+      is_order_test_mode_active: { Args: never; Returns: boolean }
       is_pizzeria_open: { Args: never; Returns: boolean }
       is_site_manually_closed: {
         Args: { _restaurant: string }

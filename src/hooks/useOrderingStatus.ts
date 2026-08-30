@@ -1,7 +1,9 @@
 import { useCart } from '@/contexts/CartContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { useLiveParisTime } from '@/hooks/useLiveParisTime';
+import { useOrderTestMode } from '@/hooks/useOrderTestMode';
 import { getCutoffState } from '@/lib/orderCutoff';
+
 
 /**
  * Single source of truth for the customer-facing "commandes fermées" state.
@@ -12,12 +14,13 @@ export function useOrderingStatus() {
   const now = useLiveParisTime();
   const { selectedRestaurant } = useCart();
   const { getClosureForSite } = useActiveClosures();
+  const { isTestModeActive } = useOrderTestMode();
 
   const parisWeekday = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Europe/Paris',
     weekday: 'short',
   }).format(now);
-  const isMonday = parisWeekday === 'Mon';
+  const isMonday = parisWeekday === 'Mon' && !isTestModeActive;
   const isSunday = parisWeekday === 'Sun';
 
   const currentHour = Number(
@@ -27,11 +30,13 @@ export function useOrderingStatus() {
       hour12: false,
     }).format(now),
   );
-  const isOutsideHours = currentHour < 18 || currentHour >= 22;
+  const isOutsideHours = (currentHour < 18 || currentHour >= 22) && !isTestModeActive;
 
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
   const isClosed = isMonday || isOutsideHours || !!manualClosure;
-  const cutoff = getCutoffState(now, isClosed);
+  // En mode test, les cut-offs du soir sont neutralisés eux aussi : seule une
+  // fermeture / un blocage manuel du site continue de s'appliquer.
+  const cutoff = getCutoffState(now, isClosed || isTestModeActive);
 
   // "Commandes fermées" banner: shown once the evening cut-off has passed, or
   // when the shop is closed for the day (Monday / outside 18h-22h).
@@ -57,5 +62,7 @@ export function useOrderingStatus() {
     cutoff,
     isOrderingClosed,
     closedMessage,
+    isTestModeActive,
   };
 }
+
