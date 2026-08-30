@@ -39,18 +39,25 @@ export default function AdminSettingsPage() {
   const [testMinutes, setTestMinutes] = useState('30');
   const [testSubmitting, setTestSubmitting] = useState(false);
   const [walletSubmitting, setWalletSubmitting] = useState(false);
-  const [walletReport, setWalletReport] = useState<string | null>(null);
+  type WalletRow = { domain: string; registered?: boolean; apple_pay?: string | null; google_pay?: string | null; error?: string };
+  const [walletReport, setWalletReport] = useState<Record<string, WalletRow[] | { error: string }> | null>(null);
 
   const registerWalletDomains = async () => {
     setWalletSubmitting(true);
     setWalletReport(null);
     try {
+      const domains = Array.from(new Set([
+        'declicpizza.fr',
+        'www.declicpizza.fr',
+        'declic-pizza-app.lovable.app',
+        window.location.hostname,
+      ]));
       const { data, error } = await supabase.functions.invoke('stripe-payment-domains', {
-        body: {},
+        body: { domains },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-      setWalletReport(JSON.stringify(data.report, null, 2));
+      setWalletReport(data.report as Record<string, WalletRow[]>);
       toast({
         title: 'Domaines Apple Pay / Google Pay enregistrés',
         description: 'Les wallets sont activés sur les comptes Conches et Beaumont.',
@@ -65,6 +72,7 @@ export default function AdminSettingsPage() {
       setWalletSubmitting(false);
     }
   };
+
 
   // Tick à la seconde pour le compte à rebours du mode test.
   const [nowTick, setNowTick] = useState(() => Date.now());
@@ -277,10 +285,36 @@ export default function AdminSettingsPage() {
                 {walletSubmitting ? 'Vérification...' : 'Activer / vérifier les wallets'}
               </Button>
               {walletReport && (
-                <pre className="max-h-64 overflow-auto rounded-lg bg-muted p-3 text-xs">
-                  {walletReport}
-                </pre>
+                <div className="space-y-3">
+                  {Object.entries(walletReport).map(([site, rows]) => (
+                    <div key={site} className="rounded-lg border p-3 space-y-2">
+                      <p className="text-sm font-semibold capitalize">{site}</p>
+                      {Array.isArray(rows) ? (
+                        rows.map((row) => (
+                          <div key={row.domain} className="flex flex-wrap items-center gap-2 text-xs">
+                            <span className="font-medium">{row.domain}</span>
+                            {row.error ? (
+                              <span className="text-destructive">{row.error}</span>
+                            ) : (
+                              <>
+                                <span className={row.apple_pay === 'active' ? 'text-primary' : 'text-muted-foreground'}>
+                                  Apple Pay : {row.apple_pay ?? 'inactif'}
+                                </span>
+                                <span className={row.google_pay === 'active' ? 'text-primary' : 'text-muted-foreground'}>
+                                  Google Pay : {row.google_pay ?? 'inactif'}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-destructive">{rows.error}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
+
             </CardContent>
           </Card>
         )}
