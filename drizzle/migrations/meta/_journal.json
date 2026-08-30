@@ -22,6 +22,13 @@
       "when": 1788099762610,
       "tag": "0002_notify_new_order_on_payment_authorized",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788099832338,
+      "tag": "0003_notify_payment_canceled",
+      "breakpoints": true
     }
   ]
 }
