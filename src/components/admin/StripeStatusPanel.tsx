@@ -119,22 +119,16 @@ export default function StripeStatusPanel({ order }: { order: Order }) {
       </div>
 
       {capture === 'authorized' && (
-        <div className="rounded-md border border-blue-500/50 bg-blue-500/10 p-3 space-y-2">
+        <div className="rounded-md border border-blue-500/50 bg-blue-500/10 p-3">
           <p className="text-xs text-blue-700 dark:text-blue-300">
             Le paiement est <strong>pré-autorisé mais pas encore encaissé</strong> chez Stripe
-            (« non capturé »). Encaissez-le pour finaliser la commande.
+            (« non capturé »). Il sera encaissé automatiquement lorsque la commande passera au
+            statut <strong>Confirmée</strong>, et la pré-autorisation sera libérée automatiquement
+            si la commande est annulée.
           </p>
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" disabled={busy} onClick={onCapture}>
-              {busy ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Check className="h-4 w-4 mr-1.5" />}
-              Encaisser le paiement
-            </Button>
-            <Button size="sm" variant="destructive" disabled={busy} onClick={onCancelAuth}>
-              Annuler la pré-autorisation
-            </Button>
-          </div>
         </div>
       )}
+
 
 
 
