@@ -245,11 +245,11 @@ export default function AdminSettingsPage() {
               <Button
                   type="button"
                   variant={isTestModeActive ? 'destructive' : 'default'}
-                  className="w-full"
+                  className="w-full text-xs sm:text-sm leading-tight whitespace-normal break-words"
                   disabled={testSubmitting}
                   onClick={() => handleToggleTestMode(!isTestModeActive)}
                 >
-                  <Power className="h-4 w-4 mr-2" />
+                  <Power className="h-4 w-4 mr-2 shrink-0" />
                   {testSubmitting
                     ? 'Mise à jour…'
                     : isTestModeActive
