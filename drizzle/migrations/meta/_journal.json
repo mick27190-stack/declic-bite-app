@@ -120,6 +120,13 @@
       "when": 1788193150847,
       "tag": "0016_grant_execute_authz_helpers_to_anon",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1788193755636,
+      "tag": "0017_allow_service_role_order_updates",
+      "breakpoints": true
     }
   ]
 }
