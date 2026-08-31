@@ -193,11 +193,14 @@ export default function AdminOrdersPage() {
       supabase.from('order_history').select('order_count'),
       // Ne compte que les commandes dont le paiement est autorisé (visibles ici),
       // en excluant celles dont l'autorisation a été annulée.
+      // Ne compte que les commandes dont le paiement a été autorisé (visibles ici).
+      // Les commandes annulées après autorisation restent comptées/affichées.
       supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
         .or('capture_status.not.is.null,status.neq.pending')
-        .not('capture_status', 'in', '("cancelled","canceled","pending")'),
+        .not('capture_status', 'eq', 'pending'),
+
     ]);
 
     const archived = (history || []).reduce((sum, r: any) => sum + (r.order_count || 0), 0);
