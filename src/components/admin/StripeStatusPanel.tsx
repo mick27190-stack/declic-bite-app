@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CreditCard, ChevronDown, ChevronUp, Copy, Check, Loader2 } from 'lucide-react';
+import { CreditCard, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Order } from '@/types/order';
 

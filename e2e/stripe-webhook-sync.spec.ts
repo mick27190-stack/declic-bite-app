@@ -161,7 +161,7 @@ test.describe("Webhooks Stripe — cohérence des statuts en back-office", () =>
     await expect(page.getByText(/Paiement encaissé/i).first()).toBeVisible();
   });
 
-  test("payment_intent.canceled retire la commande du back-office", async ({ page, baseURL }) => {
+  test("payment_intent.canceled garde la commande visible avec l'autorisation annulée", async ({ page, baseURL }) => {
     const base = baseURL ?? "http://localhost:8080";
     const orders = [baseOrder()];
     await openAdminOrders(page, base, orders);
@@ -175,8 +175,9 @@ test.describe("Webhooks Stripe — cohérence des statuts en back-office", () =>
       order_status: "cancelled",
       status: "cancelled",
     });
-    // Autorisation libérée : la commande ne doit plus apparaître comme active.
-    await expect(page.getByText("#11111111")).toHaveCount(0);
+    // Autorisation libérée : la commande reste visible pour le suivi des annulations.
+    await expect(page.getByText("#11111111").first()).toBeVisible();
+    await expect(page.getByText(/Autorisation annulée/i).first()).toBeVisible();
   });
 
   test("payment_intent.payment_failed annule la commande sans capture", async ({
