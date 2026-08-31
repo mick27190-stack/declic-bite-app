@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.notifications IS 'Notifications utilisateurs (admins et clients)';
