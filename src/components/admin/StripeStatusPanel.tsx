@@ -71,20 +71,11 @@ function buildTimeline(order: Order): { label: string; at: string | null; done: 
   ].filter((step) => step.done || step.label === 'Autorisation bancaire confirmée');
 }
 
-export default function StripeStatusPanel({
-  order,
-  busy,
-  onCapture,
-  onCancelAuth,
-}: {
-  order: Order;
-  busy?: boolean;
-  onCapture?: () => void;
-  onCancelAuth?: () => void;
-}) {
+export default function StripeStatusPanel({ order }: { order: Order }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
+
 
 
   const capture = order.capture_status ?? null;
