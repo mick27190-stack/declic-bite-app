@@ -113,6 +113,13 @@
       "when": 1788193137385,
       "tag": "0015_grant_execute_helpers_to_anon",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1788193150847,
+      "tag": "0016_grant_execute_authz_helpers_to_anon",
+      "breakpoints": true
     }
   ]
 }
