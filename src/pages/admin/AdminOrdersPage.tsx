@@ -191,13 +191,15 @@ export default function AdminOrdersPage() {
   const refreshCounters = async () => {
     const [{ data: history }, { count: live }] = await Promise.all([
       supabase.from('order_history').select('order_count'),
-      // Ne compte que les commandes dont le paiement est autorisé (visibles ici),
-      // en excluant celles dont l'autorisation a été annulée.
+      // Ne compte que les commandes dont le paiement a été autorisé (visibles ici).
+      // Les commandes annulées après autorisation restent comptées et affichées.
       supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
         .or('capture_status.not.is.null,status.neq.pending')
-        .not('capture_status', 'in', '("cancelled","canceled","pending")'),
+        .or('capture_status.is.null,capture_status.neq.pending'),
+
+
     ]);
 
     const archived = (history || []).reduce((sum, r: any) => sum + (r.order_count || 0), 0);
@@ -807,12 +809,8 @@ export default function AdminOrdersPage() {
                       </div>
                     </div>
 
-                    <StripeStatusPanel
-                      order={order}
-                      busy={stripeActionId === order.id}
-                      onCapture={() => invokeStripeAction(order.id, 'confirm-order', 'Paiement encaissé (capture Stripe)')}
-                      onCancelAuth={() => invokeStripeAction(order.id, 'cancel-order', 'Pré-autorisation Stripe annulée')}
-                    />
+                    <StripeStatusPanel order={order} />
+
 
 
                     {order.order_type === 'livraison' && (
