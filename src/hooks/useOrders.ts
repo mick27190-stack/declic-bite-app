@@ -5,16 +5,24 @@ import { CartItem } from '@/types/pizza';
 import { useToast } from '@/hooks/use-toast';
 
 /** Une commande n'est visible côté admin qu'une fois le paiement autorisé
- *  (capture_status renseigné par Stripe). Les commandes historiques, créées
- *  avant Stripe, restent visibles tant qu'elles ne sont pas en attente. */
-export function isOrderPaymentAuthorized(record: { capture_status?: string | null; status?: string | null }) {
-  // Autorisation annulée (Stripe) : la commande ne doit plus apparaître en admin.
-  if (record.capture_status === 'cancelled' || record.capture_status === 'canceled') return false;
+ *  (capture_status renseigné par Stripe). Les commandes annulées après
+ *  autorisation restent visibles (suivi des annulations) ; celles jamais
+ *  autorisées (panier abandonné, paiement échoué) restent masquées. */
+export function isOrderPaymentAuthorized(record: {
+  capture_status?: string | null;
+  status?: string | null;
+  stripe_payment_intent_id?: string | null;
+}) {
+  // Autorisation annulée : visible seulement si un paiement avait bien été créé.
+  if (record.capture_status === 'cancelled' || record.capture_status === 'canceled') {
+    return !!record.stripe_payment_intent_id || record.status !== 'pending';
+  }
   // Paiement pas encore autorisé par la banque (en attente du webhook Stripe).
   if (record.capture_status === 'pending') return false;
   if (record.capture_status) return true;
   return record.status !== 'pending';
 }
+
 
 export function useOrders(options: { autoFetch?: boolean } = {}) {
   const { autoFetch = true } = options;
