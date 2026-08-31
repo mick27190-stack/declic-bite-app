@@ -134,6 +134,13 @@
       "when": 1788194399368,
       "tag": "0018_noop_check",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1788194416461,
+      "tag": "0019_notify_new_order_test_mode",
+      "breakpoints": true
     }
   ]
 }
