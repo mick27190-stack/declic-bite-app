@@ -421,7 +421,7 @@ export function CartView() {
             <Button 
               variant="hero" 
               size="lg" 
-              className="w-full h-auto min-h-14 py-2 px-3 sm:px-6 whitespace-normal text-sm sm:text-base lg:text-lg leading-tight text-balance"
+              className="w-full h-auto min-h-14 py-2 px-2 sm:px-3 whitespace-normal text-base sm:text-lg lg:text-xl leading-tight text-balance"
               disabled={!canCheckout() || isSubmitting}
               onClick={handleSubmitOrder}
             >
