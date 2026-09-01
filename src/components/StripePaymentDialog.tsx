@@ -237,7 +237,7 @@ export function StripePaymentDialog({
 
   return (
     <Dialog open={open} onOpenChange={(next) => { if (!next) void abortOrder(); }}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain">
         <DialogHeader>
           <DialogTitle className="font-display">Paiement sécurisé</DialogTitle>
           <DialogDescription>
