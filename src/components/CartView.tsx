@@ -458,7 +458,7 @@ export function CartView() {
                 ) : orderType === 'livraison' && !pickupTime ? (
                   'Choisissez une heure'
                 ) : (
-                  'Commander maintenant'
+                  'Réglez pour finaliser votre commande'
                 ))
               )}
             </Button>
