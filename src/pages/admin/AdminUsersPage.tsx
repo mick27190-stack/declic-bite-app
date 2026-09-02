@@ -205,8 +205,8 @@ export default function AdminUsersPage() {
       <main className="container mx-auto px-4 py-8">
         <ConsentMigrationStats />
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
+          <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
               <CardTitle>Administrateurs</CardTitle>
               <CardDescription>
                 Liste des numéros de téléphone avec accès administrateur
@@ -214,7 +214,7 @@ export default function AdminUsersPage() {
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="w-full sm:w-auto shrink-0 text-sm whitespace-nowrap">
                   <UserPlus className="h-4 w-4 mr-2" />
                   Ajouter un admin
                 </Button>
