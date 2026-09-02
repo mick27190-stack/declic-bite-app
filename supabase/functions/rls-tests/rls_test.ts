@@ -254,3 +254,100 @@ Deno.test({
     }
   },
 });
+
+// ---------------------------------------------------------------------------
+// Business rule: at most 1 `super_admin` and 2 `secondary_super_admin`.
+// Enforced server-side by triggers on `admin_phones` and `user_roles`, so the
+// limit holds even when the UI is bypassed (direct API/table writes).
+// ---------------------------------------------------------------------------
+
+Deno.test({
+  name: "super admin limits cannot be bypassed outside the UI",
+  ignore: !HAS_SERVICE_ROLE,
+  fn: async () => {
+    const admin = serviceClient();
+    const users: string[] = [];
+    const phones: string[] = [];
+
+    const uniquePhone = () =>
+      `+3399${Math.floor(100000 + Math.random() * 899999)}`;
+
+    try {
+      // --- super_admin: only one allowed -----------------------------------
+      const { count: superCount } = await admin
+        .from("user_roles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "super_admin");
+
+      const extra = await createTestUser(admin, "superdupe");
+      users.push(extra.id);
+
+      if ((superCount ?? 0) >= 1) {
+        // Direct write on user_roles (bypasses admin_phones entirely).
+        const { error: roleErr } = await admin
+          .from("user_roles")
+          .insert({ user_id: extra.id, role: "super_admin" });
+        assert(roleErr, "a second super_admin must be rejected in user_roles");
+
+        // Direct write on admin_phones (bypasses the client-side check).
+        const phone = uniquePhone();
+        const { error: phoneErr } = await admin
+          .from("admin_phones")
+          .insert({ phone, role: "super_admin" });
+        if (!phoneErr) phones.push(phone);
+        assert(phoneErr, "a second super_admin must be rejected in admin_phones");
+      }
+
+      // --- secondary_super_admin: at most two -------------------------------
+      const seeded: string[] = [];
+      const { count: secCount } = await admin
+        .from("user_roles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "secondary_super_admin");
+
+      for (let i = (secCount ?? 0); i < 2; i++) {
+        const u = await createTestUser(admin, `secsuper${i}`);
+        users.push(u.id);
+        const { error } = await admin
+          .from("user_roles")
+          .insert({ user_id: u.id, role: "secondary_super_admin" });
+        assertEquals(error, null, "seeding secondary super admins should work");
+        seeded.push(u.id);
+      }
+
+      const third = await createTestUser(admin, "secsuper3");
+      users.push(third.id);
+
+      const { error: thirdRoleErr } = await admin
+        .from("user_roles")
+        .insert({ user_id: third.id, role: "secondary_super_admin" });
+      assert(
+        thirdRoleErr,
+        "a third secondary_super_admin must be rejected in user_roles",
+      );
+
+      const thirdPhone = uniquePhone();
+      const { error: thirdPhoneErr } = await admin
+        .from("admin_phones")
+        .insert({ phone: thirdPhone, role: "secondary_super_admin" });
+      if (!thirdPhoneErr) phones.push(thirdPhone);
+      assert(
+        thirdPhoneErr,
+        "a third secondary_super_admin must be rejected in admin_phones",
+      );
+
+      // --- non-regression: unrestricted roles still work --------------------
+      const { error: okErr } = await admin
+        .from("user_roles")
+        .insert({ user_id: third.id, role: "secondary_admin_conches" });
+      assertEquals(okErr, null, "unrestricted roles must still be assignable");
+    } finally {
+      for (const p of phones) {
+        await admin.from("admin_phones").delete().eq("phone", p);
+      }
+      for (const id of users) {
+        await cleanupUser(admin, id);
+      }
+    }
+  },
+});
