@@ -349,7 +349,7 @@ export default function LandingPage() {
           </Link>
         </nav>
         <p className="text-xs text-muted-foreground">
-          © 2024 Déclic Pizza • Conches & Beaumont
+          © 2026 Déclic Pizza • Conches & Beaumont
         </p>
       </footer>
     </div>
