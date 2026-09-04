@@ -55,6 +55,28 @@ export async function restoreSupabaseSession(
   );
 }
 
+/**
+ * Renvoie l'ID de l'utilisateur de la session injectée ou générée
+ * (mêmes sources que restoreSupabaseSession).
+ */
+export function getSessionUserId(): string {
+  const sessionJson = process.env.LOVABLE_BROWSER_SUPABASE_SESSION_JSON;
+  if (sessionJson) {
+    return (JSON.parse(sessionJson) as { user: { id: string } }).user.id;
+  }
+  const sessionFile = join(homedir(), ".cache/lovable-auth/session.json");
+  if (existsSync(sessionFile)) {
+    const minted = JSON.parse(readFileSync(sessionFile, "utf-8")) as {
+      session?: { user?: { id?: string } };
+    };
+    const id = minted.session?.user?.id;
+    if (id) return id;
+  }
+  throw new Error(
+    "Session Supabase absente. Connectez-vous dans le preview Lovable puis relancez les tests.",
+  );
+}
+
 export function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Variable d'environnement manquante: ${name}`);
