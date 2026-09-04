@@ -124,7 +124,7 @@ export default function MenuPage() {
             return (
               <div
                 key={pizza.id}
-                className="fade-up"
+                className="fade-up h-full"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <PizzaCard
