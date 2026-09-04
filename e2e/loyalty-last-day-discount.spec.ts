@@ -22,10 +22,10 @@ import { mockBackend, installFakeSession, TEST_USER_ID } from "./helpers/mockBac
  */
 
 const CART_STORAGE_KEY = "declic-cart-state";
-// Mardi 11/08/2026 19h00 Paris (dernier jour du programme), puis J+1.
-const LAST_DAY_UTC = "2026-08-11T17:00:00.000Z";
-const NEXT_DAY_UTC = "2026-08-12T17:00:00.000Z";
-const LAST_DAY = "2026-08-11";
+// Jeudi 13/08/2026 19h00 Paris (dernier jour du programme), puis J+1.
+const LAST_DAY_UTC = "2026-08-13T17:00:00.000Z";
+const NEXT_DAY_UTC = "2026-08-14T17:00:00.000Z";
+const LAST_DAY = "2026-08-13";
 const ORDER_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 
 const SENIOR_PROGRAM = {
