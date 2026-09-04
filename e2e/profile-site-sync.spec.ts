@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { getSessionUserId, restoreSupabaseSession } from "./helpers/session";
-import { getSupabaseAdmin } from "./helpers/supabase";
+import { getSupabaseUserClient } from "./helpers/supabase";
 
 /**
  * E2E — Synchronisation du site préféré (profil client → fiche client admin)
@@ -29,7 +29,7 @@ test.describe("Profil client → Fiche admin — site préféré", () => {
 
     // Récupérer l'ID utilisateur depuis la session injectée ou générée.
     const userId = getSessionUserId();
-    const supabase = getSupabaseAdmin();
+    const supabase = await getSupabaseUserClient();
 
     // État initial pour calculer la valeur cible (on bascule sur l'autre site).
     const { data: initial } = await supabase
