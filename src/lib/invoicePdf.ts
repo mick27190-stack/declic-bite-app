@@ -264,7 +264,7 @@ export async function generateInvoicePdf(
   // Payment / legal notes
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  const paymentLabel = 'Réglé à la commande';
+  const paymentLabel = order.status === 'cancelled' ? 'Règlement non encaissé' : 'Réglé à la commande';
   doc.text(paymentLabel, marginX, y); y += 5;
   doc.text(
     'Pas d’escompte pour paiement anticipé. Pénalités de retard : 3 fois le taux d’intérêt légal.',

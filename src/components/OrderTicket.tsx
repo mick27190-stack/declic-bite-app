@@ -176,7 +176,7 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
   const totalHT = totalTTC / (1 + TVA_RATE);
   const tva = totalTTC - totalHT;
 
-  const paymentLabel = 'Réglé à la commande';
+  const paymentLabel = order.status === 'cancelled' ? 'Règlement non encaissé' : 'Réglé à la commande';
 
   const deliveryTime =
     order.order_type === 'livraison'
