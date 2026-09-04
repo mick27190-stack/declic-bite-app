@@ -6,36 +6,29 @@
 //   2. Cumul par taille : Senior, Méga et Super Méga s'appliquent
 //      simultanément dans une même commande.
 //
-// Les tests utilisent la clé service_role (ils sont automatiquement ignorés
-// sans elle). Les programmes réels du site de test sont sauvegardés puis
-// restaurés, et toutes les lignes créées sont supprimées en fin de test.
+// Chaque test s'exécute dans une transaction annulée (ROLLBACK) : les
+// programmes réels ne sont jamais modifiés durablement et aucune donnée de
+// test ne subsiste. Les tests sont ignorés si SUPABASE_DB_URL est absent.
 
 import "https://deno.land/std@0.224.0/dotenv/load.ts";
 import { assert, assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
+import { Client } from "https://deno.land/x/postgres@v0.19.3/mod.ts";
 
-const SUPABASE_URL =
-  Deno.env.get("SUPABASE_URL") ?? Deno.env.get("VITE_SUPABASE_URL")!;
-const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const HAS_SERVICE_ROLE = Boolean(SERVICE_ROLE_KEY);
+const DB_URL = Deno.env.get("SUPABASE_DB_URL") ?? Deno.env.get("DB_URL");
+const HAS_DB = Boolean(DB_URL);
 
 const TEST_SITE = "beaumont";
 
-function serviceClient(): SupabaseClient {
-  return createClient(SUPABASE_URL, SERVICE_ROLE_KEY!, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
-interface ProgramRow {
-  id: string;
+interface DiscountItem {
+  program_id: string;
   category: string;
-  enabled: boolean;
-  start_date: string | null;
-  end_date: string | null;
-  required_count: number;
   reward_type: string;
-  discount_amount: number | null;
+  amount: number;
+  size_id: string;
+}
+interface DiscountResult {
+  total_discount: number;
+  items: DiscountItem[];
 }
 
 function pizzaItem(sizeId: string, quantity = 1) {
@@ -57,145 +50,116 @@ function pizzaItem(sizeId: string, quantity = 1) {
   };
 }
 
-/** Sauvegarde les programmes du site de test pour restauration en fin de test. */
-async function snapshotPrograms(admin: SupabaseClient): Promise<ProgramRow[]> {
-  const { data, error } = await admin
-    .from("loyalty_programs")
-    .select("id, category, enabled, start_date, end_date, required_count, reward_type, discount_amount")
-    .eq("site", TEST_SITE);
-  if (error) throw new Error(`snapshot failed: ${error.message}`);
-  return (data ?? []) as ProgramRow[];
-}
-
-async function restorePrograms(admin: SupabaseClient, snapshot: ProgramRow[]) {
-  for (const p of snapshot) {
-    await admin
-      .from("loyalty_programs")
-      .update({
-        enabled: p.enabled,
-        start_date: p.start_date,
-        end_date: p.end_date,
-        required_count: p.required_count,
-        reward_type: p.reward_type,
-        discount_amount: p.discount_amount,
-      })
-      .eq("id", p.id);
+/** Exécute `fn` dans une transaction systématiquement annulée. */
+async function inRollbackTx(fn: (db: Client) => Promise<void>) {
+  const db = new Client(DB_URL!);
+  await db.connect();
+  try {
+    await db.queryArray("BEGIN");
+    await fn(db);
+  } finally {
+    await db.queryArray("ROLLBACK").catch(() => undefined);
+    await db.end();
   }
 }
 
-async function cleanupCustomer(admin: SupabaseClient, customerId: string) {
-  await admin.from("loyalty_rewards_pending").delete().eq("customer_id", customerId);
-  await admin.from("customer_loyalty_progress").delete().eq("customer_id", customerId);
-  await admin.from("notifications").delete().eq("user_id", customerId);
+async function programId(db: Client, category: string): Promise<string> {
+  const { rows } = await db.queryObject<{ id: string }>(
+    "SELECT id FROM public.loyalty_programs WHERE site = $1 AND category = $2::public.loyalty_category",
+    [TEST_SITE, category],
+  );
+  assert(rows[0], `programme ${category} introuvable sur ${TEST_SITE}`);
+  return rows[0].id;
 }
 
 async function computeDiscount(
-  admin: SupabaseClient,
+  db: Client,
   customerId: string,
   items: unknown[],
-) {
-  const { data, error } = await admin.rpc("compute_loyalty_discount", {
-    _user_id: customerId,
-    _site: TEST_SITE,
-    _items: items,
-    _commit: false,
-  });
-  if (error) throw new Error(`compute_loyalty_discount failed: ${error.message}`);
-  return data as { total_discount: number; items: Array<Record<string, unknown>> };
+): Promise<DiscountResult> {
+  const { rows } = await db.queryObject<{ result: DiscountResult }>(
+    "SELECT public.compute_loyalty_discount($1::uuid, $2::text, $3::jsonb, now(), false, NULL) AS result",
+    [customerId, TEST_SITE, JSON.stringify(items)],
+  );
+  return rows[0].result;
 }
 
 Deno.test({
   name: "fidélité — récompense acquise le dernier jour reste utilisable après la fin du programme",
-  ignore: !HAS_SERVICE_ROLE,
+  ignore: !HAS_DB,
   async fn() {
-    const admin = serviceClient();
-    const snapshot = await snapshotPrograms(admin);
-    const customerId = crypto.randomUUID();
+    await inRollbackTx(async (db) => {
+      const customerId = crypto.randomUUID();
+      const senior = await programId(db, "senior");
 
-    try {
-      const senior = snapshot.find((p) => p.category === "senior")!;
-      assert(senior, "programme Senior introuvable sur le site de test");
+      // Programme terminé hier (dernier jour = hier) et désactivé depuis.
+      await db.queryArray(
+        `UPDATE public.loyalty_programs
+            SET enabled = false, start_date = NULL,
+                end_date = (now() AT TIME ZONE 'Europe/Paris')::date - 1,
+                required_count = 10, reward_type = 'free_pizza', discount_amount = NULL
+          WHERE id = $1`,
+        [senior],
+      );
 
-      // Programme terminé hier (dernier jour = hier) et désactivé.
-      const yesterday = new Date(Date.now() - 24 * 3600 * 1000)
-        .toISOString()
-        .slice(0, 10);
-      await admin
-        .from("loyalty_programs")
-        .update({
-          enabled: false,
-          start_date: null,
-          end_date: yesterday,
-          required_count: 10,
-          reward_type: "free_pizza",
-          discount_amount: null,
-        })
-        .eq("id", senior.id);
+      // Récompense acquise le dernier jour, pas encore consommée.
+      await db.queryArray(
+        `INSERT INTO public.loyalty_rewards_pending (customer_id, program_id, status)
+         VALUES ($1, $2, 'pending')`,
+        [customerId, senior],
+      );
 
-      // Récompense acquise avant la fin, non encore consommée.
-      const { error: insertError } = await admin
-        .from("loyalty_rewards_pending")
-        .insert({ customer_id: customerId, program_id: senior.id, status: "pending" });
-      assertEquals(insertError, null);
-
-      const result = await computeDiscount(admin, customerId, [pizzaItem("senior")]);
+      const result = await computeDiscount(db, customerId, [pizzaItem("senior")]);
 
       assert(
-        result.total_discount > 0,
+        Number(result.total_discount) > 0,
         `la récompense doit rester utilisable après la fin du programme (reçu ${result.total_discount})`,
       );
       assertEquals(result.items.length, 1);
       assertEquals(result.items[0].reward_type, "free_pizza");
       assertEquals(result.items[0].size_id, "senior");
 
-      // Aucune nouvelle progression ne doit être gagnée sur un programme terminé.
-      const second = await computeDiscount(admin, customerId, [
+      // Un programme terminé ne fait plus gagner de nouvelle récompense :
+      // seule la récompense déjà acquise est consommée.
+      const second = await computeDiscount(db, customerId, [
         pizzaItem("senior"),
         pizzaItem("senior"),
       ]);
-      assertEquals(
-        second.items.length,
-        1,
-        "une seule récompense en attente doit être consommée",
-      );
-    } finally {
-      await cleanupCustomer(admin, customerId);
-      await restorePrograms(admin, snapshot);
-    }
+      assertEquals(second.items.length, 1);
+
+      // Sans récompense en attente, un programme terminé ne remise rien.
+      const other = crypto.randomUUID();
+      const none = await computeDiscount(db, other, [pizzaItem("senior")]);
+      assertEquals(Number(none.total_discount), 0);
+      assertEquals(none.items.length, 0);
+    });
   },
 });
 
 Deno.test({
   name: "fidélité — les remises Senior, Méga et Super Méga se cumulent dans une même commande",
-  ignore: !HAS_SERVICE_ROLE,
+  ignore: !HAS_DB,
   async fn() {
-    const admin = serviceClient();
-    const snapshot = await snapshotPrograms(admin);
-    const customerId = crypto.randomUUID();
+    await inRollbackTx(async (db) => {
+      const customerId = crypto.randomUUID();
 
-    try {
-      const byCategory = new Map(snapshot.map((p) => [p.category, p]));
       for (const category of ["senior", "mega", "super_mega"]) {
-        const prog = byCategory.get(category);
-        assert(prog, `programme ${category} introuvable`);
-        await admin
-          .from("loyalty_programs")
-          .update({
-            enabled: true,
-            start_date: null,
-            end_date: null,
-            required_count: 10,
-            reward_type: "free_pizza",
-            discount_amount: null,
-          })
-          .eq("id", prog!.id);
-        const { error } = await admin
-          .from("loyalty_rewards_pending")
-          .insert({ customer_id: customerId, program_id: prog!.id, status: "pending" });
-        assertEquals(error, null);
+        const id = await programId(db, category);
+        await db.queryArray(
+          `UPDATE public.loyalty_programs
+              SET enabled = true, start_date = NULL, end_date = NULL,
+                  required_count = 10, reward_type = 'free_pizza', discount_amount = NULL
+            WHERE id = $1`,
+          [id],
+        );
+        await db.queryArray(
+          `INSERT INTO public.loyalty_rewards_pending (customer_id, program_id, status)
+           VALUES ($1, $2, 'pending')`,
+          [customerId, id],
+        );
       }
 
-      const result = await computeDiscount(admin, customerId, [
+      const result = await computeDiscount(db, customerId, [
         pizzaItem("senior"),
         pizzaItem("mega"),
         pizzaItem("super-mega"),
@@ -206,25 +170,22 @@ Deno.test({
         3,
         "les trois récompenses doivent s'appliquer dans la même commande",
       );
-      const categories = result.items.map((i) => i.category).sort();
-      assertEquals(categories, ["mega", "senior", "super_mega"]);
+      assertEquals(
+        result.items.map((i) => i.category).sort(),
+        ["mega", "senior", "super_mega"],
+      );
 
-      const sum = result.items.reduce((acc, i) => acc + Number(i.amount), 0);
-      assertEquals(Number(result.total_discount.toFixed(2)), Number(sum.toFixed(2)));
-      assert(result.total_discount > 0, "le cumul doit produire une remise");
-
-      // Les programmes restent indépendants : une seule remise par taille.
+      // Une seule remise par taille, et total = somme des lignes.
       const perCategory = new Map<string, number>();
       for (const i of result.items) {
-        const c = String(i.category);
-        perCategory.set(c, (perCategory.get(c) ?? 0) + 1);
+        perCategory.set(i.category, (perCategory.get(i.category) ?? 0) + 1);
       }
       for (const [category, count] of perCategory) {
         assertEquals(count, 1, `une seule remise attendue pour ${category}`);
       }
-    } finally {
-      await cleanupCustomer(admin, customerId);
-      await restorePrograms(admin, snapshot);
-    }
+      const sum = result.items.reduce((acc, i) => acc + Number(i.amount), 0);
+      assertEquals(Number(Number(result.total_discount).toFixed(2)), Number(sum.toFixed(2)));
+      assert(Number(result.total_discount) > 0, "le cumul doit produire une remise");
+    });
   },
 });
