@@ -72,7 +72,7 @@ export default function LoyaltyCardPage() {
                 </span>
               </div>
 
-              <Progress value={pct} className="h-3" />
+              <Progress value={pct} className="h-3 bg-muted" />
 
               <p className="text-xs text-muted-foreground">
                 Récompense : {rewardLabel(program)}
