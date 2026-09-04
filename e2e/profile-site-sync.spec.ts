@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { restoreSupabaseSession } from "./helpers/session";
+import { getSessionUserId, restoreSupabaseSession } from "./helpers/session";
 import { getSupabaseAdmin } from "./helpers/supabase";
 
 /**
