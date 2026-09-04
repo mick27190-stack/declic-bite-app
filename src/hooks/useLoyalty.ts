@@ -86,6 +86,69 @@ export function useLoyaltyCard(site?: string | null) {
   return { entries, loading, refresh: load, hasActiveProgram: entries.length > 0 };
 }
 
+export interface LoyaltyHistoryEntry {
+  reward: LoyaltyReward;
+  program: LoyaltyProgram | null;
+}
+
+/**
+ * Historique des récompenses du client connecté (appliquées et annulées),
+ * toutes tailles confondues, filtré par site si fourni.
+ */
+export function useLoyaltyHistory(site?: string | null) {
+  const { user } = useAuth();
+  const [history, setHistory] = useState<LoyaltyHistoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) {
+      setHistory([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    (async () => {
+      const { data: rewards } = await supabase
+        .from('loyalty_rewards_pending')
+        .select('*')
+        .eq('customer_id', user.id)
+        .in('status', ['applied', 'cancelled'])
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (cancelled) return;
+      const rewardList = (rewards ?? []) as unknown as LoyaltyReward[];
+      const programIds = [...new Set(rewardList.map((r) => r.program_id))];
+
+      let programs: LoyaltyProgram[] = [];
+      if (programIds.length > 0) {
+        const { data } = await supabase
+          .from('loyalty_programs')
+          .select('*')
+          .in('id', programIds);
+        programs = (data ?? []) as unknown as LoyaltyProgram[];
+      }
+      if (cancelled) return;
+
+      setHistory(
+        rewardList
+          .map((reward) => ({
+            reward,
+            program: programs.find((p) => p.id === reward.program_id) ?? null,
+          }))
+          .filter((entry) => !site || entry.program?.site === site),
+      );
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, site]);
+
+  return { history, loading };
+}
+
 /** Aperçu (non engageant) de la remise fidélité applicable au panier courant. */
 export function useLoyaltyPreview(site?: string | null, items?: unknown[]) {
   const { user } = useAuth();

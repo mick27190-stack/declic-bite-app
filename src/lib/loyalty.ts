@@ -34,6 +34,8 @@ export interface LoyaltyReward {
   status: 'pending' | 'applied' | 'cancelled';
   created_at: string;
   applied_order_id: string | null;
+  applied_at?: string | null;
+  cancelled_at?: string | null;
 }
 
 /** Détail d'une remise fidélité stockée sur la commande (`orders.loyalty_discount`). */
