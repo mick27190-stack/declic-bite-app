@@ -4,7 +4,7 @@ export default function CGVPage() {
   return (
     <LegalLayout
       title="Conditions générales de vente"
-      intro={<p>Déclic Pizza — Dernière mise à jour : 26/08/2026</p>}
+      intro={<p>Déclic Pizza — Dernière mise à jour : 04/09/2026</p>}
     >
       <LegalH2>Article 1 — Objet et identification des vendeurs</LegalH2>
       <LegalP>
@@ -174,9 +174,73 @@ export default function CGVPage() {
         préparation.
       </LegalP>
 
-      <LegalH2>Article 9 — Réclamations</LegalH2>
+      <LegalH2>Article 9 — Programme de fidélité</LegalH2>
       <LegalP>
-        <strong className="font-semibold text-foreground">9.1.</strong> Toute
+        <strong className="font-semibold text-foreground">9.1.</strong> Le programme
+        de fidélité est un dispositif optionnel, mis en place et géré par
+        l'exploitant de l'établissement auprès duquel le Client commande (Conches ou
+        Beaumont). L'exploitant peut activer un programme de fidélité par taille de
+        pizza (Senior, Méga, Super Méga), avec des dates de début et de fin définies
+        librement. Chaque établissement dispose de ses propres programmes,
+        indépendants l'un de l'autre.
+      </LegalP>
+      <LegalP>
+        <strong className="font-semibold text-foreground">9.2.</strong> Le programme
+        permet au Client d'accumuler une remise : pour chaque pizza de la taille
+        concernée commandée (hors Bambino), un compteur progresse. Une fois le seuil
+        défini par l'exploitant atteint, une récompense est débloquée — une pizza
+        offerte ou une remise en euros, selon le paramétrage du programme.
+      </LegalP>
+      <LegalP>
+        <strong className="font-semibold text-foreground">9.3. Conservation de la
+        récompense après la fin du programme.</strong> Si le Client obtient une
+        récompense le dernier jour de la période de validité du programme (ou le jour
+        de sa désactivation par l'exploitant), cette récompense reste entièrement
+        utilisable lors de sa prochaine commande, même si le programme n'est plus
+        actif à cette date. La fin du programme empêche l'acquisition de nouveaux
+        points, mais n'annule pas une récompense déjà acquise ; celle-ci n'est perdue
+        que par son utilisation ou par une annulation explicite de l'exploitant.
+      </LegalP>
+      <LegalP>
+        <strong className="font-semibold text-foreground">9.4. Conditions
+        d'application de la remise selon le mode de retrait.</strong> La récompense
+        s'applique à une seule pizza de la taille concernée par commande :
+      </LegalP>
+      <LegalList
+        items={[
+          <>
+            <strong className="font-semibold text-foreground">Commande à emporter
+            :</strong> la remise s'applique à une seule pizza, sans minimum de
+            commande spécifique.
+          </>,
+          <>
+            <strong className="font-semibold text-foreground">Commande en livraison
+            :</strong> le minimum de commande reste applicable — soit 2 pizzas Senior
+            ou 1 pizza Méga, conformément aux règles de livraison de l'établissement.
+            La pizza offerte (ou remisée) s'ajoute à ce minimum et ne s'y substitue
+            pas.
+          </>,
+        ]}
+      />
+      <LegalP>
+        <strong className="font-semibold text-foreground">9.5.</strong> Les programmes
+        de fidélité des différentes tailles (Senior, Méga, Super Méga) sont
+        indépendants et cumulables : un Client peut bénéficier simultanément de
+        plusieurs récompenses au sein d'une même commande, dans la limite d'une
+        récompense par taille et par commande.
+      </LegalP>
+      <LegalP>
+        <strong className="font-semibold text-foreground">9.6.</strong> L'exploitant se
+        réserve le droit d'activer, de désactiver ou de modifier à tout moment les
+        programmes de fidélité, leurs seuils et leurs récompenses. Le Client ne peut
+        prétendre à aucune contrepartie du fait de la modification ou de l'arrêt d'un
+        programme, à l'exception des récompenses déjà acquises au moment de la
+        modification, qui restent utilisables conformément à l'article 9.3.
+      </LegalP>
+
+      <LegalH2>Article 10 — Réclamations</LegalH2>
+      <LegalP>
+        <strong className="font-semibold text-foreground">10.1.</strong> Toute
         réclamation (produit non conforme, erreur de commande, retard, problème de
         livraison, question relative au paiement, etc.) doit être adressée directement
         à l'établissement auprès duquel la commande a été passée, aux coordonnées
@@ -212,7 +276,7 @@ export default function CGVPage() {
         dans les meilleurs délais.
       </LegalP>
       <LegalP>
-        <strong className="font-semibold text-foreground">9.2.</strong> Conformément
+        <strong className="font-semibold text-foreground">10.2.</strong> Conformément
         aux articles L616-1 et R616-1 du Code de la consommation, en cas d'échec de la
         réclamation directement auprès de l'établissement, le Client peut recourir
         gratuitement à un médiateur de la consommation, dans un délai d'un an à
@@ -220,34 +284,34 @@ export default function CGVPage() {
         coordonnées à venir.
       </LegalP>
 
-      <LegalH2>Article 10 — Responsabilité</LegalH2>
+      <LegalH2>Article 11 — Responsabilité</LegalH2>
       <LegalP>
         Les exploitants ne sauraient être tenus responsables de l'inexécution du
         contrat en cas de force majeure, de fait d'un tiers imprévisible et
-        insurmontable, ou de faute du Client (adresse erronée, indisponibilité lors de
-        la livraison, etc.).
+        insurmontable, ou de faute du Client (adresse erronée, indisponibilité lors
+        de la livraison, etc.).
       </LegalP>
 
-      <LegalH2>Article 11 — Données personnelles</LegalH2>
+      <LegalH2>Article 12 — Données personnelles</LegalH2>
       <LegalP>
         Le traitement des données personnelles du Client est décrit dans la Politique
         de Confidentialité / RGPD du Site.
       </LegalP>
 
-      <LegalH2>Article 12 — Propriété intellectuelle</LegalH2>
+      <LegalH2>Article 13 — Propriété intellectuelle</LegalH2>
       <LegalP>
         L'ensemble des éléments du Site (textes, logos, visuels, marque « Déclic
         Pizza ») est protégé par le droit de la propriété intellectuelle.
       </LegalP>
 
-      <LegalH2>Article 13 — Droit applicable et litiges</LegalH2>
+      <LegalH2>Article 14 — Droit applicable et litiges</LegalH2>
       <LegalP>
         Les présentes CGV sont soumises au droit français. À défaut de résolution
         amiable ou par médiation, les tribunaux français compétents seront seuls
         saisis.
       </LegalP>
 
-      <LegalH2>Article 14 — Modification des CGV</LegalH2>
+      <LegalH2>Article 15 — Modification des CGV</LegalH2>
       <LegalP>
         Les CGV applicables sont celles en vigueur à la date de la commande.
       </LegalP>
