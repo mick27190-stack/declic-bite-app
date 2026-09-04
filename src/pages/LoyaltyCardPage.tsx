@@ -90,6 +90,61 @@ export default function LoyaltyCardPage() {
             </div>
           );
         })}
+
+        {user && site && (
+          <div className="glass-card p-4 rounded-xl space-y-3">
+            <div className="flex items-center gap-2">
+              <History className="w-5 h-5 text-primary" />
+              <h2 className="font-display font-bold text-lg text-foreground">
+                Historique des remises
+              </h2>
+            </div>
+
+            {historyLoading && (
+              <div className="flex justify-center py-4">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              </div>
+            )}
+
+            {!historyLoading && history.length === 0 && (
+              <p className="text-sm text-muted-foreground">
+                Aucune remise fidélité utilisée pour le moment.
+              </p>
+            )}
+
+            {!historyLoading &&
+              history.map(({ reward, program }) => {
+                const applied = reward.status === 'applied';
+                const date = applied
+                  ? reward.applied_at ?? reward.created_at
+                  : reward.cancelled_at ?? reward.created_at;
+                return (
+                  <div
+                    key={reward.id}
+                    className="flex items-start gap-3 border-t border-border/50 pt-3 first:border-t-0 first:pt-0"
+                  >
+                    {applied ? (
+                      <BadgeCheck className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    ) : (
+                      <Ban className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">
+                        {program
+                          ? rewardLabel(program)
+                          : 'Récompense fidélité'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {applied ? 'Utilisée' : 'Annulée'} le{' '}
+                        {format(new Date(date), 'dd MMMM yyyy', { locale: fr })}
+                        {program ? ` • Pizzas ${CATEGORY_LABELS[program.category]}` : ''}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
       </div>
     </div>
   );
