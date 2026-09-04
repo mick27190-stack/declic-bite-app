@@ -734,6 +734,37 @@ export default function ProfilePage() {
       </div>
 
       <div className="p-6 space-y-6">
+        {/* Raccourci carte de fidélité — visible uniquement si un programme actif existe pour le site choisi */}
+        {hasActiveProgram && loyaltySummary && (
+          <button
+            type="button"
+            onClick={() => navigate('/loyalty')}
+            className="w-full glass-card p-4 rounded-xl flex items-center gap-4 text-left hover:shadow-lg transition-shadow group"
+          >
+            <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <Gift className="w-6 h-6 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold flex items-center gap-1.5">
+                Carte de fidélité
+              </p>
+              <p className="text-sm text-muted-foreground truncate">
+                {loyaltySummary.currentCount}/{loyaltySummary.program.pizzas_required} pizzas
+                {loyaltySummary.pendingRewards > 0 && (
+                  <span className="text-primary font-medium"> · {loyaltySummary.pendingRewards} récompense{loyaltySummary.pendingRewards > 1 ? 's' : ''} en attente</span>
+                )}
+              </p>
+              <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all"
+                  style={{ width: `${Math.min(100, (loyaltySummary.currentCount / loyaltySummary.program.pizzas_required) * 100)}%` }}
+                />
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+          </button>
+        )}
+
         {/* Notification permission reminder */}
         <NotificationPermissionReminder />
 
