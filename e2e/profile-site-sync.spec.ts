@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { restoreSupabaseSession } from "./helpers/session";
-import { getSupabaseAdmin } from "./helpers/supabase";
+import { getSessionUserId, restoreSupabaseSession } from "./helpers/session";
+import { getSupabaseUserClient } from "./helpers/supabase";
 
 /**
  * E2E — Synchronisation du site préféré (profil client → fiche client admin)
@@ -27,37 +27,36 @@ test.describe("Profil client → Fiche admin — site préféré", () => {
     const base = baseURL ?? "http://localhost:8080";
     await restoreSupabaseSession(context, page, base);
 
-    // Récupérer l'ID utilisateur depuis la session injectée.
-    const session = JSON.parse(
-      process.env.LOVABLE_BROWSER_SUPABASE_SESSION_JSON!,
-    );
-    const userId: string = session.user.id;
-    const supabase = getSupabaseAdmin();
+    // Récupérer l'ID utilisateur depuis la session injectée ou générée.
+    const userId = getSessionUserId();
+    const supabase = await getSupabaseUserClient();
 
     // État initial pour calculer la valeur cible (on bascule sur l'autre site).
     const { data: initial } = await supabase
       .from("profiles")
       .select("preferred_restaurant")
-      .eq("id", userId)
+      .eq("user_id", userId)
       .maybeSingle();
     const initialSite = (initial?.preferred_restaurant ?? "") as string;
     const targetSite = initialSite === "conches" ? "beaumont" : "conches";
 
-    // 1) Aller dans le profil et passer en édition.
+    // 1) Aller dans le profil et passer en édition (carte "Informations
+    //    personnelles").
     await page.goto(`${base}/profile`);
-    await page.getByRole("button", { name: /modifier|éditer/i }).first().click();
+    const infoCard = page
+      .locator("div.glass-card")
+      .filter({ hasText: "Informations personnelles" })
+      .first();
+    await infoCard.getByRole("button", { name: /modifier/i }).click();
 
     // 2) Sélectionner l'autre site dans le select "Site de commande".
-    const siteSelect = page.locator("select").filter({
+    const siteSelect = infoCard.locator("select").filter({
       has: page.locator('option[value="conches"]'),
     });
     await siteSelect.selectOption(targetSite);
 
-    // 3) Enregistrer.
-    await page
-      .getByRole("button", { name: /enregistrer|sauvegarder/i })
-      .first()
-      .click();
+    // 3) Enregistrer (bouton icône "check", sans texte).
+    await infoCard.locator("button:has(svg.lucide-check)").click();
 
     // 4) Vérifier la mise à jour côté DB avec un petit polling.
     await expect
@@ -66,7 +65,7 @@ test.describe("Profil client → Fiche admin — site préféré", () => {
           const { data } = await supabase
             .from("profiles")
             .select("preferred_restaurant")
-            .eq("id", userId)
+            .eq("user_id", userId)
             .maybeSingle();
           return data?.preferred_restaurant;
         },
