@@ -1,8 +1,9 @@
-import { Home, Pizza, ShoppingCart, User, Shield, Bike } from 'lucide-react';
+import { Home, Pizza, ShoppingCart, User, Shield, Bike, Gift } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useLoyaltyCard } from '@/hooks/useLoyalty';
 
 // Le livreur n'a accès à son espace que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
 function isLivreurWindowOpen(): boolean {
@@ -24,7 +25,8 @@ function isLivreurWindowOpen(): boolean {
 
 export function BottomNavigation() {
   const location = useLocation();
-  const { totalItems } = useCart();
+  const { totalItems, selectedRestaurant } = useCart();
+  const { hasActiveProgram } = useLoyaltyCard(selectedRestaurant?.id ?? null);
   const { isAnyAdmin, isAnyLivreur } = useAdmin();
 
   const [livreurOpen, setLivreurOpen] = useState(isLivreurWindowOpen());
@@ -39,6 +41,7 @@ export function BottomNavigation() {
     { icon: Home, label: 'Accueil', path: '/' },
     { icon: Pizza, label: 'Menu', path: '/menu' },
     { icon: ShoppingCart, label: 'Panier', path: '/cart' },
+    ...(hasActiveProgram ? [{ icon: Gift, label: 'Fidélité', path: '/loyalty' }] : []),
     ...(isAnyAdmin ? [{ icon: Shield, label: 'Admin', path: '/admin' }] : []),
     ...(isAnyLivreur && livreurOpen ? [{ icon: Bike, label: 'Livreur', path: '/livreur' }] : []),
     { icon: User, label: 'Profil', path: '/profile' },

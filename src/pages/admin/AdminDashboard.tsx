@@ -18,6 +18,7 @@ import {
   History,
   Building2,
   FileText,
+  Gift,
   ShieldCheck
 
 
@@ -150,6 +151,13 @@ export default function AdminDashboard() {
       description: 'Registre et export CSV des consentements',
       icon: ShieldCheck,
       href: '/admin/consents',
+      show: isSuperAdmin
+    },
+    {
+      title: 'Carte de fidélité',
+      description: 'Programmes de fidélité et progression des clients',
+      icon: Gift,
+      href: '/admin/loyalty',
       show: isSuperAdmin
     }
   ];

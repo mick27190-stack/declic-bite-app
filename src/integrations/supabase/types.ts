@@ -272,6 +272,41 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_loyalty_progress: {
+        Row: {
+          created_at: string
+          current_count: number
+          customer_id: string
+          id: string
+          program_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_count?: number
+          customer_id: string
+          id?: string
+          program_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_count?: number
+          customer_id?: string
+          id?: string
+          program_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_loyalty_progress_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       customers: {
         Row: {
           address: string | null
@@ -497,6 +532,89 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loyalty_programs: {
+        Row: {
+          category: Database["public"]["Enums"]["loyalty_category"]
+          created_at: string
+          discount_amount: number | null
+          enabled: boolean
+          end_date: string | null
+          id: string
+          required_count: number
+          reward_type: Database["public"]["Enums"]["loyalty_reward_type"]
+          site: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["loyalty_category"]
+          created_at?: string
+          discount_amount?: number | null
+          enabled?: boolean
+          end_date?: string | null
+          id?: string
+          required_count?: number
+          reward_type?: Database["public"]["Enums"]["loyalty_reward_type"]
+          site: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["loyalty_category"]
+          created_at?: string
+          discount_amount?: number | null
+          enabled?: boolean
+          end_date?: string | null
+          id?: string
+          required_count?: number
+          reward_type?: Database["public"]["Enums"]["loyalty_reward_type"]
+          site?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      loyalty_rewards_pending: {
+        Row: {
+          applied_at: string | null
+          applied_order_id: string | null
+          cancelled_at: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          program_id: string
+          status: string
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_order_id?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          program_id: string
+          status?: string
+        }
+        Update: {
+          applied_at?: string | null
+          applied_order_id?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          program_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loyalty_rewards_pending_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "loyalty_programs"
             referencedColumns: ["id"]
           },
         ]
@@ -728,6 +846,7 @@ export type Database = {
           delivery_time_requested: string | null
           id: string
           items: Json
+          loyalty_discount: Json | null
           notes: string | null
           order_status: string | null
           order_type: string
@@ -751,6 +870,7 @@ export type Database = {
           delivery_time_requested?: string | null
           id?: string
           items: Json
+          loyalty_discount?: Json | null
           notes?: string | null
           order_status?: string | null
           order_type: string
@@ -774,6 +894,7 @@ export type Database = {
           delivery_time_requested?: string | null
           id?: string
           items?: Json
+          loyalty_discount?: Json | null
           notes?: string | null
           order_status?: string | null
           order_type?: string
@@ -1063,6 +1184,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      compute_loyalty_discount: {
+        Args: {
+          _commit?: boolean
+          _items: Json
+          _now?: string
+          _order_id?: string
+          _site: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       compute_order_line_prices: {
         Args: { _items: Json; _now?: string }
         Returns: Json
@@ -1115,6 +1247,14 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      loyalty_program_is_active: {
+        Args: { _enabled: boolean; _end: string; _now: string; _start: string }
+        Returns: boolean
+      }
+      loyalty_size_to_category: {
+        Args: { _size_id: string }
+        Returns: Database["public"]["Enums"]["loyalty_category"]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1125,6 +1265,10 @@ export type Database = {
         Returns: number
       }
       normalize_phone: { Args: { _phone: string }; Returns: string }
+      preview_loyalty_discount: {
+        Args: { _items: Json; _site: string }
+        Returns: Json
+      }
       purge_previous_week_orders: { Args: never; Returns: undefined }
       purge_previous_week_orders_guarded: { Args: never; Returns: undefined }
       read_email_batch: {
@@ -1164,6 +1308,8 @@ export type Database = {
         | "secondary_super_admin"
         | "livreur_conches"
         | "livreur_beaumont"
+      loyalty_category: "senior" | "mega" | "super_mega"
+      loyalty_reward_type: "free_pizza" | "discount_amount"
       order_status:
         | "pending"
         | "confirmed"
@@ -1309,6 +1455,8 @@ export const Constants = {
         "livreur_conches",
         "livreur_beaumont",
       ],
+      loyalty_category: ["senior", "mega", "super_mega"],
+      loyalty_reward_type: ["free_pizza", "discount_amount"],
       order_status: [
         "pending",
         "confirmed",
