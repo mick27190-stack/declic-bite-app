@@ -117,15 +117,12 @@ test.describe("Checkout bloqué — blocage des commandes / fermeture du site", 
     ).toBeVisible();
     await expect(page.getByText(reason).first()).toBeVisible();
 
-    // 2) Bouton de commande désactivé, avec le libellé du blocage.
-    const cta = page
-      .getByRole("button", { name: /commandes en ligne bloquées/i })
-      .last();
-    await expect(cta).toBeVisible();
-    await expect(cta).toBeDisabled();
+    // 2) Aucun bouton de commande n'est proposé pendant le blocage.
+    await expect(
+      page.getByRole("button", { name: /réglez pour finaliser votre commande/i }),
+    ).toHaveCount(0);
 
-    // 3) Un clic forcé ne déclenche aucune création de commande.
-    await cta.click({ force: true }).catch(() => undefined);
+    // 3) Aucune commande n'est créée pendant le blocage.
     await page.waitForTimeout(1000);
     expect(orderPosts).toHaveLength(0);
   });
