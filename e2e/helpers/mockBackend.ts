@@ -47,6 +47,8 @@ export interface MockBackendOptions {
     string,
     { status?: number; body: Record<string, unknown> }
   >;
+  /** Réponses personnalisées des RPC (`/rest/v1/rpc/<nom>`). */
+  rpc?: Record<string, unknown>;
   /** Ligne renvoyée par un INSERT sur `orders`. */
   onCreateOrder?: (payload: Record<string, unknown>) => Record<string, unknown>;
   /** Connecter (ou non) une session Supabase simulée. */
@@ -105,6 +107,7 @@ export async function mockBackend(
     tables = {},
     roles = [],
     functions = {},
+    rpc = {},
     onCreateOrder,
     authenticated = true,
   } = options;
@@ -133,8 +136,12 @@ export async function mockBackend(
 
     if (method === "OPTIONS") return json(route, {});
 
-    // RPC (prix serveur, etc.) : réponse neutre, le front retombe sur son calcul local.
-    if (url.includes("/rest/v1/rpc/")) return json(route, null);
+    // RPC (prix serveur, remise fidélité, etc.) : réponse configurée, sinon
+    // réponse neutre et le front retombe sur son calcul local.
+    if (url.includes("/rest/v1/rpc/")) {
+      const name = url.split("/rest/v1/rpc/")[1].split("?")[0];
+      return json(route, name in rpc ? rpc[name] : null);
+    }
 
     if (table === "user_roles") {
       return json(route, roles.map((role) => ({ role })));
