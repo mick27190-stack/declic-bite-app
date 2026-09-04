@@ -739,7 +739,7 @@ export default function ProfilePage() {
         {hasActiveProgram && loyaltySummary && (() => {
           const pct = Math.min(100, Math.round((loyaltySummary.currentCount / loyaltySummary.program.required_count) * 100));
           const remaining = Math.max(0, loyaltySummary.program.required_count - loyaltySummary.currentCount);
-          const siteLabel = selectedRestaurant?.name?.replace('Déclic Pizza ', '') ?? null;
+          const siteLabel = loyaltySite ? SITE_LABELS[loyaltySite] ?? null : null;
           return (
           <button
             type="button"
@@ -760,7 +760,7 @@ export default function ProfilePage() {
               </div>
               <p className="text-xs text-muted-foreground truncate mt-0.5">
                 {remaining > 0
-                  ? <>Plus que <span className="font-semibold text-foreground">{remaining}</span> pizza{remaining > 1 ? 's' : ''} · récompense : {loyaltySummary.program.reward_label ?? rewardShort(loyaltySummary.program)}</>
+                  ? <>Plus que <span className="font-semibold text-foreground">{remaining}</span> pizza{remaining > 1 ? 's' : ''} · récompense : {rewardLabel(loyaltySummary.program)}</>
                   : <>Récompense disponible ! 🎉</>}
                 {loyaltySummary.pendingRewards > 0 && (
                   <span className="text-green-600 font-medium"> · {loyaltySummary.pendingRewards} en attente</span>
