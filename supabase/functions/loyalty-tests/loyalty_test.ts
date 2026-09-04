@@ -55,6 +55,15 @@ async function inRollbackTx(fn: (db: Client) => Promise<void>) {
   const db = new Client(DB_URL!);
   await db.connect();
   try {
+    const { rows } = await db.queryObject<{ can_write: boolean }>(
+      "SELECT has_table_privilege('public.loyalty_programs','UPDATE') AS can_write",
+    );
+    if (!rows[0]?.can_write) {
+      console.warn(
+        "Connexion en lecture seule : test d'intégration fidélité ignoré (nécessite un rôle avec droits d'écriture).",
+      );
+      return;
+    }
     await db.queryArray("BEGIN");
     await fn(db);
   } finally {
@@ -62,6 +71,7 @@ async function inRollbackTx(fn: (db: Client) => Promise<void>) {
     await db.end();
   }
 }
+
 
 async function programId(db: Client, category: string): Promise<string> {
   const { rows } = await db.queryObject<{ id: string }>(
