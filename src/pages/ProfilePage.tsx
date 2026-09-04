@@ -749,7 +749,7 @@ export default function ProfilePage() {
                 Carte de fidélité
               </p>
               <p className="text-sm text-muted-foreground truncate">
-                {loyaltySummary.currentCount}/{loyaltySummary.program.pizzas_required} pizzas
+                {loyaltySummary.currentCount}/{loyaltySummary.program.required_count} pizzas
                 {loyaltySummary.pendingRewards > 0 && (
                   <span className="text-primary font-medium"> · {loyaltySummary.pendingRewards} récompense{loyaltySummary.pendingRewards > 1 ? 's' : ''} en attente</span>
                 )}
@@ -757,7 +757,7 @@ export default function ProfilePage() {
               <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all"
-                  style={{ width: `${Math.min(100, (loyaltySummary.currentCount / loyaltySummary.program.pizzas_required) * 100)}%` }}
+                  style={{ width: `${Math.min(100, (loyaltySummary.currentCount / loyaltySummary.program.required_count) * 100)}%` }}
                 />
               </div>
             </div>
