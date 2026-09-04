@@ -29,6 +29,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useLoyaltyCard } from '@/hooks/useLoyalty';
+import { rewardLabel, SITE_LABELS } from '@/lib/loyalty';
 import { useChatClosure } from '@/hooks/useChatClosure';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import CustomerNotificationBell from '@/components/CustomerNotificationBell';
@@ -735,35 +736,47 @@ export default function ProfilePage() {
 
       <div className="p-6 space-y-6">
         {/* Raccourci carte de fidélité — visible uniquement si un programme actif existe pour le site choisi */}
-        {hasActiveProgram && loyaltySummary && (
+        {hasActiveProgram && loyaltySummary && (() => {
+          const pct = Math.min(100, Math.round((loyaltySummary.currentCount / loyaltySummary.program.required_count) * 100));
+          const remaining = Math.max(0, loyaltySummary.program.required_count - loyaltySummary.currentCount);
+          const siteLabel = loyaltySite ? SITE_LABELS[loyaltySite] ?? null : null;
+          return (
           <button
             type="button"
             onClick={() => navigate('/loyalty')}
-            className="w-full glass-card p-4 rounded-xl flex items-center gap-4 text-left hover:shadow-lg transition-shadow group"
+            className="w-full glass-card p-4 rounded-xl flex items-center gap-3 text-left hover:shadow-lg transition-shadow group"
           >
-            <div className="w-12 h-12 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-              <Gift className="w-6 h-6 text-primary" />
+            <div className="w-11 h-11 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <Gift className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold flex items-center gap-1.5">
-                Carte de fidélité
-              </p>
-              <p className="text-sm text-muted-foreground truncate">
-                {loyaltySummary.currentCount}/{loyaltySummary.program.required_count} pizzas
+              <div className="flex items-center justify-between gap-2">
+                <p className="font-semibold">Carte de fidélité</p>
+                {siteLabel && (
+                  <span className="text-[11px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                    {siteLabel}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground truncate mt-0.5">
+                {remaining > 0
+                  ? <>Plus que <span className="font-semibold text-foreground">{remaining}</span> pizza{remaining > 1 ? 's' : ''} · récompense : {rewardLabel(loyaltySummary.program)}</>
+                  : <>Récompense disponible ! 🎉</>}
                 {loyaltySummary.pendingRewards > 0 && (
-                  <span className="text-primary font-medium"> · {loyaltySummary.pendingRewards} récompense{loyaltySummary.pendingRewards > 1 ? 's' : ''} en attente</span>
+                  <span className="text-green-600 font-medium"> · {loyaltySummary.pendingRewards} en attente</span>
                 )}
               </p>
               <div className="mt-2 h-2 w-full rounded-full bg-muted overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all"
-                  style={{ width: `${Math.min(100, (loyaltySummary.currentCount / loyaltySummary.program.required_count) * 100)}%` }}
+                  style={{ width: `${pct}%` }}
                 />
               </div>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
           </button>
-        )}
+          );
+        })()}
 
         {/* Notification permission reminder */}
         <NotificationPermissionReminder />
