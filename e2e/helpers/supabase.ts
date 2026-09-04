@@ -70,9 +70,10 @@ export async function getSupabaseUserClient(): Promise<SupabaseClient> {
   });
   // Pose la session sur le client pour que les requêtes passent les RLS
   // de l'utilisateur connecté.
-  void client.auth.setSession({
+  const { error } = await client.auth.setSession({
     access_token: session.access_token,
     refresh_token: session.refresh_token,
   });
+  if (error) throw new Error(`Session utilisateur invalide: ${error.message}`);
   return client;
 }
