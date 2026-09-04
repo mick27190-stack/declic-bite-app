@@ -169,6 +169,13 @@
       "when": 1788512865070,
       "tag": "0023_loyalty_reward_push_notification",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1788514621621,
+      "tag": "0024_loyalty_redeem_after_program_end",
+      "breakpoints": true
     }
   ]
 }
