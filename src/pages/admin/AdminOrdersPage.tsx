@@ -803,6 +803,19 @@ export default function AdminOrdersPage() {
                           </span>
                         </div>
                       ))}
+                      {(() => {
+                        const loyalty = parseLoyaltyDiscount((order as any).loyalty_discount);
+                        if (!loyalty) return null;
+                        return (
+                          <div className="border-t pt-2 mt-2 flex justify-between text-sm text-green-600 font-medium">
+                            <span className="flex items-center gap-1.5">
+                              <Gift className="h-4 w-4" />
+                              Remise fidélité ({discountLineLabel(loyalty)})
+                            </span>
+                            <span>-{loyalty.total_discount.toFixed(2)}€</span>
+                          </div>
+                        );
+                      })()}
                       <div className="border-t pt-2 mt-2 flex justify-between font-bold">
                         <span>Total</span>
                         <span className="text-primary">{order.total_price.toFixed(2)}€</span>
@@ -869,6 +882,7 @@ export default function AdminOrdersPage() {
             items: orderToPrint.items,
             customer_name: orderToPrint.customer_name,
             customer_phone: orderToPrint.customer_phone,
+            loyalty_discount: (orderToPrint as any).loyalty_discount,
           }}
           company={resolveCompanyForRestaurant(companyData, orderToPrint.restaurant)}
           printOnly
