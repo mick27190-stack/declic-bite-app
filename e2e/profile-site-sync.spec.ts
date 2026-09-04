@@ -40,21 +40,23 @@ test.describe("Profil client → Fiche admin — site préféré", () => {
     const initialSite = (initial?.preferred_restaurant ?? "") as string;
     const targetSite = initialSite === "conches" ? "beaumont" : "conches";
 
-    // 1) Aller dans le profil et passer en édition.
+    // 1) Aller dans le profil et passer en édition (carte "Informations
+    //    personnelles").
     await page.goto(`${base}/profile`);
-    await page.getByRole("button", { name: /modifier|éditer/i }).first().click();
+    const infoCard = page
+      .locator("div.glass-card")
+      .filter({ hasText: "Informations personnelles" })
+      .first();
+    await infoCard.getByRole("button", { name: /modifier/i }).click();
 
     // 2) Sélectionner l'autre site dans le select "Site de commande".
-    const siteSelect = page.locator("select").filter({
+    const siteSelect = infoCard.locator("select").filter({
       has: page.locator('option[value="conches"]'),
     });
     await siteSelect.selectOption(targetSite);
 
-    // 3) Enregistrer.
-    await page
-      .getByRole("button", { name: /enregistrer|sauvegarder/i })
-      .first()
-      .click();
+    // 3) Enregistrer (bouton icône "check", sans texte).
+    await infoCard.locator("button:has(svg.lucide-check)").click();
 
     // 4) Vérifier la mise à jour côté DB avec un petit polling.
     await expect
