@@ -166,7 +166,7 @@ test.describe("Fidélité — remise acquise le dernier jour, utilisée à la co
     await page.goto(`${base}/cart`);
     await expect(page.getByText("Margherita").first()).toBeVisible();
     await expect(page.getByText("Remise fidélité")).toHaveCount(0);
-    await expect(page.getByText("13.50€").last()).toBeVisible();
+    await expect(page.locator("span.text-2xl").last()).toHaveText("13.50€");
 
     await page.getByRole("button", { name: /commander maintenant/i }).click();
     await expect.poll(() => recorder.orderWrites.length).toBeGreaterThan(0);
@@ -254,6 +254,6 @@ test.describe("Fidélité — remise acquise le dernier jour, utilisée à la co
     await expect(page.getByText("Remise fidélité")).toBeVisible();
     await expect(page.getByText("-33.50€")).toBeVisible();
     // 13,50 + 20 = 33,50 € de panier, entièrement offerts.
-    await expect(page.getByText("0.00€").last()).toBeVisible();
+    await expect(page.locator("span.text-2xl").last()).toHaveText("0.00€");
   });
 });
