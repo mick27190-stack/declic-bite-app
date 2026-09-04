@@ -99,7 +99,7 @@ export function useNotifications() {
 
           // Play distinct notification sound based on type
           try {
-            if (newNotif.type === 'new_order') {
+            if (newNotif.type === 'new_order' || newNotif.type === 'loyalty_reward') {
               playOrderSound();
             } else {
               playChatSound();
