@@ -148,6 +148,13 @@
       "when": 1788364061523,
       "tag": "0020_enforce_user_role_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1788509146814,
+      "tag": "0021_make_role_check_wrappers_security_definer",
+      "breakpoints": true
     }
   ]
 }
