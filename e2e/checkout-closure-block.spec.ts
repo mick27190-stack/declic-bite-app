@@ -148,11 +148,10 @@ test.describe("Checkout bloqué — blocage des commandes / fermeture du site", 
     await expect(page.getByText("Site fermé").first()).toBeVisible();
     await expect(page.getByText(reason).first()).toBeVisible();
 
-    const cta = page.getByRole("button", { name: /site fermé/i }).last();
-    await expect(cta).toBeVisible();
-    await expect(cta).toBeDisabled();
+    await expect(
+      page.getByRole("button", { name: /réglez pour finaliser votre commande/i }),
+    ).toHaveCount(0);
 
-    await cta.click({ force: true }).catch(() => undefined);
     await page.waitForTimeout(1000);
     expect(orderPosts).toHaveLength(0);
   });
