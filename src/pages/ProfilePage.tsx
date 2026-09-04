@@ -29,6 +29,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useLoyaltyCard } from '@/hooks/useLoyalty';
+import { rewardLabel, SITE_LABELS } from '@/lib/loyalty';
 import { useChatClosure } from '@/hooks/useChatClosure';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import CustomerNotificationBell from '@/components/CustomerNotificationBell';
