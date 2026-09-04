@@ -36,16 +36,15 @@ export function useLoyaltyCard(site?: string | null) {
         .select('*')
         .eq('site', site);
 
-      const active = ((programs ?? []) as unknown as LoyaltyProgram[]).filter((p) =>
-        isProgramActive(p),
-      );
+      const all = (programs ?? []) as unknown as LoyaltyProgram[];
+      const active = all.filter((p) => isProgramActive(p));
 
-      if (active.length === 0 || !user) {
+      if (all.length === 0 || !user) {
         setEntries(active.map((program) => ({ program, currentCount: 0, pendingRewards: 0 })));
         return;
       }
 
-      const ids = active.map((p) => p.id);
+      const ids = all.map((p) => p.id);
       const [{ data: progress }, { data: rewards }] = await Promise.all([
         supabase
           .from('customer_loyalty_progress')
@@ -64,12 +63,16 @@ export function useLoyaltyCard(site?: string | null) {
       const rewardList = (rewards ?? []) as unknown as LoyaltyReward[];
 
       setEntries(
-        active.map((program) => ({
-          program,
-          currentCount:
-            progressList.find((p) => p.program_id === program.id)?.current_count ?? 0,
-          pendingRewards: rewardList.filter((r) => r.program_id === program.id).length,
-        })),
+        all
+          .map((program) => ({
+            program,
+            currentCount:
+              progressList.find((p) => p.program_id === program.id)?.current_count ?? 0,
+            pendingRewards: rewardList.filter((r) => r.program_id === program.id).length,
+          }))
+          // Programmes actifs, ou terminés/désactivés mais avec une récompense
+          // déjà acquise (utilisable sur la prochaine commande).
+          .filter(({ program, pendingRewards }) => isProgramActive(program) || pendingRewards > 0),
       );
     } finally {
       setLoading(false);
