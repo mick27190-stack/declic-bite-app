@@ -6,8 +6,9 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send, FileText, Loader2, Check, X } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send, FileText, Loader2, Check, X, Gift } from 'lucide-react';
 import OrderTicket from '@/components/OrderTicket';
+import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 import StripeStatusPanel from '@/components/admin/StripeStatusPanel';
 
 import { generateInvoicePdf, buildInvoiceNumber } from '@/lib/invoicePdf';
