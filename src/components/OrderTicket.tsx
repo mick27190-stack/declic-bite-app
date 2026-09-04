@@ -1,5 +1,6 @@
 import { forwardRef } from 'react';
 import { useOrderLinePrices, linePriceAt } from '@/lib/orderPricing';
+import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
 // TVA restauration à emporter / livraison en France = 10%
@@ -23,6 +24,7 @@ export interface OrderTicketData {
   customer_phone?: string | null;
   payment_method?: string | null;
   paid?: boolean;
+  loyalty_discount?: unknown;
 }
 
 export interface TicketCompanyInfo {
@@ -167,7 +169,10 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
     };
   });
 
-  const totalTTC = Number(order.total_price) || lines.reduce((s, l) => s + l.sub, 0);
+  const loyalty = parseLoyaltyDiscount(order.loyalty_discount);
+  const loyaltyAmount = loyalty?.total_discount ?? 0;
+  const linesTotal = lines.reduce((s, l) => s + l.sub, 0);
+  const totalTTC = Number(order.total_price) || Math.max(linesTotal - loyaltyAmount, 0);
   const totalHT = totalTTC / (1 + TVA_RATE);
   const tva = totalTTC - totalHT;
 
@@ -220,7 +225,12 @@ ${lines
   })
   .join('\n')}
 ${SEP}
-${padLine('Total HT', fmt(totalHT))}
+${loyaltyAmount > 0
+  ? `${padLine('Sous-total', fmt(linesTotal))}\n${padLine(
+      `Fidelite (${discountLineLabel(loyalty)})`,
+      '-' + fmt(loyaltyAmount),
+    )}\n`
+  : ''}${padLine('Total HT', fmt(totalHT))}
 ${padLine(`TVA (${(TVA_RATE * 100).toFixed(0)}%)`, fmt(tva))}
 ${padLine('TOTAL TTC', fmt(totalTTC))}
 ${SEP}
