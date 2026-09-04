@@ -162,6 +162,13 @@
       "when": 1788511288618,
       "tag": "0022_create_loyalty_program",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1788512865070,
+      "tag": "0023_loyalty_reward_push_notification",
+      "breakpoints": true
     }
   ]
 }

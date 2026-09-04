@@ -10,7 +10,7 @@ export interface Notification {
   user_id: string;
   title: string;
   body: string;
-  type: 'new_order' | 'new_message';
+  type: 'new_order' | 'new_message' | 'loyalty_reward' | string;
   reference_id: string | null;
   site: string;
   is_read: boolean;
@@ -99,7 +99,7 @@ export function useNotifications() {
 
           // Play distinct notification sound based on type
           try {
-            if (newNotif.type === 'new_order') {
+            if (newNotif.type === 'new_order' || newNotif.type === 'loyalty_reward') {
               playOrderSound();
             } else {
               playChatSound();
