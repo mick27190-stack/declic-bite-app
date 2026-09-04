@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "declic-bite-app"
+const SITE_NAME = "Declic-Pizza-app"
 const SENDER_DOMAIN = "notify.declicpizza.fr"
 const ROOT_DOMAIN = "declicpizza.fr"
 const FROM_DOMAIN = "notify.declicpizza.fr" // Domain shown in From address (may be root or sender subdomain)

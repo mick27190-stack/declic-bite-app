@@ -4,7 +4,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 
-const SITE_NAME = 'declic-bite-app'
+const SITE_NAME = 'Declic-Pizza-app'
 const SENDER_DOMAIN = 'notify.declicpizza.fr'
 const FROM_DOMAIN = 'notify.declicpizza.fr'
 const TEMPLATE_NAME = 'account-deleted'
