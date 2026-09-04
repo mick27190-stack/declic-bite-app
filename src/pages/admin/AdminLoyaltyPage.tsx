@@ -557,7 +557,7 @@ export default function AdminLoyaltyPage() {
                               <TableCell>
                                 <div className="flex items-center gap-2">
                                   <Progress
-                                    className="h-2 w-24"
+                                    className="h-2 w-24 bg-muted"
                                     value={Math.min(
                                       100,
                                       (r.currentCount / r.program.required_count) * 100,
@@ -673,7 +673,7 @@ export default function AdminLoyaltyPage() {
                               </div>
                               <div className="flex items-center gap-2">
                                 <Progress
-                                  className="h-2 flex-1"
+                                  className="h-2 flex-1 bg-muted"
                                   value={Math.min(
                                     100,
                                     (r.currentCount / r.program.required_count) * 100,
