@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Gift, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, BadgeCheck, Ban, Gift, History, Loader2, Sparkles } from 'lucide-react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLoyaltyCard } from '@/hooks/useLoyalty';
+import { useLoyaltyCard, useLoyaltyHistory } from '@/hooks/useLoyalty';
 import { CATEGORY_LABELS, rewardLabel } from '@/lib/loyalty';
 
 export default function LoyaltyCardPage() {
@@ -13,6 +15,7 @@ export default function LoyaltyCardPage() {
   const { selectedRestaurant } = useCart();
   const site = selectedRestaurant?.id ?? null;
   const { entries, loading } = useLoyaltyCard(site);
+  const { history, loading: historyLoading } = useLoyaltyHistory(site ?? undefined);
 
   return (
     <div className="min-h-screen bg-background pb-24">
