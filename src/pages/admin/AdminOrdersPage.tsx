@@ -6,8 +6,9 @@ import { useOrders } from '@/hooks/useOrders';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send, FileText, Loader2, Check, X } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Phone, Printer, MessageCircle, Send, FileText, Loader2, Check, X, Gift } from 'lucide-react';
 import OrderTicket from '@/components/OrderTicket';
+import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 import StripeStatusPanel from '@/components/admin/StripeStatusPanel';
 
 import { generateInvoicePdf, buildInvoiceNumber } from '@/lib/invoicePdf';
@@ -803,6 +804,19 @@ export default function AdminOrdersPage() {
                           </span>
                         </div>
                       ))}
+                      {(() => {
+                        const loyalty = parseLoyaltyDiscount((order as any).loyalty_discount);
+                        if (!loyalty) return null;
+                        return (
+                          <div className="border-t pt-2 mt-2 flex justify-between text-sm text-green-600 font-medium">
+                            <span className="flex items-center gap-1.5">
+                              <Gift className="h-4 w-4" />
+                              Remise fidélité ({discountLineLabel(loyalty)})
+                            </span>
+                            <span>-{loyalty.total_discount.toFixed(2)}€</span>
+                          </div>
+                        );
+                      })()}
                       <div className="border-t pt-2 mt-2 flex justify-between font-bold">
                         <span>Total</span>
                         <span className="text-primary">{order.total_price.toFixed(2)}€</span>
@@ -869,6 +883,7 @@ export default function AdminOrdersPage() {
             items: orderToPrint.items,
             customer_name: orderToPrint.customer_name,
             customer_phone: orderToPrint.customer_phone,
+            loyalty_discount: (orderToPrint as any).loyalty_discount,
           }}
           company={resolveCompanyForRestaurant(companyData, orderToPrint.restaurant)}
           printOnly

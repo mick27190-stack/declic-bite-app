@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { fetchOrderLinePrices } from '@/lib/orderPricing';
 import type { Order } from '@/types/order';
 import type { CompanyInfo } from '@/hooks/useCompanyInfo';
+import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 // TVA restauration à emporter / livraison en France = 10%
@@ -230,13 +231,24 @@ export async function generateInvoicePdf(
   });
 
   y += 4;
-  const totalTTC = Number(order.total_price) || rows.reduce((s, r) => s + r.sub, 0);
+  const loyalty = parseLoyaltyDiscount((order as any).loyalty_discount);
+  const loyaltyAmount = loyalty?.total_discount ?? 0;
+  const linesTotal = rows.reduce((s, r) => s + r.sub, 0);
+  const totalTTC = Number(order.total_price) || Math.max(linesTotal - loyaltyAmount, 0);
   const totalHT = totalTTC / (1 + TVA_RATE);
   const tva = totalTTC - totalHT;
 
   // Totals block right-aligned
   const totalsX = pageWidth - marginX - 60;
   doc.setFontSize(10);
+  if (loyaltyAmount > 0) {
+    doc.text('Sous-total', totalsX, y);
+    doc.text(fmt(linesTotal), colX.total, y, { align: 'right' });
+    y += 5;
+    doc.text(`Fidélité (${discountLineLabel(loyalty)})`, totalsX, y);
+    doc.text(`-${fmt(loyaltyAmount)}`, colX.total, y, { align: 'right' });
+    y += 5;
+  }
   doc.text('Total HT', totalsX, y); doc.text(fmt(totalHT), colX.total, y, { align: 'right' }); y += 5;
   doc.text(`TVA (${(TVA_RATE * 100).toFixed(0)}%)`, totalsX, y);
   doc.text(fmt(tva), colX.total, y, { align: 'right' }); y += 5;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Minus, Plus, Trash2, ShoppingBag, CheckCircle, Loader2, AlertTriangle } from 'lucide-react';
+import { Minus, Plus, Trash2, ShoppingBag, CheckCircle, Loader2, AlertTriangle, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +18,7 @@ import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { validateDeliverySlot } from '@/lib/pickupSlots';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 import { StripePaymentDialog } from '@/components/StripePaymentDialog';
+import { useLoyaltyPreview } from '@/hooks/useLoyalty';
 
 
 
@@ -56,6 +57,9 @@ export function CartView() {
     setDeliveryAddress,
     clearCart
   } = useCart();
+
+  // Remise fidélité calculée côté serveur (aperçu non engageant).
+  const loyaltyDiscount = useLoyaltyPreview(selectedRestaurant?.id ?? null, items);
 
   // Shared, live-updating closing state (menu / cart / checkout stay in sync).
   const {
@@ -411,10 +415,21 @@ export function CartView() {
       {/* Fixed bottom checkout */}
       <div className="fixed bottom-16 left-0 right-0 p-4 bg-card/95 backdrop-blur-xl border-t border-border">
         <div className="max-w-md mx-auto">
+          {loyaltyDiscount.total > 0 && (
+            <div className="flex items-center justify-between mb-2 text-sm">
+              <span className="flex items-center gap-1.5 font-medium text-green-600">
+                <Gift className="w-4 h-4" />
+                Remise fidélité
+              </span>
+              <span className="font-semibold text-green-600">
+                -{loyaltyDiscount.total.toFixed(2)}€
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between mb-4">
             <span className="text-lg font-semibold text-foreground">Total</span>
             <span className="text-2xl font-display font-bold text-primary">
-              {totalPrice.toFixed(2)}€
+              {Math.max(totalPrice - loyaltyDiscount.total, 0).toFixed(2)}€
             </span>
           </div>
           {!isClosed && (
