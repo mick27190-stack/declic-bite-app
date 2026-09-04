@@ -23,7 +23,7 @@ export function PizzaCard({ pizza, onClick, unavailable = false }: PizzaCardProp
       onClick={unavailable ? undefined : onClick}
       disabled={unavailable}
       aria-disabled={unavailable}
-      className={`pizza-card w-full text-left group relative ${
+      className={`pizza-card w-full h-full flex flex-col text-left group relative ${
         unavailable ? 'cursor-not-allowed' : ''
       }`}
     >
@@ -61,9 +61,9 @@ export function PizzaCard({ pizza, onClick, unavailable = false }: PizzaCardProp
         )}
       </div>
 
-      <div className="p-4">
+      <div className="p-4 flex-1">
         <h3
-          className={`text-lg font-display font-bold transition-colors ${
+          className={`text-lg font-display font-bold leading-snug min-h-[2.75rem] line-clamp-2 transition-colors ${
             unavailable
               ? 'text-muted-foreground'
               : 'text-foreground group-hover:text-primary'
@@ -71,7 +71,7 @@ export function PizzaCard({ pizza, onClick, unavailable = false }: PizzaCardProp
         >
           {pizza.name}
         </h3>
-        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+        <p className="text-sm text-muted-foreground mt-1 leading-snug min-h-[2.25rem] line-clamp-2">
           {pizza.ingredients.join(', ')}
         </p>
       </div>
