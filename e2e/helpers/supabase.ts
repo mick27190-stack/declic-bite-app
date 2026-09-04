@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -32,7 +35,7 @@ export function getSupabaseAdmin(): SupabaseClient {
  * (LOVABLE_BROWSER_SUPABASE_SESSION_JSON) ou générée via
  * `lovable auth-session` (~/.cache/lovable-auth/session.json).
  */
-export function getSupabaseUserClient(): SupabaseClient {
+export async function getSupabaseUserClient(): Promise<SupabaseClient> {
   const url =
     process.env.E2E_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
   const anonKey =
