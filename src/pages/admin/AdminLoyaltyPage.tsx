@@ -57,8 +57,11 @@ export default function AdminLoyaltyPage() {
   const [loading, setLoading] = useState(true);
 
   const [customers, setCustomers] = useState<OverviewCustomer[]>([]);
+  const [suiviCustomers, setSuiviCustomers] = useState<OverviewCustomer[]>([]);
   const [search, setSearch] = useState('');
   const [siteFilter, setSiteFilter] = useState<string>('all');
+  const [suiviSearch, setSuiviSearch] = useState('');
+  const [suiviSiteFilter, setSuiviSiteFilter] = useState<string>('all');
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
 
   useEffect(() => {
@@ -103,7 +106,7 @@ export default function AdminLoyaltyPage() {
       .in('user_id', ids);
     const profileMap = new Map((profiles ?? []).map((p: any) => [p.user_id, p]));
 
-    const result: OverviewCustomer[] = ids.map((customerId) => {
+    const full: OverviewCustomer[] = ids.map((customerId) => {
       const profile: any = profileMap.get(customerId);
       const rows = list.map((program) => ({
         program,
@@ -113,7 +116,7 @@ export default function AdminLoyaltyPage() {
         pendingIds: rewardList
           .filter((r) => r.customer_id === customerId && r.program_id === program.id)
           .map((r) => r.id as string),
-      })).filter((r) => r.currentCount > 0 || r.pendingIds.length > 0);
+      }));
 
       return {
         customerId,
@@ -122,10 +125,18 @@ export default function AdminLoyaltyPage() {
         email: profile?.email ?? '',
         rows,
       };
-    }).filter((c) => c.rows.length > 0);
+    });
 
-    result.sort((a, b) => a.name.localeCompare(b.name));
-    setCustomers(result);
+    full.sort((a, b) => a.name.localeCompare(b.name));
+    setSuiviCustomers(full);
+    setCustomers(
+      full
+        .map((c) => ({
+          ...c,
+          rows: c.rows.filter((r) => r.currentCount > 0 || r.pendingIds.length > 0),
+        }))
+        .filter((c) => c.rows.length > 0),
+    );
   }, []);
 
   const refresh = useCallback(async () => {
@@ -212,6 +223,23 @@ export default function AdminLoyaltyPage() {
         c.email.toLowerCase().includes(q),
       );
   }, [customers, search, siteFilter]);
+
+  const filteredSuivi = useMemo(() => {
+    const q = suiviSearch.trim().toLowerCase();
+    return suiviCustomers
+      .map((c) => ({
+        ...c,
+        rows: c.rows.filter((r) => suiviSiteFilter === 'all' || r.program.site === suiviSiteFilter),
+      }))
+      .filter((c) => c.rows.length > 0)
+      .filter((c) =>
+        !q ||
+        c.name.toLowerCase().includes(q) ||
+        c.phone.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q),
+      );
+  }, [suiviCustomers, suiviSearch, suiviSiteFilter]);
+
 
   const exportRows: LoyaltyOverviewRow[] = useMemo(
     () =>
@@ -301,6 +329,7 @@ export default function AdminLoyaltyPage() {
           <TabsList className="mb-6">
             <TabsTrigger value="settings">Paramétrage</TabsTrigger>
             <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="suivi">Suivi</TabsTrigger>
           </TabsList>
 
           {/* ---------------- Paramétrage ---------------- */}
@@ -563,6 +592,120 @@ export default function AdminLoyaltyPage() {
                         )}
                       </TableBody>
                     </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ---------------- Suivi ---------------- */}
+          <TabsContent value="suivi">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Suivi des clients</CardTitle>
+                <CardDescription>
+                  Chaque client avec ses programmes, sa progression et ses récompenses en attente
+                </CardDescription>
+                <div className="flex flex-col sm:flex-row gap-3 pt-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      className="pl-9"
+                      placeholder="Rechercher un client…"
+                      value={suiviSearch}
+                      onChange={(e) => setSuiviSearch(e.target.value)}
+                    />
+                  </div>
+                  <Select value={suiviSiteFilter} onValueChange={setSuiviSiteFilter}>
+                    <SelectTrigger className="sm:w-44">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les sites</SelectItem>
+                      {LOYALTY_SITES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {SITE_LABELS[s] ?? s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="flex justify-center py-10">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : filteredSuivi.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">
+                    Aucun client à suivre pour le moment.
+                  </p>
+                ) : (
+                  <div className="space-y-4">
+                    {filteredSuivi.map((c) => (
+                      <div key={c.customerId} className="rounded-lg border p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                          <div>
+                            <p className="font-semibold">{c.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {[c.phone, c.email].filter(Boolean).join(' • ') || '—'}
+                            </p>
+                          </div>
+                          {c.rows.some((r) => r.pendingIds.length > 0) && (
+                            <Badge className="bg-green-600 hover:bg-green-600">
+                              {c.rows.reduce((n, r) => n + r.pendingIds.length, 0)} récompense(s) en attente
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {c.rows.map((r) => (
+                            <div key={r.program.id} className="rounded-md bg-muted/40 p-3">
+                              <div className="flex items-center justify-between gap-2 mb-2">
+                                <span className="text-sm font-medium">
+                                  {CATEGORY_LABELS[r.program.category]} —{' '}
+                                  {SITE_LABELS[r.program.site] ?? r.program.site}
+                                </span>
+                                {isProgramActive(r.program) ? (
+                                  <Badge variant="secondary" className="text-[10px]">Actif</Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-[10px]">Inactif</Badge>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Progress
+                                  className="h-2 flex-1"
+                                  value={Math.min(
+                                    100,
+                                    (r.currentCount / r.program.required_count) * 100,
+                                  )}
+                                />
+                                <span className="text-xs text-muted-foreground">
+                                  {r.currentCount}/{r.program.required_count}
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                {rewardLabel(r.program)}
+                              </p>
+                              {r.pendingIds.length > 0 && (
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge className="bg-green-600 hover:bg-green-600">
+                                    {r.pendingIds.length} en attente
+                                  </Badge>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => cancelReward(r.pendingIds[0])}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-1" />
+                                    Annuler
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
