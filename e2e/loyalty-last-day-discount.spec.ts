@@ -158,7 +158,7 @@ test.describe("Fidélité — remise acquise le dernier jour, utilisée à la co
 
     // Carte de fidélité : 9/10, aucune récompense disponible.
     await page.goto(`${base}/loyalty`);
-    await expect(page.getByText("Pizzas Senior")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Pizzas Senior" }).first()).toBeVisible();
     await expect(page.getByText("9/10")).toBeVisible();
     await expect(page.getByText(/Récompense disponible/i)).toHaveCount(0);
 
@@ -241,7 +241,7 @@ test.describe("Fidélité — remise acquise le dernier jour, utilisée à la co
     // La carte affiche toujours le programme terminé tant que la récompense
     // acquise n'a pas été utilisée.
     await page.goto(`${base}/loyalty`);
-    await expect(page.getByText("Pizzas Senior")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Pizzas Senior" }).first()).toBeVisible();
     await expect(
       page.getByText(/Récompense disponible sur ta prochaine pizza Senior/i),
     ).toBeVisible();

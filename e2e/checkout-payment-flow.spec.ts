@@ -116,7 +116,7 @@ test.describe("Flux de paiement client — à emporter", () => {
       body: { error: "Paiement indisponible (test E2E)" },
     });
 
-    await page.getByRole("button", { name: /commander maintenant/i }).click();
+    await page.getByRole("button", { name: /réglez pour finaliser votre commande/i }).click();
 
     // 1) Commande créée avec le bon type et le créneau demandé.
     await expect.poll(() => recorder.orderWrites.length).toBeGreaterThan(0);
@@ -154,7 +154,7 @@ test.describe("Flux de paiement client — livraison", () => {
       body: { error: "Paiement indisponible (test E2E)" },
     });
 
-    await page.getByRole("button", { name: /commander maintenant/i }).click();
+    await page.getByRole("button", { name: /réglez pour finaliser votre commande/i }).click();
 
     await expect.poll(() => recorder.orderWrites.length).toBeGreaterThan(0);
     const insert = recorder.orderWrites.find((w) => w.method === "POST");
