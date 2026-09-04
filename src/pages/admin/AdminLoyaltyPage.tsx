@@ -347,7 +347,7 @@ export default function AdminLoyaltyPage() {
                       .filter((p) => p.site === site)
                       .map((program) => {
                         const draft = drafts[program.id] ?? program;
-                        const active = isProgramActive(program);
+                        const active = isProgramActive(draft);
                         const update = (patch: Partial<LoyaltyProgram>) =>
                           setDrafts((prev) => ({
                             ...prev,
