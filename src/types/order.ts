@@ -26,6 +26,9 @@ export interface Order {
   delivery_time_proposed?: string | null;
   delivery_time_confirmed?: string | null;
 
+  // Remise fidélité calculée côté serveur (JSONB)
+  loyalty_discount?: unknown;
+
 
   // Historique des changements de statut (timeline client)
   status_history?: { status: OrderStatus; changed_at: string }[];

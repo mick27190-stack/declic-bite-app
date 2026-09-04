@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import { fetchOrderLinePrices } from '@/lib/orderPricing';
 import type { Order } from '@/types/order';
 import type { CompanyInfo } from '@/hooks/useCompanyInfo';
+import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 // TVA restauration à emporter / livraison en France = 10%
