@@ -24,8 +24,11 @@ import {
   MessageSquare,
   Send,
   ArrowDown,
-  AlertTriangle
+  AlertTriangle,
+  Gift,
+  ChevronRight
 } from 'lucide-react';
+import { useLoyaltyCard } from '@/hooks/useLoyalty';
 import { useChatClosure } from '@/hooks/useChatClosure';
 import { BottomNavigation } from '@/components/BottomNavigation';
 import CustomerNotificationBell from '@/components/CustomerNotificationBell';
@@ -513,6 +516,9 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, profile, addresses, signOut, updateProfile, addAddress, deleteAddress, setDefaultAddress, loading } = useAuth();
   const { selectedRestaurant } = useCart();
+  const loyaltySite = selectedRestaurant?.id ?? profile?.preferred_restaurant ?? null;
+  const { entries: loyaltyEntries, hasActiveProgram } = useLoyaltyCard(loyaltySite);
+  const loyaltySummary = loyaltyEntries[0];
   
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({
