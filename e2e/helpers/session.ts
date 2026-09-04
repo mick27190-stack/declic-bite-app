@@ -1,19 +1,38 @@
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import type { BrowserContext, Page } from "@playwright/test";
 
 /**
  * Restaure la session Supabase injectée par l'environnement Lovable
  * (LOVABLE_BROWSER_SUPABASE_*) dans le contexte du navigateur, afin que
  * les tests E2E s'exécutent en tant que l'utilisateur connecté dans le
- * preview.
+ * preview. Si les variables d'environnement sont absentes, on se rabat
+ * sur la session générée via `lovable auth-session --json`
+ * (~/.cache/lovable-auth/session.json).
  */
 export async function restoreSupabaseSession(
   context: BrowserContext,
   page: Page,
   baseUrl: string,
 ) {
-  const storageKey = process.env.LOVABLE_BROWSER_SUPABASE_STORAGE_KEY;
-  const sessionJson = process.env.LOVABLE_BROWSER_SUPABASE_SESSION_JSON;
-  const cookiesJson = process.env.LOVABLE_BROWSER_SUPABASE_COOKIES_JSON;
+  let storageKey = process.env.LOVABLE_BROWSER_SUPABASE_STORAGE_KEY;
+  let sessionJson = process.env.LOVABLE_BROWSER_SUPABASE_SESSION_JSON;
+  let cookiesJson = process.env.LOVABLE_BROWSER_SUPABASE_COOKIES_JSON;
+
+  if (!storageKey || !sessionJson) {
+    const sessionFile = join(homedir(), ".cache/lovable-auth/session.json");
+    if (existsSync(sessionFile)) {
+      const minted = JSON.parse(readFileSync(sessionFile, "utf-8")) as {
+        storage_key?: string;
+        session?: unknown;
+        cookies?: unknown;
+      };
+      storageKey = minted.storage_key;
+      sessionJson = minted.session ? JSON.stringify(minted.session) : undefined;
+      cookiesJson = minted.cookies ? JSON.stringify(minted.cookies) : undefined;
+    }
+  }
 
   if (!storageKey || !sessionJson) {
     throw new Error(
