@@ -35,7 +35,7 @@ test.describe("Profil client → Fiche admin — site préféré", () => {
     const { data: initial } = await supabase
       .from("profiles")
       .select("preferred_restaurant")
-      .eq("id", userId)
+      .eq("user_id", userId)
       .maybeSingle();
     const initialSite = (initial?.preferred_restaurant ?? "") as string;
     const targetSite = initialSite === "conches" ? "beaumont" : "conches";
@@ -65,7 +65,7 @@ test.describe("Profil client → Fiche admin — site préféré", () => {
           const { data } = await supabase
             .from("profiles")
             .select("preferred_restaurant")
-            .eq("id", userId)
+            .eq("user_id", userId)
             .maybeSingle();
           return data?.preferred_restaurant;
         },
