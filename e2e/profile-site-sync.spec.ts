@@ -27,11 +27,8 @@ test.describe("Profil client → Fiche admin — site préféré", () => {
     const base = baseURL ?? "http://localhost:8080";
     await restoreSupabaseSession(context, page, base);
 
-    // Récupérer l'ID utilisateur depuis la session injectée.
-    const session = JSON.parse(
-      process.env.LOVABLE_BROWSER_SUPABASE_SESSION_JSON!,
-    );
-    const userId: string = session.user.id;
+    // Récupérer l'ID utilisateur depuis la session injectée ou générée.
+    const userId = getSessionUserId();
     const supabase = getSupabaseAdmin();
 
     // État initial pour calculer la valeur cible (on bascule sur l'autre site).
