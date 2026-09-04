@@ -168,7 +168,7 @@ test.describe("Fidélité — remise acquise le dernier jour, utilisée à la co
     await expect(page.getByText("Remise fidélité")).toHaveCount(0);
     await expect(page.locator("span.text-2xl").last()).toHaveText("13.50€");
 
-    await page.getByRole("button", { name: /commander maintenant/i }).click();
+    await page.getByRole("button", { name: /(réglez pour finaliser|commander maintenant)/i }).click();
     await expect.poll(() => recorder.orderWrites.length).toBeGreaterThan(0);
     const firstInsert = recorder.orderWrites.find((w) => w.method === "POST");
     expect(Number(firstInsert?.body.total_price)).toBeCloseTo(13.5, 2);
