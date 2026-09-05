@@ -62,6 +62,17 @@ export async function generateInvoicePdf(
   const pageWidth = doc.internal.pageSize.getWidth();
   const marginX = 15;
 
+  const isCancelled =
+    order.status === 'cancelled' ||
+    (order as any).order_status === 'cancelled' ||
+    (order as any).capture_status === 'cancelled';
+  const isCaptured = (order as any).capture_status === 'captured';
+  // Facture uniquement si paiement encaissé et numéro séquentiel attribué.
+  const isInvoice = Boolean(meta.number) && isCaptured && !isCancelled;
+  const operator = OPERATOR_BY_SITE[siteOf(order.restaurant)];
+
+
+
   // ---------- HEADER ----------
   const headerTop = 15;
   const logoSize = 22;
