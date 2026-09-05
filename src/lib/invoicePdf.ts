@@ -111,28 +111,39 @@ export async function generateInvoicePdf(
     doc.text(lines, companyX, cy);
     cy += lines.length * 4;
   };
+  addLine(operator);
   if (company?.address) addLine(company.address);
   if (company?.phone) addLine(`Tél : ${company.phone}`);
   if (company?.email) addLine(`Email : ${company.email}`);
   if (company?.siret) addLine(`SIRET : ${company.siret}`);
 
-  // Invoice title (top-right)
+  // Document title (top-right)
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(22);
+  doc.setFontSize(isInvoice ? 22 : 15);
   doc.setTextColor(30, 30, 30);
-  doc.text('FACTURE', pageWidth - marginX, headerTop + 6, { align: 'right' });
+  const titleLines = isInvoice
+    ? ['FACTURE']
+    : (doc.splitTextToSize('Récapitulatif de commande', invoiceBlockWidth) as string[]);
+  doc.text(titleLines, pageWidth - marginX, headerTop + 6, { align: 'right' });
+  const titleBottom = headerTop + 6 + (titleLines.length - 1) * 6;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(60, 60, 60);
-  doc.text(`N° ${meta.number}`, pageWidth - marginX, headerTop + 13, { align: 'right' });
+  let ry = titleBottom + 7;
+  if (isInvoice) {
+    doc.text(`N° ${meta.number}`, pageWidth - marginX, ry, { align: 'right' });
+    ry += 5;
+  }
   doc.text(
     `Date : ${meta.date.toLocaleDateString('fr-FR')}`,
-    pageWidth - marginX, headerTop + 18, { align: 'right' },
+    pageWidth - marginX, ry, { align: 'right' },
   );
+  ry += 5;
   doc.text(
     `Commande : #${order.id.slice(0, 8)}`,
-    pageWidth - marginX, headerTop + 23, { align: 'right' },
+    pageWidth - marginX, ry, { align: 'right' },
   );
+
 
   // Separator below header (always past both logo & company text)
   let y = Math.max(cy, headerTop + logoSize, headerTop + 26) + 6;
