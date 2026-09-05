@@ -29,8 +29,16 @@ Deno.serve(async (req) => {
     const { data: userData, error: userErr } = await userClient.auth.getUser();
     if (userErr || !userData.user) return json({ error: 'Non autorisé' }, 401);
 
-    const { data: isAdmin } = await userClient.rpc('is_any_admin', { _user_id: userData.user.id });
-    if (!isAdmin) return json({ error: 'Accès refusé' }, 403);
+    // Envoi de SMS promotionnels réservé au Super Admin et aux Super Admins secondaires.
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+    const { data: roles } = await admin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userData.user.id);
+    const isSuperAdmin = (roles || []).some(
+      (r) => r.role === 'super_admin' || r.role === 'secondary_super_admin',
+    );
+    if (!isSuperAdmin) return json({ error: 'Accès refusé' }, 403);
 
     const { message, sites } = await req.json();
     if (typeof message !== 'string' || message.trim().length === 0 || message.length > 1600) {
@@ -44,7 +52,6 @@ Deno.serve(async (req) => {
     // Gather recipients from the customer file, excluding anyone whose most
     // recent SMS marketing consent is a refusal (opt-out takes effect at once,
     // and re-enabling the toggle puts the customer back in the list).
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const { data: rows, error: rowsErr } = await admin.rpc('sms_marketing_recipients', {
       _sites: siteList.length > 0 ? siteList : null,
     });
