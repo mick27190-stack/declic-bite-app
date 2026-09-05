@@ -1,6 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { captureIfNeeded, resolveSite } from '../_shared/stripe.ts';
 import { requireAdminForSite, serviceClient } from '../_shared/orderAccess.ts';
+import { assignInvoiceNumber } from '../_shared/invoiceNumber.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -14,7 +15,7 @@ Deno.serve(async (req) => {
     const { data: order, error } = await sb
       .from('orders')
       .select(
-        'id, restaurant, site, order_type, stripe_payment_intent_id, capture_status, order_status, delivery_response, delivery_time_proposed, delivery_time_confirmed',
+        'id, restaurant, site, order_type, stripe_payment_intent_id, capture_status, order_status, delivery_response, delivery_time_proposed, delivery_time_confirmed, invoice_number',
       )
       .eq('id', orderId)
       .single();
@@ -54,6 +55,10 @@ Deno.serve(async (req) => {
       capture_status: 'captured',
       status: 'confirmed',
     };
+    // Numéro de facture séquentiel : uniquement après capture réussie.
+    const invoiceNumber = await assignInvoiceNumber(sb, site, order.invoice_number);
+    if (invoiceNumber) update.invoice_number = invoiceNumber;
+
     if (order.order_type === 'livraison') {
       if (!order.delivery_response && order.delivery_time_proposed) update.delivery_response = 'accepted';
       if (!order.delivery_time_confirmed) {

@@ -1,6 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { cancelPaymentIntent, captureIfNeeded, resolveSite } from '../_shared/stripe.ts';
 import { requireUser, serviceClient } from '../_shared/orderAccess.ts';
+import { assignInvoiceNumber } from '../_shared/invoiceNumber.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -16,7 +17,7 @@ Deno.serve(async (req) => {
     const sb = serviceClient();
     const { data: order, error } = await sb
       .from('orders')
-      .select('id, user_id, restaurant, site, stripe_payment_intent_id, capture_status, delivery_time_proposed')
+      .select('id, user_id, restaurant, site, stripe_payment_intent_id, capture_status, delivery_time_proposed, invoice_number')
       .eq('id', orderId)
       .single();
     if (error || !order) throw new Error('Commande introuvable');
@@ -44,7 +45,9 @@ Deno.serve(async (req) => {
       if (order.stripe_payment_intent_id && order.capture_status !== 'captured') {
         await captureIfNeeded(site, order.stripe_payment_intent_id);
       }
+      const invoiceNumber = await assignInvoiceNumber(sb, site, order.invoice_number);
       const { error: updErr } = await sb.from('orders').update({
+        ...(invoiceNumber ? { invoice_number: invoiceNumber } : {}),
         delivery_response: 'accepted',
         delivery_time_confirmed: order.delivery_time_proposed ?? new Date().toISOString(),
         order_status: 'confirmed',

@@ -26,6 +26,9 @@ export interface Order {
   delivery_time_proposed?: string | null;
   delivery_time_confirmed?: string | null;
 
+  // Numéro de facture séquentiel attribué à la capture du paiement
+  invoice_number?: string | null;
+
   // Remise fidélité calculée côté serveur (JSONB)
   loyalty_discount?: unknown;
 
