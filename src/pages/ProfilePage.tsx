@@ -202,6 +202,21 @@ function CurrentOrders() {
 
                 <OrderTimeline order={order} />
 
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full mt-3"
+                  disabled={invoiceRequested.has(order.id) || invoiceSendingId === order.id}
+                  onClick={() => requestInvoice(order.id)}
+                >
+                  {invoiceSendingId === order.id ? (
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Mail className="w-4 h-4 mr-1" />
+                  )}
+                  {invoiceRequested.has(order.id) ? 'Demande envoyée' : 'Demander une facture'}
+                </Button>
+
                 {order.order_type === 'livraison' && order.pickup_time && !order.delivery_estimate && (
                   <p className="mt-2 text-sm flex items-center gap-1.5">
                     <Clock className="w-4 h-4 text-primary" />
