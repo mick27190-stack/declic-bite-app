@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -19,11 +19,19 @@ import {
   Building2,
   FileText,
   Gift,
-  ShieldCheck
+  ShieldCheck,
+  GripVertical,
+  ChevronUp,
+  ChevronDown,
+  Check,
+  ArrowUpDown
 
 
 } from 'lucide-react';
 import NotificationBell from '@/components/admin/NotificationBell';
+
+const ORDER_STORAGE_KEY = 'admin_dashboard_card_order';
+
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
