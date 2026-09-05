@@ -52,7 +52,6 @@ Deno.serve(async (req) => {
     // Gather recipients from the customer file, excluding anyone whose most
     // recent SMS marketing consent is a refusal (opt-out takes effect at once,
     // and re-enabling the toggle puts the customer back in the list).
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
     const { data: rows, error: rowsErr } = await admin.rpc('sms_marketing_recipients', {
       _sites: siteList.length > 0 ? siteList : null,
     });
