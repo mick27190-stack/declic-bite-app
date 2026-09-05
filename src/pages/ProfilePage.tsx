@@ -45,6 +45,9 @@ import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
 import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { statusLabels, statusColors } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
+import { generateAndSendInvoice } from '@/lib/sendInvoice';
+import { useCompanyInfo } from '@/hooks/useCompanyInfo';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -101,6 +104,8 @@ function CurrentOrders() {
   // Demandes de facture déjà envoyées par le client.
   const [invoiceRequested, setInvoiceRequested] = useState<Set<string>>(new Set());
   const [invoiceSendingId, setInvoiceSendingId] = useState<string | null>(null);
+  const { data: companyData } = useCompanyInfo();
+
 
   useEffect(() => {
     let cancelled = false;
@@ -115,17 +120,25 @@ function CurrentOrders() {
     };
   }, []);
 
-  const requestInvoice = async (orderId: string) => {
-    setInvoiceSendingId(orderId);
-    const { error } = await supabase.rpc('request_invoice', { _order_id: orderId });
-    setInvoiceSendingId(null);
-    if (error) {
-      toast.error("Impossible d'envoyer la demande de facture");
-      return;
+  const requestInvoice = async (order: (typeof activeOrders)[number]) => {
+    setInvoiceSendingId(order.id);
+    try {
+      // 1) Prévient l'équipe (admin de site 18h-22h, sinon super admins secondaires)
+      const { error } = await supabase.rpc('request_invoice', { _order_id: order.id });
+      if (error) throw error;
+
+      // 2) Génère la facture PDF, l'envoie par e-mail et l'archive côté admin
+      const { email } = await generateAndSendInvoice(order as any, companyData);
+      setInvoiceRequested((prev) => new Set(prev).add(order.id));
+      toast.success(`Facture envoyée à ${email}`);
+    } catch (e: any) {
+      console.error('Invoice request error:', e);
+      toast.error(e?.message || "Impossible de générer la facture");
+    } finally {
+      setInvoiceSendingId(null);
     }
-    setInvoiceRequested((prev) => new Set(prev).add(orderId));
-    toast.success('Demande de facture envoyée au restaurant');
   };
+
 
   return (
     <div className="glass-card p-4 rounded-xl">
@@ -207,14 +220,15 @@ function CurrentOrders() {
                   variant="outline"
                   className="w-full mt-3"
                   disabled={invoiceRequested.has(order.id) || invoiceSendingId === order.id}
-                  onClick={() => requestInvoice(order.id)}
+                  onClick={() => requestInvoice(order)}
                 >
                   {invoiceSendingId === order.id ? (
                     <Loader2 className="w-4 h-4 mr-1 animate-spin" />
                   ) : (
                     <Mail className="w-4 h-4 mr-1" />
                   )}
-                  {invoiceRequested.has(order.id) ? 'Demande envoyée' : 'Demander une facture'}
+                  {invoiceRequested.has(order.id) ? 'Facture envoyée' : 'Demander une facture'}
+
                 </Button>
 
                 {order.order_type === 'livraison' && order.pickup_time && !order.delivery_estimate && (
