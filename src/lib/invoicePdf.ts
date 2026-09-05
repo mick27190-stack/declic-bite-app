@@ -317,6 +317,7 @@ export async function generateInvoicePdf(
   // Footer
   const footer = [
     company?.name || 'Déclic Pizza',
+    operator,
     company?.address,
     company?.siret ? `SIRET ${company.siret}` : null,
     company?.phone ? `Tél ${company.phone}` : null,
@@ -327,5 +328,5 @@ export async function generateInvoicePdf(
   doc.text(footer, pageWidth / 2, 288, { align: 'center', maxWidth: pageWidth - 20 });
 
   const blob = doc.output('blob');
-  return { blob, totalTTC, totalHT, tva };
+  return { blob, totalTTC };
 }
