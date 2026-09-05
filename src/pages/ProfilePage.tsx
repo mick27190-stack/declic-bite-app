@@ -98,6 +98,34 @@ function CurrentOrders() {
   );
 
 
+  // Demandes de facture déjà envoyées par le client.
+  const [invoiceRequested, setInvoiceRequested] = useState<Set<string>>(new Set());
+  const [invoiceSendingId, setInvoiceSendingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.from('invoice_requests').select('order_id');
+      if (!cancelled && data) {
+        setInvoiceRequested(new Set(data.map((r: { order_id: string }) => r.order_id)));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const requestInvoice = async (orderId: string) => {
+    setInvoiceSendingId(orderId);
+    const { error } = await supabase.rpc('request_invoice', { _order_id: orderId });
+    setInvoiceSendingId(null);
+    if (error) {
+      toast.error("Impossible d'envoyer la demande de facture");
+      return;
+    }
+    setInvoiceRequested((prev) => new Set(prev).add(orderId));
+    toast.success('Demande de facture envoyée au restaurant');
+  };
 
   return (
     <div className="glass-card p-4 rounded-xl">
