@@ -471,6 +471,38 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_requests: {
+        Row: {
+          id: string
+          order_id: string
+          requested_at: string
+          site: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          requested_at?: string
+          site?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          order_id?: string
+          requested_at?: string
+          site?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           created_at: string
@@ -1279,6 +1311,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      request_invoice: { Args: { _order_id: string }; Returns: Json }
       resolve_customer_address: { Args: { _user_id: string }; Returns: string }
       restaurant_to_site: { Args: { _restaurant: string }; Returns: string }
       should_receive_site_notification: {
