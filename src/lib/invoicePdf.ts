@@ -146,7 +146,7 @@ export async function generateInvoicePdf(
 
 
   // Separator below header (always past both logo & company text)
-  let y = Math.max(cy, headerTop + logoSize, headerTop + 26) + 6;
+  let y = Math.max(cy, headerTop + logoSize, ry + 4) + 6;
   doc.setDrawColor(230, 230, 230);
   doc.line(marginX, y, pageWidth - marginX, y);
   y += 8;
