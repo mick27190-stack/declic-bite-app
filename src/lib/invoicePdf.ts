@@ -269,8 +269,6 @@ export async function generateInvoicePdf(
   const loyaltyAmount = loyalty?.total_discount ?? 0;
   const linesTotal = rows.reduce((s, r) => s + r.sub, 0);
   const totalTTC = Number(order.total_price) || Math.max(linesTotal - loyaltyAmount, 0);
-  const totalHT = totalTTC / (1 + TVA_RATE);
-  const tva = totalTTC - totalHT;
 
   // Totals block right-aligned
   const totalsX = pageWidth - marginX - 60;
@@ -283,37 +281,38 @@ export async function generateInvoicePdf(
     doc.text(`-${fmt(loyaltyAmount)}`, colX.total, y, { align: 'right' });
     y += 5;
   }
-  doc.text('Total HT', totalsX, y); doc.text(fmt(totalHT), colX.total, y, { align: 'right' }); y += 5;
-  doc.text(`TVA (${(TVA_RATE * 100).toFixed(0)}%)`, totalsX, y);
-  doc.text(fmt(tva), colX.total, y, { align: 'right' }); y += 5;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setDrawColor(249, 115, 22);
   doc.line(totalsX, y, colX.total, y);
   y += 5;
-  doc.text('TOTAL TTC', totalsX, y);
+  doc.text('TOTAL', totalsX, y);
   doc.text(fmt(totalTTC), colX.total, y, { align: 'right' });
+  y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  doc.text('TVA non applicable, art. 293 B du CGI', colX.total, y, { align: 'right' });
   y += 10;
 
   // Payment / legal notes
+  doc.setTextColor(20, 20, 20);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  const isCancelled =
-    order.status === 'cancelled' ||
-    (order as any).order_status === 'cancelled' ||
-    (order as any).capture_status === 'cancelled';
-  const paymentLabel = isCancelled ? 'Règlement non encaissé' : 'Réglé à la commande';
-  doc.text(paymentLabel, marginX, y); y += 5;
-  doc.text(
-    'Pas d’escompte pour paiement anticipé. Pénalités de retard : 3 fois le taux d’intérêt légal.',
-    marginX, y,
-  );
-  y += 4;
-  doc.text(
-    'Indemnité forfaitaire pour frais de recouvrement : 40 € (art. L441-10 du Code de commerce).',
-    marginX, y,
-  );
-  y += 8;
+  if (isCancelled) {
+    doc.text('Commande annulée', marginX, y); y += 5;
+    doc.text('Règlement non encaissé', marginX, y); y += 5;
+  } else if (isInvoice) {
+    doc.text('Facture réglée intégralement en ligne à la commande.', marginX, y); y += 5;
+  } else {
+    doc.text(
+      'Facture disponible une fois votre commande confirmée par l’établissement.',
+      marginX, y,
+    );
+    y += 5;
+  }
+  y += 3;
+
 
   // Footer
   const footer = [
