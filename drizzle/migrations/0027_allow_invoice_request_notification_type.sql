@@ -1,0 +1,2 @@
+ALTER TABLE public.notifications DROP CONSTRAINT IF EXISTS notifications_type_check;
+ALTER TABLE public.notifications ADD CONSTRAINT notifications_type_check CHECK (type = ANY (ARRAY['new_order','new_message','payment_canceled','order_update','delivery_estimate','delivery_response','loyalty_reward','invoice_request']));
