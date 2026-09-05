@@ -25,7 +25,8 @@ export interface InvoiceRecipient {
 }
 
 export interface InvoiceMeta {
-  number: string;
+  /** Numéro séquentiel de facture, null pour un simple récapitulatif. */
+  number: string | null;
   date: Date;
 }
 
@@ -40,12 +41,13 @@ function orderTypeLabel(t: string) {
   return t;
 }
 
+/** Référence interne (non séquentielle) utilisée pour les récapitulatifs. */
 export function buildInvoiceNumber(order: Pick<Order, 'id' | 'created_at'>): string {
   const d = new Date(order.created_at);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
-  return `F-${y}${m}${day}-${order.id.slice(0, 6).toUpperCase()}`;
+  return `R-${y}${m}${day}-${order.id.slice(0, 6).toUpperCase()}`;
 }
 
 export async function generateInvoicePdf(
@@ -54,7 +56,8 @@ export async function generateInvoicePdf(
   recipient: InvoiceRecipient,
   meta: InvoiceMeta,
   logoDataUrl?: string | null,
-): Promise<{ blob: Blob; totalTTC: number; totalHT: number; tva: number }> {
+): Promise<{ blob: Blob; totalTTC: number }> {
+
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const marginX = 15;
