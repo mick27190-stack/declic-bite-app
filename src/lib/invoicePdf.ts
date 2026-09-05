@@ -5,8 +5,17 @@ import type { CompanyInfo } from '@/hooks/useCompanyInfo';
 import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
-// TVA restauration à emporter / livraison en France = 10%
-const TVA_RATE = 0.10;
+
+// Exploitants (entreprises individuelles) par établissement.
+const OPERATOR_BY_SITE: Record<string, string> = {
+  conches: 'Thierry DUPONT, EI',
+  beaumont: 'Flora DUPONT, EI',
+};
+
+function siteOf(restaurant?: string | null): 'conches' | 'beaumont' {
+  return (restaurant ?? '').toLowerCase().includes('beaumont') ? 'beaumont' : 'conches';
+}
+
 
 export interface InvoiceRecipient {
   name?: string | null;
