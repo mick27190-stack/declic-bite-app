@@ -190,6 +190,36 @@ export default function AdminDashboard() {
     }
   ];
 
+  const visibleCards = adminCards.filter((card) => card.show);
+  const sortedCards = [...visibleCards].sort((a, b) => {
+    const ia = order.indexOf(a.href);
+    const ib = order.indexOf(b.href);
+    if (ia === -1 && ib === -1) return 0;
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+
+  const move = (href: string, direction: -1 | 1) => {
+    const hrefs = sortedCards.map((c) => c.href);
+    const from = hrefs.indexOf(href);
+    const to = from + direction;
+    if (to < 0 || to >= hrefs.length) return;
+    hrefs.splice(to, 0, hrefs.splice(from, 1)[0]);
+    persist(hrefs);
+  };
+
+  const dropOn = (targetHref: string) => {
+    if (!dragged || dragged === targetHref) return;
+    const hrefs = sortedCards.map((c) => c.href);
+    const from = hrefs.indexOf(dragged);
+    const to = hrefs.indexOf(targetHref);
+    if (from === -1 || to === -1) return;
+    hrefs.splice(to, 0, hrefs.splice(from, 1)[0]);
+    persist(hrefs);
+    setDragged(null);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
@@ -208,19 +238,91 @@ export default function AdminDashboard() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <p className="text-sm text-muted-foreground">
+            {reorderMode
+              ? 'Glissez les onglets ou utilisez les flèches pour changer l’ordre.'
+              : ''}
+          </p>
+          <div className="flex items-center gap-2">
+            {reorderMode && order.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => persist([])}>
+                Réinitialiser
+              </Button>
+            )}
+            <Button
+              variant={reorderMode ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setReorderMode((v) => !v)}
+            >
+              {reorderMode ? (
+                <>
+                  <Check className="h-4 w-4 mr-2" /> Terminé
+                </>
+              ) : (
+                <>
+                  <ArrowUpDown className="h-4 w-4 mr-2" /> Réorganiser
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {adminCards.filter(card => card.show).map((card) => (
-            <Card 
-              key={card.href} 
-              className="cursor-pointer hover:shadow-lg transition-shadow"
-              onClick={() => navigate(card.href)}
+          {sortedCards.map((card, index) => (
+            <Card
+              key={card.href}
+              draggable={reorderMode}
+              onDragStart={() => setDragged(card.href)}
+              onDragOver={(e) => reorderMode && e.preventDefault()}
+              onDrop={() => dropOn(card.href)}
+              onDragEnd={() => setDragged(null)}
+              className={`transition-shadow ${
+                reorderMode
+                  ? `cursor-grab active:cursor-grabbing border-primary/40 ${dragged === card.href ? 'opacity-50' : ''}`
+                  : 'cursor-pointer hover:shadow-lg'
+              }`}
+              onClick={() => !reorderMode && navigate(card.href)}
             >
               <CardHeader>
                 <div className="flex items-center gap-3">
+                  {reorderMode && (
+                    <GripVertical className="h-5 w-5 text-muted-foreground shrink-0" />
+                  )}
                   <div className="p-2 rounded-lg bg-primary/10">
                     <card.icon className="h-6 w-6 text-primary" />
                   </div>
                   <CardTitle className="text-lg">{card.title}</CardTitle>
+                  {reorderMode && (
+                    <div className="ml-auto flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={index === 0}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          move(card.href, -1);
+                        }}
+                        aria-label="Monter"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-8 w-8"
+                        disabled={index === sortedCards.length - 1}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          move(card.href, 1);
+                        }}
+                        aria-label="Descendre"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -230,6 +332,7 @@ export default function AdminDashboard() {
           ))}
         </div>
       </main>
+
     </div>
   );
 }
