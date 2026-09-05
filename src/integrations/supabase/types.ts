@@ -471,6 +471,24 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_counters: {
+        Row: {
+          establishment_id: string
+          last_number: number
+          year: number
+        }
+        Insert: {
+          establishment_id: string
+          last_number?: number
+          year: number
+        }
+        Update: {
+          establishment_id?: string
+          last_number?: number
+          year?: number
+        }
+        Relationships: []
+      }
       invoice_requests: {
         Row: {
           id: string
@@ -877,6 +895,7 @@ export type Database = {
           delivery_time_proposed: string | null
           delivery_time_requested: string | null
           id: string
+          invoice_number: string | null
           items: Json
           loyalty_discount: Json | null
           notes: string | null
@@ -901,6 +920,7 @@ export type Database = {
           delivery_time_proposed?: string | null
           delivery_time_requested?: string | null
           id?: string
+          invoice_number?: string | null
           items: Json
           loyalty_discount?: Json | null
           notes?: string | null
@@ -925,6 +945,7 @@ export type Database = {
           delivery_time_proposed?: string | null
           delivery_time_requested?: string | null
           id?: string
+          invoice_number?: string | null
           items?: Json
           loyalty_discount?: Json | null
           notes?: string | null
@@ -1294,6 +1315,10 @@ export type Database = {
           payload: Json
           source_queue: string
         }
+        Returns: number
+      }
+      next_invoice_number: {
+        Args: { p_establishment_id: string; p_year: number }
         Returns: number
       }
       normalize_phone: { Args: { _phone: string }; Returns: string }

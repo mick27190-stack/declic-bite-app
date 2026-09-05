@@ -5,8 +5,17 @@ import type { CompanyInfo } from '@/hooks/useCompanyInfo';
 import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
-// TVA restauration à emporter / livraison en France = 10%
-const TVA_RATE = 0.10;
+
+// Exploitants (entreprises individuelles) par établissement.
+const OPERATOR_BY_SITE: Record<string, string> = {
+  conches: 'Thierry DUPONT, EI',
+  beaumont: 'Flora DUPONT, EI',
+};
+
+function siteOf(restaurant?: string | null): 'conches' | 'beaumont' {
+  return (restaurant ?? '').toLowerCase().includes('beaumont') ? 'beaumont' : 'conches';
+}
+
 
 export interface InvoiceRecipient {
   name?: string | null;
@@ -16,7 +25,8 @@ export interface InvoiceRecipient {
 }
 
 export interface InvoiceMeta {
-  number: string;
+  /** Numéro séquentiel de facture, null pour un simple récapitulatif. */
+  number: string | null;
   date: Date;
 }
 
@@ -31,12 +41,13 @@ function orderTypeLabel(t: string) {
   return t;
 }
 
+/** Référence interne (non séquentielle) utilisée pour les récapitulatifs. */
 export function buildInvoiceNumber(order: Pick<Order, 'id' | 'created_at'>): string {
   const d = new Date(order.created_at);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
-  return `F-${y}${m}${day}-${order.id.slice(0, 6).toUpperCase()}`;
+  return `R-${y}${m}${day}-${order.id.slice(0, 6).toUpperCase()}`;
 }
 
 export async function generateInvoicePdf(
@@ -45,10 +56,22 @@ export async function generateInvoicePdf(
   recipient: InvoiceRecipient,
   meta: InvoiceMeta,
   logoDataUrl?: string | null,
-): Promise<{ blob: Blob; totalTTC: number; totalHT: number; tva: number }> {
+): Promise<{ blob: Blob; totalTTC: number }> {
+
   const doc = new jsPDF({ unit: 'mm', format: 'a4' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const marginX = 15;
+
+  const isCancelled =
+    order.status === 'cancelled' ||
+    (order as any).order_status === 'cancelled' ||
+    (order as any).capture_status === 'cancelled';
+  const isCaptured = (order as any).capture_status === 'captured';
+  // Facture uniquement si paiement encaissé et numéro séquentiel attribué.
+  const isInvoice = Boolean(meta.number) && isCaptured && !isCancelled;
+  const operator = OPERATOR_BY_SITE[siteOf(order.restaurant)];
+
+
 
   // ---------- HEADER ----------
   const headerTop = 15;
@@ -88,31 +111,42 @@ export async function generateInvoicePdf(
     doc.text(lines, companyX, cy);
     cy += lines.length * 4;
   };
+  addLine(operator);
   if (company?.address) addLine(company.address);
   if (company?.phone) addLine(`Tél : ${company.phone}`);
   if (company?.email) addLine(`Email : ${company.email}`);
   if (company?.siret) addLine(`SIRET : ${company.siret}`);
 
-  // Invoice title (top-right)
+  // Document title (top-right)
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(22);
+  doc.setFontSize(isInvoice ? 22 : 15);
   doc.setTextColor(30, 30, 30);
-  doc.text('FACTURE', pageWidth - marginX, headerTop + 6, { align: 'right' });
+  const titleLines = isInvoice
+    ? ['FACTURE']
+    : (doc.splitTextToSize('Récapitulatif de commande', invoiceBlockWidth) as string[]);
+  doc.text(titleLines, pageWidth - marginX, headerTop + 6, { align: 'right' });
+  const titleBottom = headerTop + 6 + (titleLines.length - 1) * 6;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(60, 60, 60);
-  doc.text(`N° ${meta.number}`, pageWidth - marginX, headerTop + 13, { align: 'right' });
+  let ry = titleBottom + 7;
+  if (isInvoice) {
+    doc.text(`N° ${meta.number}`, pageWidth - marginX, ry, { align: 'right' });
+    ry += 5;
+  }
   doc.text(
     `Date : ${meta.date.toLocaleDateString('fr-FR')}`,
-    pageWidth - marginX, headerTop + 18, { align: 'right' },
+    pageWidth - marginX, ry, { align: 'right' },
   );
+  ry += 5;
   doc.text(
     `Commande : #${order.id.slice(0, 8)}`,
-    pageWidth - marginX, headerTop + 23, { align: 'right' },
+    pageWidth - marginX, ry, { align: 'right' },
   );
 
+
   // Separator below header (always past both logo & company text)
-  let y = Math.max(cy, headerTop + logoSize, headerTop + 26) + 6;
+  let y = Math.max(cy, headerTop + logoSize, ry + 4) + 6;
   doc.setDrawColor(230, 230, 230);
   doc.line(marginX, y, pageWidth - marginX, y);
   y += 8;
@@ -235,8 +269,6 @@ export async function generateInvoicePdf(
   const loyaltyAmount = loyalty?.total_discount ?? 0;
   const linesTotal = rows.reduce((s, r) => s + r.sub, 0);
   const totalTTC = Number(order.total_price) || Math.max(linesTotal - loyaltyAmount, 0);
-  const totalHT = totalTTC / (1 + TVA_RATE);
-  const tva = totalTTC - totalHT;
 
   // Totals block right-aligned
   const totalsX = pageWidth - marginX - 60;
@@ -249,41 +281,43 @@ export async function generateInvoicePdf(
     doc.text(`-${fmt(loyaltyAmount)}`, colX.total, y, { align: 'right' });
     y += 5;
   }
-  doc.text('Total HT', totalsX, y); doc.text(fmt(totalHT), colX.total, y, { align: 'right' }); y += 5;
-  doc.text(`TVA (${(TVA_RATE * 100).toFixed(0)}%)`, totalsX, y);
-  doc.text(fmt(tva), colX.total, y, { align: 'right' }); y += 5;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setDrawColor(249, 115, 22);
   doc.line(totalsX, y, colX.total, y);
   y += 5;
-  doc.text('TOTAL TTC', totalsX, y);
+  doc.text('TOTAL', totalsX, y);
   doc.text(fmt(totalTTC), colX.total, y, { align: 'right' });
+  y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  doc.text('TVA non applicable, art. 293 B du CGI', colX.total, y, { align: 'right' });
   y += 10;
 
   // Payment / legal notes
+  doc.setTextColor(20, 20, 20);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  const isCancelled =
-    order.status === 'cancelled' ||
-    (order as any).order_status === 'cancelled' ||
-    (order as any).capture_status === 'cancelled';
-  const paymentLabel = isCancelled ? 'Règlement non encaissé' : 'Réglé à la commande';
-  doc.text(paymentLabel, marginX, y); y += 5;
-  doc.text(
-    'Pas d’escompte pour paiement anticipé. Pénalités de retard : 3 fois le taux d’intérêt légal.',
-    marginX, y,
-  );
-  y += 4;
-  doc.text(
-    'Indemnité forfaitaire pour frais de recouvrement : 40 € (art. L441-10 du Code de commerce).',
-    marginX, y,
-  );
-  y += 8;
+  if (isCancelled) {
+    doc.text('Commande annulée', marginX, y); y += 5;
+    doc.text('Règlement non encaissé', marginX, y); y += 5;
+  } else if (isInvoice) {
+    doc.text('Facture réglée intégralement en ligne à la commande.', marginX, y); y += 5;
+  } else {
+    doc.text(
+      'Facture disponible une fois votre commande confirmée par l’établissement.',
+      marginX, y,
+    );
+    y += 5;
+  }
+  y += 3;
+
 
   // Footer
   const footer = [
     company?.name || 'Déclic Pizza',
+    operator,
     company?.address,
     company?.siret ? `SIRET ${company.siret}` : null,
     company?.phone ? `Tél ${company.phone}` : null,
@@ -294,5 +328,5 @@ export async function generateInvoicePdf(
   doc.text(footer, pageWidth / 2, 288, { align: 'center', maxWidth: pageWidth - 20 });
 
   const blob = doc.output('blob');
-  return { blob, totalTTC, totalHT, tva };
+  return { blob, totalTTC };
 }

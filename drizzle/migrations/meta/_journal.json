@@ -204,6 +204,13 @@
       "when": 1788644492739,
       "tag": "0028_customer_invoice_generation",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1788648892462,
+      "tag": "0029_invoice_counters",
+      "breakpoints": true
     }
   ]
 }
