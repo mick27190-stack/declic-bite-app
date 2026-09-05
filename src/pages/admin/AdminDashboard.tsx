@@ -47,6 +47,26 @@ export default function AdminDashboard() {
     loading: adminLoading 
   } = useAdmin();
 
+  const [reorderMode, setReorderMode] = useState(false);
+  const [order, setOrder] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(ORDER_STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [dragged, setDragged] = useState<string | null>(null);
+
+  const persist = (next: string[]) => {
+    setOrder(next);
+    try {
+      localStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  };
+
   useEffect(() => {
     if (!authLoading && !adminLoading) {
       if (!user) {
