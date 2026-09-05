@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, FileText, Loader2, Search, Send, Download, RefreshCw, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, FileDown, Loader2, Search, Send, Download, RefreshCw, Trash2 } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +53,114 @@ const normalize = (s: string) =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
 
+type PeriodFilter = 'all' | 'month' | 'quarter' | 'year';
+
+const periodLabels: Record<PeriodFilter, string> = {
+  all: 'Toutes les périodes',
+  month: 'Mois en cours',
+  quarter: 'Trimestre en cours',
+  year: 'Année en cours',
+};
+
+const siteLabel = (site: string) =>
+  site === 'all' ? 'Tous les sites' : site === 'conches' ? 'Conches' : 'Beaumont';
+
+function matchesPeriod(sentAt: string, period: PeriodFilter): boolean {
+  if (period === 'all') return true;
+  const d = new Date(sentAt);
+  const now = new Date();
+  if (period === 'month') {
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }
+  if (period === 'quarter') {
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      Math.floor(d.getMonth() / 3) === Math.floor(now.getMonth() / 3)
+    );
+  }
+  return d.getFullYear() === now.getFullYear();
+}
+
+function escapeCsv(value: string | number | undefined) {
+  const str = String(value ?? '');
+  if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+function exportInvoicesCsv(rows: InvoiceRow[], siteFilter: string, periodFilter: PeriodFilter) {
+  const filterLine = `Filtres;${siteLabel(siteFilter)};${periodLabels[periodFilter]}\n`;
+  const header =
+    'N° facture;Date;Site;Client;Téléphone;Email;Total TTC (€);Renvois;Dernier renvoi\n';
+  const body = rows
+    .map((inv) =>
+      [
+        escapeCsv(inv.invoice_number),
+        new Date(inv.sent_at).toLocaleString('fr-FR'),
+        siteLabel(inv.site),
+        escapeCsv(inv.customer_name || '-'),
+        escapeCsv(inv.customer_phone || '-'),
+        escapeCsv(inv.recipient_email),
+        Number(inv.total_ttc).toFixed(2).replace('.', ','),
+        inv.resent_count,
+        inv.last_resent_at ? new Date(inv.last_resent_at).toLocaleString('fr-FR') : '-',
+      ].join(';'),
+    )
+    .join('\n');
+
+  const total = rows.reduce((sum, inv) => sum + Number(inv.total_ttc), 0);
+  const summary = `\n\nTotal;${rows.length} facture(s);;;;;${total.toFixed(2).replace('.', ',')};;`;
+
+  const csv = '\uFEFF' + filterLine + '\n' + header + body + summary;
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `factures-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function exportInvoicesPdf(rows: InvoiceRow[], siteFilter: string, periodFilter: PeriodFilter) {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  doc.setFontSize(18);
+  doc.text('Factures générées', 14, 20);
+  doc.setFontSize(11);
+  doc.setTextColor(80);
+  doc.text(`Filtres : ${siteLabel(siteFilter)} · ${periodLabels[periodFilter]}`, 14, 28);
+
+  const total = rows.reduce((sum, inv) => sum + Number(inv.total_ttc), 0);
+  doc.text(
+    `${rows.length} facture(s) — Total : ${total.toFixed(2).replace('.', ',')} €`,
+    14,
+    35
+  );
+
+  autoTable(doc, {
+    head: [['N° facture', 'Date', 'Site', 'Client', 'Email', 'Total TTC', 'Renvois']],
+    body: rows.map((inv) => [
+      inv.invoice_number,
+      new Date(inv.sent_at).toLocaleDateString('fr-FR'),
+      siteLabel(inv.site),
+      inv.customer_name || '-',
+      inv.recipient_email,
+      Number(inv.total_ttc).toFixed(2).replace('.', ',') + ' €',
+      String(inv.resent_count),
+    ]),
+    startY: 40,
+    theme: 'striped',
+    headStyles: { fillColor: [234, 88, 12] },
+    styles: { fontSize: 9, cellPadding: 2 },
+    margin: { left: 14, right: 14 },
+  });
+
+  doc.save(`factures-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
 export default function AdminInvoicesPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -55,6 +171,7 @@ export default function AdminInvoicesPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [siteFilter, setSiteFilter] = useState<'all' | 'conches' | 'beaumont'>('all');
+  const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
   const [busyId, setBusyId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -86,6 +203,7 @@ export default function AdminInvoicesPage() {
     const q = normalize(search.trim());
     return invoices.filter((inv) => {
       if (siteFilter !== 'all' && inv.site !== siteFilter) return false;
+      if (!matchesPeriod(inv.sent_at, periodFilter)) return false;
       if (!q) return true;
       const hay = normalize(
         [inv.customer_name, inv.customer_phone, inv.recipient_email, inv.invoice_number]
@@ -94,7 +212,7 @@ export default function AdminInvoicesPage() {
       );
       return hay.includes(q);
     });
-  }, [invoices, search, siteFilter]);
+  }, [invoices, search, siteFilter, periodFilter]);
 
   const handleDownload = async (inv: InvoiceRow) => {
     try {
@@ -206,6 +324,25 @@ export default function AdminInvoicesPage() {
             <Button variant="outline" size="sm" onClick={fetchInvoices} disabled={loading}>
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" disabled={loading || filtered.length === 0}>
+                  <FileDown className="h-4 w-4 mr-1" /> Exporter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => exportInvoicesCsv(filtered, siteFilter, periodFilter)}
+                >
+                  Exporter en CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => exportInvoicesPdf(filtered, siteFilter, periodFilter)}
+                >
+                  Exporter en PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <NotificationBell />
           </div>
         </div>
@@ -230,6 +367,17 @@ export default function AdminInvoicesPage() {
               <SelectItem value="all">Tous les sites</SelectItem>
               <SelectItem value="conches">Conches</SelectItem>
               <SelectItem value="beaumont">Beaumont</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={periodFilter} onValueChange={(v: any) => setPeriodFilter(v)}>
+            <SelectTrigger className="w-full md:w-52">
+              <SelectValue placeholder="Période" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes les périodes</SelectItem>
+              <SelectItem value="month">Mois en cours</SelectItem>
+              <SelectItem value="quarter">Trimestre en cours</SelectItem>
+              <SelectItem value="year">Année en cours</SelectItem>
             </SelectContent>
           </Select>
         </div>
