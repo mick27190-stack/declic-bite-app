@@ -126,8 +126,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const canManageMenu = isSuperAdmin || isSiteAdminConches || isSiteAdminBeaumont;
   const canManageOrders = isAnyAdmin;
   const canManageChat = isAnyAdmin;
-  const canSendSMS = isSuperAdmin || isSiteAdminConches || isSiteAdminBeaumont;
-  const canManageSecondaryAdmins = isSuperAdmin || isSiteAdminConches || isSiteAdminBeaumont;
+  // SMS promotionnels et gestion des admins : réservés au Super Admin
+  // et aux Super Admins secondaires (isSuperAdmin couvre les deux rôles).
+  const canSendSMS = isSuperAdmin;
+  const canManageSecondaryAdmins = isSuperAdmin;
 
   const assignRole = async (phone: string, role: AppRole, site?: string) => {
     try {
