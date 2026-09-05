@@ -98,6 +98,34 @@ function CurrentOrders() {
   );
 
 
+  // Demandes de facture déjà envoyées par le client.
+  const [invoiceRequested, setInvoiceRequested] = useState<Set<string>>(new Set());
+  const [invoiceSendingId, setInvoiceSendingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.from('invoice_requests').select('order_id');
+      if (!cancelled && data) {
+        setInvoiceRequested(new Set(data.map((r: { order_id: string }) => r.order_id)));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const requestInvoice = async (orderId: string) => {
+    setInvoiceSendingId(orderId);
+    const { error } = await supabase.rpc('request_invoice', { _order_id: orderId });
+    setInvoiceSendingId(null);
+    if (error) {
+      toast.error("Impossible d'envoyer la demande de facture");
+      return;
+    }
+    setInvoiceRequested((prev) => new Set(prev).add(orderId));
+    toast.success('Demande de facture envoyée au restaurant');
+  };
 
   return (
     <div className="glass-card p-4 rounded-xl">
@@ -173,6 +201,21 @@ function CurrentOrders() {
                 )}
 
                 <OrderTimeline order={order} />
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full mt-3"
+                  disabled={invoiceRequested.has(order.id) || invoiceSendingId === order.id}
+                  onClick={() => requestInvoice(order.id)}
+                >
+                  {invoiceSendingId === order.id ? (
+                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                  ) : (
+                    <Mail className="w-4 h-4 mr-1" />
+                  )}
+                  {invoiceRequested.has(order.id) ? 'Demande envoyée' : 'Demander une facture'}
+                </Button>
 
                 {order.order_type === 'livraison' && order.pickup_time && !order.delivery_estimate && (
                   <p className="mt-2 text-sm flex items-center gap-1.5">
