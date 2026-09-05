@@ -190,6 +190,13 @@
       "when": 1788626703057,
       "tag": "0026_fix_request_invoice_rowcount",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1788627030207,
+      "tag": "0027_allow_invoice_request_notification_type",
+      "breakpoints": true
     }
   ]
 }
