@@ -104,6 +104,8 @@ function CurrentOrders() {
   // Demandes de facture déjà envoyées par le client.
   const [invoiceRequested, setInvoiceRequested] = useState<Set<string>>(new Set());
   const [invoiceSendingId, setInvoiceSendingId] = useState<string | null>(null);
+  const { data: companyData } = useCompanyInfo();
+
 
   useEffect(() => {
     let cancelled = false;
