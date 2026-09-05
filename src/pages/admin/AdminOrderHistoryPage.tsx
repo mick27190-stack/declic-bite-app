@@ -329,6 +329,7 @@ export default function AdminOrderHistoryPage() {
       pickup_time: (data as any)?.pickup_time ?? o.pickup_time,
       delivery_estimate: (data as any)?.delivery_estimate ?? o.delivery_estimate,
       notes: (data as any)?.notes ?? o.notes,
+      loyalty_discount: (data as any)?.loyalty_discount ?? (o as any)?.loyalty_discount,
     });
   };
 
