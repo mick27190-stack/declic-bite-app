@@ -115,17 +115,25 @@ function CurrentOrders() {
     };
   }, []);
 
-  const requestInvoice = async (orderId: string) => {
-    setInvoiceSendingId(orderId);
-    const { error } = await supabase.rpc('request_invoice', { _order_id: orderId });
-    setInvoiceSendingId(null);
-    if (error) {
-      toast.error("Impossible d'envoyer la demande de facture");
-      return;
+  const requestInvoice = async (order: (typeof activeOrders)[number]) => {
+    setInvoiceSendingId(order.id);
+    try {
+      // 1) Prévient l'équipe (admin de site 18h-22h, sinon super admins secondaires)
+      const { error } = await supabase.rpc('request_invoice', { _order_id: order.id });
+      if (error) throw error;
+
+      // 2) Génère la facture PDF, l'envoie par e-mail et l'archive côté admin
+      const { email } = await generateAndSendInvoice(order as any, companyData);
+      setInvoiceRequested((prev) => new Set(prev).add(order.id));
+      toast.success(`Facture envoyée à ${email}`);
+    } catch (e: any) {
+      console.error('Invoice request error:', e);
+      toast.error(e?.message || "Impossible de générer la facture");
+    } finally {
+      setInvoiceSendingId(null);
     }
-    setInvoiceRequested((prev) => new Set(prev).add(orderId));
-    toast.success('Demande de facture envoyée au restaurant');
   };
+
 
   return (
     <div className="glass-card p-4 rounded-xl">
