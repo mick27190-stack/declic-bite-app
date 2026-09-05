@@ -15,7 +15,8 @@ import { fr } from 'date-fns/locale';
 
 function NotificationItem({ notification, onRead }: { notification: Notification; onRead: (id: string) => void }) {
   const navigate = useNavigate();
-  const isOrder = notification.type === 'new_order';
+  const isOrder =
+    notification.type === 'new_order' || notification.type === 'invoice_request';
 
   const handleClick = () => {
     if (!notification.is_read) {
