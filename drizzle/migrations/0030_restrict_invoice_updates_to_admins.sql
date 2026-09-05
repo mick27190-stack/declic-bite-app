@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Customers can update own invoices" ON storage.objects;
