@@ -38,7 +38,16 @@ export async function generateAndSendInvoice(
     'Client';
 
   const company = resolveCompanyForRestaurant(companyData, order.restaurant);
-  const meta = { number: buildInvoiceNumber(order), date: new Date(order.created_at) };
+  // Le numéro séquentiel est attribué côté serveur à la capture du paiement.
+  // Sans numéro, le document est un simple récapitulatif de commande.
+  const invoiceNumber = ((order as any).invoice_number as string | null) ?? null;
+  const isCancelled =
+    order.status === 'cancelled' ||
+    (order as any).order_status === 'cancelled' ||
+    (order as any).capture_status === 'cancelled';
+  const isInvoice = Boolean(invoiceNumber) && (order as any).capture_status === 'captured' && !isCancelled;
+  const reference = isInvoice ? (invoiceNumber as string) : buildInvoiceNumber(order);
+  const meta = { number: isInvoice ? (invoiceNumber as string) : null, date: new Date(order.created_at) };
 
   // Logo (facultatif) intégré au PDF
   let logoDataUrl: string | null = null;
@@ -79,7 +88,7 @@ export async function generateAndSendInvoice(
   const siteValue = order.restaurant?.toLowerCase().includes('beaumont')
     ? 'beaumont'
     : 'conches';
-  const path = `${siteValue}/${order.user_id}/${meta.number}.pdf`;
+  const path = `${siteValue}/${order.user_id}/${reference}.pdf`;
 
   const { error: upErr } = await supabase.storage
     .from('invoices')
@@ -95,10 +104,10 @@ export async function generateAndSendInvoice(
     body: {
       templateName: 'invoice',
       recipientEmail: email,
-      idempotencyKey: `invoice-${order.id}-${meta.number}`,
+      idempotencyKey: `invoice-${order.id}-${reference}`,
       templateData: {
         customerName: fullName,
-        invoiceNumber: meta.number,
+        invoiceNumber: reference,
         orderDate: meta.date.toLocaleDateString('fr-FR'),
         totalTTC: totalTTC.toFixed(2).replace('.', ',') + '€',
         downloadUrl: signed.signedUrl,
@@ -112,7 +121,7 @@ export async function generateAndSendInvoice(
     {
       order_id: order.id,
       user_id: order.user_id,
-      invoice_number: meta.number,
+      invoice_number: reference,
       storage_path: path,
       total_ttc: Number(totalTTC.toFixed(2)),
       recipient_email: email,
@@ -126,5 +135,5 @@ export async function generateAndSendInvoice(
   );
   if (recErr) console.warn('Failed to record invoice:', recErr);
 
-  return { invoiceNumber: meta.number, email, totalTTC };
+  return { invoiceNumber: reference, email, totalTTC };
 }
