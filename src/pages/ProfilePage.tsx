@@ -45,6 +45,9 @@ import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
 import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { statusLabels, statusColors } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
+import { generateAndSendInvoice } from '@/lib/sendInvoice';
+import { useCompanyInfo } from '@/hooks/useCompanyInfo';
+
 import {
   AlertDialog,
   AlertDialogAction,
