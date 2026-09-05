@@ -11,7 +11,7 @@ import OrderTicket from '@/components/OrderTicket';
 import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 import StripeStatusPanel from '@/components/admin/StripeStatusPanel';
 
-import { generateInvoicePdf, buildInvoiceNumber } from '@/lib/invoicePdf';
+import { generateAndSendInvoice } from '@/lib/sendInvoice';
 import { useCompanyInfo, resolveCompanyForRestaurant } from '@/hooks/useCompanyInfo';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
