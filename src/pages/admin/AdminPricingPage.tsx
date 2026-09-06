@@ -578,6 +578,11 @@ export default function AdminPricingPage() {
                 ))}
 
             </div>
+
+            <Button onClick={addPromo} disabled={addingPromo} className="w-full">
+              <Plus className="h-4 w-4 mr-2" />
+              {addingPromo ? 'Ajout en cours...' : 'Ajouter la promotion'}
+            </Button>
           </CardContent>
         </Card>
       </main>
