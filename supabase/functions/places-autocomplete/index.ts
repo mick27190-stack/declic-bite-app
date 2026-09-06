@@ -31,6 +31,11 @@ async function gatewayFetch(
     if (!response.ok) {
       lastErrorBody = body;
       console.error(`Places gateway request failed [${response.status}]: ${body}`);
+      if (response.status === 403 && body.includes('API_KEY_HTTP_REFERRER_BLOCKED')) {
+        lastErrorBody =
+          "La clé Google Maps utilisée côté serveur est restreinte par référent HTTP. " +
+          "Dans Google Cloud Console, réglez les restrictions d'application de la clé serveur sur « Aucune » ou « Adresses IP ».";
+      }
       continue;
     }
 
@@ -42,6 +47,7 @@ async function gatewayFetch(
   }
 
   throw new Error(lastErrorBody || 'Google Maps gateway request failed');
+
 }
 
 serve(async (req) => {
