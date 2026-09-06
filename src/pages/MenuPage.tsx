@@ -110,15 +110,27 @@ export default function MenuPage() {
 
         <ActivePromoBanner className="mb-4" />
 
-        <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-          <div>
-            <p className="font-semibold text-destructive text-sm">Livraison hors Conches &amp; Beaumont</p>
-            <p className="text-sm text-foreground mt-1">
-              Minimum de commande de <strong className="text-primary">20€</strong> (2 pizzas Senior ou 1 pizza Méga).
-            </p>
+        <RetractableBanner
+          visible
+          tone="red"
+          className="mb-4"
+          summary={
+            <>
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span className="truncate">Livraison hors zone — min. 20€</span>
+            </>
+          }
+        >
+          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-destructive text-sm">Livraison hors Conches & Beaumont</p>
+              <p className="text-sm text-foreground mt-1">
+                Minimum de commande de <strong className="text-primary">20€</strong> (2 pizzas Senior ou 1 pizza Méga).
+              </p>
+            </div>
           </div>
-        </div>
+        </RetractableBanner>
         <div className="grid grid-cols-2 gap-4">
           {filteredPizzas.map((pizza, index) => {
             const unavailable = !isAvailable(pizza.id, selectedRestaurant?.id);
