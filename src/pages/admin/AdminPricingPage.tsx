@@ -444,12 +444,8 @@ export default function AdminPricingPage() {
                   ]}
                 />
               </div>
-
-              <Button onClick={addPromo} disabled={addingPromo}>
-                <Plus className="h-4 w-4 mr-2" />
-                Ajouter
-              </Button>
             </div>
+
 
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 items-end">
               <div className="space-y-2">
