@@ -96,12 +96,16 @@ export async function generateAndSendInvoice(
   const { error: upErr } = await supabase.storage
     .from('invoices')
     .upload(path, blob, { contentType: 'application/pdf', upsert: true });
-  if (upErr) throw upErr;
 
   const { data: signed, error: signErr } = await supabase.storage
     .from('invoices')
     .createSignedUrl(path, 60 * 60 * 24 * 30);
+
+  // Un client n'a pas le droit de remplacer un fichier existant : si le PDF
+  // était déjà en place (nouvelle tentative), on réutilise simplement celui-ci.
+  if (upErr && !signed?.signedUrl) throw upErr;
   if (signErr || !signed?.signedUrl) throw signErr ?? new Error('URL indisponible');
+
 
   const { error: mailErr } = await supabase.functions.invoke('send-transactional-email', {
     body: {
