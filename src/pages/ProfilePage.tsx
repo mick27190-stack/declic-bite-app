@@ -1149,6 +1149,21 @@ export default function ProfilePage() {
       </div>
 
       <div className="p-6 flex flex-col gap-6">
+        {/* Bouton Réorganiser — placé entre la fiche client et les sections */}
+        <div className="flex justify-center -mt-1">
+          <button
+            type="button"
+            onClick={() => setReordering((r) => !r)}
+            className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+              reordering
+                ? 'bg-orange-500 border-orange-500 text-white'
+                : 'border-orange-400/70 text-orange-600 hover:bg-orange-400/10'
+            }`}
+          >
+            {reordering ? <Check className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4" />}
+            {reordering ? 'Terminer' : 'Réorganiser'}
+          </button>
+        </div>
         {/* Raccourci carte de fidélité — visible uniquement si un programme actif existe pour le site choisi */}
         {hasActiveProgram && loyaltySummary && <ProfileSection {...sectionProps('loyalty')}>{(() => {
           const pct = Math.min(100, Math.round((loyaltySummary.currentCount / loyaltySummary.program.required_count) * 100));
