@@ -361,6 +361,18 @@ function OrderHistory() {
   const handleDelete = async (orderId: string) => {
     setDeletingId(orderId);
     try {
+      // Préserve la comptabilité : on ne supprime jamais une commande qui a\n      // déjà fait l'objet d'une facture ou d'un récapitulatif envoyé.
+      const { data: invoice } = await supabase
+        .from('invoices')
+        .select('id')
+        .eq('order_id', orderId)
+        .limit(1)
+        .maybeSingle();
+      if (invoice) {
+        toast.error('Cette commande est facturée et ne peut pas être supprimée');
+        return;
+      }
+
       const { error } = await supabase.from('orders').delete().eq('id', orderId);
       if (error) throw error;
       setOrders((prev) => prev.filter((o) => o.id !== orderId));
