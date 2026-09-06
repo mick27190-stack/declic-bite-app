@@ -39,9 +39,10 @@ import CommunicationPreferences from '@/components/CommunicationPreferences';
 
 import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
-import { useUserOrders } from '@/hooks/useOrders';
+import { useUserOrders, isOrderPaymentAuthorized } from '@/hooks/useOrders';
+import { parisIsoDate } from '@/lib/parisTime';
 import { OrderTimeline } from '@/components/OrderTimeline';
-import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
+import { Clock, Package, CheckCircle, XCircle, History } from 'lucide-react';
 import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { statusLabels, statusColors } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
