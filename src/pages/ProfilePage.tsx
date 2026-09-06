@@ -1149,8 +1149,8 @@ export default function ProfilePage() {
       </div>
 
       <div className="p-6 flex flex-col gap-6">
-        {/* Bouton Réorganiser — placé entre la fiche client et les sections */}
-        <div className="flex justify-center -mt-1">
+        {/* Bouton Réorganiser — placé entre la fiche client et les sections, aligné à droite */}
+        <div className="flex justify-end -mt-1 px-1">
           <button
             type="button"
             onClick={() => setReordering((r) => !r)}
@@ -1161,7 +1161,8 @@ export default function ProfilePage() {
             }`}
           >
             {reordering ? <Check className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4" />}
-            {reordering ? 'Terminer' : 'Réorganiser'}
+            <span className="hidden xs:inline sm:inline">{reordering ? 'Terminer' : 'Réorganiser'}</span>
+            <span className="xs:hidden sm:hidden">{reordering ? <Check className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4" />}</span>
           </button>
         </div>
         {/* Raccourci carte de fidélité — visible uniquement si un programme actif existe pour le site choisi */}
