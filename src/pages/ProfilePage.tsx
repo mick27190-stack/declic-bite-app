@@ -310,42 +310,46 @@ function CurrentOrders() {
 function OrderHistory() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  // Section pliée par défaut pour ne pas surcharger la page du profil.
+  const [collapsed, setCollapsed] = useState(true);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const fetchHistory = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const todayIso = parisIsoDate();
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      // Historique : uniquement les commandes passées avant aujourd'hui
+      // (heure de Paris) et dont le paiement a été autorisé.
+      const past = (data || [])
+        .filter((o: any) => isOrderPaymentAuthorized(o))
+        .filter((o: any) => parisIsoDate(new Date(o.created_at)) !== todayIso)
+        .slice(0, 20);
+
+      setOrders(past as unknown as Order[]);
+    } catch (e) {
+      console.error('Error fetching order history:', e);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const todayIso = parisIsoDate();
-        const { data, error } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(50);
-
-        if (error) throw error;
-
-        // Historique : uniquement les commandes passées avant aujourd'hui
-        // (heure de Paris) et dont le paiement a été autorisé.
-        const past = (data || [])
-          .filter((o: any) => isOrderPaymentAuthorized(o))
-          .filter((o: any) => parisIsoDate(new Date(o.created_at)) !== todayIso)
-          .slice(0, 20);
-
-        if (!cancelled) setOrders(past as unknown as Order[]);
-      } catch (e) {
-        console.error('Error fetching order history:', e);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    fetchHistory();
+  }, [fetchHistory]);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('fr-FR', {
@@ -354,50 +358,193 @@ function OrderHistory() {
       month: 'short',
     });
 
+  const handleDelete = async (orderId: string) => {
+    setDeletingId(orderId);
+    try {
+      const { error } = await supabase.from('orders').delete().eq('id', orderId);
+      if (error) throw error;
+      setOrders((prev) => prev.filter((o) => o.id !== orderId));
+      if (expandedId === orderId) setExpandedId(null);
+      toast.success('Commande supprimée de votre historique');
+    } catch (e: any) {
+      console.error('Error deleting order:', e);
+      toast.error(e?.message || 'Impossible de supprimer la commande');
+    } finally {
+      setDeletingId(null);
+      setConfirmDeleteId(null);
+    }
+  };
+
+  const orderToDelete = orders.find((o) => o.id === confirmDeleteId);
+
+  // Prix unitaires calculés par le backend pour les commandes dépliées.
+  const expandedOrders = orders.filter((o) => o.id === expandedId);
+  const linePrices = useOrdersLinePrices(
+    expandedOrders.map((o) => ({ id: o.id, items: o.items as any[], created_at: o.created_at })),
+  );
+
   return (
     <div className="glass-card p-4 rounded-xl">
-      <h3 className="font-semibold flex items-center gap-2 mb-4">
-        <History className="w-5 h-5 text-primary" />
-        Historique des commandes
-      </h3>
+      <button
+        type="button"
+        onClick={() => setCollapsed((c) => !c)}
+        className="w-full flex items-center justify-between gap-2 mb-0"
+        aria-expanded={!collapsed}
+      >
+        <h3 className="font-semibold flex items-center gap-2">
+          <History className="w-5 h-5 text-primary" />
+          Historique des commandes
+        </h3>
+        {collapsed ? (
+          <ChevronRight className="w-5 h-5 text-orange-500" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-orange-500" />
+        )}
+      </button>
 
-      {loading ? (
-        <div className="flex justify-center py-6">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-        </div>
-      ) : orders.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">
-          Aucune commande passée
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {orders.map((order) => (
-            <div
-              key={order.id}
-              className="p-3 rounded-lg border border-border flex items-center justify-between gap-3"
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground capitalize">
-                    {formatDate(order.created_at)}
-                  </span>
-                  <span className={`text-xs text-white px-2 py-0.5 rounded-full ${statusColors[order.status]}`}>
-                    {statusLabels[order.status]}
-                  </span>
-                </div>
-                <p className="text-sm mt-1 truncate">
-                  {order.order_type === 'livraison' ? '🚗 Livraison' : '🏪 À emporter'}
-                  {' • '}
-                  {order.items?.map((i) => `${i.quantity}× ${i.pizza?.name}`).join(', ')}
-                </p>
-              </div>
-              <span className="font-semibold text-primary text-sm shrink-0">
-                {order.total_price.toFixed(2)}€
-              </span>
+      {!collapsed && (
+        <>
+          {loading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
             </div>
-          ))}
-        </div>
+          ) : orders.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Aucune commande passée
+            </p>
+          ) : (
+            <div className="space-y-2 mt-3">
+              {orders.map((order) => {
+                const isOpen = expandedId === order.id;
+                return (
+                  <div
+                    key={order.id}
+                    className="p-3 rounded-lg border border-border"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground capitalize">
+                            {formatDate(order.created_at)}
+                          </span>
+                          <span className={`text-xs text-white px-2 py-0.5 rounded-full ${statusColors[order.status]}`}>
+                            {statusLabels[order.status]}
+                          </span>
+                        </div>
+                        <p className="text-sm mt-1 truncate">
+                          {order.order_type === 'livraison' ? '🚗 Livraison' : '🏪 À emporter'}
+                          {' • '}
+                          {order.items?.map((i) => `${i.quantity}× ${i.pizza?.name}`).join(', ')}
+                        </p>
+                      </div>
+                      <span className="font-semibold text-primary text-sm shrink-0">
+                        {order.total_price.toFixed(2)}€
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2 mt-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => setExpandedId(isOpen ? null : order.id)}
+                      >
+                        <Eye className="w-4 h-4 mr-1" />
+                        {isOpen ? 'Masquer' : 'Voir'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-destructive border-destructive/30 hover:bg-destructive/10"
+                        disabled={deletingId === order.id}
+                        onClick={() => setConfirmDeleteId(order.id)}
+                      >
+                        {deletingId === order.id ? (
+                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4 mr-1" />
+                        )}
+                        Supprimer
+                      </Button>
+                    </div>
+
+                    {isOpen && (
+                      <div className="mt-3 border-t border-border pt-3">
+                        {order.items && order.items.length > 0 && (
+                          <ul className="space-y-1.5">
+                            {order.items.map((item, idx) => {
+                              const orderDate = new Date(order.created_at);
+                              const { unitPrice } = linePriceAt(linePrices[order.id], idx, item, orderDate);
+                              return (
+                                <li key={idx} className="text-xs">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="font-medium text-foreground">
+                                      {item.quantity}× {item.pizza?.name}
+                                    </span>
+                                    {item.size?.name && (
+                                      <span className="text-muted-foreground">{item.size.name}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center justify-between gap-2 text-muted-foreground">
+                                    <span>{item.quantity} × {unitPrice.toFixed(2)}€</span>
+                                    <span className="font-medium text-foreground">{(unitPrice * item.quantity).toFixed(2)}€</span>
+                                  </div>
+                                  <div className="text-muted-foreground">
+                                    {item.pizza?.hasBase !== false &&
+                                      item.pizza?.category !== 'boissons' &&
+                                      item.base && <span>Base {item.base === 'creme' ? 'crème' : 'tomate'}</span>}
+                                    {item.supplements && item.supplements.length > 0 && (
+                                      <span> • + {item.supplements.map((s) => s.name).join(', ')}</span>
+                                    )}
+                                  </div>
+                                  {item.notes && (
+                                    <p className="text-muted-foreground italic">📝 {item.notes}</p>
+                                  )}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        )}
+                        <OrderTimeline order={order} />
+                        <div className="flex items-center justify-between mt-2 text-sm">
+                          <span className="text-muted-foreground">Total</span>
+                          <span className="font-semibold text-primary">{order.total_price.toFixed(2)}€</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
+
+      <AlertDialog open={!!confirmDeleteId} onOpenChange={(o) => { if (!o) setConfirmDeleteId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer cette commande ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {orderToDelete
+                ? `Cette action est définitive. La commande #${orderToDelete.id.slice(0, 8)} du ${formatDate(orderToDelete.created_at)} sera retirée de votre historique.`
+                : 'Cette action est définitive.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={!!deletingId}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!!deletingId}
+              onClick={(e) => {
+                e.preventDefault();
+                if (confirmDeleteId) handleDelete(confirmDeleteId);
+              }}
+            >
+              {deletingId ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : null}
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
