@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { generateInvoicePdf, buildInvoiceNumber } from '@/lib/invoicePdf';
 import { resolveCompanyForRestaurant, type CompanyInfo } from '@/hooks/useCompanyInfo';
+import { blobToCompressedDataUrl } from '@/lib/imageResize';
 import type { Order } from '@/types/order';
 
 export interface SendInvoiceResult {
