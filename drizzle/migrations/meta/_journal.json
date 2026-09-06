@@ -218,6 +218,13 @@
       "when": 1788651017350,
       "tag": "0030_restrict_invoice_updates_to_admins",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1788723644496,
+      "tag": "0031_allow_users_to_delete_their_own_orders",
+      "breakpoints": true
     }
   ]
 }
