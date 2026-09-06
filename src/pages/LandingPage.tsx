@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
+import { RetractableBanner } from '@/components/RetractableBanner';
 
 import { Restaurant } from '@/types/pizza';
 import { preloadHeroMedia, heroPosterUrl } from '@/lib/heroPreload';
