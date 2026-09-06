@@ -170,22 +170,29 @@ export default function LandingPage() {
           <div className="w-full max-w-md mb-8 space-y-3">
             {closures.map((closure) => {
               const type = closure.closure_type === 'site' ? 'site' : 'orders';
+              const label = `${closureTitle(type)}${closure.site !== 'all' ? ` — ${siteLabel(closure.site)}` : ''}`;
               return (
-                <div
+                <RetractableBanner
                   key={closure.id}
-                  className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3"
+                  visible
+                  tone="red"
+                  summary={
+                    <>
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      <span className="truncate">{label}</span>
+                    </>
+                  }
                 >
-                  <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-destructive text-sm">
-                      {closureTitle(type)}
-                      {closure.site !== 'all' ? ` — ${siteLabel(closure.site)}` : ''}
-                    </p>
-                    <p className="text-sm text-foreground mt-1">
-                      {closureMessage(type, closure.reason)}
-                    </p>
+                  <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+                    <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-destructive text-sm">{label}</p>
+                      <p className="text-sm text-foreground mt-1">
+                        {closureMessage(type, closure.reason)}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                </RetractableBanner>
               );
             })}
           </div>
