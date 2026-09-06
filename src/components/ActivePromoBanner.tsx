@@ -1,6 +1,7 @@
 import { promoMatchesDate, getRawSizePrice, type DayPromo } from '@/lib/pricing';
 import { isPromoDay, PROMO_LABEL } from '@/lib/promo';
 import { usePricing } from '@/contexts/PricingContext';
+import { RetractableBanner } from '@/components/RetractableBanner';
 
 const SIZE_LABELS: Record<string, string> = {
   senior: 'Senior',
