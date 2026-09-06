@@ -24,6 +24,8 @@ import {
   MessageSquare,
   Send,
   ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
   AlertTriangle,
   Gift,
   ChevronRight,
@@ -845,6 +847,54 @@ function ProfileChat() {
   );
 }
 
+type ProfileSectionId = 'loyalty' | 'notifications' | 'currentOrders' | 'orderHistory' | 'profileInfo' | 'prefs' | 'addresses' | 'chat';
+const DEFAULT_SECTION_ORDER: ProfileSectionId[] = ['loyalty', 'notifications', 'currentOrders', 'orderHistory', 'profileInfo', 'prefs', 'addresses', 'chat'];
+const SECTION_ORDER_KEY = 'profile-section-order-v1';
+
+function ProfileSection({
+  id,
+  order,
+  count,
+  reordering,
+  onMove,
+  children
+}: {
+  id: ProfileSectionId;
+  order: number;
+  count: number;
+  reordering: boolean;
+  onMove: (id: ProfileSectionId, dir: -1 | 1) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div style={{ order }} className={reordering ? 'relative rounded-xl ring-1 ring-dashed ring-primary/50 pt-1' : 'relative'}>
+      {reordering && (
+        <div className="absolute -top-3 right-2 z-20 flex gap-1">
+          <button
+            type="button"
+            aria-label="Monter cette section"
+            disabled={order <= 0}
+            onClick={() => onMove(id, -1)}
+            className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow disabled:opacity-30"
+          >
+            <ArrowUp className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Descendre cette section"
+            disabled={order >= count - 1}
+            onClick={() => onMove(id, 1)}
+            className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow disabled:opacity-30"
+          >
+            <ArrowDown className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, profile, addresses, signOut, updateProfile, addAddress, deleteAddress, setDefaultAddress, loading } = useAuth();
@@ -875,6 +925,38 @@ export default function ProfilePage() {
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingAddress, setSavingAddress] = useState(false);
+
+  const [reordering, setReordering] = useState(false);
+  const [sectionOrder, setSectionOrder] = useState<ProfileSectionId[]>(() => {
+    try {
+      const raw = localStorage.getItem(SECTION_ORDER_KEY);
+      if (!raw) return DEFAULT_SECTION_ORDER;
+      const parsed = JSON.parse(raw) as ProfileSectionId[];
+      const valid = parsed.filter((id) => DEFAULT_SECTION_ORDER.includes(id));
+      const missing = DEFAULT_SECTION_ORDER.filter((id) => !valid.includes(id));
+      return [...valid, ...missing];
+    } catch {
+      return DEFAULT_SECTION_ORDER;
+    }
+  });
+  const moveSection = useCallback((id: ProfileSectionId, dir: -1 | 1) => {
+    setSectionOrder((prev) => {
+      const idx = prev.indexOf(id);
+      const target = idx + dir;
+      if (idx < 0 || target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      try { localStorage.setItem(SECTION_ORDER_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  }, []);
+  const sectionProps = (id: ProfileSectionId) => ({
+    id,
+    order: sectionOrder.indexOf(id),
+    count: sectionOrder.length,
+    reordering,
+    onMove: moveSection
+  });
 
   React.useEffect(() => {
     if (profile) {
@@ -1046,6 +1128,18 @@ export default function ProfilePage() {
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <h1 className="font-display text-2xl text-white flex-1">Mon Profil</h1>
+          <button
+            type="button"
+            onClick={() => setReordering((r) => !r)}
+            className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+              reordering
+                ? 'bg-orange-500 border-orange-500 text-white'
+                : 'border-orange-400/70 text-orange-300 hover:bg-orange-400/10'
+            }`}
+          >
+            {reordering ? <Check className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4" />}
+            {reordering ? 'Terminer' : 'Réorganiser'}
+          </button>
           <div className="text-white">
             <CustomerNotificationBell />
           </div>
@@ -1066,9 +1160,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
+      <div className="p-6 flex flex-col gap-6">
         {/* Raccourci carte de fidélité — visible uniquement si un programme actif existe pour le site choisi */}
-        {hasActiveProgram && loyaltySummary && (() => {
+        {hasActiveProgram && loyaltySummary && <ProfileSection {...sectionProps('loyalty')}>{(() => {
           const pct = Math.min(100, Math.round((loyaltySummary.currentCount / loyaltySummary.program.required_count) * 100));
           const remaining = Math.max(0, loyaltySummary.program.required_count - loyaltySummary.currentCount);
           const siteLabel = loyaltySite ? SITE_LABELS[loyaltySite] ?? null : null;
@@ -1108,21 +1202,28 @@ export default function ProfilePage() {
             <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
           </button>
           );
-        })()}
+        })()}</ProfileSection>}
 
         {/* Notification permission reminder */}
-        <NotificationPermissionReminder />
-
-        {/* Push notification test */}
-        <PushTestPanel />
+        <ProfileSection {...sectionProps('notifications')}>
+          <div className="flex flex-col gap-6">
+            <NotificationPermissionReminder />
+            <PushTestPanel />
+          </div>
+        </ProfileSection>
 
         {/* Current Orders Section */}
-        <CurrentOrders />
+        <ProfileSection {...sectionProps('currentOrders')}>
+          <CurrentOrders />
+        </ProfileSection>
 
         {/* Order History Section */}
-        <OrderHistory />
+        <ProfileSection {...sectionProps('orderHistory')}>
+          <OrderHistory />
+        </ProfileSection>
 
         {/* Profile Section */}
+        <ProfileSection {...sectionProps('profileInfo')}>
         <div className="glass-card p-4 rounded-xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
@@ -1300,12 +1401,15 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+        </ProfileSection>
 
         {/* Communication preferences */}
-        <CommunicationPreferences />
+        <ProfileSection {...sectionProps('prefs')}>
+          <CommunicationPreferences />
+        </ProfileSection>
 
         {/* Addresses Section */}
-
+        <ProfileSection {...sectionProps('addresses')}>
         <div className="glass-card p-4 rounded-xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold flex items-center gap-2">
@@ -1372,8 +1476,10 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
+        </ProfileSection>
 
         {/* Chat Section */}
+        <ProfileSection {...sectionProps('chat')}>
         {(selectedRestaurant || profile?.preferred_restaurant) ? (
           <ProfileChat />
         ) : (
@@ -1466,7 +1572,9 @@ export default function ProfilePage() {
             </div>
           </div>
         )}
+        </ProfileSection>
 
+        <div style={{ order: 99 }} className="flex flex-col gap-3">
         {/* Sign Out Button */}
         <Button
           variant="outline"
@@ -1486,6 +1594,7 @@ export default function ProfilePage() {
           <Trash2 className="w-5 h-5 mr-2" />
           Supprimer mon compte
         </Button>
+        </div>
       </div>
 
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
