@@ -275,11 +275,9 @@ export default function AdminInvoicesPage() {
   const handleDelete = async (inv: InvoiceRow) => {
     setBusyId(inv.id);
     try {
-      // Best-effort remove of the stored PDF; ignore errors so a missing
-      // object doesn't block deletion of the row.
-      if (inv.storage_path) {
-        await supabase.storage.from('invoices').remove([inv.storage_path]);
-      }
+      // On ne supprime JAMAIS le PDF du stockage : le lien de téléchargement
+      // envoyé au client reste valable 30 jours et le document doit rester
+      // archivé. Seule la ligne d'historique est retirée.
       const { error } = await supabase.from('invoices').delete().eq('id', inv.id);
       if (error) throw error;
       setInvoices((prev) => prev.filter((i) => i.id !== inv.id));
