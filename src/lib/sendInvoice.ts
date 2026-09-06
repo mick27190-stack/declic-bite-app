@@ -63,12 +63,10 @@ export async function generateAndSendInvoice(
       if (signed?.signedUrl) {
         const res = await fetch(signed.signedUrl);
         const b = await res.blob();
-        logoDataUrl = await new Promise<string>((resolve, reject) => {
-          const fr = new FileReader();
-          fr.onload = () => resolve(fr.result as string);
-          fr.onerror = reject;
-          fr.readAsDataURL(b);
-        });
+        // Le logo n'est affiché qu'à 22 mm dans le PDF : on le redimensionne
+        // à 200 px et on le compresse en JPEG (qualité 0.8) pour limiter la
+        // taille du PDF et celle du bucket `invoices`.
+        logoDataUrl = await blobToCompressedDataUrl(b, 200, 0.8);
       }
     } catch (err) {
       console.warn('Logo fetch failed, continuing without it:', err);
