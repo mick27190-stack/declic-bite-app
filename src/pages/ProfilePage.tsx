@@ -1149,11 +1149,12 @@ export default function ProfilePage() {
       </div>
 
       <div className="p-6 flex flex-col gap-6">
-        {/* Bouton Réorganiser — placé entre la fiche client et les sections */}
-        <div className="flex justify-center -mt-1">
+        {/* Bouton Réorganiser — placé entre la fiche client et les sections, aligné à droite */}
+        <div className="flex justify-end -mt-1 px-1">
           <button
             type="button"
             onClick={() => setReordering((r) => !r)}
+            aria-label={reordering ? 'Terminer la réorganisation' : 'Réorganiser les sections'}
             className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
               reordering
                 ? 'bg-orange-500 border-orange-500 text-white'
@@ -1161,7 +1162,7 @@ export default function ProfilePage() {
             }`}
           >
             {reordering ? <Check className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4" />}
-            {reordering ? 'Terminer' : 'Réorganiser'}
+            <span>{reordering ? 'Terminer' : 'Réorganiser'}</span>
           </button>
         </div>
         {/* Raccourci carte de fidélité — visible uniquement si un programme actif existe pour le site choisi */}
