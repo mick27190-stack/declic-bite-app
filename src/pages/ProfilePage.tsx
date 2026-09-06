@@ -110,9 +110,17 @@ function CurrentOrders() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.from('invoice_requests').select('order_id');
+      // On se base sur les factures réellement générées et envoyées,
+      // pas sur la simple demande : une tentative échouée reste réessayable.
+      const { data } = await supabase.from('invoices').select('order_id');
       if (!cancelled && data) {
-        setInvoiceRequested(new Set(data.map((r: { order_id: string }) => r.order_id)));
+        setInvoiceRequested(
+          new Set(
+            data
+              .map((r: { order_id: string | null }) => r.order_id)
+              .filter((id): id is string => Boolean(id)),
+          ),
+        );
       }
     })();
     return () => {
@@ -128,9 +136,13 @@ function CurrentOrders() {
       if (error) throw error;
 
       // 2) Génère la facture PDF, l'envoie par e-mail et l'archive côté admin
-      const { email } = await generateAndSendInvoice(order as any, companyData);
+      const { email, isInvoice } = await generateAndSendInvoice(order as any, companyData);
       setInvoiceRequested((prev) => new Set(prev).add(order.id));
-      toast.success(`Facture envoyée à ${email}`);
+      toast.success(
+        isInvoice
+          ? `Facture envoyée à ${email}`
+          : `Récapitulatif envoyé à ${email} — la facture définitive suivra une fois la commande confirmée`,
+      );
     } catch (e: any) {
       console.error('Invoice request error:', e);
       toast.error(e?.message || "Impossible de générer la facture");
@@ -138,6 +150,7 @@ function CurrentOrders() {
       setInvoiceSendingId(null);
     }
   };
+
 
 
   return (
