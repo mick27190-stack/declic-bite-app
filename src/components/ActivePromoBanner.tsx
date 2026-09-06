@@ -56,7 +56,16 @@ export function ActivePromoBanner({ className = '' }: { className?: string }) {
     messages.unshift(PROMO_LABEL);
   }
 
-  return <PromoBanner messages={messages} className={className} />;
+  return (
+    <RetractableBanner
+      visible={messages.length > 0}
+      tone="green"
+      className={className}
+      summary={<span className="truncate">🎉 Promotions du jour</span>}
+    >
+      <PromoBanner messages={messages} />
+    </RetractableBanner>
+  );
 }
 
 export default ActivePromoBanner;
