@@ -7,11 +7,28 @@ export async function fileToCompressedDataUrl(
   maxSize = 800,
   quality = 0.75,
 ): Promise<string> {
+  return blobToCompressedDataUrl(file, maxSize, quality);
+}
+
+/**
+ * Redimensionne et compresse un Blob image (ex. : logo récupéré depuis Storage)
+ * en une data URL JPEG. Même traitement que {@link fileToCompressedDataUrl},
+ * mais accepte un Blob en entrée au lieu d'un File.
+ *
+ * Le logo intégré aux factures PDF étant affiché à seulement 22 mm, on passe
+ * généralement une maxSize de 200 px et une qualité de 0.8 : cela réduit
+ * drastiquement la taille du PDF sans perte visuelle perceptible.
+ */
+export async function blobToCompressedDataUrl(
+  blob: Blob,
+  maxSize = 800,
+  quality = 0.75,
+): Promise<string> {
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = () => reject(new Error("Impossible de lire l'image"));
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(blob);
   });
 
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
