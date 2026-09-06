@@ -1128,18 +1128,6 @@ export default function ProfilePage() {
             <ArrowLeft className="w-6 h-6" />
           </Button>
           <h1 className="font-display text-2xl text-white flex-1">Mon Profil</h1>
-          <button
-            type="button"
-            onClick={() => setReordering((r) => !r)}
-            className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
-              reordering
-                ? 'bg-orange-500 border-orange-500 text-white'
-                : 'border-orange-400/70 text-orange-300 hover:bg-orange-400/10'
-            }`}
-          >
-            {reordering ? <Check className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4" />}
-            {reordering ? 'Terminer' : 'Réorganiser'}
-          </button>
           <div className="text-white">
             <CustomerNotificationBell />
           </div>
