@@ -39,11 +39,12 @@ import CommunicationPreferences from '@/components/CommunicationPreferences';
 
 import { useCustomerChat } from '@/hooks/useCustomerChat';
 import { useAdminPresenceWatch } from '@/hooks/useAdminPresence';
-import { useUserOrders } from '@/hooks/useOrders';
+import { useUserOrders, isOrderPaymentAuthorized } from '@/hooks/useOrders';
+import { parisIsoDate } from '@/lib/parisTime';
 import { OrderTimeline } from '@/components/OrderTimeline';
-import { Clock, Package, CheckCircle, XCircle } from 'lucide-react';
+import { Clock, Package, CheckCircle, XCircle, History } from 'lucide-react';
 import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
-import { statusLabels, statusColors } from '@/types/order';
+import { statusLabels, statusColors, Order } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
 import { generateAndSendInvoice } from '@/lib/sendInvoice';
 import { useCompanyInfo } from '@/hooks/useCompanyInfo';
@@ -82,9 +83,14 @@ const getFunctionErrorMessage = async (error: unknown) => {
 function CurrentOrders() {
   const { orders, loading, respondToOrder } = useUserOrders();
 
+  const todayIso = parisIsoDate();
   const activeOrders = orders
     .filter((order) => {
       if (order.status === 'cancelled') return false;
+
+      // Seules les commandes du jour (heure de Paris) restent dans
+      // "Mes commandes en cours" ; les autres basculent dans l'historique.
+      if (parisIsoDate(new Date(order.created_at)) !== todayIso) return false;
 
       // Delivery orders must stay visible in the customer profile for tracking,
       // including when the restaurant marks them as delivered.
@@ -293,6 +299,101 @@ function CurrentOrders() {
               </div>
             );
           })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OrderHistory() {
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const todayIso = parisIsoDate();
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (error) throw error;
+
+        // Historique : uniquement les commandes passées avant aujourd'hui
+        // (heure de Paris) et dont le paiement a été autorisé.
+        const past = (data || [])
+          .filter((o: any) => isOrderPaymentAuthorized(o))
+          .filter((o: any) => parisIsoDate(new Date(o.created_at)) !== todayIso)
+          .slice(0, 20);
+
+        if (!cancelled) setOrders(past as unknown as Order[]);
+      } catch (e) {
+        console.error('Error fetching order history:', e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('fr-FR', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    });
+
+  return (
+    <div className="glass-card p-4 rounded-xl">
+      <h3 className="font-semibold flex items-center gap-2 mb-4">
+        <History className="w-5 h-5 text-primary" />
+        Historique des commandes
+      </h3>
+
+      {loading ? (
+        <div className="flex justify-center py-6">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
+      ) : orders.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-4">
+          Aucune commande passée
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {orders.map((order) => (
+            <div
+              key={order.id}
+              className="p-3 rounded-lg border border-border flex items-center justify-between gap-3"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground capitalize">
+                    {formatDate(order.created_at)}
+                  </span>
+                  <span className={`text-xs text-white px-2 py-0.5 rounded-full ${statusColors[order.status]}`}>
+                    {statusLabels[order.status]}
+                  </span>
+                </div>
+                <p className="text-sm mt-1 truncate">
+                  {order.order_type === 'livraison' ? '🚗 Livraison' : '🏪 À emporter'}
+                  {' • '}
+                  {order.items?.map((i) => `${i.quantity}× ${i.pizza?.name}`).join(', ')}
+                </p>
+              </div>
+              <span className="font-semibold text-primary text-sm shrink-0">
+                {order.total_price.toFixed(2)}€
+              </span>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -856,6 +957,9 @@ export default function ProfilePage() {
 
         {/* Current Orders Section */}
         <CurrentOrders />
+
+        {/* Order History Section */}
+        <OrderHistory />
 
         {/* Profile Section */}
         <div className="glass-card p-4 rounded-xl">
