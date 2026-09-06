@@ -1,6 +1,7 @@
 import { promoMatchesDate, getRawSizePrice, type DayPromo } from '@/lib/pricing';
 import { isPromoDay, PROMO_LABEL } from '@/lib/promo';
 import { usePricing } from '@/contexts/PricingContext';
+import { RetractableBanner } from '@/components/RetractableBanner';
 
 const SIZE_LABELS: Record<string, string> = {
   senior: 'Senior',
@@ -55,7 +56,16 @@ export function ActivePromoBanner({ className = '' }: { className?: string }) {
     messages.unshift(PROMO_LABEL);
   }
 
-  return <PromoBanner messages={messages} className={className} />;
+  return (
+    <RetractableBanner
+      visible={messages.length > 0}
+      tone="green"
+      className={className}
+      summary={<span className="truncate">🎉 Promotions du jour</span>}
+    >
+      <PromoBanner messages={messages} />
+    </RetractableBanner>
+  );
 }
 
 export default ActivePromoBanner;
