@@ -1154,6 +1154,7 @@ export default function ProfilePage() {
           <button
             type="button"
             onClick={() => setReordering((r) => !r)}
+            aria-label={reordering ? 'Terminer la réorganisation' : 'Réorganiser les sections'}
             className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
               reordering
                 ? 'bg-orange-500 border-orange-500 text-white'
@@ -1161,8 +1162,7 @@ export default function ProfilePage() {
             }`}
           >
             {reordering ? <Check className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4" />}
-            <span className="hidden xs:inline sm:inline">{reordering ? 'Terminer' : 'Réorganiser'}</span>
-            <span className="xs:hidden sm:hidden">{reordering ? <Check className="w-4 h-4" /> : <ArrowUpDown className="w-4 h-4" />}</span>
+            <span>{reordering ? 'Terminer' : 'Réorganiser'}</span>
           </button>
         </div>
         {/* Raccourci carte de fidélité — visible uniquement si un programme actif existe pour le site choisi */}
