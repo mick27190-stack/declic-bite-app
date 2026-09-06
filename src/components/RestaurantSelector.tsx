@@ -22,6 +22,17 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
     new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Paris', weekday: 'short' }).format(now) ===
     'Mon';
 
+  // À partir de 22h (heure de Paris), les restaurants ont fermé : on bloque
+  // aussi les boutons d'appel affichés pendant un blocage admin.
+  const parisHour = Number(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Paris',
+      hour: '2-digit',
+      hour12: false,
+    }).format(now),
+  );
+  const isAfterClosing = parisHour >= 22;
+
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
       <h2 className="text-2xl font-display font-bold text-center text-foreground mb-6">
@@ -56,10 +67,10 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
                 </div>
               </div>
 
-              {isSiteClosed || isMonday ? (
+              {isSiteClosed || isMonday || isAfterClosing ? (
                 <div className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-muted text-muted-foreground font-semibold py-3 px-4 cursor-not-allowed">
                   <Phone className="w-4 h-4" />
-                  {isSiteClosed ? 'Site injoignable' : 'Fermé le lundi'}
+                  {isSiteClosed ? 'Site injoignable' : isMonday ? 'Fermé le lundi' : 'Fermé pour ce soir'}
                 </div>
               ) : (
                 <a
