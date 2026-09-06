@@ -22,8 +22,8 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
     new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Paris', weekday: 'short' }).format(now) ===
     'Mon';
 
-  // À partir de 22h (heure de Paris), les restaurants ont fermé : on bloque
-  // aussi les boutons d'appel affichés pendant un blocage admin.
+  // Les boutons d'appel (pendant un blocage admin) ne sont actifs que pendant
+  // les horaires d'ouverture : 18h00–22h00 (heure de Paris), sauf le lundi.
   const parisHour = Number(
     new Intl.DateTimeFormat('en-GB', {
       timeZone: 'Europe/Paris',
@@ -31,7 +31,7 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
       hour12: false,
     }).format(now),
   );
-  const isAfterClosing = parisHour >= 22;
+  const isOutsideCallHours = parisHour < 18 || parisHour >= 22;
 
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
