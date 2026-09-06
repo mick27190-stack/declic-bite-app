@@ -13,6 +13,7 @@ import { ActivePromoBanner } from '@/components/ActivePromoBanner';
 import { useMenuAvailability } from '@/hooks/useMenuAvailability';
 import { useMenuOverrides } from '@/hooks/useMenuOverrides';
 import { OrdersClosedBanner } from '@/components/OrdersClosedBanner';
+import { RetractableBanner } from '@/components/RetractableBanner';
 
 
 export default function MenuPage() {
