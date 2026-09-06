@@ -457,9 +457,9 @@ export default function AdminInvoicesPage() {
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Supprimer cette facture ?</AlertDialogTitle>
+                          <AlertDialogTitle>Retirer cette facture de l'historique ?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            La facture {inv.invoice_number} sera définitivement retirée de l'historique et le PDF associé supprimé du stockage. Cette action est irréversible.
+                            La facture {inv.invoice_number} sera retirée de cette liste. Le PDF reste archivé et le lien de téléchargement déjà envoyé au client continue de fonctionner.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
