@@ -26,7 +26,9 @@ import {
   ArrowDown,
   AlertTriangle,
   Gift,
-  ChevronRight
+  ChevronRight,
+  ChevronDown,
+  Eye
 } from 'lucide-react';
 import { useLoyaltyCard } from '@/hooks/useLoyalty';
 import { rewardLabel, SITE_LABELS } from '@/lib/loyalty';
