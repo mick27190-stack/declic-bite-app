@@ -44,7 +44,7 @@ import { parisIsoDate } from '@/lib/parisTime';
 import { OrderTimeline } from '@/components/OrderTimeline';
 import { Clock, Package, CheckCircle, XCircle, History } from 'lucide-react';
 import { useOrdersLinePrices, linePriceAt } from '@/lib/orderPricing';
-import { statusLabels, statusColors } from '@/types/order';
+import { statusLabels, statusColors, Order } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
 import { generateAndSendInvoice } from '@/lib/sendInvoice';
 import { useCompanyInfo } from '@/hooks/useCompanyInfo';
