@@ -142,5 +142,5 @@ export async function generateAndSendInvoice(
   );
   if (recErr) console.warn('Failed to record invoice:', recErr);
 
-  return { invoiceNumber: reference, email, totalTTC };
+  return { invoiceNumber: reference, email, totalTTC, isInvoice };
 }
