@@ -275,11 +275,9 @@ export default function AdminInvoicesPage() {
   const handleDelete = async (inv: InvoiceRow) => {
     setBusyId(inv.id);
     try {
-      // Best-effort remove of the stored PDF; ignore errors so a missing
-      // object doesn't block deletion of the row.
-      if (inv.storage_path) {
-        await supabase.storage.from('invoices').remove([inv.storage_path]);
-      }
+      // On ne supprime JAMAIS le PDF du stockage : le lien de téléchargement
+      // envoyé au client reste valable 30 jours et le document doit rester
+      // archivé. Seule la ligne d'historique est retirée.
       const { error } = await supabase.from('invoices').delete().eq('id', inv.id);
       if (error) throw error;
       setInvoices((prev) => prev.filter((i) => i.id !== inv.id));
@@ -459,9 +457,9 @@ export default function AdminInvoicesPage() {
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Supprimer cette facture ?</AlertDialogTitle>
+                          <AlertDialogTitle>Retirer cette facture de l'historique ?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            La facture {inv.invoice_number} sera définitivement retirée de l'historique et le PDF associé supprimé du stockage. Cette action est irréversible.
+                            La facture {inv.invoice_number} sera retirée de cette liste. Le PDF reste archivé et le lien de téléchargement déjà envoyé au client continue de fonctionner.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
