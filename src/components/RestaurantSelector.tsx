@@ -31,7 +31,10 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
       hour12: false,
     }).format(now),
   );
-  const isOutsideCallHours = parisHour < 18 || parisHour >= 22;
+  // Avant 18h00 : « Ouverture à 18h00 » ; après 22h00 : « Fermé pour ce soir ».
+  const isBeforeOpening = parisHour < 18;
+  const isEveningClosed = parisHour >= 22;
+  const isOutsideCallHours = isBeforeOpening || isEveningClosed;
 
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
@@ -70,7 +73,7 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
               {isSiteClosed || isMonday || isOutsideCallHours ? (
                 <div className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-muted text-muted-foreground font-semibold py-3 px-4 cursor-not-allowed">
                   <Phone className="w-4 h-4" />
-                  {isSiteClosed ? 'Site injoignable' : isMonday ? 'Fermé le lundi' : 'Ouverture à 18h00'}
+                  {isSiteClosed ? 'Site injoignable' : isMonday ? 'Fermé le lundi' : isEveningClosed ? 'Fermé pour ce soir' : 'Ouverture à 18h00'}
                 </div>
               ) : (
                 <a
