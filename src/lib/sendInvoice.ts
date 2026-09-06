@@ -7,7 +7,10 @@ export interface SendInvoiceResult {
   invoiceNumber: string;
   email: string;
   totalTTC: number;
+  /** true = vraie facture numérotée, false = simple récapitulatif de commande */
+  isInvoice: boolean;
 }
+
 
 /**
  * Génère la facture PDF d'une commande, la stocke dans le bucket privé
