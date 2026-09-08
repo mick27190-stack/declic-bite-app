@@ -47,6 +47,9 @@ export async function blobToCompressedDataUrl(
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   if (!ctx) return dataUrl;
+  // JPEG n'a pas de canal alpha : sans fond, la transparence devient noire.
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, height);
   ctx.drawImage(img, 0, 0, width, height);
 
   return canvas.toDataURL('image/jpeg', quality);
