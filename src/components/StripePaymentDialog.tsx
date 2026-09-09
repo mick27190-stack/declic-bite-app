@@ -236,8 +236,8 @@ export function StripePaymentDialog({
   };
 
   return (
-    {/* Seul le bouton « Annuler la commande » annule : ni le clic extérieur,
-        ni la touche Échap, ni la croix ne déclenchent l'annulation. */}
+    // Seul le bouton « Annuler la commande » annule : ni le clic extérieur,
+    // ni la touche Échap, ni la croix ne déclenchent l'annulation.
     <Dialog open={open}>
       <DialogContent
         className="max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain [&>button.absolute]:hidden"
