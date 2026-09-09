@@ -228,7 +228,7 @@ export function StripePaymentDialog({
     };
   }, [open, orderId, stripeSite]);
 
-  const abortOrder = async () => {
+  const cancelOrder = async (declined: boolean) => {
     if (!orderId) return;
     setAborting(true);
     try {
@@ -236,7 +236,13 @@ export function StripePaymentDialog({
         body: { order_id: orderId },
       });
       if (error) throw error;
-      toast({ title: 'Commande annulée', description: "Aucun montant n'a été débité." });
+      toast({
+        title: declined ? 'Paiement refusé — commande annulée' : 'Commande annulée',
+        description: declined
+          ? "Votre banque a refusé l'autorisation. Aucun montant n'a été débité."
+          : "Aucun montant n'a été débité.",
+        variant: declined ? 'destructive' : undefined,
+      });
     } catch (err) {
       console.error('cancel-order failed', err);
     } finally {
@@ -244,6 +250,8 @@ export function StripePaymentDialog({
       onCancelled();
     }
   };
+
+  const abortOrder = () => cancelOrder(false);
 
   return (
     // Seul le bouton « Annuler la commande » annule : ni le clic extérieur,
