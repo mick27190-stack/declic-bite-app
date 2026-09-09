@@ -54,6 +54,14 @@ function PaymentForm({
       redirect: 'if_required',
     });
     if (error) {
+      // Refus bancaire (carte refusée) : la commande est annulée immédiatement.
+      if (error.type === 'card_error') {
+        setErrorMessage(
+          `${error.message ?? 'Autorisation refusée par votre banque.'} La commande a été annulée, aucun montant n'a été débité.`,
+        );
+        await onDeclined();
+        return;
+      }
       setErrorMessage(error.message ?? "Le paiement n'a pas pu être autorisé.");
       return;
     }
