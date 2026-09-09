@@ -29,12 +29,14 @@ function PaymentForm({
   amount,
   onSuccess,
   onAbort,
+  onDeclined,
   aborting,
 }: {
   orderType: 'emporter' | 'livraison';
   amount: number;
   onSuccess: () => void;
   onAbort: () => void;
+  onDeclined: () => Promise<void>;
   aborting: boolean;
 }) {
   const stripe = useStripe();
