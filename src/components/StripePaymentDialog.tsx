@@ -236,8 +236,15 @@ export function StripePaymentDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => { if (!next) void abortOrder(); }}>
-      <DialogContent className="max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain">
+    // Seul le bouton « Annuler la commande » annule : ni le clic extérieur,
+    // ni la touche Échap, ni la croix ne déclenchent l'annulation.
+    <Dialog open={open}>
+      <DialogContent
+        className="max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain [&>button.absolute]:hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="font-display">Paiement sécurisé</DialogTitle>
           <DialogDescription>
