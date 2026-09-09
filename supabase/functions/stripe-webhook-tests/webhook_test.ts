@@ -64,7 +64,11 @@ Deno.test('payment_intent.canceled → commande annulée', () => {
 
 Deno.test('payment_intent.payment_failed → commande annulée sans capture', () => {
   const r = stripeEventToOrderUpdate(piEvent('payment_intent.payment_failed'));
-  assertEquals(r.update, { order_status: 'cancelled', status: 'cancelled' });
+  assertEquals(r.update, {
+    capture_status: 'failed',
+    order_status: 'cancelled',
+    status: 'cancelled',
+  });
 });
 
 Deno.test('événement non géré → ignoré', () => {

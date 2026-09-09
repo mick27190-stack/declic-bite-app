@@ -29,12 +29,14 @@ function PaymentForm({
   amount,
   onSuccess,
   onAbort,
+  onDeclined,
   aborting,
 }: {
   orderType: 'emporter' | 'livraison';
   amount: number;
   onSuccess: () => void;
   onAbort: () => void;
+  onDeclined: () => Promise<void>;
   aborting: boolean;
 }) {
   const stripe = useStripe();
@@ -52,6 +54,14 @@ function PaymentForm({
       redirect: 'if_required',
     });
     if (error) {
+      // Refus bancaire (carte refusée) : la commande est annulée immédiatement.
+      if (error.type === 'card_error') {
+        setErrorMessage(
+          `${error.message ?? 'Autorisation refusée par votre banque.'} La commande a été annulée, aucun montant n'a été débité.`,
+        );
+        await onDeclined();
+        return;
+      }
       setErrorMessage(error.message ?? "Le paiement n'a pas pu être autorisé.");
       return;
     }
@@ -218,7 +228,7 @@ export function StripePaymentDialog({
     };
   }, [open, orderId, stripeSite]);
 
-  const abortOrder = async () => {
+  const cancelOrder = async (declined: boolean) => {
     if (!orderId) return;
     setAborting(true);
     try {
@@ -226,7 +236,13 @@ export function StripePaymentDialog({
         body: { order_id: orderId },
       });
       if (error) throw error;
-      toast({ title: 'Commande annulée', description: "Aucun montant n'a été débité." });
+      toast({
+        title: declined ? 'Paiement refusé — commande annulée' : 'Commande annulée',
+        description: declined
+          ? "Votre banque a refusé l'autorisation. Aucun montant n'a été débité."
+          : "Aucun montant n'a été débité.",
+        variant: declined ? 'destructive' : undefined,
+      });
     } catch (err) {
       console.error('cancel-order failed', err);
     } finally {
@@ -234,6 +250,8 @@ export function StripePaymentDialog({
       onCancelled();
     }
   };
+
+  const abortOrder = () => cancelOrder(false);
 
   return (
     // Seul le bouton « Annuler la commande » annule : ni le clic extérieur,
@@ -272,6 +290,7 @@ export function StripePaymentDialog({
               amount={amount}
               onSuccess={onSuccess}
               onAbort={abortOrder}
+              onDeclined={() => cancelOrder(true)}
               aborting={aborting}
             />
           </Elements>

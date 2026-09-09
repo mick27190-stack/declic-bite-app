@@ -45,7 +45,9 @@ export function stripeEventToOrderUpdate(event: Record<string, unknown>): Resolv
       update = { capture_status: 'cancelled', order_status: 'cancelled', status: 'cancelled' };
       break;
     case 'payment_intent.payment_failed':
-      update = { order_status: 'cancelled', status: 'cancelled' };
+      // Pré-autorisation refusée par la banque : la commande passe en annulée
+      // et le règlement est marqué non encaissé.
+      update = { capture_status: 'failed', order_status: 'cancelled', status: 'cancelled' };
       break;
     default:
       update = null;
