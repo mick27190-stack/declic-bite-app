@@ -290,6 +290,7 @@ export function StripePaymentDialog({
               amount={amount}
               onSuccess={onSuccess}
               onAbort={abortOrder}
+              onDeclined={() => cancelOrder(true)}
               aborting={aborting}
             />
           </Elements>
