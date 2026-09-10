@@ -54,8 +54,10 @@ function PaymentForm({
       redirect: 'if_required',
     });
     if (error) {
-      // Refus bancaire (carte refusée) : la commande est annulée immédiatement.
-      if (error.type === 'card_error') {
+      // Seul un vrai refus de la banque annule la commande. Une saisie erronée
+      // (numéro, date, CVC) laisse le client corriger et réessayer.
+      const issuerDeclineCodes = ['card_declined', 'insufficient_funds', 'lost_card', 'stolen_card'];
+      if (error.type === 'card_error' && issuerDeclineCodes.includes(error.code ?? '')) {
         setErrorMessage(
           `${error.message ?? 'Autorisation refusée par votre banque.'} La commande a été annulée, aucun montant n'a été débité.`,
         );
