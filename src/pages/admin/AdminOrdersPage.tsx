@@ -198,7 +198,7 @@ export default function AdminOrdersPage() {
         .from('orders')
         .select('*', { count: 'exact', head: true })
         .or('capture_status.not.is.null,status.neq.pending')
-        .or('capture_status.is.null,capture_status.neq.pending'),
+        .or('capture_status.is.null,and(capture_status.neq.pending,capture_status.neq.failed)'),
 
 
     ]);

@@ -19,6 +19,8 @@ export function isOrderPaymentAuthorized(record: {
   }
   // Paiement pas encore autorisé par la banque (en attente du webhook Stripe).
   if (record.capture_status === 'pending') return false;
+  // Pré-autorisation refusée : aucune autorisation n'a jamais existé.
+  if (record.capture_status === 'failed') return false;
   if (record.capture_status) return true;
   return record.status !== 'pending';
 }
