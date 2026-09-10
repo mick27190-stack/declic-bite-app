@@ -64,7 +64,8 @@ function PaymentForm({
         await onDeclined();
         return;
       }
-      setErrorMessage(error.message ?? "Le paiement n'a pas pu être autorisé.");
+      // Message explicite selon le champ invalide, avant toute fermeture.
+      setErrorMessage(describeCardError(error) ?? error.message ?? "Le paiement n'a pas pu être autorisé.");
       return;
     }
     if (paymentIntent && ['requires_capture', 'succeeded'].includes(paymentIntent.status)) {
