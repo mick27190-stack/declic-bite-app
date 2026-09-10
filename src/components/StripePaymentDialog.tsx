@@ -24,6 +24,32 @@ type Props = {
   onCancelled: () => void;
 };
 
+// Mappe les codes d'erreur Stripe vers un message français explicite nommant
+// le champ concerné (numéro, mois, CVC) pour guider la correction client.
+function describeCardError(error: {
+  type?: string;
+  code?: string;
+  message?: string;
+}): string | null {
+  if (error.type !== 'card_error') return null;
+  switch (error.code) {
+    case 'incorrect_number':
+    case 'invalid_number':
+      return 'Le numéro de carte saisi est invalide. Vérifiez les 16 chiffres inscrits sur votre carte.';
+    case 'invalid_expiry_month':
+      return "Le mois d'expiration saisi est invalide (01 à 12).";
+    case 'invalid_expiry_year':
+      return "L'année d'expiration est invalide.";
+    case 'expired_card':
+      return "Votre carte a expiré. Merci d'utiliser une autre carte.";
+    case 'incorrect_cvc':
+    case 'invalid_cvc':
+      return 'Le cryptogramme visuel (CVC) est invalide : 3 chiffres au dos de la carte.';
+    default:
+      return null;
+  }
+}
+
 function PaymentForm({
   orderType,
   amount,
@@ -64,7 +90,8 @@ function PaymentForm({
         await onDeclined();
         return;
       }
-      setErrorMessage(error.message ?? "Le paiement n'a pas pu être autorisé.");
+      // Message explicite selon le champ invalide, avant toute fermeture.
+      setErrorMessage(describeCardError(error) ?? error.message ?? "Le paiement n'a pas pu être autorisé.");
       return;
     }
     if (paymentIntent && ['requires_capture', 'succeeded'].includes(paymentIntent.status)) {
