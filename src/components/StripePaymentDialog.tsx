@@ -41,7 +41,7 @@ function describeCardError(error: {
     case 'invalid_expiry_year':
       return "L'année d'expiration est invalide.";
     case 'expired_card':
-      return 'Votre carte a expiré. Merci d'utiliser une autre carte.';
+      return "Votre carte a expiré. Merci d'utiliser une autre carte.";
     case 'incorrect_cvc':
     case 'invalid_cvc':
       return 'Le cryptogramme visuel (CVC) est invalide : 3 chiffres au dos de la carte.';
