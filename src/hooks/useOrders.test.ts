@@ -62,6 +62,16 @@ describe("isOrderPaymentAuthorized — visibilité back-office après paiement",
     ).toBe(true);
   });
 
+  it("une pré-autorisation refusée par la banque reste visible comme « Annulée » (traçabilité)", () => {
+    expect(
+      isOrderPaymentAuthorized({
+        status: "cancelled",
+        capture_status: "failed",
+        stripe_payment_intent_id: "pi_123",
+      }),
+    ).toBe(true);
+  });
+
   it("une autorisation annulée sans paiement créé et toujours pending est masquée", () => {
     expect(
       isOrderPaymentAuthorized({

@@ -193,12 +193,12 @@ export default function AdminOrdersPage() {
     const [{ data: history }, { count: live }] = await Promise.all([
       supabase.from('order_history').select('order_count'),
       // Ne compte que les commandes dont le paiement a été autorisé (visibles ici).
-      // Les commandes annulées après autorisation restent comptées et affichées.
+      // Les commandes annulées (après autorisation ou refus bancaire) restent
+      // comptées et affichées pour la traçabilité.
       supabase
         .from('orders')
         .select('*', { count: 'exact', head: true })
-        .or('capture_status.not.is.null,status.neq.pending')
-        .or('capture_status.is.null,and(capture_status.neq.pending,capture_status.neq.failed)'),
+        .or('capture_status.not.is.null,status.neq.pending'),
 
 
     ]);

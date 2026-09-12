@@ -5,9 +5,9 @@ import { CartItem } from '@/types/pizza';
 import { useToast } from '@/hooks/use-toast';
 
 /** Une commande n'est visible côté admin qu'une fois le paiement autorisé
- *  (capture_status renseigné par Stripe). Les commandes annulées après
- *  autorisation restent visibles (suivi des annulations) ; celles jamais
- *  autorisées (panier abandonné, paiement échoué) restent masquées. */
+ *  (capture_status renseigné par Stripe). Les commandes annulées — après
+ *  autorisation ou après refus bancaire — restent visibles (traçabilité) ;
+ *  seules celles jamais autorisées (panier abandonné) restent masquées. */
 export function isOrderPaymentAuthorized(record: {
   capture_status?: string | null;
   status?: string | null;
@@ -19,8 +19,8 @@ export function isOrderPaymentAuthorized(record: {
   }
   // Paiement pas encore autorisé par la banque (en attente du webhook Stripe).
   if (record.capture_status === 'pending') return false;
-  // Pré-autorisation refusée : aucune autorisation n'a jamais existé.
-  if (record.capture_status === 'failed') return false;
+  // Pré-autorisation refusée : la commande est annulée mais reste visible
+  // pour la traçabilité (le client peut appeler pour comprendre).
   if (record.capture_status) return true;
   return record.status !== 'pending';
 }
@@ -313,7 +313,9 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
                 return [updatedOrder, ...prev];
               });
               // Le paiement vient d'être autorisé : la commande arrive en cuisine.
-              if (isNewArrival) {
+              // Une pré-autorisation refusée (capture_status 'failed') reste visible
+              // comme « Annulée » mais ne doit pas déclencher d'alerte nouvelle commande.
+              if (isNewArrival && updatedOrder.capture_status !== 'failed') {
                 toast({
                   title: '🔔 Nouvelle commande !',
                   description: `Commande de ${updatedOrder.total_price.toFixed(2)}€`,
