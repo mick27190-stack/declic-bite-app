@@ -354,7 +354,6 @@ export const pizzas: Pizza[] = [
     isAvailable: true,
     hasSize: true,
     hasBase: true,
-    hasSupplements: false,
   },
   {
     id: 'panini-jambon',
@@ -367,7 +366,6 @@ export const pizzas: Pizza[] = [
     isAvailable: true,
     hasSize: true,
     hasBase: true,
-    hasSupplements: false,
   },
   {
     id: 'panini-savoyard',
@@ -380,7 +378,6 @@ export const pizzas: Pizza[] = [
     isAvailable: true,
     hasSize: true,
     hasBase: true,
-    hasSupplements: false,
   },
   {
     id: 'panini-raclette',
@@ -393,7 +390,6 @@ export const pizzas: Pizza[] = [
     isAvailable: true,
     hasSize: true,
     hasBase: true,
-    hasSupplements: false,
   },
 
   // Boissons
