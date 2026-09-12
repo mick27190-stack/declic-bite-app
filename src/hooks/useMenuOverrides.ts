@@ -76,12 +76,12 @@ export function customToPizza(o: MenuOverride): Pizza {
     basePrice: o.base_price ?? 0,
     category,
     isAvailable: true,
-    // Même architecture que les pizzas/paninis existants :
-    // tailles, base tomate/crème et suppléments à 1 € pour les nouveaux
-    // produits créés en admin, sauf boissons (rien) et bambino (base seule).
+    // Même architecture que les pizzas/paninis/bambinos existants :
+    // tailles (sauf bambino), base tomate/crème et suppléments à 1 €,
+    // sauf boissons (rien).
     hasSize: !isDrink && !isBambino,
     hasBase: !isDrink,
-    hasSupplements: !isDrink && !isBambino,
+    hasSupplements: !isDrink,
   };
 }
 
