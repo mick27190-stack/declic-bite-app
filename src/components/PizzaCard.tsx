@@ -61,6 +61,12 @@ export function PizzaCard({ pizza, onClick, unavailable = false }: PizzaCardProp
         )}
       </div>
 
+      {pizza.category !== 'boissons' && (
+        <p className="text-xs italic text-gray-400 text-center -mt-1 px-2">
+          Photo non contractuelle
+        </p>
+      )}
+
       <div className="p-4 flex-1">
         <h3
           className={`text-lg font-display font-bold leading-snug min-h-[2.75rem] line-clamp-2 transition-colors ${
