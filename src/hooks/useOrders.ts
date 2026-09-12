@@ -313,7 +313,9 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
                 return [updatedOrder, ...prev];
               });
               // Le paiement vient d'être autorisé : la commande arrive en cuisine.
-              if (isNewArrival) {
+              // Une pré-autorisation refusée (capture_status 'failed') reste visible
+              // comme « Annulée » mais ne doit pas déclencher d'alerte nouvelle commande.
+              if (isNewArrival && updatedOrder.capture_status !== 'failed') {
                 toast({
                   title: '🔔 Nouvelle commande !',
                   description: `Commande de ${updatedOrder.total_price.toFixed(2)}€`,
