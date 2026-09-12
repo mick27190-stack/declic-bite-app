@@ -65,6 +65,7 @@ export function applyOverride(pizza: Pizza, o?: MenuOverride): Pizza {
 export function customToPizza(o: MenuOverride): Pizza {
   const category = (o.category as ProductCategory) ?? 'classiques';
   const isDrink = category === 'boissons';
+  const isBambino = category === 'bambino';
   const baseName = o.name ?? 'Nouveau produit';
   return {
     id: o.item_id,
@@ -75,6 +76,12 @@ export function customToPizza(o: MenuOverride): Pizza {
     basePrice: o.base_price ?? 0,
     category,
     isAvailable: true,
+    // Même architecture que les pizzas/paninis existants :
+    // tailles, base tomate/crème et suppléments à 1 € pour les nouveaux
+    // produits créés en admin, sauf boissons (rien) et bambino (base seule).
+    hasSize: !isDrink && !isBambino,
+    hasBase: !isDrink,
+    hasSupplements: !isDrink && !isBambino,
   };
 }
 
