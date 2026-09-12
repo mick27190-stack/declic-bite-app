@@ -62,6 +62,15 @@ export default function CGVPage() {
         Chaque exploitant se réserve le droit de modifier à tout moment sa carte, ses
         prix et ses disponibilités.
       </LegalP>
+      <LegalP>
+        <strong className="font-semibold text-foreground">2.1. Photographies des
+        produits.</strong> Les photographies illustrant les produits présentés sur le
+        site declicpizza.fr sont fournies à titre indicatif et n'ont pas de valeur
+        contractuelle. La composition, la présentation ou l'aspect visuel du produit
+        livré peuvent différer légèrement des photographies, notamment en fonction des
+        ingrédients disponibles ou de leur préparation. Ces variations éventuelles ne
+        constituent pas un motif de non-conformité du produit.
+      </LegalP>
 
       <LegalH2>Article 3 — Prix</LegalH2>
       <LegalP>
