@@ -62,7 +62,7 @@ export function PizzaCard({ pizza, onClick, unavailable = false }: PizzaCardProp
       </div>
 
       {(pizza.category !== 'boissons' || pizza.id === 'rose-bouteille') && (
-        <p className="text-xs italic text-gray-400 text-center -mt-1 px-2">
+        <p className="text-[9px] italic text-gray-400 text-center -mt-1 px-2 leading-none">
           Photo non contractuelle
         </p>
       )}
