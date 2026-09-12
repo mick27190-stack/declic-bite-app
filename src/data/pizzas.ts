@@ -472,6 +472,8 @@ export const supplements: Supplement[] = [
   { id: 'reblochon', name: 'Reblochon', price: 1 },
   { id: 'ananas', name: 'Ananas', price: 1 },
   { id: 'miel', name: 'Miel', price: 1 },
+  { id: 'bleu', name: 'Bleu', price: 1 },
+  { id: 'chorizo', name: 'Chorizo', price: 1 },
 ];
 
 export const restaurants: Restaurant[] = [
