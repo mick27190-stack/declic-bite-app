@@ -66,6 +66,10 @@ Deno.serve(async (req) => {
       throw new Error(`Pré-autorisation libérée mais mise à jour impossible : ${updErr.message}`);
     }
 
+    // E-mail client : récapitulatif + motif + absence de débit (jamais si le
+    // paiement avait déjà été encaissé).
+    if (!alreadyCaptured) await sendOrderCancelledEmail(sb, order.id, reason);
+
 
     return new Response(JSON.stringify({ ok: true, already_captured: alreadyCaptured }), {
 
