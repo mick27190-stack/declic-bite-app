@@ -262,7 +262,10 @@ export function StripePaymentDialog({
     setAborting(true);
     try {
       const { error } = await supabase.functions.invoke('cancel-order', {
-        body: { order_id: orderId },
+        body: {
+          order_id: orderId,
+          reason: declined ? 'bank_declined' : 'customer_payment_cancelled',
+        },
       });
       if (error) throw error;
       toast({

@@ -54,12 +54,11 @@ function formatItems(items: any): { label?: string; details?: string; quantity?:
       const sel = it.selectedItems.map((s: any) => s?.name ?? s).filter(Boolean);
       if (sel.length) parts.push(sel.join(', '));
     }
-    const unit =
-      Number(it?.size?.price ?? it?.price ?? 0) +
+    const supTotal = Array.isArray(it?.supplements)
       // deno-lint-ignore no-explicit-any
-      sups.reduce((_sum: number, _n: string) => _sum, 0) +
-      // deno-lint-ignore no-explicit-any
-      (Array.isArray(it?.supplements) ? it.supplements.reduce((s: number, x: any) => s + Number(x?.price ?? 0), 0) : 0);
+      ? it.supplements.reduce((s: number, x: any) => s + Number(x?.price ?? 0), 0)
+      : 0;
+    const unit = Number(it?.size?.price ?? it?.price ?? 0) + supTotal;
     return {
       label: String(name),
       details: parts.join(' · ') || undefined,

@@ -1,6 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { cancelPaymentIntent, resolveSite, retrievePaymentIntent } from '../_shared/stripe.ts';
 import { requireAdminForSite, requireUser, serviceClient } from '../_shared/orderAccess.ts';
+import { sendOrderCancelledEmail, type CancellationReason } from '../_shared/orderCancelledEmail.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
