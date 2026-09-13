@@ -29,6 +29,14 @@ Deno.serve(async (req) => {
       (order.order_status === null || order.order_status === 'pending_confirmation');
     if (!ownerMayCancel) await requireAdminForSite(req, site);
 
+    // Motif d'annulation (pour l'e-mail client) : fourni par la page de paiement,
+    // sinon déduit de l'appelant.
+    const allowedReasons: CancellationReason[] = ['customer_payment_cancelled', 'bank_declined'];
+    const requested = String(body.reason ?? '') as CancellationReason;
+    const reason: CancellationReason = ownerMayCancel
+      ? (allowedReasons.includes(requested) ? requested : 'customer_payment_cancelled')
+      : 'admin_cancelled';
+
     // Annule le PaymentIntent seulement s'il n'a jamais été capturé
     let alreadyCaptured = order.capture_status === 'captured';
     if (order.stripe_payment_intent_id && !alreadyCaptured) {
