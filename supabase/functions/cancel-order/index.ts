@@ -1,6 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { cancelPaymentIntent, resolveSite, retrievePaymentIntent } from '../_shared/stripe.ts';
 import { requireAdminForSite, requireUser, serviceClient } from '../_shared/orderAccess.ts';
+import { sendOrderCancelledEmail, type CancellationReason } from '../_shared/orderCancelledEmail.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -27,6 +28,14 @@ Deno.serve(async (req) => {
       order.capture_status !== 'captured' &&
       (order.order_status === null || order.order_status === 'pending_confirmation');
     if (!ownerMayCancel) await requireAdminForSite(req, site);
+
+    // Motif d'annulation (pour l'e-mail client) : fourni par la page de paiement,
+    // sinon déduit de l'appelant.
+    const allowedReasons: CancellationReason[] = ['customer_payment_cancelled', 'bank_declined'];
+    const requested = String(body.reason ?? '') as CancellationReason;
+    const reason: CancellationReason = ownerMayCancel
+      ? (allowedReasons.includes(requested) ? requested : 'customer_payment_cancelled')
+      : 'admin_cancelled';
 
     // Annule le PaymentIntent seulement s'il n'a jamais été capturé
     let alreadyCaptured = order.capture_status === 'captured';
@@ -56,6 +65,10 @@ Deno.serve(async (req) => {
     if (updErr) {
       throw new Error(`Pré-autorisation libérée mais mise à jour impossible : ${updErr.message}`);
     }
+
+    // E-mail client : récapitulatif + motif + absence de débit (jamais si le
+    // paiement avait déjà été encaissé).
+    if (!alreadyCaptured) await sendOrderCancelledEmail(sb, order.id, reason);
 
 
     return new Response(JSON.stringify({ ok: true, already_captured: alreadyCaptured }), {

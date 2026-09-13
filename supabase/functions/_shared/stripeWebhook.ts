@@ -2,6 +2,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { verifyStripeSignature, type StripeSite } from './stripe.ts';
 import { serviceClient } from './orderAccess.ts';
 import { stripeEventToOrderUpdate } from './stripeEventMap.ts';
+import { sendOrderCancelledEmail } from './orderCancelledEmail.ts';
 
 export { stripeEventToOrderUpdate };
 export type { ResolvedStripeEvent } from './stripeEventMap.ts';
@@ -55,6 +56,21 @@ export async function handleStripeWebhook(req: Request, site: StripeSite): Promi
   if (orderId) query = query.eq('id', orderId);
   const { error } = await query;
   if (error) console.error('Webhook order update failed:', error.message);
+
+  // Pré-autorisation refusée par la banque : informer le client par e-mail
+  // (envoi idempotent, aucun doublon si la page de paiement a déjà annulé).
+  if (!error && event.type === 'payment_intent.payment_failed') {
+    let targetId = orderId;
+    if (!targetId) {
+      const { data: found } = await sb
+        .from('orders')
+        .select('id')
+        .eq('stripe_payment_intent_id', paymentIntentId)
+        .maybeSingle();
+      targetId = found?.id as string | undefined;
+    }
+    if (targetId) await sendOrderCancelledEmail(sb, targetId, 'bank_declined');
+  }
 
   return new Response(JSON.stringify({ received: true }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },

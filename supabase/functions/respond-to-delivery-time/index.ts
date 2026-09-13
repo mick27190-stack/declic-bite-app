@@ -2,6 +2,7 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { cancelPaymentIntent, captureIfNeeded, resolveSite } from '../_shared/stripe.ts';
 import { requireUser, serviceClient } from '../_shared/orderAccess.ts';
 import { assignInvoiceNumber } from '../_shared/invoiceNumber.ts';
+import { sendOrderCancelledEmail } from '../_shared/orderCancelledEmail.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -69,6 +70,7 @@ Deno.serve(async (req) => {
         capture_status: 'cancelled',
         status: 'cancelled',
       }).eq('id', order.id);
+      await sendOrderCancelledEmail(sb, order.id, 'delivery_time_refused');
     }
 
     return new Response(JSON.stringify({ ok: true }), {
