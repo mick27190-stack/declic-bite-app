@@ -88,7 +88,7 @@ export function OrderTimeline({ order }: { order: Order }) {
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs font-medium text-destructive">Annulée</span>
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                {formatDate(reachedMap.get('cancelled')!)}
+                {formatDate(cancelledAt)}
               </span>
             </div>
           </li>
