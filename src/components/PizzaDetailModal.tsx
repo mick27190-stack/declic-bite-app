@@ -53,10 +53,10 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   };
 
   const calculateTotal = () => {
-    if (!showSize) {
-      return getNonPizzaPrice(pizza) * quantity;
-    }
     const supps = selectedSupplements.reduce((sum, s) => sum + s.price, 0);
+    if (!showSize) {
+      return (getNonPizzaPrice(pizza) + supps) * quantity;
+    }
     if (isPizza) {
       const pairPromo = getPairPromoForSize(selectedSize.id, pizza.category);
       if (pairPromo) {
