@@ -184,10 +184,13 @@ function CurrentOrders() {
       ) : (
         <div className="space-y-3">
           {activeOrders.map((order) => {
+            const isCancelled = order.status === 'cancelled';
             const awaitingResponse =
+              !isCancelled &&
               order.order_type === 'livraison' &&
               !!order.delivery_estimate &&
               !order.delivery_response;
+
 
             return (
               <div key={order.id} className="p-3 rounded-lg border border-border">
