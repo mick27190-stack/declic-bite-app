@@ -90,11 +90,13 @@ function CurrentOrders() {
   const todayIso = parisIsoDate();
   const activeOrders = orders
     .filter((order) => {
-      if (order.status === 'cancelled') return false;
-
       // Seules les commandes du jour (heure de Paris) restent dans
       // "Mes commandes en cours" ; les autres basculent dans l'historique.
       if (parisIsoDate(new Date(order.created_at)) !== todayIso) return false;
+
+      // Les commandes annulées restent visibles sur la journée (traçabilité
+      // pour le client : timeline + récapitulatif de commande).
+      if (order.status === 'cancelled') return true;
 
       // Delivery orders must stay visible in the customer profile for tracking,
       // including when the restaurant marks them as delivered.
@@ -102,6 +104,7 @@ function CurrentOrders() {
 
       return order.status !== 'delivered';
     })
+
     // Suivi de commandes : uniquement les 5 dernières commandes.
     .slice(0, 5);
 
