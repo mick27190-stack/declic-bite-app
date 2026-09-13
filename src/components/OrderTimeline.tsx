@@ -20,7 +20,9 @@ export function OrderTimeline({ order }: { order: Order }) {
   history.forEach((h) => reachedMap.set(h.status, h.changed_at));
 
   const isDelivery = order.order_type === 'livraison';
-  const cancelled = reachedMap.has('cancelled');
+  const cancelled = reachedMap.has('cancelled') || order.status === 'cancelled';
+  const cancelledAt = reachedMap.get('cancelled') ?? order.updated_at ?? order.created_at;
+
 
   const steps: TimelineStep[] = [
     { key: 'pending', label: 'Commande passée', icon: Receipt },
@@ -86,7 +88,7 @@ export function OrderTimeline({ order }: { order: Order }) {
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs font-medium text-destructive">Annulée</span>
               <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                {formatDate(reachedMap.get('cancelled')!)}
+                {formatDate(cancelledAt)}
               </span>
             </div>
           </li>

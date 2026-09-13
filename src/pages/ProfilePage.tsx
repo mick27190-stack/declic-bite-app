@@ -90,11 +90,13 @@ function CurrentOrders() {
   const todayIso = parisIsoDate();
   const activeOrders = orders
     .filter((order) => {
-      if (order.status === 'cancelled') return false;
-
       // Seules les commandes du jour (heure de Paris) restent dans
       // "Mes commandes en cours" ; les autres basculent dans l'historique.
       if (parisIsoDate(new Date(order.created_at)) !== todayIso) return false;
+
+      // Les commandes annulées restent visibles sur la journée (traçabilité
+      // pour le client : timeline + récapitulatif de commande).
+      if (order.status === 'cancelled') return true;
 
       // Delivery orders must stay visible in the customer profile for tracking,
       // including when the restaurant marks them as delivered.
@@ -102,6 +104,7 @@ function CurrentOrders() {
 
       return order.status !== 'delivered';
     })
+
     // Suivi de commandes : uniquement les 5 dernières commandes.
     .slice(0, 5);
 
@@ -181,10 +184,13 @@ function CurrentOrders() {
       ) : (
         <div className="space-y-3">
           {activeOrders.map((order) => {
+            const isCancelled = order.status === 'cancelled';
             const awaitingResponse =
+              !isCancelled &&
               order.order_type === 'livraison' &&
               !!order.delivery_estimate &&
               !order.delivery_response;
+
 
             return (
               <div key={order.id} className="p-3 rounded-lg border border-border">
@@ -250,7 +256,14 @@ function CurrentOrders() {
                   ) : (
                     <Mail className="w-4 h-4 mr-1" />
                   )}
-                  {invoiceRequested.has(order.id) ? 'Facture envoyée' : 'Demander une facture'}
+                  {isCancelled
+                    ? invoiceRequested.has(order.id)
+                      ? 'Récapitulatif envoyé'
+                      : 'Demander un récapitulatif'
+                    : invoiceRequested.has(order.id)
+                      ? 'Facture envoyée'
+                      : 'Demander une facture'}
+
 
                 </Button>
 
