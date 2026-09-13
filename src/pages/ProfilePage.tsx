@@ -256,7 +256,14 @@ function CurrentOrders() {
                   ) : (
                     <Mail className="w-4 h-4 mr-1" />
                   )}
-                  {invoiceRequested.has(order.id) ? 'Facture envoyée' : 'Demander une facture'}
+                  {isCancelled
+                    ? invoiceRequested.has(order.id)
+                      ? 'Récapitulatif envoyé'
+                      : 'Demander un récapitulatif'
+                    : invoiceRequested.has(order.id)
+                      ? 'Facture envoyée'
+                      : 'Demander une facture'}
+
 
                 </Button>
 
