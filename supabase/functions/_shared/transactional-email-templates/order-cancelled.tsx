@@ -65,9 +65,16 @@ const OrderCancelledEmail = ({
           )}
           <Section style={infoBox}>
             <Text style={infoText}>
-              💳 <strong>Aucun montant ne sera débité de votre compte bancaire.</strong> La
-              pré-autorisation réalisée lors de la commande a été libérée : selon votre banque,
-              elle peut rester affichée quelques jours avant de disparaître automatiquement.
+              💳{' '}
+              {paymentNotice ? (
+                <span>{paymentNotice}</span>
+              ) : (
+                <>
+                  <strong>Aucun montant ne sera débité de votre compte bancaire.</strong> La
+                  pré-autorisation réalisée lors de la commande a été libérée : selon votre banque,
+                  elle peut rester affichée quelques jours avant de disparaître automatiquement.
+                </>
+              )}
             </Text>
           </Section>
           <Hr style={hr} />
