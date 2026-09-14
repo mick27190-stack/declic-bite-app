@@ -154,6 +154,14 @@ export default function CGVPage() {
         demander l'annulation de sa commande en contactant directement l'établissement
         concerné avant la préparation de celle-ci.
       </LegalP>
+      <LegalP>
+        <strong className="font-semibold text-foreground">6.4. Remboursement en cas
+        d'annulation après encaissement.</strong> Si l'établissement annule la commande
+        après que le paiement a été encaissé (capture déjà effectuée), le remboursement
+        est effectué sur place, à l'établissement auprès duquel la commande a été
+        passée. Le Client doit se présenter au site de sa commande, muni de sa
+        confirmation de commande, pour obtenir le remboursement du montant encaissé.
+      </LegalP>
 
       <LegalH2>Article 7 — Livraison et retrait</LegalH2>
       <LegalP>
