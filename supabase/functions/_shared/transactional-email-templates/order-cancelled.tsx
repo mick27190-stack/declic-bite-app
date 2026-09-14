@@ -28,6 +28,7 @@ interface OrderCancelledProps {
   restaurant?: string
   orderType?: string
   reasonMessage?: string
+  paymentNotice?: string
   items?: CancelledLine[]
   total?: string
 }
@@ -39,6 +40,7 @@ const OrderCancelledEmail = ({
   restaurant,
   orderType,
   reasonMessage,
+  paymentNotice,
   items,
   total,
 }: OrderCancelledProps) => {
