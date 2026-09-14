@@ -29,6 +29,7 @@ interface OrderCancelledProps {
   orderType?: string
   reasonMessage?: string
   paymentNotice?: string
+  totalSuffix?: string
   items?: CancelledLine[]
   total?: string
 }
@@ -41,6 +42,7 @@ const OrderCancelledEmail = ({
   orderType,
   reasonMessage,
   paymentNotice,
+  totalSuffix,
   items,
   total,
 }: OrderCancelledProps) => {
@@ -97,7 +99,8 @@ const OrderCancelledEmail = ({
           ))}
           {total && (
             <Text style={totalText}>
-              Total de la commande annulée : <strong>{total}</strong> (non encaissé)
+              Total de la commande annulée : <strong>{total}</strong>{' '}
+              {totalSuffix ?? '(non encaissé)'}
             </Text>
           )}
           <Hr style={hr} />
