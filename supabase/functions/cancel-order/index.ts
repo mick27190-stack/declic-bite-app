@@ -35,10 +35,11 @@ Deno.serve(async (req) => {
     const requested = String(body.reason ?? '') as CancellationReason;
     const reason: CancellationReason = ownerMayCancel
       ? (allowedReasons.includes(requested) ? requested : 'customer_payment_cancelled')
-      : 'admin_cancelled';
+      : (alreadyCapturedInitially ? 'admin_cancelled_captured' : 'admin_cancelled');
 
     // Annule le PaymentIntent seulement s'il n'a jamais été capturé
     let alreadyCaptured = order.capture_status === 'captured';
+    const alreadyCapturedInitially = alreadyCaptured;
     if (order.stripe_payment_intent_id && !alreadyCaptured) {
       try {
         const pi = await retrievePaymentIntent(site, order.stripe_payment_intent_id);
@@ -68,7 +69,11 @@ Deno.serve(async (req) => {
 
     // E-mail client : récapitulatif + motif + absence de débit (jamais si le
     // paiement avait déjà été encaissé).
-    if (!alreadyCaptured) await sendOrderCancelledEmail(sb, order.id, reason);
+    await sendOrderCancelledEmail(
+      sb,
+      order.id,
+      alreadyCaptured && !ownerMayCancel ? 'admin_cancelled_captured' : reason,
+    );
 
 
     return new Response(JSON.stringify({ ok: true, already_captured: alreadyCaptured }), {
