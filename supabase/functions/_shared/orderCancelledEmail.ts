@@ -30,7 +30,7 @@ const REASON_MESSAGES: Record<CancellationReason, string> = {
 };
 
 const CAPTURED_PAYMENT_NOTICE =
-  'Votre commande ayant déjà été réglée, le montant correspondant vous sera remboursé sur le moyen de paiement utilisé. Selon votre banque, le remboursement peut mettre quelques jours à apparaître sur votre compte.';
+  'Votre commande ayant déjà été réglée, le montant correspondant vous sera remboursé sur place, à l\'établissement auprès duquel vous avez commandé. Conformément à nos CGV (article 6.4), vous devez vous présenter au site de votre commande pour obtenir votre remboursement ; merci de vous y rendre dès que possible muni de votre confirmation de commande.';
 
 function euros(n: number): string {
   return `${n.toFixed(2).replace('.', ',')}€`;
