@@ -13,7 +13,8 @@ export type CancellationReason =
   | 'customer_payment_cancelled'
   | 'bank_declined'
   | 'delivery_time_refused'
-  | 'admin_cancelled';
+  | 'admin_cancelled'
+  | 'admin_cancelled_captured';
 
 const REASON_MESSAGES: Record<CancellationReason, string> = {
   customer_payment_cancelled:
@@ -24,7 +25,12 @@ const REASON_MESSAGES: Record<CancellationReason, string> = {
     'Motif : vous avez refusé le nouvel horaire de livraison proposé par la pizzeria. Votre commande a donc été annulée et aucun règlement n’a été encaissé.',
   admin_cancelled:
     'Motif : la pizzeria a dû annuler votre commande. Nous en sommes sincèrement désolés et restons joignables par téléphone pour vous apporter plus de précisions.',
+  admin_cancelled_captured:
+    'Motif : la pizzeria a dû annuler votre commande. Nous en sommes sincèrement désolés et restons joignables par téléphone pour vous apporter plus de précisions.',
 };
+
+const CAPTURED_PAYMENT_NOTICE =
+  'Votre commande ayant déjà été réglée, le montant correspondant vous sera remboursé sur le moyen de paiement utilisé. Selon votre banque, le remboursement peut mettre quelques jours à apparaître sur votre compte.';
 
 function euros(n: number): string {
   return `${n.toFixed(2).replace('.', ',')}€`;
@@ -37,10 +43,14 @@ function generateToken(): string {
 }
 
 // deno-lint-ignore no-explicit-any
-function formatItems(items: any): { label?: string; details?: string; quantity?: number; price?: string }[] {
+function formatItems(
+  items: any,
+  // deno-lint-ignore no-explicit-any
+  unitPrices?: number[],
+): { label?: string; details?: string; quantity?: number; price?: string }[] {
   if (!Array.isArray(items)) return [];
   // deno-lint-ignore no-explicit-any
-  return items.map((it: any) => {
+  return items.map((it: any, idx: number) => {
     const name = it?.pizza?.name ?? it?.name ?? 'Article';
     const quantity = Number(it?.quantity ?? 1);
     const parts: string[] = [];
@@ -58,7 +68,11 @@ function formatItems(items: any): { label?: string; details?: string; quantity?:
       // deno-lint-ignore no-explicit-any
       ? it.supplements.reduce((s: number, x: any) => s + Number(x?.price ?? 0), 0)
       : 0;
-    const unit = Number(it?.size?.price ?? it?.price ?? 0) + supTotal;
+    const computed = unitPrices?.[idx];
+    const unit =
+      typeof computed === 'number' && Number.isFinite(computed)
+        ? computed
+        : Number(it?.size?.price ?? it?.price ?? 0) + supTotal;
     return {
       label: String(name),
       details: parts.join(' · ') || undefined,
@@ -150,6 +164,26 @@ export async function sendOrderCancelledEmail(
       timeStyle: 'short',
     }).format(new Date(order.created_at as string));
 
+    // Prix unitaires : même fonction serveur que le total facturé, pour que les
+    // lignes de l'e-mail ne puissent pas diverger du total.
+    let unitPrices: number[] | undefined;
+    try {
+      const { data: lines } = await sb.rpc('compute_order_line_prices', {
+        _items: order.items,
+        _now: order.created_at,
+      });
+      if (Array.isArray(lines)) {
+        // deno-lint-ignore no-explicit-any
+        unitPrices = lines.map((row: any) =>
+          Number(row?.unit_price ?? 0) + Number(row?.supplements_total ?? 0)
+        );
+      }
+    } catch (_e) {
+      unitPrices = undefined;
+    }
+
+    const captured = reason === 'admin_cancelled_captured';
+
     const templateData = {
       customerName,
       orderNumber: String(order.id).slice(0, 8).toUpperCase(),
@@ -157,7 +191,9 @@ export async function sendOrderCancelledEmail(
       restaurant: order.restaurant as string,
       orderType: order.order_type === 'livraison' ? 'Livraison' : 'À emporter',
       reasonMessage: REASON_MESSAGES[reason],
-      items: formatItems(order.items),
+      paymentNotice: captured ? CAPTURED_PAYMENT_NOTICE : undefined,
+      totalSuffix: captured ? '(remboursement en cours)' : undefined,
+      items: formatItems(order.items, unitPrices),
       total: euros(Number(order.total_price ?? 0)),
     };
 

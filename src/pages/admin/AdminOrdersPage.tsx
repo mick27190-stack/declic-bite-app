@@ -289,7 +289,9 @@ export default function AdminOrdersPage() {
     const hasPending = !!order?.stripe_payment_intent_id && order?.capture_status !== 'captured';
     const shouldCapture = ['confirmed', 'preparing', 'ready', 'delivered'].includes(newStatus);
 
-    if (hasPending && newStatus === 'cancelled') {
+    // Toute annulation passe par l'Edge Function (même une commande déjà
+    // encaissée) : elle libère Stripe si besoin et envoie l'e-mail au client.
+    if (!!order?.stripe_payment_intent_id && newStatus === 'cancelled') {
       await invokeStripeAction(orderId, 'cancel-order', 'Pré-autorisation Stripe annulée');
       return;
     }

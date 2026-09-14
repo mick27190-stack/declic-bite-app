@@ -28,6 +28,8 @@ interface OrderCancelledProps {
   restaurant?: string
   orderType?: string
   reasonMessage?: string
+  paymentNotice?: string
+  totalSuffix?: string
   items?: CancelledLine[]
   total?: string
 }
@@ -39,6 +41,8 @@ const OrderCancelledEmail = ({
   restaurant,
   orderType,
   reasonMessage,
+  paymentNotice,
+  totalSuffix,
   items,
   total,
 }: OrderCancelledProps) => {
@@ -63,9 +67,16 @@ const OrderCancelledEmail = ({
           )}
           <Section style={infoBox}>
             <Text style={infoText}>
-              💳 <strong>Aucun montant ne sera débité de votre compte bancaire.</strong> La
-              pré-autorisation réalisée lors de la commande a été libérée : selon votre banque,
-              elle peut rester affichée quelques jours avant de disparaître automatiquement.
+              💳{' '}
+              {paymentNotice ? (
+                <span>{paymentNotice}</span>
+              ) : (
+                <>
+                  <strong>Aucun montant ne sera débité de votre compte bancaire.</strong> La
+                  pré-autorisation réalisée lors de la commande a été libérée : selon votre banque,
+                  elle peut rester affichée quelques jours avant de disparaître automatiquement.
+                </>
+              )}
             </Text>
           </Section>
           <Hr style={hr} />
@@ -88,7 +99,8 @@ const OrderCancelledEmail = ({
           ))}
           {total && (
             <Text style={totalText}>
-              Total de la commande annulée : <strong>{total}</strong> (non encaissé)
+              Total de la commande annulée : <strong>{total}</strong>{' '}
+              {totalSuffix ?? '(non encaissé)'}
             </Text>
           )}
           <Hr style={hr} />
