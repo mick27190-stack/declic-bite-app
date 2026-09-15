@@ -48,6 +48,12 @@
     visibility: hidden !important;
   }
 
+  /* L'application entière est retirée du flux d'impression : seul le ticket
+     (rendu en portail directement dans <body>) reste imprimé. */
+  #root {
+    display: none !important;
+  }
+
   .order-ticket,
   .order-ticket * {
     visibility: visible !important;
