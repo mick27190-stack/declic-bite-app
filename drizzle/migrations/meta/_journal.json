@@ -232,6 +232,13 @@
       "when": 1788968562584,
       "tag": "0032_allow_failed_capture_status",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1789490998711,
+      "tag": "0033_grant_invoices_data_api",
+      "breakpoints": true
     }
   ]
 }
