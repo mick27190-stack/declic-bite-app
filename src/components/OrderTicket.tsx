@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useOrderLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
@@ -199,7 +200,7 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
     return parts.join('\n');
   })();
 
-  return (
+  const content = (
     <div ref={ref} className={printOnly ? 'order-ticket order-ticket--print-only' : 'order-ticket'}>
       <pre className="order-ticket__body">
 {`${companyHeader}
@@ -245,6 +246,12 @@ ${order.notes ? `${SEP}\nNote client :\n${order.notes}\n` : ''}${SEP}
       </pre>
     </div>
   );
+
+  // Rendu hors de #root pour que l'impression n'embarque aucun élément de l'UI.
+  if (typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+  return content;
 });
 
 OrderTicket.displayName = 'OrderTicket';
