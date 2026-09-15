@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { useAuth } from '@/contexts/AuthContext';
@@ -739,7 +740,7 @@ export default function AdminOrdersPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setOrderToPrint(order)}
+                        onClick={() => handlePrintTicket(order)}
                       >
                         <Printer className="h-4 w-4 mr-2" />
                         Imprimer le ticket
