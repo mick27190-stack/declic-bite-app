@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { useAuth } from '@/contexts/AuthContext';
@@ -173,16 +174,23 @@ export default function AdminOrdersPage() {
   // Not affected by the Monday 4:00 (Paris) purge of past-week live orders.
   const [archivedCount, setArchivedCount] = useState(0);
 
-  useEffect(() => {
-    if (!orderToPrint) return;
+  // L'impression doit être déclenchée dans le même geste utilisateur que le clic
+  // (Safari / iOS et certains navigateurs bloquent window.print() différé).
+  const handlePrintTicket = (order: Order) => {
+    flushSync(() => setOrderToPrint(order));
     const done = () => setOrderToPrint(null);
     window.addEventListener('afterprint', done, { once: true });
-    const t = setTimeout(() => window.print(), 80);
-    return () => {
-      clearTimeout(t);
+    try {
+      window.print();
+    } catch (e) {
+      console.error('Impression impossible', e);
+    }
+    // Repli si « afterprint » n'est jamais émis (certains navigateurs mobiles).
+    setTimeout(() => {
       window.removeEventListener('afterprint', done);
-    };
-  }, [orderToPrint]);
+      setOrderToPrint(null);
+    }, 3000);
+  };
 
   // Live count of current-week orders straight from the database.
   // Acts as the source of truth so that deletions (or any drift between the
@@ -732,7 +740,7 @@ export default function AdminOrdersPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setOrderToPrint(order)}
+                        onClick={() => handlePrintTicket(order)}
                       >
                         <Printer className="h-4 w-4 mr-2" />
                         Imprimer le ticket
