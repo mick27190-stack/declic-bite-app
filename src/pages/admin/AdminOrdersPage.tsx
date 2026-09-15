@@ -176,16 +176,54 @@ export default function AdminOrdersPage() {
 
   // L'impression doit être déclenchée dans le même geste utilisateur que le clic
   // (Safari / iOS et certains navigateurs bloquent window.print() différé).
+  // Une fenêtre dédiée évite aussi que l'interface admin masque le ticket pendant
+  // la préparation de l'aperçu par le navigateur.
   const handlePrintTicket = (order: Order) => {
+    const printWindow = window.open('', '_blank');
     flushSync(() => setOrderToPrint(order));
-    const done = () => setOrderToPrint(null);
-    window.addEventListener('afterprint', done, { once: true });
+
+    const ticket = document.querySelector<HTMLElement>('.order-ticket');
+    if (!printWindow || !ticket) {
+      setOrderToPrint(null);
+      if (printWindow) printWindow.close();
+      toast({
+        title: 'Aperçu bloqué',
+        description: "Autorisez les fenêtres surgissantes pour afficher le ticket.",
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
-      window.print();
+      printWindow.document.open();
+      printWindow.document.write(`<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ticket commande #${order.id.slice(0, 8)}</title>
+    <style>
+      @page { size: 80mm auto; margin: 0; }
+      html, body { margin: 0; padding: 0; background: #fff; color: #000; }
+      .order-ticket { display: block; box-sizing: border-box; width: 76mm; margin: 0; padding: 2mm; background: #fff; color: #000; font: 12px/1.35 "Courier New", Courier, monospace; }
+      .order-ticket__body { margin: 0; padding: 0; max-width: 100%; color: inherit; background: transparent; font: inherit; white-space: pre-wrap; overflow-wrap: break-word; }
+    </style>
+  </head>
+  <body>${ticket.outerHTML}</body>
+</html>`);
+      printWindow.document.close();
+      setOrderToPrint(null);
+      printWindow.focus();
+      printWindow.print();
     } catch (e) {
-      window.removeEventListener('afterprint', done);
-      done();
+      setOrderToPrint(null);
+      printWindow.close();
       console.error('Impression impossible', e);
+      toast({
+        title: 'Impression impossible',
+        description: "L'aperçu du ticket n'a pas pu être ouvert.",
+        variant: 'destructive',
+      });
     }
   };
 
