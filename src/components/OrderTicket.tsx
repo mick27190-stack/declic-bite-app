@@ -1,4 +1,5 @@
 import { forwardRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useOrderLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
