@@ -183,13 +183,10 @@ export default function AdminOrdersPage() {
     try {
       window.print();
     } catch (e) {
+      window.removeEventListener('afterprint', done);
+      done();
       console.error('Impression impossible', e);
     }
-    // Repli si « afterprint » n'est jamais émis (certains navigateurs mobiles).
-    setTimeout(() => {
-      window.removeEventListener('afterprint', done);
-      setOrderToPrint(null);
-    }, 3000);
   };
 
   // Live count of current-week orders straight from the database.
