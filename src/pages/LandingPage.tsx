@@ -295,7 +295,12 @@ export default function LandingPage() {
             {/* Opening Hours Note */}
             <p className="text-sm text-muted-foreground mt-8 text-center inline-flex items-center justify-center gap-1.5">
               <Pizza className="w-4 h-4 text-[#E85D2C]" />
-              Ouvert du mardi au dimanche
+              <span>Ouvert du mardi au dimanche</span>
+              <img
+                src={deliveryScooterAsset.url}
+                alt="Livraison Déclic Pizza"
+                className="h-5 w-auto object-contain"
+              />
             </p>
           </>
         ) : (
