@@ -14,7 +14,7 @@ import { RetractableBanner } from '@/components/RetractableBanner';
 import { Restaurant } from '@/types/pizza';
 import { preloadHeroMedia, heroPosterUrl } from '@/lib/heroPreload';
 import wordmarkAsset from '@/assets/declic-wordmark.png.asset.json';
-import deliveryScooterAsset from '@/assets/delivery-scooter.png.asset.json';
+import deliveryScooterUrl from '@/assets/delivery-scooter.png';
 
 const heroPoster = heroPosterUrl;
 
@@ -297,9 +297,9 @@ export default function LandingPage() {
               <Pizza className="w-4 h-4 text-[#E85D2C]" />
               <span>Ouvert du mardi au dimanche</span>
               <img
-                src={deliveryScooterAsset.url}
+                src={deliveryScooterUrl}
                 alt="Livraison Déclic Pizza"
-                className="h-5 w-auto object-contain"
+                className="h-4 w-4 object-contain"
               />
             </p>
           </>
