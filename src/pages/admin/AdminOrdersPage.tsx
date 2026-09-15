@@ -207,14 +207,31 @@ export default function AdminOrdersPage() {
       html, body { margin: 0; padding: 0; background: #fff; color: #000; }
       .order-ticket { display: block; box-sizing: border-box; width: 76mm; margin: 0; padding: 2mm; background: #fff; color: #000; font: 12px/1.35 "Courier New", Courier, monospace; }
       .order-ticket__body { margin: 0; padding: 0; max-width: 100%; color: inherit; background: transparent; font: inherit; white-space: pre-wrap; overflow-wrap: break-word; }
+      .ticket-actions { display: flex; gap: 8px; justify-content: center; padding: 12px; font-family: system-ui, sans-serif; background: #f3f4f6; position: sticky; top: 0; }
+      .ticket-actions button { flex: 1; max-width: 200px; padding: 12px 16px; border: 0; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; }
+      .ticket-actions .btn-print { background: #ea580c; color: #fff; }
+      .ticket-actions .btn-close { background: #e5e7eb; color: #111827; }
+      @media print { .ticket-actions { display: none !important; } }
     </style>
   </head>
-  <body>${ticket.outerHTML}</body>
+  <body>
+    <div class="ticket-actions">
+      <button type="button" class="btn-print" onclick="window.print()">Imprimer</button>
+      <button type="button" class="btn-close" onclick="window.close()">Retour à la commande</button>
+    </div>
+    ${ticket.outerHTML}
+    <script>window.onafterprint = function () { window.close(); };</script>
+  </body>
 </html>`);
       printWindow.document.close();
       setOrderToPrint(null);
       printWindow.focus();
-      printWindow.print();
+      try {
+        printWindow.print();
+      } catch {
+        // Certains navigateurs mobiles bloquent l'impression automatique :
+        // le bouton « Imprimer » de l'aperçu prend le relais.
+      }
     } catch (e) {
       setOrderToPrint(null);
       printWindow.close();
