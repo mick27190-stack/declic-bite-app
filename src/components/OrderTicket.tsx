@@ -245,6 +245,12 @@ ${order.notes ? `${SEP}\nNote client :\n${order.notes}\n` : ''}${SEP}
       </pre>
     </div>
   );
+
+  // Rendu hors de #root pour que l'impression n'embarque aucun élément de l'UI.
+  if (typeof document !== 'undefined') {
+    return createPortal(content, document.body);
+  }
+  return content;
 });
 
 OrderTicket.displayName = 'OrderTicket';
