@@ -199,7 +199,7 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
     return parts.join('\n');
   })();
 
-  return (
+  const content = (
     <div ref={ref} className={printOnly ? 'order-ticket order-ticket--print-only' : 'order-ticket'}>
       <pre className="order-ticket__body">
 {`${companyHeader}
