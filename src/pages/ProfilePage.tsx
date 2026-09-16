@@ -348,9 +348,14 @@ function OrderHistory() {
       if (error) throw error;
 
       // Historique : uniquement les commandes passées avant aujourd'hui
-      // (heure de Paris) et dont le paiement a été autorisé.
+      // (heure de Paris). Les commandes annulées restent visibles au même
+      // titre que les commandes confirmées (traçabilité pour le client).
       const past = (data || [])
-        .filter((o: any) => isOrderPaymentAuthorized(o))
+        .filter((o: any) =>
+          isOrderPaymentAuthorized(o) ||
+          o.status === 'cancelled' ||
+          o.order_status === 'cancelled',
+        )
         .filter((o: any) => parisIsoDate(new Date(o.created_at)) !== todayIso)
         .slice(0, 20);
 
