@@ -299,8 +299,8 @@ export default function LandingPage() {
               <img
                 src={deliveryScooterUrl}
                 alt="Livraison Déclic Pizza"
-                className="h-7 w-auto justify-self-start object-contain"
-              />
+    className="h-6 w-auto justify-self-start object-contain"
+  />
             </p>
           </>
         ) : (
