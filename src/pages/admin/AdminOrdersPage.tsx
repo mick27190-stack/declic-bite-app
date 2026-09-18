@@ -147,13 +147,19 @@ export default function AdminOrdersPage() {
   const { data: companyData } = useCompanyInfo();
   
   const { toast } = useToast();
-  const forcedSite: 'conches' | 'beaumont' | null = isSuperAdmin
-    ? null
-    : (isSiteAdminConches || isSecondaryAdminConches)
-      ? 'conches'
-      : (isSiteAdminBeaumont || isSecondaryAdminBeaumont)
-        ? 'beaumont'
-        : null;
+  // Sites auxquels ce compte a accès. Un même numéro peut être admin des deux
+  // sites : dans ce cas le filtre « Tous les sites » doit rester disponible.
+  const accessibleSites: Array<'conches' | 'beaumont'> = isSuperAdmin
+    ? ['conches', 'beaumont']
+    : ([
+        (isSiteAdminConches || isSecondaryAdminConches) ? 'conches' : null,
+        (isSiteAdminBeaumont || isSecondaryAdminBeaumont) ? 'beaumont' : null,
+      ].filter(Boolean) as Array<'conches' | 'beaumont'>);
+
+  // Le filtre n'est verrouillé que si le compte n'a accès qu'à un seul site.
+  const forcedSite: 'conches' | 'beaumont' | null =
+    accessibleSites.length === 1 ? accessibleSites[0] : null;
+
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>(forcedSite ?? 'all');
 
   useEffect(() => {
