@@ -147,13 +147,19 @@ export default function AdminOrdersPage() {
   const { data: companyData } = useCompanyInfo();
   
   const { toast } = useToast();
-  const forcedSite: 'conches' | 'beaumont' | null = isSuperAdmin
-    ? null
-    : (isSiteAdminConches || isSecondaryAdminConches)
-      ? 'conches'
-      : (isSiteAdminBeaumont || isSecondaryAdminBeaumont)
-        ? 'beaumont'
-        : null;
+  // Sites auxquels ce compte a accès. Un même numéro peut être admin des deux
+  // sites : dans ce cas le filtre « Tous les sites » doit rester disponible.
+  const accessibleSites: Array<'conches' | 'beaumont'> = isSuperAdmin
+    ? ['conches', 'beaumont']
+    : ([
+        (isSiteAdminConches || isSecondaryAdminConches) ? 'conches' : null,
+        (isSiteAdminBeaumont || isSecondaryAdminBeaumont) ? 'beaumont' : null,
+      ].filter(Boolean) as Array<'conches' | 'beaumont'>);
+
+  // Le filtre n'est verrouillé que si le compte n'a accès qu'à un seul site.
+  const forcedSite: 'conches' | 'beaumont' | null =
+    accessibleSites.length === 1 ? accessibleSites[0] : null;
+
   const [filterSite, setFilterSite] = useState<'all' | 'conches' | 'beaumont'>(forcedSite ?? 'all');
 
   useEffect(() => {
@@ -327,11 +333,9 @@ export default function AdminOrdersPage() {
       if (!isAwaitingCustomerResponse(order)) return false;
     } else if (filterStatus !== 'all' && order.status !== filterStatus) return false;
     
-    // Filter by site if not super admin
-    if (!isSuperAdmin) {
-      if (isSiteAdminConches && site !== 'conches') return false;
-      if (isSiteAdminBeaumont && site !== 'beaumont') return false;
-    }
+    // Restriction aux sites réellement accessibles au compte
+    if (!isSuperAdmin && !accessibleSites.includes(site)) return false;
+
     
     return true;
   });
@@ -562,18 +566,7 @@ export default function AdminOrdersPage() {
         <div className="flex flex-wrap gap-4 mb-6">
 
 
-          {isSuperAdmin ? (
-            <Select value={filterSite} onValueChange={(v) => setFilterSite(v as any)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filtrer par site" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les sites</SelectItem>
-                <SelectItem value="conches">Conches</SelectItem>
-                <SelectItem value="beaumont">Beaumont</SelectItem>
-              </SelectContent>
-            </Select>
-          ) : forcedSite ? (
+          {forcedSite ? (
             <Select value={forcedSite} disabled>
               <SelectTrigger className="w-[180px]">
                 <SelectValue />
@@ -584,7 +577,19 @@ export default function AdminOrdersPage() {
                 </SelectItem>
               </SelectContent>
             </Select>
+          ) : accessibleSites.length > 1 ? (
+            <Select value={filterSite} onValueChange={(v) => setFilterSite(v as any)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filtrer par site" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les sites</SelectItem>
+                <SelectItem value="conches">Conches</SelectItem>
+                <SelectItem value="beaumont">Beaumont</SelectItem>
+              </SelectContent>
+            </Select>
           ) : null}
+
           <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as any)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrer par statut" />
