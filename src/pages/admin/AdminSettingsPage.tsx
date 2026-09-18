@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical, Power, Wallet } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical, Power, Wallet, Bell } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import NotificationBell from '@/components/admin/NotificationBell';
 import { useOrderTestMode } from '@/hooks/useOrderTestMode';
@@ -356,6 +356,51 @@ export default function AdminSettingsPage() {
                 </div>
               )}
 
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Alertes par site, propres au compte connecté */}
+        {isAnyAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                Recevoir les alertes de
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Choisissez les sites dont vous souhaitez recevoir les notifications
+                (nouvelles commandes, messages, livraisons, factures). Ce réglage est propre à votre compte.
+              </p>
+              {(isSuperAdmin || isSiteAdminConches) && (
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="notify-conches">Conches</Label>
+                  <Switch
+                    id="notify-conches"
+                    checked={notifyConches}
+                    disabled={prefsLoading}
+                    onCheckedChange={(v) => savePrefs({ notify_conches: v, notify_beaumont: notifyBeaumont })}
+                  />
+                </div>
+              )}
+              {(isSuperAdmin || isSiteAdminBeaumont) && (
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="notify-beaumont">Beaumont</Label>
+                  <Switch
+                    id="notify-beaumont"
+                    checked={notifyBeaumont}
+                    disabled={prefsLoading}
+                    onCheckedChange={(v) => savePrefs({ notify_conches: notifyConches, notify_beaumont: v })}
+                  />
+                </div>
+              )}
+              {!notifyConches && !notifyBeaumont && (
+                <p className="text-sm text-destructive">
+                  Toutes vos alertes sont désactivées : vous ne recevrez plus aucune notification.
+                </p>
+              )}
             </CardContent>
           </Card>
         )}
