@@ -137,6 +137,47 @@ export default function AdminSettingsPage() {
     }
   }, [user, isAnyAdmin, authLoading, adminLoading]);
 
+  // Préférences d'alertes par site, enregistrées sur le compte.
+  const [notifyConches, setNotifyConches] = useState(true);
+  const [notifyBeaumont, setNotifyBeaumont] = useState(true);
+  const [prefsLoading, setPrefsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('admin_notification_prefs')
+        .select('notify_conches, notify_beaumont')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data) {
+        setNotifyConches(data.notify_conches);
+        setNotifyBeaumont(data.notify_beaumont);
+      }
+      setPrefsLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const savePrefs = async (next: { notify_conches: boolean; notify_beaumont: boolean }) => {
+    if (!user) return;
+    const prev = { notify_conches: notifyConches, notify_beaumont: notifyBeaumont };
+    setNotifyConches(next.notify_conches);
+    setNotifyBeaumont(next.notify_beaumont);
+    const { error } = await supabase
+      .from('admin_notification_prefs')
+      .upsert({ user_id: user.id, ...next, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
+    if (error) {
+      setNotifyConches(prev.notify_conches);
+      setNotifyBeaumont(prev.notify_beaumont);
+      toast({ title: 'Enregistrement impossible', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Préférences enregistrées' });
+  };
+
   const handleAdd = async () => {
     if (!newReason.trim() || !user) return;
     setSubmitting(true);
@@ -152,7 +193,7 @@ export default function AdminSettingsPage() {
     setSubmitting(false);
   };
 
-  // Determine which sites this admin can manage
+  // Détermine quels sites l'admin peut gérer
   const availableSites = isSuperAdmin
     ? [{ value: 'all', label: 'Tous les sites' }, { value: 'conches', label: 'Conches' }, { value: 'beaumont', label: 'Beaumont' }]
     : isSiteAdminConches
