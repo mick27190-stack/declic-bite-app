@@ -333,11 +333,9 @@ export default function AdminOrdersPage() {
       if (!isAwaitingCustomerResponse(order)) return false;
     } else if (filterStatus !== 'all' && order.status !== filterStatus) return false;
     
-    // Filter by site if not super admin
-    if (!isSuperAdmin) {
-      if (isSiteAdminConches && site !== 'conches') return false;
-      if (isSiteAdminBeaumont && site !== 'beaumont') return false;
-    }
+    // Restriction aux sites réellement accessibles au compte
+    if (!isSuperAdmin && !accessibleSites.includes(site)) return false;
+
     
     return true;
   });
