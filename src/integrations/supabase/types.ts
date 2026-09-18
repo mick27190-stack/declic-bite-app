@@ -77,6 +77,27 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_notification_prefs: {
+        Row: {
+          notify_beaumont: boolean
+          notify_conches: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          notify_beaumont?: boolean
+          notify_conches?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          notify_beaumont?: boolean
+          notify_conches?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_phones: {
         Row: {
           active: boolean
