@@ -360,8 +360,8 @@ export default function AdminSettingsPage() {
           </Card>
         )}
 
-        {/* Alertes par site, propres au compte connecté */}
-        {isAnyAdmin && (
+        {/* Alertes par site, propres au compte connecté — visible uniquement si admin des deux sites */}
+        {(isSuperAdmin || isSiteAdminConches) && (isSuperAdmin || isSiteAdminBeaumont) && (
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
