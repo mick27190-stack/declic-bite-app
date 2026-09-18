@@ -566,18 +566,7 @@ export default function AdminOrdersPage() {
         <div className="flex flex-wrap gap-4 mb-6">
 
 
-          {isSuperAdmin ? (
-            <Select value={filterSite} onValueChange={(v) => setFilterSite(v as any)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filtrer par site" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les sites</SelectItem>
-                <SelectItem value="conches">Conches</SelectItem>
-                <SelectItem value="beaumont">Beaumont</SelectItem>
-              </SelectContent>
-            </Select>
-          ) : forcedSite ? (
+          {forcedSite ? (
             <Select value={forcedSite} disabled>
               <SelectTrigger className="w-[180px]">
                 <SelectValue />
@@ -588,7 +577,19 @@ export default function AdminOrdersPage() {
                 </SelectItem>
               </SelectContent>
             </Select>
+          ) : accessibleSites.length > 1 ? (
+            <Select value={filterSite} onValueChange={(v) => setFilterSite(v as any)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filtrer par site" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les sites</SelectItem>
+                <SelectItem value="conches">Conches</SelectItem>
+                <SelectItem value="beaumont">Beaumont</SelectItem>
+              </SelectContent>
+            </Select>
           ) : null}
+
           <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as any)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrer par statut" />
