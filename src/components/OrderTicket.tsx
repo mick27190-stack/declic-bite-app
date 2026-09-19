@@ -4,9 +4,6 @@ import { useOrderLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
-// TVA restauration à emporter / livraison en France = 10%
-const TVA_RATE = 0.10;
-
 const SEP = '--------------------------------';
 
 export interface OrderTicketData {
@@ -174,8 +171,6 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
   const loyaltyAmount = loyalty?.total_discount ?? 0;
   const linesTotal = lines.reduce((s, l) => s + l.sub, 0);
   const totalTTC = Number(order.total_price) || Math.max(linesTotal - loyaltyAmount, 0);
-  const totalHT = totalTTC / (1 + TVA_RATE);
-  const tva = totalTTC - totalHT;
 
   const isCancelled =
     order.status === 'cancelled' ||
@@ -235,9 +230,7 @@ ${loyaltyAmount > 0
       `Fidelite (${discountLineLabel(loyalty)})`,
       '-' + fmt(loyaltyAmount),
     )}\n`
-  : ''}${padLine('Total HT', fmt(totalHT))}
-${padLine(`TVA (${(TVA_RATE * 100).toFixed(0)}%)`, fmt(tva))}
-${padLine('TOTAL TTC', fmt(totalTTC))}
+  : ''}${padLine('TOTAL TTC', fmt(totalTTC))}
 ${SEP}
 ${paymentLabel}
 ${order.notes ? `${SEP}\nNote client :\n${order.notes}\n` : ''}${SEP}
