@@ -123,23 +123,20 @@ export async function generateAndSendInvoice(
   });
   if (mailErr) throw mailErr;
 
-  const { error: recErr } = await supabase.from('invoices').upsert(
-    {
-      order_id: order.id,
-      user_id: order.user_id,
-      invoice_number: reference,
-      storage_path: path,
-      total_ttc: Number(totalTTC.toFixed(2)),
-      recipient_email: email,
-      customer_name: fullName,
-      customer_phone: profile?.phone ?? (order as any).customer_phone ?? null,
-      restaurant: order.restaurant,
-      site: siteValue,
-      sent_at: new Date().toISOString(),
-    },
-    { onConflict: 'invoice_number' },
-  );
+  // Enregistrement dans la section « Factures » de l'admin.
+  // Passe par une fonction serveur : le client comme l'admin peuvent ainsi
+  // archiver la facture, quelles que soient les permissions de la table.
+  const { error: recErr } = await supabase.rpc('record_invoice', {
+    _order_id: order.id,
+    _invoice_number: reference,
+    _storage_path: path,
+    _total_ttc: Number(totalTTC.toFixed(2)),
+    _recipient_email: email,
+    _customer_name: fullName,
+    _customer_phone: profile?.phone ?? (order as any).customer_phone ?? null,
+  });
   if (recErr) console.warn('Failed to record invoice:', recErr);
+
 
   return { invoiceNumber: reference, email, totalTTC, isInvoice };
 }
