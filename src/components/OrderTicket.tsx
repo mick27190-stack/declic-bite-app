@@ -171,8 +171,6 @@ const OrderTicket = forwardRef<HTMLDivElement, Props>(({ order, printOnly = true
   const loyaltyAmount = loyalty?.total_discount ?? 0;
   const linesTotal = lines.reduce((s, l) => s + l.sub, 0);
   const totalTTC = Number(order.total_price) || Math.max(linesTotal - loyaltyAmount, 0);
-  const totalHT = totalTTC / (1 + TVA_RATE);
-  const tva = totalTTC - totalHT;
 
   const isCancelled =
     order.status === 'cancelled' ||
