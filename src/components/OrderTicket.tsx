@@ -235,9 +235,7 @@ ${loyaltyAmount > 0
       `Fidelite (${discountLineLabel(loyalty)})`,
       '-' + fmt(loyaltyAmount),
     )}\n`
-  : ''}${padLine('Total HT', fmt(totalHT))}
-${padLine(`TVA (${(TVA_RATE * 100).toFixed(0)}%)`, fmt(tva))}
-${padLine('TOTAL TTC', fmt(totalTTC))}
+  : ''}${padLine('TOTAL TTC', fmt(totalTTC))}
 ${SEP}
 ${paymentLabel}
 ${order.notes ? `${SEP}\nNote client :\n${order.notes}\n` : ''}${SEP}
