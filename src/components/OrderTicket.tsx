@@ -4,9 +4,6 @@ import { useOrderLinePrices, linePriceAt } from '@/lib/orderPricing';
 import { parseLoyaltyDiscount, discountLineLabel } from '@/lib/loyalty';
 const PIZZA_CATEGORIES = ['classiques', 'speciales', 'vegetariennes', 'gourmandes'];
 
-// TVA restauration à emporter / livraison en France = 10%
-const TVA_RATE = 0.10;
-
 const SEP = '--------------------------------';
 
 export interface OrderTicketData {
