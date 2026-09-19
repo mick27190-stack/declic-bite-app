@@ -1228,6 +1228,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      __rls_probe: { Args: never; Returns: string }
       active_site_closure_type: {
         Args: { _restaurant: string }
         Returns: string
@@ -1356,6 +1357,18 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      record_invoice: {
+        Args: {
+          _customer_name: string
+          _customer_phone: string
+          _invoice_number: string
+          _order_id: string
+          _recipient_email: string
+          _storage_path: string
+          _total_ttc: number
+        }
+        Returns: undefined
       }
       request_invoice: { Args: { _order_id: string }; Returns: Json }
       resolve_customer_address: { Args: { _user_id: string }; Returns: string }
