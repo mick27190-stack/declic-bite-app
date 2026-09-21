@@ -201,6 +201,11 @@ export default function AdminSMSPage() {
     }
   };
 
+  const handleDeleteCampaign = (id: string) => {
+    setCampaigns((prev) => prev.filter((c) => c.id !== id));
+    toast.success('Campagne supprimée de l\'historique');
+  };
+
   const handleSendSMS = async () => {
     if (!message.trim()) {
       toast.error('Veuillez entrer un message');
