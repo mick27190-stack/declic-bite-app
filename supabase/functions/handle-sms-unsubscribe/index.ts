@@ -89,12 +89,22 @@ Deno.serve(async (req) => {
     clientId = customer?.user_id ?? null;
   }
   if (!clientId && tokenRecord.phone) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('user_id')
-      .eq('phone', tokenRecord.phone.trim())
-      .maybeSingle();
-    clientId = profile?.user_id ?? null;
+    // Les numéros circulent sous plusieurs formats (+33.../33.../0...) :
+    // on compare sur les 9 derniers chiffres.
+    const digits = tokenRecord.phone.replace(/\D/g, '');
+    const last9 = digits.slice(-9);
+    const variants = [tokenRecord.phone.trim(), digits, `33${last9}`, `+33${last9}`, `0${last9}`];
+    for (const table of ['profiles', 'customers'] as const) {
+      const { data: match } = await supabase
+        .from(table)
+        .select('user_id')
+        .in('phone', variants)
+        .not('user_id', 'is', null)
+        .limit(1)
+        .maybeSingle();
+      clientId = match?.user_id ?? null;
+      if (clientId) break;
+    }
   }
 
   if (clientId) {
