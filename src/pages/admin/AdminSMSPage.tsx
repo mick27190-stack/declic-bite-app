@@ -447,25 +447,52 @@ export default function AdminSMSPage() {
                   {recipientCount} client(s) inscrits aux SMS promotionnels seront contactés
                 </p>
               )}
+              {recipientCount !== null && message.trim().length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Coût estimé : <span className="font-medium">{estimatedCost.toFixed(2)} USD</span>{' '}
+                  ({recipientCount} destinataire(s) × {sms.segments} segment(s) × 0,0798 USD)
+                </p>
+              )}
             </div>
 
-            <Button 
-              onClick={handleSendSMS} 
-              disabled={isSending || !message.trim()}
-              className="w-full md:w-auto"
-            >
-              {isSending ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Envoi en cours...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Envoyer la campagne
-                </>
-              )}
-            </Button>
+            <div className="flex items-start gap-2 rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                Envoi possible uniquement entre 8h et 20h, hors dimanche et jours fériés.
+                {windowError && (
+                  <span className="block font-medium text-destructive mt-1">{windowError}</span>
+                )}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-3 md:flex-row">
+              <Button
+                onClick={handleSendSMS}
+                disabled={isSending || !message.trim() || !!windowError}
+                className="w-full md:w-auto"
+              >
+                {isSending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Envoyer la campagne
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setTestOpen(true)}
+                disabled={!message.trim()}
+                className="w-full md:w-auto"
+              >
+                <FlaskConical className="h-4 w-4 mr-2" />
+                Envoyer un SMS test
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
