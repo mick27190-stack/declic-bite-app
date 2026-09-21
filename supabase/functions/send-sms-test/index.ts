@@ -83,8 +83,8 @@ Deno.serve(async (req) => {
       },
       body: new URLSearchParams(
         TWILIO_MESSAGING_SERVICE_SID
-          ? { To: to, MessagingServiceSid: TWILIO_MESSAGING_SERVICE_SID, Body: `[TEST] ${message}` }
-          : { To: to, From: TWILIO_FROM!, Body: `[TEST] ${message}` },
+          ? { To: to, MessagingServiceSid: TWILIO_MESSAGING_SERVICE_SID, Body: body }
+          : { To: to, From: TWILIO_FROM!, Body: body },
       ),
     });
 
