@@ -550,6 +550,39 @@ export default function AdminSMSPage() {
           </CardContent>
         </Card>
       </main>
+
+      <Dialog open={testOpen} onOpenChange={setTestOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Envoyer un SMS test</DialogTitle>
+            <DialogDescription>
+              Le message sera envoyé uniquement à ce numéro, précédé de « [TEST] ». Il n'est pas
+              compté dans la campagne ni dans le fichier client.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="test-phone">Numéro de test</Label>
+            <Input
+              id="test-phone"
+              type="tel"
+              value={testPhone}
+              onChange={(e) => setTestPhone(e.target.value)}
+              placeholder="06 12 34 56 78"
+            />
+            <p className="text-sm text-muted-foreground">
+              {testSms.segments} segment(s) {testSms.encoding === 'gsm7' ? 'GSM-7' : 'Unicode'}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTestOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSendTest} disabled={isSendingTest || !testPhone.trim()}>
+              {isSendingTest ? 'Envoi…' : 'Envoyer le test'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
