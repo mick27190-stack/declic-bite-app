@@ -507,6 +507,7 @@ export default function AdminSMSPage() {
                     <TableHead>Message</TableHead>
                     <TableHead>Site</TableHead>
                     <TableHead className="text-right">Destinataires</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
