@@ -533,6 +533,17 @@ export default function AdminSMSPage() {
                       <TableCell className="text-right">
                         {campaign.recipientCount}
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteCampaign(campaign.id)}
+                          aria-label="Supprimer la campagne"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
