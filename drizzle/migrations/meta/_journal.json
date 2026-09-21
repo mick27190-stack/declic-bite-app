@@ -253,6 +253,13 @@
       "when": 1789850987905,
       "tag": "0035_record_invoice_rpc",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1790010044436,
+      "tag": "0036_sms_unsubscribe",
+      "breakpoints": true
     }
   ]
 }

@@ -1151,6 +1151,48 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_opt_outs: {
+        Row: {
+          created_at: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          phone?: string
+        }
+        Relationships: []
+      }
+      sms_unsubscribe_tokens: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          phone: string
+          token: string
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          phone: string
+          token?: string
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          phone?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       supplement_prices: {
         Row: {
           created_at: string
@@ -1386,6 +1428,15 @@ export type Database = {
         Returns: {
           phone: string
           site: string
+        }[]
+      }
+      sms_marketing_recipients_v2: {
+        Args: { _sites?: string[] }
+        Returns: {
+          customer_id: string
+          phone: string
+          site: string
+          user_id: string
         }[]
       }
     }
