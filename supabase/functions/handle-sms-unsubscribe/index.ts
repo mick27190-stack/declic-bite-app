@@ -74,12 +74,33 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: false, reason: 'already_unsubscribed' });
   }
 
-  if (tokenRecord.user_id) {
+  // Compte client rattaché : par le token, sinon via la fiche client ou le
+  // téléphone du profil, pour que le statut « Refusé » remonte partout.
+  let clientId: string | null = tokenRecord.user_id ?? null;
+  if (!clientId && tokenRecord.customer_id) {
+    const { data: customer } = await supabase
+      .from('customers')
+      .select('user_id')
+      .eq('id', tokenRecord.customer_id)
+      .maybeSingle();
+    clientId = customer?.user_id ?? null;
+  }
+  if (!clientId && tokenRecord.phone) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id')
+      .eq('phone', tokenRecord.phone.trim())
+      .maybeSingle();
+    clientId = profile?.user_id ?? null;
+  }
+
+  if (clientId) {
     // Toujours une nouvelle ligne : l'historique de consentement n'est jamais modifié.
     const { error: consentError } = await supabase.from('consentements').insert({
-      client_id: tokenRecord.user_id,
+      client_id: clientId,
       type_consentement: 'sms_marketing',
       accepte: false,
+      version_document: LEGAL_DOCS_VERSION,
       motif_refus: 'Désinscription via lien SMS',
     });
     if (consentError) {
