@@ -395,8 +395,20 @@ export default function AdminSMSPage() {
                 maxLength={320}
               />
               <p className="text-sm text-muted-foreground text-right">
-                {message.length}/320 caractères ({Math.ceil(message.length / 160)} SMS)
+                {message.length}/320 caractères — {sms.segments} segment(s){' '}
+                {sms.encoding === 'gsm7' ? 'GSM-7' : 'Unicode'}
               </p>
+              {sms.encoding === 'unicode' && (
+                <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
+                  <p className="text-muted-foreground">
+                    Votre message contient des caractères hors GSM-7 (
+                    <span className="font-medium">{sms.unicodeChars.slice(0, 10).join(' ')}</span>
+                    ) : chaque segment ne fait plus que 70 caractères au lieu de 160, ce qui
+                    augmente le coût. Retirez-les (emojis, symboles) pour rester en GSM-7.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
