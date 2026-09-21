@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ArrowLeft, Send, History, Users, AlertTriangle, Clock, FlaskConical } from 'lucide-react';
+import { ArrowLeft, Send, History, Users, AlertTriangle, Clock, FlaskConical, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -199,6 +199,11 @@ export default function AdminSMSPage() {
     } finally {
       setIsAddingCustomer(false);
     }
+  };
+
+  const handleDeleteCampaign = (id: string) => {
+    setCampaigns((prev) => prev.filter((c) => c.id !== id));
+    toast.success('Campagne supprimée de l\'historique');
   };
 
   const handleSendSMS = async () => {
@@ -502,6 +507,7 @@ export default function AdminSMSPage() {
                     <TableHead>Message</TableHead>
                     <TableHead>Site</TableHead>
                     <TableHead className="text-right">Destinataires</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -526,6 +532,17 @@ export default function AdminSMSPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         {campaign.recipientCount}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteCampaign(campaign.id)}
+                          aria-label="Supprimer la campagne"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
