@@ -49,22 +49,7 @@ interface SMSCampaign {
 }
 
 // Mock data
-const mockCampaigns: SMSCampaign[] = [
-  {
-    id: '1',
-    message: '🍕 Mardi, toutes nos pizzas Senior à 10€ ! Venez en profiter !',
-    recipientCount: 150,
-    sentAt: new Date(Date.now() - 86400000).toISOString(),
-    site: 'all'
-  },
-  {
-    id: '2',
-    message: 'Nouvelle pizza du mois : La Forestière ! Champignons, lardons et crème fraîche 🌲',
-    recipientCount: 85,
-    sentAt: new Date(Date.now() - 172800000).toISOString(),
-    site: 'conches'
-  }
-];
+const mockCampaigns: SMSCampaign[] = [];
 
 export default function AdminSMSPage() {
   const navigate = useNavigate();
