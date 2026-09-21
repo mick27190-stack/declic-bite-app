@@ -55,9 +55,9 @@ export function analyzeSms(message: string): SmsSegmentInfo {
   return { encoding: 'gsm7', segments, length: gsmLength, unicodeChars: [] };
 }
 
-/** Tarif Twilio indicatif par segment (USD). */
-export const SMS_SEGMENT_PRICE_USD = 0.0798;
+/** Tarif Twilio indicatif par segment (EUR, ~0,0798 USD au taux 1 USD ≈ 0,92 EUR). */
+export const SMS_SEGMENT_PRICE_EUR = 0.0734;
 
 export function estimateCampaignCost(segments: number, recipients: number): number {
-  return segments * recipients * SMS_SEGMENT_PRICE_USD;
+  return segments * recipients * SMS_SEGMENT_PRICE_EUR;
 }
