@@ -88,6 +88,21 @@ function checkSendWindow(now = new Date()): string | null {
   return null;
 }
 
+/**
+ * Twilio exige le format E.164 (+33...). Le fichier client stocke les numéros
+ * sans le « + » (ex. 33612345678) : sans normalisation, chaque envoi échoue.
+ */
+function toE164(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  let digits = raw.replace(/\D/g, '');
+  if (!digits) return null;
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.length === 10 && digits.startsWith('0')) digits = `33${digits.slice(1)}`;
+  else if (digits.length === 9) digits = `33${digits}`;
+  if (digits.length < 8 || digits.length > 15) return null;
+  return `+${digits}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
