@@ -84,6 +84,61 @@ export default function AdminSMSPage() {
   const [newSite, setNewSite] = useState<'conches' | 'beaumont'>('conches');
   const [isAddingCustomer, setIsAddingCustomer] = useState(false);
 
+  // SMS test
+  const [testOpen, setTestOpen] = useState(false);
+  const [testPhone, setTestPhone] = useState('');
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
+  // Analyse du message (segments réels, encodage, coût estimé)
+  const now = useLiveParisTime();
+  const windowError = smsSendWindowError(now);
+  const sms = analyzeSms(message);
+  const testSms = analyzeSms(`[TEST] ${message}`);
+  const estimatedCost = estimateCampaignCost(sms.segments, recipientCount ?? 0);
+
+  // Pré-remplit le numéro de test avec celui du profil admin connecté.
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data?.phone) setTestPhone(data.phone);
+    })();
+  }, [user]);
+
+  const handleSendTest = async () => {
+    const formatted = formatFrenchPhone(testPhone);
+    if (!formatted) {
+      toast.error('Numéro de test invalide (ex : 06 12 34 56 78)');
+      return;
+    }
+    setIsSendingTest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-sms-test', {
+        body: { message, phone: formatted },
+      });
+      if (error) throw error;
+      if (data?.error === 'sms_not_configured') {
+        toast.warning("Messagerie SMS non configurée.");
+        return;
+      }
+      if (data?.error) {
+        toast.error(data.message || "Erreur lors de l'envoi du SMS test");
+        return;
+      }
+      toast.success(`SMS test envoyé au ${formatted}`);
+      setTestOpen(false);
+    } catch {
+      toast.error("Erreur lors de l'envoi du SMS test");
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
+
+
   const refreshRecipientCount = useCallback(async () => {
     const selected: string[] = [];
     if (targetConches) selected.push('conches');
