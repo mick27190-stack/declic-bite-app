@@ -2,6 +2,91 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/twilio';
+const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') ?? 'https://declicpizza.fr';
+
+/** Heure murale de Paris (mêmes conventions que src/lib/parisTime.ts). */
+function parisCivilDate(date = new Date()): Date {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  return new Date(
+    get('year'),
+    get('month') - 1,
+    get('day'),
+    get('hour') % 24,
+    get('minute'),
+    get('second'),
+    0,
+  );
+}
+
+/** Dimanche de Pâques (algorithme de Meeus/Jones/Butcher). */
+function easterSunday(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(year, month - 1, day);
+}
+
+function frenchHolidays(year: number): Set<string> {
+  const iso = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const easter = easterSunday(year);
+  const plus = (days: number) => {
+    const d = new Date(easter);
+    d.setDate(d.getDate() + days);
+    return d;
+  };
+  return new Set([
+    `${year}-01-01`,
+    iso(plus(1)), // lundi de Pâques
+    `${year}-05-01`,
+    `${year}-05-08`,
+    iso(plus(39)), // Ascension
+    iso(plus(50)), // lundi de Pentecôte
+    `${year}-07-14`,
+    `${year}-08-15`,
+    `${year}-11-01`,
+    `${year}-11-11`,
+    `${year}-12-25`,
+  ]);
+}
+
+/** Créneau légal d'envoi : 8h–20h, hors dimanche et jours fériés. */
+function checkSendWindow(now = new Date()): string | null {
+  const paris = parisCivilDate(now);
+  if (paris.getDay() === 0) {
+    return "Envoi interdit le dimanche. Réessayez un jour ouvré entre 8h et 20h.";
+  }
+  const isoDay = `${paris.getFullYear()}-${String(paris.getMonth() + 1).padStart(2, '0')}-${String(paris.getDate()).padStart(2, '0')}`;
+  if (frenchHolidays(paris.getFullYear()).has(isoDay)) {
+    return "Envoi interdit un jour férié. Réessayez un jour ouvré entre 8h et 20h.";
+  }
+  const hour = paris.getHours();
+  if (hour < 8 || hour >= 20) {
+    return "Envoi possible uniquement entre 8h et 20h (heure de Paris).";
+  }
+  return null;
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
