@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/twilio';
+const PUBLIC_SITE_URL = Deno.env.get('PUBLIC_SITE_URL') ?? 'https://declicpizza.fr';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -60,6 +61,19 @@ Deno.serve(async (req) => {
       }, 200);
     }
 
+    // Le SMS test doit être identique à un envoi réel : lien « Stop » inclus.
+    let stop = '';
+    const { data: tokenRow, error: tokenErr } = await admin
+      .from('sms_unsubscribe_tokens')
+      .insert({ phone: to, user_id: null, customer_id: null })
+      .select('token')
+      .maybeSingle();
+    if (tokenErr) console.error('Failed to create test unsubscribe token', tokenErr);
+    else if (tokenRow?.token) {
+      stop = ` Stop: ${PUBLIC_SITE_URL}/desabonnement-sms?token=${tokenRow.token}`;
+    }
+    const body = `[TEST] ${message}${stop}`;
+
     const resp = await fetch(`${GATEWAY_URL}/Messages.json`, {
       method: 'POST',
       headers: {
@@ -69,8 +83,8 @@ Deno.serve(async (req) => {
       },
       body: new URLSearchParams(
         TWILIO_MESSAGING_SERVICE_SID
-          ? { To: to, MessagingServiceSid: TWILIO_MESSAGING_SERVICE_SID, Body: `[TEST] ${message}` }
-          : { To: to, From: TWILIO_FROM!, Body: `[TEST] ${message}` },
+          ? { To: to, MessagingServiceSid: TWILIO_MESSAGING_SERVICE_SID, Body: body }
+          : { To: to, From: TWILIO_FROM!, Body: body },
       ),
     });
 
