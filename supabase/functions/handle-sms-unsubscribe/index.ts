@@ -1,6 +1,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 
+/** Doit rester aligné sur LEGAL_DOCS_VERSION (src/lib/consent.ts). */
+const LEGAL_DOCS_VERSION = 'v1.0-2026-08';
+
 function jsonResponse(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
