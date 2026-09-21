@@ -107,15 +107,15 @@ Deno.serve(async (req) => {
       console.error('Failed to insert sms consent', { error: consentError });
       return jsonResponse({ error: 'Failed to process unsubscribe' }, 500);
     }
-  } else {
-    // Client sans compte : opt-out au niveau du numéro.
-    const { error: optOutError } = await supabase
-      .from('sms_opt_outs')
-      .upsert({ phone: tokenRecord.phone.trim() }, { onConflict: 'phone' });
-    if (optOutError) {
-      console.error('Failed to insert sms opt-out', { error: optOutError });
-      return jsonResponse({ error: 'Failed to process unsubscribe' }, 500);
-    }
+  }
+
+  // Opt-out au niveau du numéro dans tous les cas (clients sans compte inclus).
+  const { error: optOutError } = await supabase
+    .from('sms_opt_outs')
+    .upsert({ phone: tokenRecord.phone.trim() }, { onConflict: 'phone' });
+  if (optOutError) {
+    console.error('Failed to insert sms opt-out', { error: optOutError });
+    if (!clientId) return jsonResponse({ error: 'Failed to process unsubscribe' }, 500);
   }
 
   return jsonResponse({ success: true });
