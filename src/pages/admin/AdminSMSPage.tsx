@@ -227,6 +227,12 @@ export default function AdminSMSPage() {
       return;
     }
 
+    if (windowError) {
+      toast.error(windowError);
+      return;
+    }
+
+
     setIsSending(true);
 
     const sites: string[] = [];
