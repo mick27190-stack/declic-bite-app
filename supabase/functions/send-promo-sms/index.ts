@@ -129,6 +129,13 @@ Deno.serve(async (req) => {
     if (typeof message !== 'string' || message.trim().length === 0 || message.length > 1600) {
       return json({ error: 'Message invalide' }, 400);
     }
+
+    // Contrainte légale d'envoi (heure de Paris) : 8h–20h, hors dimanche et fériés.
+    const windowError = checkSendWindow();
+    if (windowError) {
+      return json({ error: 'send_window', message: windowError }, 400);
+    }
+
     const ALLOWED_SITES = ['conches', 'beaumont'];
     const siteList: string[] = (Array.isArray(sites) ? sites : []).filter(
       (s: unknown): s is string => typeof s === 'string' && ALLOWED_SITES.includes(s),
@@ -137,20 +144,25 @@ Deno.serve(async (req) => {
     // Gather recipients from the customer file, excluding anyone whose most
     // recent SMS marketing consent is a refusal (opt-out takes effect at once,
     // and re-enabling the toggle puts the customer back in the list).
-    const { data: rows, error: rowsErr } = await admin.rpc('sms_marketing_recipients', {
+    const { data: rows, error: rowsErr } = await admin.rpc('sms_marketing_recipients_v2', {
       _sites: siteList.length > 0 ? siteList : null,
     });
     if (rowsErr) return json({ error: 'Erreur lecture fichier client' }, 500);
 
-    const phones = Array.from(
-      new Set(
-        ((rows || []) as { phone: string | null }[])
-          .map((r) => r.phone?.trim())
-          .filter(Boolean),
-      ),
-    ) as string[];
+    type Recipient = { phone: string; customer_id: string | null; user_id: string | null };
+    const byPhone = new Map<string, Recipient>();
+    for (const r of (rows || []) as {
+      phone: string | null;
+      customer_id: string | null;
+      user_id: string | null;
+    }[]) {
+      const phone = r.phone?.trim();
+      if (!phone || byPhone.has(phone)) continue;
+      byPhone.set(phone, { phone, customer_id: r.customer_id, user_id: r.user_id });
+    }
+    const recipients = Array.from(byPhone.values());
 
-    if (phones.length === 0) {
+    if (recipients.length === 0) {
       return json({ error: 'Aucun client inscrit aux SMS promotionnels' }, 400);
     }
 
@@ -162,13 +174,42 @@ Deno.serve(async (req) => {
       return json({
         error: 'sms_not_configured',
         message: 'La messagerie SMS n\'est pas encore configurée.',
-        recipientCount: phones.length,
+        recipientCount: recipients.length,
       }, 200);
     }
 
+    // Un token de désinscription par destinataire, créé au moment de l'envoi.
+    const tokenRows = recipients.map((r) => ({
+      customer_id: r.customer_id,
+      user_id: r.user_id,
+      phone: r.phone,
+    }));
+    const { data: tokens, error: tokenErr } = await admin
+      .from('sms_unsubscribe_tokens')
+      .insert(tokenRows)
+      .select('token, phone');
+    if (tokenErr) {
+      console.error('Failed to create sms unsubscribe tokens', tokenErr);
+      return json({ error: 'Erreur création des liens de désinscription' }, 500);
+    }
+    const tokenByPhone = new Map<string, string>();
+    for (const t of (tokens || []) as { token: string; phone: string }[]) {
+      if (!tokenByPhone.has(t.phone)) tokenByPhone.set(t.phone, t.token);
+    }
+
+    // Marge de sécurité : le message est tronqué pour que le lien "Stop" tienne.
+    const MAX_BODY = 1500;
+
     let sent = 0;
     const failed: string[] = [];
-    for (const to of phones) {
+    for (const r of recipients) {
+      const token = tokenByPhone.get(r.phone);
+      const stop = token
+        ? ` Stop: ${PUBLIC_SITE_URL}/desabonnement-sms?token=${token}`
+        : '';
+      const base = message.length + stop.length > MAX_BODY
+        ? message.slice(0, Math.max(0, MAX_BODY - stop.length))
+        : message;
       const resp = await fetch(`${GATEWAY_URL}/Messages.json`, {
         method: 'POST',
         headers: {
@@ -176,13 +217,16 @@ Deno.serve(async (req) => {
           'X-Connection-Api-Key': TWILIO_API_KEY,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({ To: to, From: TWILIO_FROM, Body: message }),
+        body: new URLSearchParams({ To: r.phone, From: TWILIO_FROM, Body: `${base}${stop}` }),
       });
       if (resp.ok) sent++;
-      else failed.push(to);
+      else {
+        failed.push(r.phone);
+        console.error(`Twilio send failed [${resp.status}]: ${await resp.text()}`);
+      }
     }
 
-    return json({ success: true, recipientCount: phones.length, sent, failed: failed.length });
+    return json({ success: true, recipientCount: recipients.length, sent, failed: failed.length });
   } catch (e) {
     return json({ error: String(e) }, 500);
   }
