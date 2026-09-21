@@ -220,7 +220,11 @@ Deno.serve(async (req) => {
           'X-Connection-Api-Key': TWILIO_API_KEY,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: new URLSearchParams({ To: r.phone, From: TWILIO_FROM, Body: `${base}${stop}` }),
+        body: new URLSearchParams(
+          TWILIO_MESSAGING_SERVICE_SID
+            ? { To: r.phone, MessagingServiceSid: TWILIO_MESSAGING_SERVICE_SID, Body: `${base}${stop}` }
+            : { To: r.phone, From: TWILIO_FROM!, Body: `${base}${stop}` },
+        ),
       });
       if (resp.ok) sent++;
       else {
