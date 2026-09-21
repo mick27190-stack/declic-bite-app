@@ -9,11 +9,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ArrowLeft, Send, History, Users } from 'lucide-react';
+import { ArrowLeft, Send, History, Users, AlertTriangle, Clock, FlaskConical } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { UserPlus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { analyzeSms, estimateCampaignCost } from '@/lib/smsSegments';
+import { smsSendWindowError } from '@/lib/smsSendWindow';
+import { useLiveParisTime } from '@/hooks/useLiveParisTime';
 
 const SITE_OPTIONS = [
   { value: 'conches', label: 'Conches-en-Ouche' },
@@ -72,6 +83,61 @@ export default function AdminSMSPage() {
   const [newPhone, setNewPhone] = useState('');
   const [newSite, setNewSite] = useState<'conches' | 'beaumont'>('conches');
   const [isAddingCustomer, setIsAddingCustomer] = useState(false);
+
+  // SMS test
+  const [testOpen, setTestOpen] = useState(false);
+  const [testPhone, setTestPhone] = useState('');
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
+  // Analyse du message (segments réels, encodage, coût estimé)
+  const now = useLiveParisTime();
+  const windowError = smsSendWindowError(now);
+  const sms = analyzeSms(message);
+  const testSms = analyzeSms(`[TEST] ${message}`);
+  const estimatedCost = estimateCampaignCost(sms.segments, recipientCount ?? 0);
+
+  // Pré-remplit le numéro de test avec celui du profil admin connecté.
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data?.phone) setTestPhone(data.phone);
+    })();
+  }, [user]);
+
+  const handleSendTest = async () => {
+    const formatted = formatFrenchPhone(testPhone);
+    if (!formatted) {
+      toast.error('Numéro de test invalide (ex : 06 12 34 56 78)');
+      return;
+    }
+    setIsSendingTest(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-sms-test', {
+        body: { message, phone: formatted },
+      });
+      if (error) throw error;
+      if (data?.error === 'sms_not_configured') {
+        toast.warning("Messagerie SMS non configurée.");
+        return;
+      }
+      if (data?.error) {
+        toast.error(data.message || "Erreur lors de l'envoi du SMS test");
+        return;
+      }
+      toast.success(`SMS test envoyé au ${formatted}`);
+      setTestOpen(false);
+    } catch {
+      toast.error("Erreur lors de l'envoi du SMS test");
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
+
 
   const refreshRecipientCount = useCallback(async () => {
     const selected: string[] = [];
@@ -160,6 +226,12 @@ export default function AdminSMSPage() {
       toast.error('Veuillez sélectionner au moins un site');
       return;
     }
+
+    if (windowError) {
+      toast.error(windowError);
+      return;
+    }
+
 
     setIsSending(true);
 
@@ -323,8 +395,20 @@ export default function AdminSMSPage() {
                 maxLength={320}
               />
               <p className="text-sm text-muted-foreground text-right">
-                {message.length}/320 caractères ({Math.ceil(message.length / 160)} SMS)
+                {message.length}/320 caractères — {sms.segments} segment(s){' '}
+                {sms.encoding === 'gsm7' ? 'GSM-7' : 'Unicode'}
               </p>
+              {sms.encoding === 'unicode' && (
+                <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
+                  <AlertTriangle className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
+                  <p className="text-muted-foreground">
+                    Votre message contient des caractères hors GSM-7 (
+                    <span className="font-medium">{sms.unicodeChars.slice(0, 10).join(' ')}</span>
+                    ) : chaque segment ne fait plus que 70 caractères au lieu de 160, ce qui
+                    augmente le coût. Retirez-les (emojis, symboles) pour rester en GSM-7.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -363,25 +447,52 @@ export default function AdminSMSPage() {
                   {recipientCount} client(s) inscrits aux SMS promotionnels seront contactés
                 </p>
               )}
+              {recipientCount !== null && message.trim().length > 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Coût estimé : <span className="font-medium">{estimatedCost.toFixed(2)} USD</span>{' '}
+                  ({recipientCount} destinataire(s) × {sms.segments} segment(s) × 0,0798 USD)
+                </p>
+              )}
             </div>
 
-            <Button 
-              onClick={handleSendSMS} 
-              disabled={isSending || !message.trim()}
-              className="w-full md:w-auto"
-            >
-              {isSending ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Envoi en cours...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Envoyer la campagne
-                </>
-              )}
-            </Button>
+            <div className="flex items-start gap-2 rounded-md border bg-muted/40 p-3 text-sm text-muted-foreground">
+              <Clock className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>
+                Envoi possible uniquement entre 8h et 20h, hors dimanche et jours fériés.
+                {windowError && (
+                  <span className="block font-medium text-destructive mt-1">{windowError}</span>
+                )}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-3 md:flex-row">
+              <Button
+                onClick={handleSendSMS}
+                disabled={isSending || !message.trim() || !!windowError}
+                className="w-full md:w-auto"
+              >
+                {isSending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Envoyer la campagne
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setTestOpen(true)}
+                disabled={!message.trim()}
+                className="w-full md:w-auto"
+              >
+                <FlaskConical className="h-4 w-4 mr-2" />
+                Envoyer un SMS test
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -439,6 +550,39 @@ export default function AdminSMSPage() {
           </CardContent>
         </Card>
       </main>
+
+      <Dialog open={testOpen} onOpenChange={setTestOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Envoyer un SMS test</DialogTitle>
+            <DialogDescription>
+              Le message sera envoyé uniquement à ce numéro, précédé de « [TEST] ». Il n'est pas
+              compté dans la campagne ni dans le fichier client.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="test-phone">Numéro de test</Label>
+            <Input
+              id="test-phone"
+              type="tel"
+              value={testPhone}
+              onChange={(e) => setTestPhone(e.target.value)}
+              placeholder="06 12 34 56 78"
+            />
+            <p className="text-sm text-muted-foreground">
+              {testSms.segments} segment(s) {testSms.encoding === 'gsm7' ? 'GSM-7' : 'Unicode'}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTestOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSendTest} disabled={isSendingTest || !testPhone.trim()}>
+              {isSendingTest ? 'Envoi…' : 'Envoyer le test'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -36,6 +36,7 @@ import LivreurOrdersPage from "./pages/LivreurOrdersPage";
 import NotFound from "./pages/NotFound";
 import CutoffPreviewPage from "./pages/dev/CutoffPreviewPage";
 import UnsubscribePage from "./pages/UnsubscribePage";
+import UnsubscribeSMSPage from "./pages/UnsubscribeSMSPage";
 import MentionsLegalesPage from "./pages/MentionsLegalesPage";
 import CGVPage from "./pages/CGVPage";
 import ConfidentialitePage from "./pages/ConfidentialitePage";
@@ -111,6 +112,7 @@ const App = () => {
                 <Route path="/loyalty" element={<LoyaltyCardPage />} />
                 <Route path="/dev/cutoff-preview" element={<CutoffPreviewPage />} />
                 <Route path="/unsubscribe" element={<UnsubscribePage />} />
+                <Route path="/desabonnement-sms" element={<UnsubscribeSMSPage />} />
                 <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
                 <Route path="/cgv" element={<CGVPage />} />
                 <Route path="/confidentialite" element={<ConfidentialitePage />} />
