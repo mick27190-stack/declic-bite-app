@@ -50,8 +50,10 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const TWILIO_API_KEY = Deno.env.get('TWILIO_API_KEY');
     const TWILIO_FROM = Deno.env.get('TWILIO_FROM_NUMBER');
+    // Expéditeur de marque (DECLICPIZZA) via le Messaging Service Twilio.
+    const TWILIO_MESSAGING_SERVICE_SID = Deno.env.get('TWILIO_MESSAGING_SERVICE_SID');
 
-    if (!LOVABLE_API_KEY || !TWILIO_API_KEY || !TWILIO_FROM) {
+    if (!LOVABLE_API_KEY || !TWILIO_API_KEY || (!TWILIO_MESSAGING_SERVICE_SID && !TWILIO_FROM)) {
       return json({
         error: 'sms_not_configured',
         message: "La messagerie SMS n'est pas encore configurée.",
@@ -65,7 +67,11 @@ Deno.serve(async (req) => {
         'X-Connection-Api-Key': TWILIO_API_KEY,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: new URLSearchParams({ To: to, From: TWILIO_FROM, Body: `[TEST] ${message}` }),
+      body: new URLSearchParams(
+        TWILIO_MESSAGING_SERVICE_SID
+          ? { To: to, MessagingServiceSid: TWILIO_MESSAGING_SERVICE_SID, Body: `[TEST] ${message}` }
+          : { To: to, From: TWILIO_FROM!, Body: `[TEST] ${message}` },
+      ),
     });
 
     if (!resp.ok) {
