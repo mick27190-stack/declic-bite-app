@@ -439,8 +439,8 @@ export default function AdminSMSPage() {
               )}
               {recipientCount !== null && message.trim().length > 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Coût estimé : <span className="font-medium">{estimatedCost.toFixed(2)} USD</span>{' '}
-                  ({recipientCount} destinataire(s) × {sms.segments} segment(s) × 0,0798 USD)
+                  Coût estimé : <span className="font-medium">{estimatedCost.toFixed(2)} €</span>{' '}
+                  ({recipientCount} destinataire(s) × {sms.segments} segment(s) × 0,0734 €)
                 </p>
               )}
             </div>
