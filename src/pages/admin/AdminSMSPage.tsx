@@ -9,11 +9,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { ArrowLeft, Send, History, Users } from 'lucide-react';
+import { ArrowLeft, Send, History, Users, AlertTriangle, Clock, FlaskConical } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { UserPlus } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { analyzeSms, estimateCampaignCost } from '@/lib/smsSegments';
+import { smsSendWindowError } from '@/lib/smsSendWindow';
+import { useLiveParisTime } from '@/hooks/useLiveParisTime';
 
 const SITE_OPTIONS = [
   { value: 'conches', label: 'Conches-en-Ouche' },
