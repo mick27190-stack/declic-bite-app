@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
       customer_id: string | null;
       user_id: string | null;
     }[]) {
-      const phone = r.phone?.trim();
+      const phone = toE164(r.phone);
       if (!phone || byPhone.has(phone)) continue;
       byPhone.set(phone, { phone, customer_id: r.customer_id, user_id: r.user_id });
     }
