@@ -55,6 +55,19 @@ export function analyzeSms(message: string): SmsSegmentInfo {
   return { encoding: 'gsm7', segments, length: gsmLength, unicodeChars: [] };
 }
 
+/**
+ * Chaque SMS envoyé se termine par un lien de désinscription unique
+ * (` Stop: https://declicpizza.fr/desabonnement-sms?token=<uuid>`).
+ * Il faut le compter pour estimer le vrai nombre de segments facturés.
+ */
+export const SMS_STOP_LINK_SAMPLE =
+  ' Stop: https://declicpizza.fr/desabonnement-sms?token=00000000-0000-0000-0000-000000000000';
+
+/** Message réellement envoyé à Twilio (message saisi + lien de désinscription). */
+export function withStopLink(message: string): string {
+  return `${message}${SMS_STOP_LINK_SAMPLE}`;
+}
+
 /** Tarif Twilio indicatif par segment (EUR, ~0,0798 USD au taux 1 USD ≈ 0,92 EUR). */
 export const SMS_SEGMENT_PRICE_EUR = 0.0734;
 
