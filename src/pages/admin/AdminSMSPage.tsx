@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { analyzeSms, estimateCampaignCost } from '@/lib/smsSegments';
+import { analyzeSms, estimateCampaignCost, withStopLink } from '@/lib/smsSegments';
 import { smsSendWindowError } from '@/lib/smsSendWindow';
 import { useLiveParisTime } from '@/hooks/useLiveParisTime';
 
@@ -77,8 +77,10 @@ export default function AdminSMSPage() {
   // Analyse du message (segments réels, encodage, coût estimé)
   const now = useLiveParisTime();
   const windowError = smsSendWindowError(now);
-  const sms = analyzeSms(message);
-  const testSms = analyzeSms(`[TEST] ${message}`);
+  // Le lien de désinscription est ajouté à chaque SMS envoyé : il doit être
+  // compté dans les segments facturés, sinon le coût affiché est sous-estimé.
+  const sms = analyzeSms(withStopLink(message));
+  const testSms = analyzeSms(withStopLink(`[TEST] ${message}`));
   const estimatedCost = estimateCampaignCost(sms.segments, recipientCount ?? 0);
 
   // Pré-remplit le numéro de test avec celui du profil admin connecté.
