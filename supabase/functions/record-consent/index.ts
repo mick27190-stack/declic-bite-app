@@ -71,5 +71,38 @@ Deno.serve(async (req) => {
 
   if (error) return json({ error: error.message }, 500);
 
+  // Réinscription SMS : on lève l'opt-out posé au niveau du numéro (lien
+  // « Stop » d'un SMS), sinon le client resterait exclu des campagnes.
+  const optsIn = parsed.data.entries.some(
+    (e) => e.type_consentement === 'sms_marketing' && e.accepte,
+  );
+  if (optsIn) {
+    const last9 = (v: string | null | undefined) => {
+      const d = (v ?? '').replace(/\D/g, '');
+      return d.length >= 9 ? d.slice(-9) : null;
+    };
+    const [{ data: prof }, { data: cust }] = await Promise.all([
+      admin.from('profiles').select('phone').eq('user_id', userId).maybeSingle(),
+      admin.from('customers').select('phone').eq('user_id', userId).limit(1).maybeSingle(),
+    ]);
+    const keys = new Set([last9(prof?.phone), last9(cust?.phone)].filter(Boolean) as string[]);
+    if (keys.size > 0) {
+      const { data: optOuts } = await admin.from('sms_opt_outs').select('phone');
+      const toDelete = (optOuts ?? [])
+        .filter((o: { phone: string }) => {
+          const k = last9(o.phone);
+          return k !== null && keys.has(k);
+        })
+        .map((o: { phone: string }) => o.phone);
+      if (toDelete.length > 0) {
+        const { error: delError } = await admin
+          .from('sms_opt_outs')
+          .delete()
+          .in('phone', toDelete);
+        if (delError) console.error('Failed to clear sms opt-out', { error: delError });
+      }
+    }
+  }
+
   return json({ ok: true });
 });
