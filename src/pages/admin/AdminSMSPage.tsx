@@ -388,7 +388,7 @@ export default function AdminSMSPage() {
               />
               <p className="text-sm text-muted-foreground text-right">
                 {message.length}/320 caractères — {sms.segments} segment(s){' '}
-                {sms.encoding === 'gsm7' ? 'GSM-7' : 'Unicode'}
+                {sms.encoding === 'gsm7' ? 'GSM-7' : 'Unicode'} (lien de désinscription inclus)
               </p>
               {sms.encoding === 'unicode' && (
                 <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm">
