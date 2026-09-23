@@ -43,7 +43,7 @@ export default function MenuPage() {
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+              className="flex min-h-11 items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
               <span className="text-sm">Retour</span>
@@ -81,7 +81,7 @@ export default function MenuPage() {
             <button
               onClick={() => setSelectedCategory('all')}
               aria-pressed={selectedCategory === 'all'}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`flex-shrink-0 min-h-11 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 selectedCategory === 'all'
                   ? 'bg-primary text-primary-foreground shadow-glow'
                   : 'bg-muted text-foreground hover:bg-muted/80'
@@ -94,7 +94,7 @@ export default function MenuPage() {
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
                 aria-pressed={selectedCategory === category.id}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                className={`flex-shrink-0 min-h-11 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                   selectedCategory === category.id
                     ? 'bg-primary text-primary-foreground shadow-glow'
                     : 'bg-muted text-foreground hover:bg-muted/80'

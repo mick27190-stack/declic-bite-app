@@ -126,7 +126,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                     key={p.id}
                     onClick={() => setSelectedBambinoPizza(p)}
                     aria-pressed={selectedBambinoPizza?.id === p.id}
-                    className={`flex items-center gap-2 py-2 px-3 rounded-lg border-2 text-sm transition-all text-left ${
+                    className={`flex min-h-11 items-center gap-2 py-2 px-3 rounded-lg border-2 text-sm transition-all text-left ${
                       selectedBambinoPizza?.id === p.id
                         ? 'border-primary bg-primary/10 text-primary'
                         : 'border-border bg-muted/50 text-foreground hover:border-primary/50'
@@ -223,7 +223,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                       key={supplement.id}
                       onClick={() => toggleSupplement(supplement)}
                       aria-pressed={Boolean(isSelected)}
-                      className={`flex items-center justify-between py-2 px-3 rounded-lg border-2 text-sm transition-all ${
+                      className={`flex min-h-11 items-center justify-between py-2 px-3 rounded-lg border-2 text-sm transition-all ${
                         isSelected
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-border bg-muted/50 text-foreground hover:border-primary/50'
