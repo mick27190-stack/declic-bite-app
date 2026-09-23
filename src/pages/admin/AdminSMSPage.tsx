@@ -384,10 +384,10 @@ export default function AdminSMSPage() {
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="🍕 Offre spéciale ! ..."
                 rows={4}
-                maxLength={320}
+                maxLength={160}
               />
               <p className="text-sm text-muted-foreground text-right">
-                {message.length}/320 caractères — {sms.segments} segment(s){' '}
+                {message.length}/160 caractères — {sms.segments} segment(s){' '}
                 {sms.encoding === 'gsm7' ? 'GSM-7' : 'Unicode'} (lien de désinscription inclus)
               </p>
               {sms.encoding === 'unicode' && (
