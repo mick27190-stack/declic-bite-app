@@ -30,6 +30,7 @@ export default function LoyaltyCardPage() {
             size="icon"
             onClick={() => navigate(-1)}
             className="text-white hover:bg-white/10 shrink-0"
+            aria-label="Retour"
           >
             <ArrowLeft className="w-6 h-6" />
           </Button>

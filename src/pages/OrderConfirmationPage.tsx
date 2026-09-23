@@ -91,7 +91,7 @@ export default function OrderConfirmationPage() {
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Retour à l’accueil">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
