@@ -77,7 +77,7 @@ export default function MenuPage() {
           </div>
 
           {/* Categories */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2 sm:flex-wrap sm:overflow-x-visible sm:mx-0 sm:px-0">
             <button
               onClick={() => setSelectedCategory('all')}
               aria-pressed={selectedCategory === 'all'}
