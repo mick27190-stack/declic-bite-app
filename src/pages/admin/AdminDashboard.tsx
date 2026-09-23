@@ -225,7 +225,7 @@ export default function AdminDashboard() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Retour à l’accueil">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -283,6 +283,14 @@ export default function AdminDashboard() {
                   : 'cursor-pointer hover:shadow-lg'
               }`}
               onClick={() => !reorderMode && navigate(card.href)}
+              role={reorderMode ? undefined : 'link'}
+              tabIndex={reorderMode ? -1 : 0}
+              onKeyDown={(event) => {
+                if (!reorderMode && (event.key === 'Enter' || event.key === ' ')) {
+                  event.preventDefault();
+                  navigate(card.href);
+                }
+              }}
             >
               <CardHeader>
                 <div className="flex items-center gap-3">
@@ -298,7 +306,7 @@ export default function AdminDashboard() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-11 w-11"
                         disabled={index === 0}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -311,7 +319,7 @@ export default function AdminDashboard() {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-11 w-11"
                         disabled={index === sortedCards.length - 1}
                         onClick={(e) => {
                           e.stopPropagation();

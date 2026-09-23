@@ -267,7 +267,7 @@ export default function AdminCustomersPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} aria-label="Retour à l’administration">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -358,7 +358,7 @@ export default function AdminCustomersPage() {
                       <div className="space-y-2">
                         <Label>Site</Label>
                         <Select value={site} onValueChange={setSite}>
-                          <SelectTrigger>
+                          <SelectTrigger aria-label="Site du client">
                             <SelectValue placeholder="Aucun site" />
                           </SelectTrigger>
                           <SelectContent>
@@ -384,6 +384,7 @@ export default function AdminCustomersPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  aria-label="Rechercher par nom"
                   placeholder="Rechercher par nom..."
                   value={nameFilter}
                   onChange={(e) => setNameFilter(e.target.value)}
@@ -393,6 +394,7 @@ export default function AdminCustomersPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  aria-label="Rechercher par email"
                   placeholder="Rechercher par email..."
                   value={emailFilter}
                   onChange={(e) => setEmailFilter(e.target.value)}
@@ -402,6 +404,7 @@ export default function AdminCustomersPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
+                  aria-label="Rechercher par adresse"
                   placeholder="Rechercher par adresse..."
                   value={addressFilter}
                   onChange={(e) => setAddressFilter(e.target.value)}
@@ -409,7 +412,7 @@ export default function AdminCustomersPage() {
                 />
               </div>
               <Select value={siteFilter} onValueChange={setSiteFilter}>
-                <SelectTrigger>
+                <SelectTrigger aria-label="Filtrer les clients par site">
                   <SelectValue placeholder="Site" />
                 </SelectTrigger>
                 <SelectContent>
@@ -466,7 +469,7 @@ export default function AdminCustomersPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)} aria-label={`Supprimer ${[c.first_name, c.last_name].filter(Boolean).join(' ') || 'ce client'}`}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -482,7 +485,7 @@ export default function AdminCustomersPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
-                      <SelectTrigger className="w-[110px]">
+                      <SelectTrigger className="w-[110px]" aria-label="Nombre de clients par page">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -496,6 +499,7 @@ export default function AdminCustomersPage() {
                       size="icon"
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage <= 1}
+                      aria-label="Page précédente"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -507,6 +511,7 @@ export default function AdminCustomersPage() {
                       size="icon"
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                       disabled={currentPage >= totalPages}
+                      aria-label="Page suivante"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>

@@ -192,7 +192,7 @@ export default function AdminUsersPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} aria-label="Retour à l’administration">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -240,7 +240,7 @@ export default function AdminUsersPage() {
                   <div className="space-y-2">
                     <Label htmlFor="role">Rôle</Label>
                     <Select value={newRole} onValueChange={(v) => setNewRole(v as AppRole)}>
-                      <SelectTrigger>
+                      <SelectTrigger aria-label="Rôle de l’administrateur">
                         <SelectValue placeholder="Sélectionner un rôle" />
                       </SelectTrigger>
                       <SelectContent>
@@ -305,6 +305,7 @@ export default function AdminUsersPage() {
                           <Switch
                             checked={admin.active}
                             onCheckedChange={(checked) => handleToggleActive(admin, checked)}
+                            aria-label={`${admin.active ? 'Désactiver' : 'Activer'} ${admin.phone}`}
                           />
                         ) : (
                           <span className="text-xs text-muted-foreground">
@@ -321,6 +322,7 @@ export default function AdminUsersPage() {
                           size="icon"
                           className="text-destructive hover:text-destructive"
                           onClick={() => handleRemoveAdmin(admin.phone, admin.role)}
+                          aria-label={`Supprimer l’administrateur ${admin.phone}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { X, Plus, Minus, Check, AlertTriangle } from 'lucide-react';
+import { Plus, Minus, Check, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Pizza, PizzaSize, Supplement, CartItem } from '@/types/pizza';
 import { pizzaSizes, paniniSizes, supplements, pizzas } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
@@ -91,20 +92,8 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
-      <div 
-        className="absolute inset-0 bg-background/80 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-card border border-border rounded-t-3xl sm:rounded-3xl shadow-2xl animate-slide-up">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-muted/80 backdrop-blur-sm text-foreground hover:bg-muted transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="w-[calc(100%-1rem)] max-w-lg max-h-[90dvh] overflow-y-auto bg-card border-border rounded-2xl p-0 gap-0 shadow-2xl">
         <div className="relative aspect-video">
           <ProductImage
             src={pizza.image}
@@ -118,7 +107,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
 
         <div className="p-4 sm:p-6 space-y-6">
           <div>
-            <h2 className="text-2xl font-display font-bold text-foreground">{pizza.name}</h2>
+            <DialogTitle className="text-2xl font-display font-bold text-foreground">{pizza.name}</DialogTitle>
             <p className="text-muted-foreground mt-1">{pizza.description}</p>
             {pizza.ingredients.length > 0 && (
               <p className="text-sm text-primary mt-2">
@@ -136,6 +125,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                   <button
                     key={p.id}
                     onClick={() => setSelectedBambinoPizza(p)}
+                    aria-pressed={selectedBambinoPizza?.id === p.id}
                     className={`flex items-center gap-2 py-2 px-3 rounded-lg border-2 text-sm transition-all text-left ${
                       selectedBambinoPizza?.id === p.id
                         ? 'border-primary bg-primary/10 text-primary'
@@ -158,6 +148,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                   <button
                     key={base}
                     onClick={() => setSelectedBase(base)}
+                     aria-pressed={selectedBase === base}
                     className={`flex-1 py-3 px-4 rounded-xl border-2 font-medium transition-all ${
                       selectedBase === base
                         ? 'border-primary bg-primary/10 text-primary'
@@ -182,6 +173,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                   <button
                     key={size.id}
                     onClick={() => setSelectedSize(size)}
+                    aria-pressed={selectedSize.id === size.id}
                     className={`w-full flex items-center justify-between py-3 px-4 rounded-xl border-2 transition-all ${
                       selectedSize.id === size.id
                         ? 'border-primary bg-primary/10'
@@ -230,6 +222,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                     <button
                       key={supplement.id}
                       onClick={() => toggleSupplement(supplement)}
+                      aria-pressed={Boolean(isSelected)}
                       className={`flex items-center justify-between py-2 px-3 rounded-lg border-2 text-sm transition-all ${
                         isSelected
                           ? 'border-primary bg-primary/10 text-primary'
@@ -247,8 +240,9 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
 
           {/* Item notes for the pizzeria */}
           <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Message pour la pizzeria</h3>
+            <label htmlFor="item-notes" className="block text-sm font-semibold text-foreground mb-3">Message pour la pizzeria</label>
             <Textarea
+              id="item-notes"
               value={itemNotes}
               onChange={(e) => setItemNotes(e.target.value)}
               placeholder="Ex : sans origan"
@@ -263,7 +257,8 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-foreground hover:bg-muted/80 transition-colors"
+                aria-label="Diminuer la quantité"
+                className="w-11 h-11 rounded-full bg-muted flex items-center justify-center text-foreground hover:bg-muted/80 transition-colors"
               >
                 <Minus className="w-5 h-5" />
               </button>
@@ -272,7 +267,8 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
               </span>
               <button
                 onClick={() => setQuantity(quantity + 1)}
-                className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors"
+                aria-label="Augmenter la quantité"
+                className="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -310,7 +306,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             </Button>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
