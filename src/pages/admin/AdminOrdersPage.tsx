@@ -642,12 +642,12 @@ export default function AdminOrdersPage() {
                           </Badge>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
                         <Select 
                           value={order.status} 
                           onValueChange={(v) => handleStatusChange(order.id, v as OrderStatus)}
                         >
-                          <SelectTrigger className="w-[160px]">
+                          <SelectTrigger className="min-w-0 flex-1 sm:w-[160px] sm:flex-none">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -664,6 +664,7 @@ export default function AdminOrdersPage() {
                         <Button
                           variant="outline"
                           size="sm"
+                          className="flex-1 sm:flex-none"
                           onClick={() => handleSendInvoice(order)}
                           disabled={invoiceSendingId === order.id || !order.user_id}
                           title="Envoyer la facture PDF par email au client"

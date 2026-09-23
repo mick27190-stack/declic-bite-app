@@ -116,7 +116,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
           <div className="absolute inset-0 bg-gradient-to-t from-card via-transparent to-transparent" />
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-4 sm:p-6 space-y-6">
           <div>
             <h2 className="text-2xl font-display font-bold text-foreground">{pizza.name}</h2>
             <p className="text-muted-foreground mt-1">{pizza.description}</p>
@@ -131,7 +131,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
           {isBambino && (
             <div>
               <h3 className="text-sm font-semibold text-foreground mb-3">Choix de la pizza</h3>
-              <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
+              <div className="grid grid-cols-1 min-[430px]:grid-cols-2 gap-2 max-h-60 overflow-y-auto pr-1">
                 {allPizzas.map((p) => (
                   <button
                     key={p.id}
@@ -143,7 +143,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                     }`}
                   >
                     <ProductImage src={p.image} alt={p.name} className="w-8 h-8 rounded-md object-cover flex-shrink-0" iconClassName="h-4 w-4" />
-                    <span className="truncate font-medium">{p.name}</span>
+                    <span className="min-w-0 break-words font-medium">{p.name}</span>
                     {selectedBambinoPizza?.id === p.id && <Check className="w-4 h-4 flex-shrink-0 ml-auto" />}
                   </button>
                 ))}
@@ -223,7 +223,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
           {showSupplements && (
             <div>
               <h3 className="text-sm font-semibold text-foreground mb-3">Suppléments</h3>
-              <div className="grid grid-cols-2 gap-2">
+               <div className="grid grid-cols-1 min-[430px]:grid-cols-2 gap-2">
                 {supplements.map((supplement) => {
                   const isSelected = selectedSupplements.find((s) => s.id === supplement.id);
                   return (
@@ -236,8 +236,8 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                           : 'border-border bg-muted/50 text-foreground hover:border-primary/50'
                       }`}
                     >
-                      <span>{supplement.name}</span>
-                      <span className="font-semibold">+{supplement.price}€</span>
+                      <span className="min-w-0 break-words text-left">{supplement.name}</span>
+                      <span className="shrink-0 font-semibold">+{supplement.price}€</span>
                     </button>
                   );
                 })}

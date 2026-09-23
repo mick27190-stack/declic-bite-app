@@ -52,7 +52,7 @@ export function BottomNavigation() {
       className="fixed bottom-0 left-0 right-0 top-auto z-40 bg-card/90 backdrop-blur-xl border-t border-border/50"
       style={{ transform: 'translateZ(0)', willChange: 'transform' }}
     >
-      <div className="flex items-center justify-around h-16 max-w-md mx-auto px-4">
+      <div className="flex items-center justify-around h-16 max-w-md mx-auto px-1 sm:px-4">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/');
           const Icon = item.icon;
@@ -62,7 +62,7 @@ export function BottomNavigation() {
             <Link
               key={item.path}
               to={item.path}
-              className={`relative flex flex-col items-center justify-center w-16 h-full transition-all duration-300 ${
+              className={`relative flex min-w-0 flex-1 max-w-16 flex-col items-center justify-center h-full transition-all duration-300 ${
                 isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -77,7 +77,7 @@ export function BottomNavigation() {
                 )}
               </div>
               
-              <span className={`text-xs mt-1 font-medium transition-all duration-300 ${
+              <span className={`max-w-full truncate text-[10px] sm:text-xs mt-1 font-medium transition-all duration-300 ${
                 isActive ? 'opacity-100' : 'opacity-70'
               }`}>
                 {item.label}

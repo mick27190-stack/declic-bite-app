@@ -276,7 +276,7 @@ export default function AdminChatPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:h-[calc(100vh-200px)]">
           {/* Conversations list */}
           <Card className="md:col-span-1">
             <CardHeader>
@@ -291,7 +291,7 @@ export default function AdminChatPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <ScrollArea className="h-[500px]">
+              <ScrollArea className="h-[min(50vh,500px)] md:h-[500px]">
                 {conversations.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
                     Aucune conversation
