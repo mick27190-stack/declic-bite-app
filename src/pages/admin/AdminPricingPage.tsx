@@ -288,7 +288,7 @@ export default function AdminPricingPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} aria-label="Retour à l’administration">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -525,8 +525,9 @@ export default function AdminPricingPage() {
                         <Switch
                           checked={p.is_active}
                           onCheckedChange={(v) => togglePromo(p.id, v)}
+                          aria-label={`${p.is_active ? 'Désactiver' : 'Activer'} la promotion ${DAY_NAMES[p.day_of_week]}`}
                         />
-                        <Button variant="ghost" size="icon" onClick={() => deletePromo(p.id)}>
+                        <Button variant="ghost" size="icon" onClick={() => deletePromo(p.id)} aria-label={`Supprimer la promotion ${DAY_NAMES[p.day_of_week]}`}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

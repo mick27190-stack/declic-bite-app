@@ -49,6 +49,7 @@ export function BottomNavigation() {
 
   return (
     <nav
+      aria-label="Navigation principale"
       className="fixed bottom-0 left-0 right-0 top-auto z-40 bg-card/90 backdrop-blur-xl border-t border-border/50"
       style={{ transform: 'translateZ(0)', willChange: 'transform' }}
     >
@@ -62,6 +63,7 @@ export function BottomNavigation() {
             <Link
               key={item.path}
               to={item.path}
+              aria-current={isActive ? 'page' : undefined}
               className={`relative flex min-w-0 flex-1 max-w-16 flex-col items-center justify-center h-full transition-all duration-300 ${
                 isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               }`}

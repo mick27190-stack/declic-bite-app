@@ -38,10 +38,19 @@ function ConversationItem({
 }) {
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-pressed={isSelected}
       className={`p-4 border-b border-border/50 cursor-pointer hover:bg-muted/50 transition-colors ${
         isSelected ? 'bg-muted' : ''
       }`}
       onClick={onSelect}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect();
+        }
+      }}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -62,7 +71,7 @@ function ConversationItem({
               <AlertDialogTrigger asChild>
                 <button
                   onClick={(e) => e.stopPropagation()}
-                  className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  className="min-h-11 min-w-11 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
                   aria-label="Supprimer la conversation"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -263,7 +272,7 @@ export default function AdminChatPage() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} aria-label="Retour à l’administration">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -356,12 +365,13 @@ export default function AdminChatPage() {
 
                   <div className="border-t p-4 flex gap-2">
                     <Input
+                      aria-label="Message au client"
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       placeholder="Tapez votre message..."
                       onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     />
-                    <Button onClick={handleSend}>
+                    <Button onClick={handleSend} size="icon" aria-label="Envoyer le message">
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
