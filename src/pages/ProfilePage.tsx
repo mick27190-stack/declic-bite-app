@@ -213,12 +213,12 @@ function CurrentOrders() {
                       const { unitPrice } = linePriceAt(linePrices[order.id], idx, item, orderDate);
                       return (
                       <li key={idx} className="text-xs">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium text-foreground">
+                        <div className="flex flex-wrap items-start justify-between gap-x-2 gap-y-0.5">
+                          <span className="min-w-0 flex-1 break-words font-medium text-foreground">
                             {item.quantity}× {item.pizza?.name}
                           </span>
                           {item.size?.name && (
-                            <span className="text-muted-foreground">{item.size.name}</span>
+                            <span className="shrink-0 text-muted-foreground">{item.size.name}</span>
                           )}
                         </div>
                         <div className="flex items-center justify-between gap-2 text-muted-foreground">

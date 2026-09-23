@@ -204,7 +204,7 @@ export default function LandingPage() {
             {/* Logo/Hero Animation */}
             <div className="relative w-full flex justify-center mb-6 sm:mb-8 animate-float">
               {/* Espace réservé : évite tout décalage de mise en page pendant le chargement */}
-              <div className="relative w-[min(88vw,22rem)] sm:w-[min(70vw,26rem)] lg:w-[min(45vw,30rem)] h-[38vh] sm:h-[42vh] flex items-center justify-center">
+              <div className="relative w-[min(88vw,22rem)] sm:w-[min(70vw,26rem)] lg:w-[min(45vw,30rem)] h-[min(38dvh,22rem)] sm:h-[min(42dvh,26rem)] flex items-center justify-center">
                 {!heroLoaded && (
                   <div className="absolute inset-6 rounded-full bg-foreground/5 animate-pulse" aria-hidden="true" />
                 )}
@@ -293,7 +293,7 @@ export default function LandingPage() {
             </div>
 
             {/* Opening Hours Note */}
-            <p className="text-sm text-muted-foreground mt-8 text-center inline-grid items-center justify-center gap-2 [grid-template-columns:auto_1fr_auto]">
+            <p className="text-sm text-muted-foreground mt-8 text-center inline-flex flex-wrap items-center justify-center gap-2">
               <Pizza className="w-4 h-4 justify-self-end text-[#E85D2C]" />
               <span className="text-center">Ouvert du mardi au dimanche</span>
               <img

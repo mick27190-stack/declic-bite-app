@@ -529,10 +529,10 @@ export default function AdminSalesPage() {
       <main className="container mx-auto px-4 py-6 space-y-6">
         {/* Filters */}
         <div className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1">
+          <div className="flex w-full flex-col gap-1 sm:w-auto">
             <span className="text-xs text-muted-foreground">Affichage</span>
             <Select value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week' | 'month')}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-full sm:w-[150px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -542,13 +542,13 @@ export default function AdminSalesPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex w-full flex-col gap-1 sm:w-auto">
             <span className="text-xs text-muted-foreground">{viewMode === 'month' ? 'Mois début' : viewMode === 'week' ? 'Semaine début' : 'Du'}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={cn('w-[150px] justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
+                  className={cn('w-full sm:w-[150px] justify-start text-left font-normal', !startDate && 'text-muted-foreground')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {startDate
@@ -579,13 +579,13 @@ export default function AdminSalesPage() {
               </PopoverContent>
             </Popover>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex w-full flex-col gap-1 sm:w-auto">
             <span className="text-xs text-muted-foreground">{viewMode === 'month' ? 'Mois fin' : viewMode === 'week' ? 'Semaine fin' : 'Au'}</span>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className={cn('w-[150px] justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
+                  className={cn('w-full sm:w-[150px] justify-start text-left font-normal', !endDate && 'text-muted-foreground')}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {endDate
@@ -618,7 +618,7 @@ export default function AdminSalesPage() {
           </div>
           {isSuperAdmin && (
             <Select value={filterSite} onValueChange={(v) => setFilterSite(v as any)}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-full sm:w-[160px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -631,7 +631,7 @@ export default function AdminSalesPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">

@@ -47,7 +47,7 @@ export default function ConsentMigrationStats() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-1 gap-4 text-center min-[420px]:grid-cols-3">
           <div>
             <p className="text-2xl font-bold text-foreground">{stats.total_clients}</p>
             <p className="text-xs text-muted-foreground">Comptes clients</p>
