@@ -38,7 +38,7 @@ export default function MenuPage() {
     <div className="min-h-screen pb-24">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-md mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-4">
           {/* Restaurant & Back */}
           <div className="flex items-center justify-between mb-4">
             <button
@@ -108,7 +108,7 @@ export default function MenuPage() {
       </header>
 
       {/* Pizza Grid */}
-      <main className="max-w-md mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-6">
         <OrdersClosedBanner className="mb-4" />
 
         <ActivePromoBanner className="mb-4" />
@@ -134,7 +134,7 @@ export default function MenuPage() {
             </div>
           </div>
         </RetractableBanner>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredPizzas.map((pizza, index) => {
             const unavailable = !isAvailable(pizza.id, selectedRestaurant?.id);
             return (
