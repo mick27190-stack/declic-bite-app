@@ -81,6 +81,10 @@
     @apply border-border;
   }
 
+  :where(a, button, input, textarea, select, [role="button"]):focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
   html {
     scroll-behavior: smooth;
   }
@@ -235,6 +239,19 @@
 
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* iOS Safari: anchor fixed bottom navigation when the dynamic toolbar/address bar changes */

@@ -222,6 +222,7 @@ export default function AuthPage() {
           size="icon"
           onClick={() => navigate('/')}
           className="text-white hover:bg-white/10"
+          aria-label="Retour à l’accueil"
         >
           <ArrowLeft className="w-6 h-6" />
         </Button>

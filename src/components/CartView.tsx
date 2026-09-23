@@ -379,7 +379,8 @@ export function CartView() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => updateQuantity(index, item.quantity - 1)}
-                      className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground hover:bg-muted/80"
+                      aria-label={`Diminuer la quantité de ${item.pizza.name}`}
+                      className="w-11 h-11 rounded-full bg-muted flex items-center justify-center text-foreground hover:bg-muted/80"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -388,7 +389,8 @@ export function CartView() {
                     </span>
                     <button
                       onClick={() => updateQuantity(index, item.quantity + 1)}
-                      className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground"
+                      aria-label={`Augmenter la quantité de ${item.pizza.name}`}
+                      className="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-primary-foreground"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -400,7 +402,8 @@ export function CartView() {
                     </span>
                     <button
                       onClick={() => removeItem(index)}
-                      className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20"
+                      aria-label={`Retirer ${item.pizza.name} du panier`}
+                      className="w-11 h-11 rounded-full bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

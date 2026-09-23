@@ -219,13 +219,13 @@ export default function CustomerChat() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-20 right-4 left-4 sm:left-auto sm:w-96 z-50 rounded-2xl border border-border bg-background shadow-2xl flex flex-col h-[70vh] max-h-[560px] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+        <div role="dialog" aria-modal="true" aria-labelledby="customer-chat-title" className="fixed bottom-20 right-4 left-4 sm:left-auto sm:w-96 z-50 rounded-2xl border border-border bg-background shadow-2xl flex flex-col h-[70vh] max-h-[560px] overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground rounded-t-2xl">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
               <div>
-                <span className="font-semibold text-sm">Chat Déclic Pizza</span>
+                <span id="customer-chat-title" className="font-semibold text-sm">Chat Déclic Pizza</span>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-400 animate-pulse' : 'bg-primary-foreground/40'}`} />
                   <span className="text-[10px] text-primary-foreground/80">
@@ -234,7 +234,7 @@ export default function CustomerChat() {
                 </div>
               </div>
             </div>
-            <button onClick={() => setOpen(false)} className="hover:opacity-70 transition-opacity">
+            <button onClick={() => setOpen(false)} aria-label="Fermer le chat" className="min-h-11 min-w-11 flex items-center justify-center hover:opacity-70 transition-opacity">
               <X className="h-5 w-5" />
             </button>
           </div>

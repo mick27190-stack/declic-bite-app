@@ -2,6 +2,7 @@ import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CartView } from '@/components/CartView';
 import { BottomNavigation } from '@/components/BottomNavigation';
+import { Button } from '@/components/ui/button';
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -12,12 +13,14 @@ export default function CartPage() {
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Retour"
               onClick={() => navigate(-1)}
-              className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
-            </button>
+            </Button>
             <h1 className="text-2xl font-display font-bold text-foreground">
               Votre Panier 🛒
             </h1>
