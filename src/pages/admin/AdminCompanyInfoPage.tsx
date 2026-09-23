@@ -151,7 +151,7 @@ export default function AdminCompanyInfoPage() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} aria-label="Retour à l’administration">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -226,6 +226,7 @@ export default function AdminCompanyInfoPage() {
                   <label>
                     <input
                       type="file"
+                      aria-label="Choisir le logo de l’entreprise"
                       accept="image/png,image/jpeg,image/svg+xml,image/webp"
                       className="hidden"
                       disabled={logoUploading}

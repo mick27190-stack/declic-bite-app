@@ -533,7 +533,7 @@ export default function AdminOrderHistoryPage() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} aria-label="Retour à l’administration">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -544,12 +544,12 @@ export default function AdminOrderHistoryPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={fetchHistory}>
+            <Button variant="outline" size="icon" onClick={fetchHistory} aria-label="Actualiser l’historique">
               <RefreshCw className="h-4 w-4" />
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" disabled={loading || weeks.length === 0}>
+                <Button variant="outline" size="icon" disabled={loading || weeks.length === 0} aria-label="Exporter l’historique">
                   <FileDown className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -787,8 +787,8 @@ export default function AdminOrderHistoryPage() {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  className="h-8 w-8"
-                                  title="Voir le détail"
+                                  className="h-11 w-11"
+                                  aria-label={`Voir le détail de la commande ${order.id.slice(0, 8)}`}
                                 >
                                   <ChevronDown className="h-4 w-4" />
                                 </Button>
@@ -796,9 +796,9 @@ export default function AdminOrderHistoryPage() {
                               <Button
                                 variant="outline"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-11 w-11"
                                 onClick={() => handlePrint(order)}
-                                title="Imprimer le ticket"
+                                aria-label={`Imprimer le ticket de la commande ${order.id.slice(0, 8)} dans une nouvelle fenêtre`}
                               >
                                 <Printer className="h-4 w-4" />
                               </Button>
@@ -807,8 +807,8 @@ export default function AdminOrderHistoryPage() {
                                   <Button
                                     variant="outline"
                                     size="icon"
-                                    className="h-8 w-8 text-destructive hover:text-destructive"
-                                    title="Supprimer la commande"
+                                    className="h-11 w-11 text-destructive hover:text-destructive"
+                                    aria-label={`Supprimer la commande ${order.id.slice(0, 8)}`}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
