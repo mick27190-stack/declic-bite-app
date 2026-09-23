@@ -43,7 +43,7 @@ export default function MenuPage() {
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+              className="flex min-h-11 items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
               <span className="text-sm">Retour</span>
@@ -68,6 +68,7 @@ export default function MenuPage() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               type="text"
+              aria-label="Rechercher dans le menu"
               placeholder="Rechercher une pizza..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -79,7 +80,8 @@ export default function MenuPage() {
           <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-2">
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              aria-pressed={selectedCategory === 'all'}
+              className={`flex-shrink-0 min-h-11 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 selectedCategory === 'all'
                   ? 'bg-primary text-primary-foreground shadow-glow'
                   : 'bg-muted text-foreground hover:bg-muted/80'
@@ -91,7 +93,8 @@ export default function MenuPage() {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                aria-pressed={selectedCategory === category.id}
+                className={`flex-shrink-0 min-h-11 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                   selectedCategory === category.id
                     ? 'bg-primary text-primary-foreground shadow-glow'
                     : 'bg-muted text-foreground hover:bg-muted/80'

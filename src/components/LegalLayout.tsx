@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface LegalLayoutProps {
   title: string;
@@ -21,14 +22,15 @@ export function LegalLayout({ title, intro, children }: LegalLayoutProps) {
       <header className="sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-3xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <button
+            <Button
+              variant="ghost"
               onClick={() => navigate('/')}
               aria-label="Retour à l'accueil"
-              className="flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+              className="px-3 text-muted-foreground hover:text-primary"
             >
               <ChevronLeft className="w-5 h-5" />
               <span className="text-sm">Accueil</span>
-            </button>
+            </Button>
             <h1 className="text-xl sm:text-2xl font-display font-bold text-primary text-center flex-1">
               {title}
             </h1>

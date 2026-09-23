@@ -161,6 +161,10 @@ export function AddressAutocomplete({
         <Input
           ref={inputRef}
           type="text"
+          aria-label="Adresse de livraison"
+          aria-autocomplete="list"
+          aria-expanded={isOpen}
+          aria-controls="address-suggestions"
           placeholder={placeholder}
           value={value}
           onChange={(e) => handleInputChange(e.target.value)}
@@ -192,11 +196,12 @@ export function AddressAutocomplete({
       </div>
 
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
+        <div id="address-suggestions" role="listbox" className="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
           {suggestions.map((suggestion) => (
             <button
               key={suggestion.placeId}
               type="button"
+              role="option"
               className="flex w-full items-start gap-2 px-3 py-2 text-left text-sm transition-colors hover:bg-accent focus:bg-accent focus:outline-none"
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => handleSuggestionSelect(suggestion)}

@@ -220,7 +220,7 @@ export default function AdminSettingsPage() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} aria-label="Retour à l’administration">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -532,12 +532,14 @@ export default function AdminSettingsPage() {
                         <Switch
                           checked={closure.is_active}
                           onCheckedChange={(checked) => toggleClosure(closure.id, checked)}
+                          aria-label={`${closure.is_active ? 'Désactiver' : 'Activer'} la fermeture ${closure.site}`}
                         />
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          className="h-11 w-11 text-destructive hover:text-destructive"
                           onClick={() => deleteClosure(closure.id)}
+                          aria-label={`Supprimer la fermeture ${closure.site}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

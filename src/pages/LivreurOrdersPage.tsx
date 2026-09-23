@@ -100,7 +100,7 @@ export default function LivreurOrdersPage() {
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/')} aria-label="Retour à l’accueil">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
@@ -111,7 +111,7 @@ export default function LivreurOrdersPage() {
               Livraisons en cours{livreurSite ? ` • ${livreurSite}` : ''}
             </p>
           </div>
-          <Button variant="outline" size="icon" onClick={refetch} disabled={ordersLoading}>
+          <Button variant="outline" size="icon" onClick={refetch} disabled={ordersLoading} aria-label="Actualiser les livraisons">
             <RefreshCw className={`h-4 w-4 ${ordersLoading ? 'animate-spin' : ''}`} />
           </Button>
         </div>

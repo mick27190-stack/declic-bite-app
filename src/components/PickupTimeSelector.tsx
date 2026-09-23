@@ -48,6 +48,7 @@ export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSele
           className="w-full justify-start gap-3"
           disabled={asapDisabled}
           onClick={() => handleSelect(asapTime, asapDisabled)}
+          aria-pressed={selectedTime === asapTime}
         >
           <Clock className="w-4 h-4" />
           <span>Dès que possible</span>
@@ -68,8 +69,9 @@ export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSele
                 type="button"
                 disabled={isDisabled}
                 aria-disabled={isDisabled}
+                aria-pressed={isSelected}
                 onClick={() => handleSelect(time, isDisabled)}
-                className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                className={`min-h-11 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                   isDisabled
                     ? 'cursor-not-allowed opacity-40 bg-muted text-muted-foreground line-through'
                     : isSelected

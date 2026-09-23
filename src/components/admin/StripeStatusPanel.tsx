@@ -6,12 +6,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Order } from '@/types/order';
 
 const captureLabels: Record<string, { label: string; className: string }> = {
-  pending: { label: '⏳ Autorisation en attente', className: 'bg-yellow-500 text-white' },
-  authorized: { label: '🔒 Paiement autorisé', className: 'bg-blue-600 text-white' },
-  captured: { label: '✅ Paiement encaissé', className: 'bg-green-600 text-white' },
-  cancelled: { label: '❌ Autorisation annulée', className: 'bg-red-600 text-white' },
-  canceled: { label: '❌ Autorisation annulée', className: 'bg-red-600 text-white' },
-  refunded: { label: '↩️ Remboursé', className: 'bg-gray-500 text-white' },
+  pending: { label: '⏳ Autorisation en attente', className: 'bg-pizza-gold text-primary-foreground' },
+  authorized: { label: '🔒 Paiement autorisé', className: 'bg-secondary text-secondary-foreground' },
+  captured: { label: '✅ Paiement encaissé', className: 'bg-accent text-accent-foreground' },
+  cancelled: { label: '❌ Autorisation annulée', className: 'bg-destructive text-destructive-foreground' },
+  canceled: { label: '❌ Autorisation annulée', className: 'bg-destructive text-destructive-foreground' },
+  refunded: { label: '↩️ Remboursé', className: 'bg-muted text-foreground' },
 };
 
 const orderStatusLabels: Record<string, string> = {
@@ -112,6 +112,7 @@ export default function StripeStatusPanel({ order }: { order: Order }) {
           size="sm"
           className="ml-auto h-8"
           onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
         >
           {open ? <ChevronUp className="h-4 w-4 mr-1" /> : <ChevronDown className="h-4 w-4 mr-1" />}
           Historique
@@ -137,7 +138,7 @@ export default function StripeStatusPanel({ order }: { order: Order }) {
         {pi ? (
           <>
             <code className="rounded bg-muted px-1.5 py-0.5 font-mono break-all">{pi}</code>
-            <Button variant="ghost" size="sm" className="h-6 px-1.5" onClick={copyPi} title="Copier l'identifiant">
+            <Button variant="ghost" size="icon" className="h-11 w-11" onClick={copyPi} aria-label="Copier l’identifiant Stripe">
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             </Button>
           </>

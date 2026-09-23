@@ -235,7 +235,7 @@ export default function AdminMenuPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} aria-label="Retour à l’administration">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
@@ -309,7 +309,7 @@ export default function AdminMenuPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-11 w-11"
                           aria-label={`Monter ${pizza.name}`}
                           disabled={reordering || index === 0}
                           onClick={() => handleMove(index, -1)}
@@ -319,7 +319,7 @@ export default function AdminMenuPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-11 w-11"
                           aria-label={`Descendre ${pizza.name}`}
                           disabled={reordering || index === pizzaList.length - 1}
                           onClick={() => handleMove(index, 1)}
@@ -350,12 +350,14 @@ export default function AdminMenuPage() {
                       <Switch
                         checked={isAvailable(pizza.id, 'conches')}
                         onCheckedChange={() => handleToggleAvailability(pizza.id, 'conches')}
+                        aria-label={`Disponibilité de ${pizza.name} à Conches`}
                       />
                     </TableCell>
                     <TableCell>
                       <Switch
                         checked={isAvailable(pizza.id, 'beaumont')}
                         onCheckedChange={() => handleToggleAvailability(pizza.id, 'beaumont')}
+                        aria-label={`Disponibilité de ${pizza.name} à Beaumont`}
                       />
                     </TableCell>
                     <TableCell className="text-right">
@@ -364,6 +366,7 @@ export default function AdminMenuPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleOpenDialog(pizza)}
+                          aria-label={`Modifier ${pizza.name}`}
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -372,6 +375,7 @@ export default function AdminMenuPage() {
                           size="icon"
                           className="text-destructive hover:text-destructive"
                           onClick={() => handleDeletePizza(pizza.id)}
+                          aria-label={`Supprimer ${pizza.name}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

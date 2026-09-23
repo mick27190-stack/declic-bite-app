@@ -70,7 +70,7 @@ export function RetractableBanner({
         type="button"
         onClick={expand}
         aria-label="Afficher le détail du message"
-        className={`fade-up flex items-center gap-2 w-full text-left px-3 py-2 rounded-xl border text-sm font-semibold ${TONE_CLASSES[tone]} ${className}`}
+        className={`fade-up flex min-h-11 items-center gap-2 w-full text-left px-3 py-2 rounded-xl border text-sm font-semibold ${TONE_CLASSES[tone]} ${className}`}
       >
         {summary}
         <ChevronDown className="w-4 h-4 ml-auto shrink-0 opacity-70" />

@@ -849,13 +849,14 @@ function ProfileChat() {
       ) : (
         <div className="flex gap-2">
           <Input
+            aria-label="Votre message"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Votre message..."
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             className="text-sm"
           />
-          <Button size="icon" onClick={handleSend} disabled={!input.trim()}>
+          <Button size="icon" onClick={handleSend} disabled={!input.trim()} aria-label="Envoyer le message">
             <Send className="h-4 w-4" />
           </Button>
         </div>
@@ -1142,6 +1143,7 @@ export default function ProfilePage() {
             size="icon"
             onClick={() => navigate(-1)}
             className="text-white hover:bg-white/10"
+            aria-label="Retour"
           >
             <ArrowLeft className="w-6 h-6" />
           </Button>
@@ -1477,8 +1479,9 @@ export default function ProfilePage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
+                          className="h-11 w-11"
                           onClick={() => handleSetDefault(address.id)}
+                          aria-label={`Définir ${address.street} comme adresse par défaut`}
                         >
                           <Star className="w-4 h-4" />
                         </Button>
@@ -1486,8 +1489,9 @@ export default function ProfilePage() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-destructive"
+                        className="h-11 w-11 text-destructive"
                         onClick={() => handleDeleteAddress(address.id)}
+                        aria-label={`Supprimer l’adresse ${address.street}`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

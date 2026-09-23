@@ -306,7 +306,7 @@ export default function AdminInvoicesPage() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} aria-label="Retour à l’administration">
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
@@ -319,7 +319,7 @@ export default function AdminInvoicesPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={fetchInvoices} disabled={loading}>
+            <Button variant="outline" size="sm" onClick={fetchInvoices} disabled={loading} aria-label="Actualiser les factures">
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
             <DropdownMenu>

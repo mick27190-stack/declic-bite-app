@@ -133,6 +133,7 @@ export default function ResetPasswordPage() {
           size="icon"
           onClick={() => navigate('/auth')}
           className="text-white hover:bg-white/10"
+          aria-label="Retour à la connexion"
         >
           <ArrowLeft className="w-6 h-6" />
         </Button>

@@ -42,7 +42,7 @@ export function UserBadge({ variant, label, onClick, className }: UserBadgeProps
   }
 
   return (
-    <Badge className={cn(baseClasses, 'bg-amber-500 hover:bg-amber-500 text-white', className)}>
+    <Badge className={cn(baseClasses, 'bg-pizza-gold hover:bg-pizza-gold text-primary-foreground', className)}>
       <Bike className="w-4 h-4" />
       {label}
     </Badge>

@@ -14,12 +14,14 @@ export default function ContactPage() {
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-md mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Retour"
               onClick={() => navigate(-1)}
-              className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ChevronLeft className="w-5 h-5" />
-            </button>
+            </Button>
             <h1 className="text-2xl font-display font-bold text-foreground">
               Contact 📞
             </h1>

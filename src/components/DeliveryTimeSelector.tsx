@@ -60,6 +60,7 @@ export function DeliveryTimeSelector({ value, onChange, disabled }: DeliveryTime
         className="w-full justify-start gap-3"
         disabled={disabled}
         onClick={() => handleSelect(asap)}
+        aria-pressed={isAsapSelected}
       >
         <Clock className="w-4 h-4" />
         <span>Dès que possible</span>
@@ -76,7 +77,8 @@ export function DeliveryTimeSelector({ value, onChange, disabled }: DeliveryTime
                 type="button"
                 disabled={disabled}
                 onClick={() => handleSelect(time)}
-                className={`py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                aria-pressed={value === time}
+                className={`min-h-11 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                   disabled ? 'cursor-not-allowed ' : ''
                 }${
                   value === time
