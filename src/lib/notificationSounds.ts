@@ -74,3 +74,12 @@ export function playOrderSound() {
 export function playChatSound() {
   playTone([660, 520], [0.15, 0.2], 0.25, 'triangle');
 }
+
+/** Loud, distinct kitchen alarm (square-wave siren) — used in a loop for unacknowledged orders. */
+export function playAlarmSound() {
+  playTone([988, 740, 988, 740, 988, 740], [0.18, 0.18, 0.18, 0.18, 0.18, 0.25], 0.6, 'square');
+}
+
+export function isAudioUnlocked(): boolean {
+  return sharedCtx?.state === 'running';
+}

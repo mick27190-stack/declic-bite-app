@@ -43,6 +43,7 @@ import ConfidentialitePage from "./pages/ConfidentialitePage";
 import { useEffect } from "react";
 import { initNotificationSounds } from "@/lib/notificationSounds";
 import ConsentUpdateDialog from "@/components/ConsentUpdateDialog";
+import NewOrderAlarm from "@/components/admin/NewOrderAlarm";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +83,7 @@ const App = () => {
             <Sonner />
             <BrowserRouter>
               <ConsentUpdateDialog />
+              <NewOrderAlarm />
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/menu" element={<MenuPage />} />
