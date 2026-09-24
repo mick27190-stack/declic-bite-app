@@ -64,6 +64,16 @@ export default function NewOrderAlarm() {
       .then(({ data }) => data && setPrefs({ conches: data.notify_conches, beaumont: data.notify_beaumont }));
   }, [onAdmin, user]);
 
+  // Mise à jour immédiate quand le réglage « Recevoir les alertes de » change.
+  useEffect(() => {
+    const onChange = (e: Event) => {
+      const d = (e as CustomEvent).detail;
+      if (d) setPrefs({ conches: d.notify_conches, beaumont: d.notify_beaumont });
+    };
+    window.addEventListener('admin-notification-prefs-changed', onChange);
+    return () => window.removeEventListener('admin-notification-prefs-changed', onChange);
+  }, []);
+
   // Chargement initial + Realtime INSERT/UPDATE (synchronise tous les onglets/postes).
   useEffect(() => {
     if (!active) {
