@@ -30,6 +30,16 @@ export default function AlarmSettingsCard() {
     saveAlarmSettings(next);
   };
 
+  const groups = useMemo(() => {
+    const map = new Map<string, typeof ALARM_SOUNDS>();
+    ALARM_SOUNDS.forEach((o) => {
+      const list = map.get(o.group) ?? [];
+      list.push(o);
+      map.set(o.group, list);
+    });
+    return Array.from(map.entries());
+  }, []);
+
   return (
     <Card>
       <CardHeader>
