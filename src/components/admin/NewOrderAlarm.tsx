@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
-import { initNotificationSounds, isAudioUnlocked, playAlarmSound } from '@/lib/notificationSounds';
+import { initNotificationSounds, isAudioUnlocked, playAlarmSound, getAlarmSettings, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
 
 type Site = 'conches' | 'beaumont';
 interface PendingOrder {
@@ -108,12 +108,31 @@ export default function NewOrderAlarm() {
 
   // Son en boucle tant qu'il reste au moins une commande non acquittée.
   const ringing = orders.length > 0;
+  const [alarmSettings, setAlarmSettings] = useState(getAlarmSettings);
+  useEffect(() => {
+    const onChange = () => setAlarmSettings(getAlarmSettings());
+    window.addEventListener(ALARM_SETTINGS_EVENT, onChange);
+    window.addEventListener('storage', onChange);
+    return () => {
+      window.removeEventListener(ALARM_SETTINGS_EVENT, onChange);
+      window.removeEventListener('storage', onChange);
+    };
+  }, []);
   useEffect(() => {
     if (!ringing || !unlocked) return;
-    playAlarmSound();
-    const t = window.setInterval(playAlarmSound, 2500);
+    const s = alarmSettings;
+    let count = 1;
+    playAlarmSound(s);
+    const t = window.setInterval(() => {
+      if (s.repetitions > 0 && count >= s.repetitions) {
+        window.clearInterval(t);
+        return;
+      }
+      count++;
+      playAlarmSound(s);
+    }, (s.duration + 1.5) * 1000);
     return () => window.clearInterval(t);
-  }, [ringing, unlocked]);
+  }, [ringing, unlocked, orders.length, alarmSettings]);
 
   useEffect(() => {
     if (!active) return;

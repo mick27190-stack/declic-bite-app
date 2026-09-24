@@ -20,6 +20,7 @@ import {
 import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical, Power, Wallet, Bell } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import NotificationBell from '@/components/admin/NotificationBell';
+import AlarmSettingsCard from '@/components/admin/AlarmSettingsCard';
 import { useOrderTestMode } from '@/hooks/useOrderTestMode';
 import { toast } from '@/hooks/use-toast';
 
@@ -404,6 +405,8 @@ export default function AdminSettingsPage() {
             </CardContent>
           </Card>
         )}
+
+        <AlarmSettingsCard />
 
         {/* Add new closure */}
 

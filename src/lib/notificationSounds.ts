@@ -75,9 +75,54 @@ export function playChatSound() {
   playTone([660, 520], [0.15, 0.2], 0.25, 'triangle');
 }
 
-/** Loud, distinct kitchen alarm (square-wave siren) — used in a loop for unacknowledged orders. */
-export function playAlarmSound() {
-  playTone([988, 740, 988, 740, 988, 740], [0.18, 0.18, 0.18, 0.18, 0.18, 0.25], 0.6, 'square');
+export type AlarmSoundId = 'siren' | 'chime' | 'bell' | 'beep';
+export interface AlarmSettings {
+  sound: AlarmSoundId;
+  volume: number; // 0-100
+  duration: number; // seconds per ring (1-5)
+  repetitions: number; // 0 = until acknowledged
+}
+export const ALARM_SOUNDS: { id: AlarmSoundId; label: string }[] = [
+  { id: 'siren', label: 'Sirène' },
+  { id: 'chime', label: 'Carillon' },
+  { id: 'bell', label: 'Cloche' },
+  { id: 'beep', label: 'Bip' },
+];
+export const DEFAULT_ALARM_SETTINGS: AlarmSettings = { sound: 'siren', volume: 100, duration: 1, repetitions: 0 };
+const ALARM_KEY = 'order-alarm-settings-v1';
+export const ALARM_SETTINGS_EVENT = 'order-alarm-settings-changed';
+
+export function getAlarmSettings(): AlarmSettings {
+  try {
+    const raw = localStorage.getItem(ALARM_KEY);
+    return raw ? { ...DEFAULT_ALARM_SETTINGS, ...JSON.parse(raw) } : DEFAULT_ALARM_SETTINGS;
+  } catch {
+    return DEFAULT_ALARM_SETTINGS;
+  }
+}
+export function saveAlarmSettings(s: AlarmSettings) {
+  localStorage.setItem(ALARM_KEY, JSON.stringify(s));
+  window.dispatchEvent(new Event(ALARM_SETTINGS_EVENT));
+}
+
+const PATTERNS: Record<AlarmSoundId, { f: number[]; d: number[]; type: OscillatorType }> = {
+  siren: { f: [988, 740], d: [0.18, 0.18], type: 'square' },
+  chime: { f: [880, 1100], d: [0.14, 0.2], type: 'sine' },
+  bell: { f: [1320, 990], d: [0.3, 0.4], type: 'triangle' },
+  beep: { f: [1000, 0], d: [0.15, 0.1], type: 'square' },
+};
+
+/** Kitchen alarm — plays one ring using the configured sound, volume and duration. */
+export function playAlarmSound(settings: AlarmSettings = getAlarmSettings()) {
+  const p = PATTERNS[settings.sound] ?? PATTERNS.siren;
+  const cycle = p.d.reduce((a, b) => a + b * 0.8, 0);
+  const n = Math.max(1, Math.round(settings.duration / cycle));
+  const f: number[] = [];
+  const d: number[] = [];
+  for (let i = 0; i < n; i++) { f.push(...p.f); d.push(...p.d); }
+  const vol = Math.max(0.001, Math.min(1, settings.volume / 100) * 0.6);
+  // Frequency 0 = silence gap
+  playTone(f.map((x) => x || 1), d, vol, p.type);
 }
 
 export function isAudioUnlocked(): boolean {
