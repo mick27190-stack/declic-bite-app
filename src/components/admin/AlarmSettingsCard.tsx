@@ -54,7 +54,12 @@ export default function AlarmSettingsCard() {
           <Select value={s.sound} onValueChange={(v) => update({ sound: v as AlarmSoundId })}>
             <SelectTrigger id="alarm-sound" className="min-h-11"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {ALARM_SOUNDS.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+              {groups.map(([group, items]) => (
+                <SelectGroup key={group}>
+                  <SelectLabel>{group}</SelectLabel>
+                  {items.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+                </SelectGroup>
+              ))}
             </SelectContent>
           </Select>
         </div>
