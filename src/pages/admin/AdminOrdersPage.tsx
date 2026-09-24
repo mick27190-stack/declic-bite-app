@@ -643,9 +643,10 @@ export default function AdminOrdersPage() {
                         )}
                       </div>
                       <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                        <Select 
-                          value={order.status} 
+                        <Select
+                          value={order.status}
                           onValueChange={(v) => handleStatusChange(order.id, v as OrderStatus)}
+                          disabled={order.status === 'cancelled'}
                         >
                           <SelectTrigger className="min-w-0 flex-1 sm:w-[160px] sm:flex-none">
                             <SelectValue />
