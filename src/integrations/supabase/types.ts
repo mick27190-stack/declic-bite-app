@@ -907,6 +907,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          acquittee_le: string | null
+          acquittee_par: string | null
           capture_status: string | null
           created_at: string
           delivery_address: Json | null
@@ -932,6 +934,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          acquittee_le?: string | null
+          acquittee_par?: string | null
           capture_status?: string | null
           created_at?: string
           delivery_address?: Json | null
@@ -957,6 +961,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          acquittee_le?: string | null
+          acquittee_par?: string | null
           capture_status?: string | null
           created_at?: string
           delivery_address?: Json | null
@@ -1271,6 +1277,10 @@ export type Database = {
     }
     Functions: {
       __rls_probe: { Args: never; Returns: string }
+      acknowledge_order: {
+        Args: { _by?: string; _order_id: string }
+        Returns: undefined
+      }
       active_site_closure_type: {
         Args: { _restaurant: string }
         Returns: string

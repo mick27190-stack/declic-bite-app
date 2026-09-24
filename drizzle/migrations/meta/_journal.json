@@ -274,6 +274,13 @@
       "when": 1790223986890,
       "tag": "0038_lock_cancelled_order_status",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1790284217618,
+      "tag": "0039_order_acknowledgement",
+      "breakpoints": true
     }
   ]
 }
