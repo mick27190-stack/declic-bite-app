@@ -176,6 +176,7 @@ export default function AdminSettingsPage() {
       toast({ title: 'Enregistrement impossible', description: error.message, variant: 'destructive' });
       return;
     }
+    window.dispatchEvent(new CustomEvent('admin-notification-prefs-changed', { detail: next }));
     toast({ title: 'Préférences enregistrées' });
   };
 
