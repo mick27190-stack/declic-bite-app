@@ -350,6 +350,8 @@ export default function AdminOrdersPage() {
    *  - « Annulée » libère la pré-autorisation. */
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     const order = orders.find((o) => o.id === orderId);
+    // Une commande annulée est définitive : aucun changement de statut possible.
+    if (order?.status === 'cancelled') return;
     const hasPending = !!order?.stripe_payment_intent_id && order?.capture_status !== 'captured';
     const shouldCapture = ['confirmed', 'preparing', 'ready', 'delivered'].includes(newStatus);
 
@@ -643,9 +645,10 @@ export default function AdminOrdersPage() {
                         )}
                       </div>
                       <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-                        <Select 
-                          value={order.status} 
+                        <Select
+                          value={order.status}
                           onValueChange={(v) => handleStatusChange(order.id, v as OrderStatus)}
+                          disabled={order.status === 'cancelled'}
                         >
                           <SelectTrigger className="min-w-0 flex-1 sm:w-[160px] sm:flex-none">
                             <SelectValue />
