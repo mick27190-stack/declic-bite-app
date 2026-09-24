@@ -350,6 +350,8 @@ export default function AdminOrdersPage() {
    *  - « Annulée » libère la pré-autorisation. */
   const handleStatusChange = async (orderId: string, newStatus: OrderStatus) => {
     const order = orders.find((o) => o.id === orderId);
+    // Une commande annulée est définitive : aucun changement de statut possible.
+    if (order?.status === 'cancelled') return;
     const hasPending = !!order?.stripe_payment_intent_id && order?.capture_status !== 'captured';
     const shouldCapture = ['confirmed', 'preparing', 'ready', 'delivered'].includes(newStatus);
 
