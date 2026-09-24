@@ -267,6 +267,13 @@
       "when": 1790015438569,
       "tag": "0037_sms_recipients_exclude_refused_by_phone",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1790223986890,
+      "tag": "0038_lock_cancelled_order_status",
+      "breakpoints": true
     }
   ]
 }
