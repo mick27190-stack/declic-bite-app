@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Volume2, Play } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import {
   ALARM_SOUNDS,
   AlarmSettings,
@@ -28,6 +30,16 @@ export default function AlarmSettingsCard() {
     saveAlarmSettings(next);
   };
 
+  const groups = useMemo(() => {
+    const map = new Map<string, typeof ALARM_SOUNDS>();
+    ALARM_SOUNDS.forEach((o) => {
+      const list = map.get(o.group) ?? [];
+      list.push(o);
+      map.set(o.group, list);
+    });
+    return Array.from(map.entries());
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -42,7 +54,12 @@ export default function AlarmSettingsCard() {
           <Select value={s.sound} onValueChange={(v) => update({ sound: v as AlarmSoundId })}>
             <SelectTrigger id="alarm-sound" className="min-h-11"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {ALARM_SOUNDS.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+              {groups.map(([group, items]) => (
+                <SelectGroup key={group}>
+                  <SelectLabel>{group}</SelectLabel>
+                  {items.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+                </SelectGroup>
+              ))}
             </SelectContent>
           </Select>
         </div>
