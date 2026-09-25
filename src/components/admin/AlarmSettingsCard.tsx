@@ -117,10 +117,16 @@ export default function AlarmSettingsCard() {
                 <Label htmlFor={`alarm-sound-${site}`}>Son de l'alerte — {site === 'conches' ? 'Conches' : 'Beaumont'}</Label>
                 <div className="flex gap-2">
                   <div className="flex-1">{soundSelect(`alarm-sound-${site}`, value, (v) => update({ siteSounds: { ...s.siteSounds, [site]: v } }))}</div>
-                  <Button type="button" variant="outline" className="min-h-11" aria-label={`Écouter le son de ${site}`} onClick={() => { initNotificationSounds(); playAlarmSound({ ...s, sound: value }); }}>
+                  <Button type="button" variant="outline" className="min-h-11" aria-label={`Écouter le son de ${site}`} onClick={() => { initNotificationSounds(); playAlarmSound({ ...s, sound: value }, s.siteCustomSoundUrls?.[site] || null); }}>
                     <Play className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
+                {customUrlInput(
+                  `alarm-custom-${site}`,
+                  s.siteCustomSoundUrls?.[site] ?? '',
+                  (v) => update({ siteCustomSoundUrls: { ...s.siteCustomSoundUrls, [site]: v || undefined } }),
+                  site,
+                )}
               </div>
             );
           })
@@ -128,6 +134,7 @@ export default function AlarmSettingsCard() {
           <div className="space-y-2">
             <Label htmlFor="alarm-sound">Son de l'alerte</Label>
             {soundSelect('alarm-sound', s.sound, (v) => update({ sound: v }))}
+            {customUrlInput('alarm-custom', s.customSoundUrl ?? '', (v) => update({ customSoundUrl: v || undefined }))}
           </div>
         )}
 
