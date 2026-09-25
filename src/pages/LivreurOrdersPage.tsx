@@ -9,19 +9,27 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Clock, MapPin, RefreshCw, Package, Bike, CheckCircle2, Phone } from 'lucide-react';
 import { statusLabels, statusColors } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
+import { useOpeningHours } from '@/hooks/useOpeningHours';
+import { parisMinutes } from '@/lib/pickupSlots';
+import { parisDayOfWeek, minutesToHuman, ServiceWindow } from '@/lib/openingHours';
 
-// Plage horaire du livreur : 18h - 23h30 (heure de Paris).
-function isLivreurWindowOpen(): boolean {
-  const parts = new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(new Date());
-  const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
-  const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
-  const minutes = hour * 60 + minute;
-  return minutes >= 18 * 60 && minutes <= 23 * 60 + 30;
+// Marge après la dernière plage : le livreur finit ses livraisons du soir.
+const LIVREUR_AFTER_CLOSE_MINUTES = 90;
+
+/**
+ * L'espace livreur suit les créneaux d'ouverture configurés du site :
+ * ouvert du début de la première plage du jour jusqu'à 1h30 après la fin
+ * de la dernière plage. Jour fermé = espace indisponible.
+ */
+function livreurWindow(windows: ServiceWindow[]): { open: boolean; label: string } {
+  if (windows.length === 0) return { open: false, label: "Aucun service aujourd'hui" };
+  const start = Math.min(...windows.map((w) => w.start));
+  const end = Math.max(...windows.map((w) => w.end)) + LIVREUR_AFTER_CLOSE_MINUTES;
+  const now = parisMinutes();
+  return {
+    open: now >= start && now <= end,
+    label: `Disponible de ${minutesToHuman(start)} à ${minutesToHuman(end)}`,
+  };
 }
 
 export default function LivreurOrdersPage() {
