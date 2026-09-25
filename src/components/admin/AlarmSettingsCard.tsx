@@ -225,7 +225,11 @@ export default function AlarmSettingsCard() {
                 {customUrlInput(
                   `alarm-custom-${site}`,
                   s.siteCustomSoundUrls?.[site] ?? '',
-                  (v) => update({ siteCustomSoundUrls: { ...s.siteCustomSoundUrls, [site]: v || undefined } }),
+                  (v, meta) => update({
+                    siteCustomSoundUrls: { ...s.siteCustomSoundUrls, [site]: v || undefined },
+                    siteCustomSoundMeta: { ...s.siteCustomSoundMeta, [site]: meta ?? undefined },
+                  }),
+                  s.siteCustomSoundMeta?.[site] ?? null,
                   site,
                 )}
               </div>
@@ -235,7 +239,12 @@ export default function AlarmSettingsCard() {
           <div className="space-y-2">
             <Label htmlFor="alarm-sound">Son de l'alerte</Label>
             {soundSelect('alarm-sound', s.sound, (v) => update({ sound: v }))}
-            {customUrlInput('alarm-custom', s.customSoundUrl ?? '', (v) => update({ customSoundUrl: v || undefined }))}
+            {customUrlInput(
+              'alarm-custom',
+              s.customSoundUrl ?? '',
+              (v, meta) => update({ customSoundUrl: v || undefined, customSoundMeta: meta ?? undefined }),
+              s.customSoundMeta ?? null,
+            )}
           </div>
         )}
 
