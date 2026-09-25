@@ -16,7 +16,7 @@ import { preloadHeroMedia, heroPosterUrl } from '@/lib/heroPreload';
 import wordmarkAsset from '@/assets/declic-wordmark.png.asset.json';
 import deliveryScooterUrl from '@/assets/delivery-scooter.png';
 
-import { useOpeningHours } from '@/hooks/useOpeningHours';
+import { useOpeningHours, useSiteActivityBadges } from '@/hooks/useOpeningHours';
 import { formatWindows, parisDayOfWeek } from '@/lib/openingHours';
 
 const heroPoster = heroPosterUrl;

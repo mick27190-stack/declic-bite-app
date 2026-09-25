@@ -4,38 +4,16 @@ import { useEffect, useState } from 'react';
 import { useCart } from '@/contexts/CartContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { useLoyaltyCard } from '@/hooks/useLoyalty';
-
-// Le livreur n'a accès à son espace que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
-function isLivreurWindowOpen(): boolean {
-  const parts = new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris',
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(new Date());
-  const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
-  const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
-  const weekday = parts.find((p) => p.type === 'weekday')?.value?.toLowerCase() ?? '';
-  const isMonday = weekday.startsWith('lun');
-  const minutes = hour * 60 + minute;
-  // Fermé le lundi : pas de créneau livreur quand la pizzeria est fermée.
-  return !isMonday && minutes >= 18 * 60 && minutes <= 23 * 60 + 30;
-}
+import { useSiteActivityBadges } from '@/hooks/useOpeningHours';
 
 export function BottomNavigation() {
   const location = useLocation();
   const { totalItems, selectedRestaurant } = useCart();
   const { hasActiveProgram } = useLoyaltyCard(selectedRestaurant?.id ?? null);
-  const { isAnyAdmin, isAnyLivreur } = useAdmin();
+  const { isAnyAdmin, isAnyLivreur, livreurSite } = useAdmin();
 
-  const [livreurOpen, setLivreurOpen] = useState(isLivreurWindowOpen());
-
-  useEffect(() => {
-    if (!isAnyLivreur) return;
-    const interval = setInterval(() => setLivreurOpen(isLivreurWindowOpen()), 60 * 1000);
-    return () => clearInterval(interval);
-  }, [isAnyLivreur]);
+  // Badge « Livreur » aligné sur les horaires d'ouverture configurés du site.
+  const { livreurOpen } = useSiteActivityBadges([], livreurSite);
 
   const navItems = [
     { icon: Home, label: 'Accueil', path: '/' },
