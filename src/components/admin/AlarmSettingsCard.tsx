@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Volume2, Play } from 'lucide-react';
+import { Volume2, Play, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,20 +48,64 @@ export default function AlarmSettingsCard() {
   const { isSuperAdmin, isSiteAdminConches, isSiteAdminBeaumont, isSecondaryAdminConches, isSecondaryAdminBeaumont } = useAdmin();
   const dualSite = isSuperAdmin || ((isSiteAdminConches || isSecondaryAdminConches) && (isSiteAdminBeaumont || isSecondaryAdminBeaumont));
 
+  const MAX_AUDIO_SIZE = 2 * 1024 * 1024; // 2 Mo — stocké sur l'appareil
+
+  const pickAudioFile = (onChange: (v: string) => void) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('audio/')) {
+      toast.error('Veuillez sélectionner un fichier audio (MP3, WAV, OGG…)');
+      return;
+    }
+    if (file.size > MAX_AUDIO_SIZE) {
+      toast.error('Fichier trop lourd : 2 Mo maximum');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      onChange(String(reader.result));
+      toast.success('Son personnalisé enregistré sur cet appareil');
+    };
+    reader.onerror = () => toast.error("Impossible de lire le fichier audio");
+    reader.readAsDataURL(file);
+  };
+
   const customUrlInput = (id: string, value: string, onChange: (v: string) => void, site?: 'conches' | 'beaumont') => (
     <div className="space-y-1">
       <Label htmlFor={id} className="text-sm font-normal text-muted-foreground">
-        Son personnalisé (lien du fichier audio, optionnel)
+        Son personnalisé (fichier audio ou lien, optionnel)
       </Label>
-      <Input
-        id={id}
-        type="url"
-        inputMode="url"
-        placeholder="https://…/mon-son.mp3"
-        value={value}
-        onChange={(e) => onChange(e.target.value.trim())}
-        className="min-h-11"
-      />
+      <div className="flex gap-2">
+        <Input
+          id={id}
+          type="url"
+          inputMode="url"
+          placeholder="https://…/mon-son.mp3"
+          value={value.startsWith('data:') ? '' : value}
+          onChange={(e) => onChange(e.target.value.trim())}
+          className="min-h-11 flex-1"
+        />
+        <Button
+          type="button"
+          variant="outline"
+          className="min-h-11 shrink-0"
+          aria-label={site ? `Importer un fichier audio pour ${site}` : 'Importer un fichier audio'}
+          onClick={() => document.getElementById(`${id}-file`)?.click()}
+        >
+          <Upload className="h-4 w-4" aria-hidden="true" />
+        </Button>
+        <input
+          id={`${id}-file`}
+          type="file"
+          accept="audio/*"
+          className="hidden"
+          onChange={pickAudioFile(onChange)}
+        />
+      </div>
+      {value.startsWith('data:') && (
+        <p className="text-xs text-foreground">Fichier audio importé sur cet appareil.</p>
+      )}
       <p className="text-xs text-muted-foreground">
         Si le fichier est supprimé, inaccessible ou illisible sur cet appareil, la sirène générée prend automatiquement le relais.
       </p>
