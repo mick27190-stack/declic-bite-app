@@ -87,12 +87,21 @@ export interface AlarmSettings {
   /** Son distinct par site (admins des 2 sites). */
   perSite?: boolean;
   siteSounds?: { conches?: AlarmSoundId; beaumont?: AlarmSoundId };
+  /** Fichier audio personnalisé (URL). Secours automatique sur le son généré si illisible. */
+  customSoundUrl?: string;
+  siteCustomSoundUrls?: { conches?: string; beaumont?: string };
 }
 
 /** Son à jouer pour un site donné selon les réglages. */
 export function soundForSite(s: AlarmSettings, site: 'conches' | 'beaumont' | null): AlarmSoundId {
   if (s.perSite && site && s.siteSounds?.[site]) return s.siteSounds[site]!;
   return s.sound;
+}
+
+/** URL du fichier personnalisé pour un site donné, si défini. */
+export function customSoundForSite(s: AlarmSettings, site: 'conches' | 'beaumont' | null): string | null {
+  if (s.perSite && site && s.siteCustomSoundUrls?.[site]) return s.siteCustomSoundUrls[site]!;
+  return s.customSoundUrl || null;
 }
 export const ALARM_SOUNDS: { id: AlarmSoundId; label: string; group: string }[] = [
   { id: 'siren', label: 'Sirène', group: 'Urgents' },
