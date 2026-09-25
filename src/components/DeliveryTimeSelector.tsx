@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Clock, Info, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { computeDeliverySlots, DeliverySlots, validateDeliverySlot } from '@/lib/pickupSlots';
+import { useCurrentServiceWindow } from '@/hooks/useOpeningHours';
 
 interface DeliveryTimeSelectorProps {
   value: string | null;
@@ -10,26 +11,29 @@ interface DeliveryTimeSelectorProps {
 }
 
 export function DeliveryTimeSelector({ value, onChange, disabled }: DeliveryTimeSelectorProps) {
-  const [slots, setSlots] = useState<DeliverySlots>(() => computeDeliverySlots(new Date()));
+  const { reference } = useCurrentServiceWindow();
+  const [slots, setSlots] = useState<DeliverySlots>(() =>
+    computeDeliverySlots(new Date(), reference),
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const refresh = () => setSlots(computeDeliverySlots(new Date()));
+    const refresh = () => setSlots(computeDeliverySlots(new Date(), reference));
     refresh();
     const id = setInterval(refresh, 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [reference]);
 
   const handleSelect = (time: string) => {
     if (disabled) return;
     // Same rule as the backend: never accept a slot before 18h45 nor before
     // the 30-min lead time.
-    const check = validateDeliverySlot(time, new Date());
+    const check = validateDeliverySlot(time, new Date(), reference);
     if (!check.valid) {
       setError(check.error ?? null);
 
       // Fall back to the earliest bookable slot so the customer is never stuck.
-      setSlots(computeDeliverySlots(new Date()));
+      setSlots(computeDeliverySlots(new Date(), reference));
       return;
     }
     setError(null);

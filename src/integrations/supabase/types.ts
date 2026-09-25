@@ -1157,6 +1157,45 @@ export type Database = {
         }
         Relationships: []
       }
+      site_opening_hours: {
+        Row: {
+          day_of_week: number
+          id: string
+          is_closed: boolean
+          site: string
+          slot1_end: number | null
+          slot1_start: number | null
+          slot2_end: number | null
+          slot2_start: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          day_of_week: number
+          id?: string
+          is_closed?: boolean
+          site: string
+          slot1_end?: number | null
+          slot1_start?: number | null
+          slot2_end?: number | null
+          slot2_start?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          day_of_week?: number
+          id?: string
+          is_closed?: boolean
+          site?: string
+          slot1_end?: number | null
+          slot1_start?: number | null
+          slot2_end?: number | null
+          slot2_start?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       sms_opt_outs: {
         Row: {
           created_at: string
@@ -1311,6 +1350,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_order_creation_cutoff_window: {
+        Args: {
+          _order_type: string
+          _paris_minutes: number
+          _pickup_time: string
+          _win_end: number
+          _win_start: number
+        }
+        Returns: undefined
+      }
       compute_loyalty_discount: {
         Args: {
           _commit?: boolean
@@ -1336,6 +1385,13 @@ export type Database = {
           confirmed: number
           pending: number
           total_clients: number
+        }[]
+      }
+      current_site_window: {
+        Args: { _restaurant: string }
+        Returns: {
+          win_end: number
+          win_start: number
         }[]
       }
       delete_email: {
@@ -1373,6 +1429,7 @@ export type Database = {
         Args: { _restaurant: string }
         Returns: boolean
       }
+      is_site_open: { Args: { _restaurant: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       loyalty_program_is_active: {
         Args: { _enabled: boolean; _end: string; _now: string; _start: string }
@@ -1428,6 +1485,13 @@ export type Database = {
       should_receive_site_notification: {
         Args: { _category?: string; _site: string; _user_id: string }
         Returns: boolean
+      }
+      site_opening_windows: {
+        Args: { _dow: number; _restaurant: string }
+        Returns: {
+          win_end: number
+          win_start: number
+        }[]
       }
       sms_marketing_recipient_count: {
         Args: { _sites?: string[] }

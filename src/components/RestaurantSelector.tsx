@@ -5,6 +5,15 @@ import { restaurants } from '@/data/pizzas';
 import { useCart } from '@/contexts/CartContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
 import { useLiveParisTime } from '@/hooks/useLiveParisTime';
+import { useOpeningHours, restaurantToSite } from '@/hooks/useOpeningHours';
+import {
+  activeWindow,
+  formatWindows,
+  minutesToHuman,
+  nextWindowToday,
+  parisDayOfWeek,
+} from '@/lib/openingHours';
+import { parisMinutes } from '@/lib/pickupSlots';
 
 interface RestaurantSelectorProps {
   onSelect: (restaurant: Restaurant) => void;
@@ -16,25 +25,10 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
   const { selectedRestaurant } = useCart();
   const { getClosureForSite } = useActiveClosures();
   const now = useLiveParisTime();
+  const { getWindows } = useOpeningHours();
 
-  // Les sites sont fermés tous les lundis : aucun appel possible ce jour-là.
-  const isMonday =
-    new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Paris', weekday: 'short' }).format(now) ===
-    'Mon';
-
-  // Les boutons d'appel (pendant un blocage admin) ne sont actifs que pendant
-  // les horaires d'ouverture : 18h00–22h00 (heure de Paris), sauf le lundi.
-  const parisHour = Number(
-    new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Paris',
-      hour: '2-digit',
-      hour12: false,
-    }).format(now),
-  );
-  // Avant 18h00 : « Ouverture à 18h00 » ; après 22h00 : « Fermé pour ce soir ».
-  const isBeforeOpening = parisHour < 18;
-  const isEveningClosed = parisHour >= 22;
-  const isOutsideCallHours = isBeforeOpening || isEveningClosed;
+  const dow = parisDayOfWeek(now);
+  const nowMinutes = parisMinutes(now);
 
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
@@ -45,6 +39,20 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
       {restaurants.map((restaurant, index) => {
         const closure = getClosureForSite(restaurant.id || restaurant.name);
         const telHref = `tel:${restaurant.phone.replace(/[^0-9+]/g, '')}`;
+
+        // Horaires configurés pour cet établissement.
+        const windows = getWindows(restaurantToSite(restaurant.id || restaurant.name), dow);
+        const hoursLabel = windows.length === 0 ? "Fermé aujourd'hui" : formatWindows(windows);
+        const isDayClosed = windows.length === 0;
+        const isOpenNow = !!activeWindow(windows, nowMinutes);
+        const upcoming = nextWindowToday(windows, nowMinutes);
+        const isOutsideCallHours = !isOpenNow;
+        const callClosedLabel = isDayClosed
+          ? "Fermé aujourd'hui"
+          : upcoming
+            ? `Ouverture à ${minutesToHuman(upcoming.start)}`
+            : 'Fermé pour ce soir';
+
 
         if (closure) {
           const isSiteClosed = closure.closure_type === 'site';
@@ -70,10 +78,10 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
                 </div>
               </div>
 
-              {isSiteClosed || isMonday || isOutsideCallHours ? (
+              {isSiteClosed || isDayClosed || isOutsideCallHours ? (
                 <div className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-muted text-muted-foreground font-semibold py-3 px-4 cursor-not-allowed">
                   <Phone className="w-4 h-4" />
-                  {isMonday ? 'Fermé le lundi' : isSiteClosed ? 'Site injoignable' : isEveningClosed ? 'Fermé pour ce soir' : 'Ouverture à 18h00'}
+                  {isDayClosed ? "Fermé aujourd'hui" : isSiteClosed ? 'Site injoignable' : callClosedLabel}
                 </div>
               ) : (
                 <a
@@ -125,7 +133,7 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-primary" />
-                <span className="text-sm">{restaurant.hours}</span>
+                <span className="text-sm">Aujourd'hui : {hoursLabel}</span>
               </div>
             </div>
           </button>

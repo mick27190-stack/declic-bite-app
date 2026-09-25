@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { computePickupSlotOptions, type PickupSlot } from '@/lib/pickupSlots';
+import { useCurrentServiceWindow } from '@/hooks/useOpeningHours';
 
 interface PickupTimeSelectorProps {
   value: string | null;
@@ -12,14 +13,18 @@ interface PickupTimeSelectorProps {
 export function PickupTimeSelector({ value, onChange, disabled }: PickupTimeSelectorProps) {
   const [selectedTime, setSelectedTime] = useState<string | null>(value);
 
-  const [slots, setSlots] = useState<PickupSlot[]>(() => computePickupSlotOptions(new Date()));
+  const { reference } = useCurrentServiceWindow();
+
+  const [slots, setSlots] = useState<PickupSlot[]>(() =>
+    computePickupSlotOptions(new Date(), reference),
+  );
 
   useEffect(() => {
-    const refresh = () => setSlots(computePickupSlotOptions(new Date()));
+    const refresh = () => setSlots(computePickupSlotOptions(new Date(), reference));
     refresh();
     const id = setInterval(refresh, 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [reference]);
 
   const handleSelect = (time: string, slotDisabled: boolean) => {
     if (disabled || slotDisabled) return;
