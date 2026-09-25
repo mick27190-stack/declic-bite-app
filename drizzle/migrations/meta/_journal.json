@@ -288,6 +288,13 @@
       "when": 1790320151190,
       "tag": "0040_site_opening_hours",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1790320539388,
+      "tag": "0041_opening_hours_security_definer",
+      "breakpoints": true
     }
   ]
 }
