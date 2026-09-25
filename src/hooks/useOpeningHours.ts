@@ -97,3 +97,40 @@ export function useCurrentServiceWindow() {
 
   return { now, nowMinutes, site, dow, windows, reference, active, loading, getWindows };
 }
+
+// Marge après la dernière plage : le livreur finit ses livraisons du soir.
+const LIVREUR_AFTER_CLOSE_MINUTES = 90;
+
+/**
+ * Visibilité des badges « Admin site » et « Livreur » selon les horaires
+ * d'ouverture configurés (Paramètres), rafraîchie chaque minute et en temps
+ * réel quand les horaires changent.
+ * - Admin site : visible si au moins un site administré est dans une plage ouverte.
+ * - Livreur : visible du début de la première plage du jour de son site
+ *   jusqu'à 1h30 après la fin de la dernière plage.
+ */
+export function useSiteActivityBadges(adminSites: SiteId[], livreurSite: SiteId | null) {
+  const now = useLiveParisTime();
+  const { getWindows } = useOpeningHours();
+  const dow = parisDayOfWeek(now);
+  const nowMinutes = parisMinutes(now);
+
+  const adminOpen = useMemo(
+    () =>
+      adminSites.some((site) =>
+        getWindows(site, dow).some((w) => nowMinutes >= w.start && nowMinutes < w.end),
+      ),
+    [getWindows, adminSites, dow, nowMinutes],
+  );
+
+  const livreurOpen = useMemo(() => {
+    if (!livreurSite) return false;
+    const windows = getWindows(livreurSite, dow);
+    if (windows.length === 0) return false;
+    const start = Math.min(...windows.map((w) => w.start));
+    const end = Math.max(...windows.map((w) => w.end)) + LIVREUR_AFTER_CLOSE_MINUTES;
+    return nowMinutes >= start && nowMinutes <= end;
+  }, [getWindows, livreurSite, dow, nowMinutes]);
+
+  return { adminOpen, livreurOpen };
+}

@@ -16,7 +16,7 @@ import { preloadHeroMedia, heroPosterUrl } from '@/lib/heroPreload';
 import wordmarkAsset from '@/assets/declic-wordmark.png.asset.json';
 import deliveryScooterUrl from '@/assets/delivery-scooter.png';
 
-import { useOpeningHours } from '@/hooks/useOpeningHours';
+import { useOpeningHours, useSiteActivityBadges } from '@/hooks/useOpeningHours';
 import { formatWindows, parisDayOfWeek } from '@/lib/openingHours';
 
 const heroPoster = heroPosterUrl;
@@ -42,41 +42,6 @@ function TodayHoursBadge() {
 
 
 
-// La badge "Livreur" n'est visible que pendant la plage de livraison : 18h - 23h30 (heure de Paris).
-function isLivreurWindowOpen(): boolean {
-  const parts = new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris',
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(new Date());
-  const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
-  const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
-  const weekday = parts.find((p) => p.type === 'weekday')?.value?.toLowerCase() ?? '';
-  const isMonday = weekday.startsWith('lun');
-  const minutes = hour * 60 + minute;
-  // Fermé le lundi : pas de créneau livreur quand la pizzeria est fermée.
-  return !isMonday && minutes >= 18 * 60 && minutes <= 23 * 60 + 30;
-}
-
-// Le badge "Admin site" n'est visible que pendant les horaires d'ouverture :
-// 18h - 22h (heure de Paris), fermé le lundi.
-function isPizzeriaOpen(): boolean {
-  const parts = new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris',
-    weekday: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(new Date());
-  const hour = parseInt(parts.find((p) => p.type === 'hour')?.value ?? '0', 10);
-  const minute = parseInt(parts.find((p) => p.type === 'minute')?.value ?? '0', 10);
-  const weekday = parts.find((p) => p.type === 'weekday')?.value?.toLowerCase() ?? '';
-  const isMonday = weekday.startsWith('lun');
-  const minutes = hour * 60 + minute;
-  return !isMonday && minutes >= 18 * 60 && minutes < 22 * 60;
-}
 
 export default function LandingPage() {
   const [showRestaurantSelector, setShowRestaurantSelector] = useState(false);
@@ -86,6 +51,7 @@ export default function LandingPage() {
   const { user, profile } = useAuth();
   const {
     isAnyLivreur,
+    livreurSite,
     isSiteAdminConches,
     isSiteAdminBeaumont,
     isSecondaryAdminConches,
@@ -105,20 +71,13 @@ export default function LandingPage() {
     isSecondaryAdminConches ||
     isSecondaryAdminBeaumont;
 
-  const [livreurOpen, setLivreurOpen] = useState(isLivreurWindowOpen());
-  const [pizzeriaOpen, setPizzeriaOpen] = useState(isPizzeriaOpen());
-
-  // Actualisation automatique (toutes les minutes) pour faire apparaître/disparaître
-  // les badges "Livreur" et "Admin site" en fonction de l'heure, sans rechargement de la page.
-  useEffect(() => {
-    setLivreurOpen(isLivreurWindowOpen());
-    setPizzeriaOpen(isPizzeriaOpen());
-    const interval = setInterval(() => {
-      setLivreurOpen(isLivreurWindowOpen());
-      setPizzeriaOpen(isPizzeriaOpen());
-    }, 60 * 1000);
-    return () => clearInterval(interval);
-  }, [isAnyLivreur, isSiteAdmin]);
+  // Badges « Admin site » et « Livreur » alignés sur les horaires d'ouverture
+  // configurés (Paramètres), rafraîchis chaque minute et en temps réel.
+  const adminSites = [
+    ...(isSiteAdminConches || isSecondaryAdminConches ? (['conches'] as const) : []),
+    ...(isSiteAdminBeaumont || isSecondaryAdminBeaumont ? (['beaumont'] as const) : []),
+  ];
+  const { adminOpen: pizzeriaOpen, livreurOpen } = useSiteActivityBadges(adminSites, livreurSite);
 
   // L'animation est préchargée dès le démarrage de l'application (voir main.tsx) :
   // ici on se contente d'attendre la promesse partagée, déjà résolue la plupart
