@@ -165,25 +165,63 @@ const PATTERNS: Record<AlarmSoundId, { f: number[]; d: number[]; type: Oscillato
 };
 
 /**
+ * Convertit les liens de partage courants (Google Drive, Dropbox, OneDrive…)
+ * en lien direct vers le fichier audio, et force https (contenu mixte bloqué).
+ */
+export function normalizeAudioUrl(raw: string): string {
+  const url = (raw || '').trim();
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return url;
+  try {
+    const u = new URL(url);
+    if (u.protocol === 'http:' && window.location.protocol === 'https:') u.protocol = 'https:';
+    const host = u.hostname.toLowerCase();
+    // Google Drive : /file/d/<id>/view  ou  open?id=<id>
+    if (host.endsWith('drive.google.com')) {
+      const m = u.pathname.match(/\/file\/d\/([^/]+)/);
+      const id = m?.[1] || u.searchParams.get('id');
+      if (id) return `https://drive.google.com/uc?export=download&id=${id}`;
+    }
+    // Dropbox : ?dl=0 → lien brut
+    if (host.endsWith('dropbox.com')) {
+      u.searchParams.delete('dl');
+      u.searchParams.set('raw', '1');
+      return u.toString();
+    }
+    // OneDrive / SharePoint
+    if (host.includes('1drv.ms') || host.includes('onedrive.live.com') || host.includes('sharepoint.com')) {
+      u.searchParams.set('download', '1');
+      return u.toString();
+    }
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+/**
  * Joue un fichier audio personnalisé. Renvoie une promesse résolue à `true`
  * si la lecture a démarré, `false` si le fichier est supprimé, inaccessible
  * ou incompatible avec l'appareil — l'appelant bascule alors sur le secours.
  */
-function tryPlayCustomSound(url: string, volume: number): Promise<boolean> {
+export function tryPlayCustomSound(rawUrl: string, volume: number): Promise<boolean> {
+  const url = normalizeAudioUrl(rawUrl);
   return new Promise((resolve) => {
     let settled = false;
     const done = (ok: boolean) => {
       if (!settled) { settled = true; resolve(ok); }
     };
     try {
-      const audio = new Audio(url);
+      const audio = new Audio();
+      audio.preload = 'auto';
       audio.volume = Math.max(0, Math.min(1, volume / 100));
       audio.onerror = () => done(false);
-      const timeout = window.setTimeout(() => done(false), 3000);
+      // Laisse le temps aux fichiers distants (réseau mobile) de se charger.
+      const timeout = window.setTimeout(() => { if (!settled) { audio.pause(); done(false); } }, 10000);
+      audio.src = url;
       audio
         .play()
         .then(() => { window.clearTimeout(timeout); done(true); })
-        .catch(() => { window.clearTimeout(timeout); done(false); });
+        .catch((e) => { window.clearTimeout(timeout); console.warn('Son personnalisé illisible:', e?.message || e); done(false); });
     } catch {
       done(false);
     }
