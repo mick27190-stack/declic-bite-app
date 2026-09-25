@@ -72,8 +72,9 @@ export default function AlarmSettingsCard() {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
-    if (!file.type.startsWith('audio/')) {
-      toast.error('Veuillez sélectionner un fichier audio (MP3, WAV, OGG…)');
+    const isAudio = file.type.startsWith('audio/') || file.type === 'video/mp4' || /\.(mp4|m4a|aac)$/i.test(file.name);
+    if (!isAudio) {
+      toast.error('Veuillez sélectionner un fichier audio (MP3, MP4, M4A, WAV, OGG…)');
       return;
     }
     if (file.size > MAX_AUDIO_SIZE) {
@@ -132,7 +133,7 @@ export default function AlarmSettingsCard() {
         <input
           id={`${id}-file`}
           type="file"
-          accept="audio/*"
+          accept="audio/*,audio/mp4,audio/m4a,audio/x-m4a,video/mp4,.mp3,.mp4,.m4a,.aac,.wav,.ogg,.flac"
           className="hidden"
           onChange={pickAudioFile(onChange)}
         />
