@@ -21,6 +21,7 @@ import {
   playAlarmSound,
   saveAlarmSettings,
   customSoundForSite,
+  tryPlayCustomSound,
 } from '@/lib/notificationSounds';
 
 const REPETITION_OPTIONS = [
@@ -168,7 +169,14 @@ export default function AlarmSettingsCard() {
             size="sm"
             className="min-h-11"
             aria-label={site ? `Écouter le son personnalisé de ${site}` : 'Écouter le son personnalisé'}
-            onClick={() => { initNotificationSounds(); playAlarmSound(s, value); }}
+            onClick={async () => {
+              initNotificationSounds();
+              const ok = await tryPlayCustomSound(value, s.volume);
+              if (!ok) {
+                playAlarmSound(s);
+                toast.error("Ce lien n'est pas un fichier audio lisible. Utilisez un lien direct vers un .mp3 (ou importez le fichier). Sirène de secours jouée.");
+              }
+            }}
           >
             <Play className="h-4 w-4 mr-2" aria-hidden="true" /> Écouter le fichier
           </Button>
