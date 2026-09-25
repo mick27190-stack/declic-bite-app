@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Volume2, Play } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import {
   initNotificationSounds,
   playAlarmSound,
   saveAlarmSettings,
+  customSoundForSite,
 } from '@/lib/notificationSounds';
 
 const REPETITION_OPTIONS = [
@@ -44,6 +46,38 @@ export default function AlarmSettingsCard() {
 
   const { isSuperAdmin, isSiteAdminConches, isSiteAdminBeaumont, isSecondaryAdminConches, isSecondaryAdminBeaumont } = useAdmin();
   const dualSite = isSuperAdmin || ((isSiteAdminConches || isSecondaryAdminConches) && (isSiteAdminBeaumont || isSecondaryAdminBeaumont));
+
+  const customUrlInput = (id: string, value: string, onChange: (v: string) => void, site?: 'conches' | 'beaumont') => (
+    <div className="space-y-1">
+      <Label htmlFor={id} className="text-sm font-normal text-muted-foreground">
+        Son personnalisé (lien du fichier audio, optionnel)
+      </Label>
+      <Input
+        id={id}
+        type="url"
+        inputMode="url"
+        placeholder="https://…/mon-son.mp3"
+        value={value}
+        onChange={(e) => onChange(e.target.value.trim())}
+        className="min-h-11"
+      />
+      <p className="text-xs text-muted-foreground">
+        Si le fichier est supprimé, inaccessible ou illisible sur cet appareil, la sirène générée prend automatiquement le relais.
+      </p>
+      {value && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-h-11"
+          aria-label={site ? `Écouter le son personnalisé de ${site}` : 'Écouter le son personnalisé'}
+          onClick={() => { initNotificationSounds(); playAlarmSound(s, value); }}
+        >
+          <Play className="h-4 w-4 mr-2" aria-hidden="true" /> Écouter le fichier
+        </Button>
+      )}
+    </div>
+  );
 
   const soundSelect = (id: string, value: AlarmSoundId, onChange: (v: AlarmSoundId) => void) => (
     <Select value={value} onValueChange={(v) => onChange(v as AlarmSoundId)}>
@@ -83,10 +117,16 @@ export default function AlarmSettingsCard() {
                 <Label htmlFor={`alarm-sound-${site}`}>Son de l'alerte — {site === 'conches' ? 'Conches' : 'Beaumont'}</Label>
                 <div className="flex gap-2">
                   <div className="flex-1">{soundSelect(`alarm-sound-${site}`, value, (v) => update({ siteSounds: { ...s.siteSounds, [site]: v } }))}</div>
-                  <Button type="button" variant="outline" className="min-h-11" aria-label={`Écouter le son de ${site}`} onClick={() => { initNotificationSounds(); playAlarmSound({ ...s, sound: value }); }}>
+                  <Button type="button" variant="outline" className="min-h-11" aria-label={`Écouter le son de ${site}`} onClick={() => { initNotificationSounds(); playAlarmSound({ ...s, sound: value }, s.siteCustomSoundUrls?.[site] || null); }}>
                     <Play className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
+                {customUrlInput(
+                  `alarm-custom-${site}`,
+                  s.siteCustomSoundUrls?.[site] ?? '',
+                  (v) => update({ siteCustomSoundUrls: { ...s.siteCustomSoundUrls, [site]: v || undefined } }),
+                  site,
+                )}
               </div>
             );
           })
@@ -94,6 +134,7 @@ export default function AlarmSettingsCard() {
           <div className="space-y-2">
             <Label htmlFor="alarm-sound">Son de l'alerte</Label>
             {soundSelect('alarm-sound', s.sound, (v) => update({ sound: v }))}
+            {customUrlInput('alarm-custom', s.customSoundUrl ?? '', (v) => update({ customSoundUrl: v || undefined }))}
           </div>
         )}
 
@@ -117,7 +158,7 @@ export default function AlarmSettingsCard() {
           </Select>
         </div>
 
-        <Button type="button" variant="outline" className="min-h-11" onClick={() => { initNotificationSounds(); playAlarmSound(s); }}>
+        <Button type="button" variant="outline" className="min-h-11" onClick={() => { initNotificationSounds(); playAlarmSound(s, customSoundForSite(s, null)); }}>
           <Play className="h-4 w-4 mr-2" aria-hidden="true" /> Écouter
         </Button>
         <p className="text-xs text-muted-foreground">

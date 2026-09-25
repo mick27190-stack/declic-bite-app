@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
-import { initNotificationSounds, isAudioUnlocked, playAlarmSound, getAlarmSettings, soundForSite, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
+import { initNotificationSounds, isAudioUnlocked, playAlarmSound, getAlarmSettings, soundForSite, customSoundForSite, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
 
 type Site = 'conches' | 'beaumont';
 interface PendingOrder {
@@ -133,15 +133,16 @@ export default function NewOrderAlarm() {
   useEffect(() => {
     if (!ringing || !unlocked) return;
     const s = { ...alarmSettings, sound: soundForSite(alarmSettings, latestSite) };
+    const customUrl = customSoundForSite(alarmSettings, latestSite);
     let count = 1;
-    playAlarmSound(s);
+    playAlarmSound(s, customUrl);
     const t = window.setInterval(() => {
       if (s.repetitions > 0 && count >= s.repetitions) {
         window.clearInterval(t);
         return;
       }
       count++;
-      playAlarmSound(s);
+      playAlarmSound(s, customUrl);
     }, (s.duration + 1.5) * 1000);
     return () => window.clearInterval(t);
   }, [ringing, unlocked, orders.length, alarmSettings, latestSite]);

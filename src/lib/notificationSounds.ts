@@ -87,12 +87,21 @@ export interface AlarmSettings {
   /** Son distinct par site (admins des 2 sites). */
   perSite?: boolean;
   siteSounds?: { conches?: AlarmSoundId; beaumont?: AlarmSoundId };
+  /** Fichier audio personnalisé (URL). Secours automatique sur le son généré si illisible. */
+  customSoundUrl?: string;
+  siteCustomSoundUrls?: { conches?: string; beaumont?: string };
 }
 
 /** Son à jouer pour un site donné selon les réglages. */
 export function soundForSite(s: AlarmSettings, site: 'conches' | 'beaumont' | null): AlarmSoundId {
   if (s.perSite && site && s.siteSounds?.[site]) return s.siteSounds[site]!;
   return s.sound;
+}
+
+/** URL du fichier personnalisé pour un site donné, si défini. */
+export function customSoundForSite(s: AlarmSettings, site: 'conches' | 'beaumont' | null): string | null {
+  if (s.perSite && site && s.siteCustomSoundUrls?.[site]) return s.siteCustomSoundUrls[site]!;
+  return s.customSoundUrl || null;
 }
 export const ALARM_SOUNDS: { id: AlarmSoundId; label: string; group: string }[] = [
   { id: 'siren', label: 'Sirène', group: 'Urgents' },
@@ -139,8 +148,56 @@ const PATTERNS: Record<AlarmSoundId, { f: number[]; d: number[]; type: Oscillato
   sleigh: { f: [1760, 2200], d: [0.09, 0.09], type: 'triangle' },
 };
 
-/** Kitchen alarm — plays one ring using the configured sound, volume and duration. */
-export function playAlarmSound(settings: AlarmSettings = getAlarmSettings()) {
+/**
+ * Joue un fichier audio personnalisé. Renvoie une promesse résolue à `true`
+ * si la lecture a démarré, `false` si le fichier est supprimé, inaccessible
+ * ou incompatible avec l'appareil — l'appelant bascule alors sur le secours.
+ */
+function tryPlayCustomSound(url: string, volume: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const done = (ok: boolean) => {
+      if (!settled) { settled = true; resolve(ok); }
+    };
+    try {
+      const audio = new Audio(url);
+      audio.volume = Math.max(0, Math.min(1, volume / 100));
+      audio.onerror = () => done(false);
+      const timeout = window.setTimeout(() => done(false), 3000);
+      audio
+        .play()
+        .then(() => { window.clearTimeout(timeout); done(true); })
+        .catch(() => { window.clearTimeout(timeout); done(false); });
+    } catch {
+      done(false);
+    }
+  });
+}
+
+/** Son généré de secours (sirène), toujours disponible sans fichier. */
+function playFallbackAlarm(settings: AlarmSettings) {
+  const p = PATTERNS.siren;
+  const cycle = p.d.reduce((a, b) => a + b * 0.8, 0);
+  const n = Math.max(1, Math.round(settings.duration / cycle));
+  const f: number[] = [];
+  const d: number[] = [];
+  for (let i = 0; i < n; i++) { f.push(...p.f); d.push(...p.d); }
+  const vol = Math.max(0.001, Math.min(1, settings.volume / 100) * 0.6);
+  playTone(f.map((x) => x || 1), d, vol, p.type);
+}
+
+/**
+ * Kitchen alarm — plays one ring using the configured sound, volume and duration.
+ * Si un fichier personnalisé est configuré mais supprimé, inaccessible ou
+ * incompatible avec l'appareil, le son généré (sirène) prend le relais.
+ */
+export function playAlarmSound(settings: AlarmSettings = getAlarmSettings(), customUrl?: string | null) {
+  if (customUrl) {
+    tryPlayCustomSound(customUrl, settings.volume).then((ok) => {
+      if (!ok) playFallbackAlarm(settings);
+    });
+    return;
+  }
   const p = PATTERNS[settings.sound] ?? PATTERNS.siren;
   const cycle = p.d.reduce((a, b) => a + b * 0.8, 0);
   const n = Math.max(1, Math.round(settings.duration / cycle));
