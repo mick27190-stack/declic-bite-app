@@ -47,6 +47,38 @@ export default function AlarmSettingsCard() {
   const { isSuperAdmin, isSiteAdminConches, isSiteAdminBeaumont, isSecondaryAdminConches, isSecondaryAdminBeaumont } = useAdmin();
   const dualSite = isSuperAdmin || ((isSiteAdminConches || isSecondaryAdminConches) && (isSiteAdminBeaumont || isSecondaryAdminBeaumont));
 
+  const customUrlInput = (id: string, value: string, onChange: (v: string) => void, site?: 'conches' | 'beaumont') => (
+    <div className="space-y-1">
+      <Label htmlFor={id} className="text-sm font-normal text-muted-foreground">
+        Son personnalisé (lien du fichier audio, optionnel)
+      </Label>
+      <Input
+        id={id}
+        type="url"
+        inputMode="url"
+        placeholder="https://…/mon-son.mp3"
+        value={value}
+        onChange={(e) => onChange(e.target.value.trim())}
+        className="min-h-11"
+      />
+      <p className="text-xs text-muted-foreground">
+        Si le fichier est supprimé, inaccessible ou illisible sur cet appareil, la sirène générée prend automatiquement le relais.
+      </p>
+      {value && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="min-h-11"
+          aria-label={site ? `Écouter le son personnalisé de ${site}` : 'Écouter le son personnalisé'}
+          onClick={() => { initNotificationSounds(); playAlarmSound(s, value); }}
+        >
+          <Play className="h-4 w-4 mr-2" aria-hidden="true" /> Écouter le fichier
+        </Button>
+      )}
+    </div>
+  );
+
   const soundSelect = (id: string, value: AlarmSoundId, onChange: (v: AlarmSoundId) => void) => (
     <Select value={value} onValueChange={(v) => onChange(v as AlarmSoundId)}>
       <SelectTrigger id={id} className="min-h-11"><SelectValue /></SelectTrigger>
