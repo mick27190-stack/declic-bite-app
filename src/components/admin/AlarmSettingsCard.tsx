@@ -126,15 +126,15 @@ export default function AlarmSettingsCard() {
             >
               <Upload className="h-4 w-4" aria-hidden="true" />
             </Button>
-            <input
-              id={`${id}-file`}
-              type="file"
-              accept="audio/*"
-              className="hidden"
-              onChange={pickAudioFile(onChange)}
-            />
           </div>
         )}
+        <input
+          id={`${id}-file`}
+          type="file"
+          accept="audio/*"
+          className="hidden"
+          onChange={pickAudioFile(onChange)}
+        />
         {value && (
           <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-2">
             <Music2 className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
