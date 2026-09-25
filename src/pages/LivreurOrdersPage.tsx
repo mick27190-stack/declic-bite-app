@@ -38,12 +38,17 @@ export default function LivreurOrdersPage() {
   const { isAnyLivreur, livreurSite, loading: adminLoading } = useAdmin();
   const { orders, loading: ordersLoading, updateOrderStatus, refetch } = useOrders();
 
-  const [windowOpen, setWindowOpen] = useState(isLivreurWindowOpen());
+  const { getWindows } = useOpeningHours();
+  const [windowInfo, setWindowInfo] = useState(() => livreurWindow([]));
 
   useEffect(() => {
-    const interval = setInterval(() => setWindowOpen(isLivreurWindowOpen()), 60 * 1000);
+    const update = () =>
+      setWindowInfo(livreurWindow(livreurSite ? getWindows(livreurSite, parisDayOfWeek()) : []));
+    update();
+    const interval = setInterval(update, 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [getWindows, livreurSite]);
+  const windowOpen = windowInfo.open;
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -129,7 +134,7 @@ export default function LivreurOrdersPage() {
         {!windowOpen && (
           <Card className="mb-6 border-amber-500/50">
             <CardContent className="py-4 text-center text-foreground">
-              L'espace livreur est disponible de 18h à 23h30.
+              L'espace livreur suit les horaires d'ouverture du site. {windowInfo.label}
             </CardContent>
           </Card>
         )}
