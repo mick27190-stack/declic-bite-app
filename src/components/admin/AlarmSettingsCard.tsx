@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ChangeEvent } from 'react';
 import { Volume2, Play, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,7 +50,7 @@ export default function AlarmSettingsCard() {
 
   const MAX_AUDIO_SIZE = 2 * 1024 * 1024; // 2 Mo — stocké sur l'appareil
 
-  const pickAudioFile = (onChange: (v: string) => void) => async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const pickAudioFile = (onChange: (v: string) => void) => async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
