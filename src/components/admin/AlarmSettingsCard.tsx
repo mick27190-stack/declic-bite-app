@@ -1,5 +1,5 @@
 import { useMemo, useState, type ChangeEvent } from 'react';
-import { Volume2, Play, Upload } from 'lucide-react';
+import { Volume2, Play, Upload, RefreshCw, Trash2, Music2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import {
   ALARM_SOUNDS,
   AlarmSettings,
   AlarmSoundId,
+  CustomSoundMeta,
   getAlarmSettings,
   initNotificationSounds,
   playAlarmSound,
