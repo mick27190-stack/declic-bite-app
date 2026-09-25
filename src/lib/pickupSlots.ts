@@ -2,7 +2,7 @@
 // Les bornes sont dérivées de la plage de service en cours (paramétrable par
 // établissement dans l'administration) : par défaut 18h00 – 22h00.
 
-import { DEFAULT_WINDOW, ServiceWindow } from './openingHours';
+import { DEFAULT_WINDOW, ServiceWindow, minutesToHuman } from './openingHours';
 
 export const SLOT_INTERVAL = 15; // minutes
 export const MIN_LEAD_MINUTES = 15; // minimum delay before the first available slot
@@ -234,7 +234,7 @@ export function validateDeliverySlotFromMinutes(
     slotMinutes > deliveryLastSlot(win) ||
     slotMinutes % SLOT_INTERVAL !== 0
   ) {
-    return { valid: false, error: DELIVERY_SLOT_RANGE_MESSAGE };
+    return { valid: false, error: rangeMessage(win) };
   }
 
   if (slotMinutes < earliestBookableDeliveryMinutes(nowMinutes, win)) {
