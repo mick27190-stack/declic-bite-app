@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
-import { initNotificationSounds, isAudioUnlocked, playAlarmSound, getAlarmSettings, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
+import { initNotificationSounds, isAudioUnlocked, playAlarmSound, getAlarmSettings, soundForSite, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
 
 type Site = 'conches' | 'beaumont';
 interface PendingOrder {
@@ -128,9 +128,11 @@ export default function NewOrderAlarm() {
       window.removeEventListener('storage', onChange);
     };
   }, []);
+  // Son du site de la commande la plus récente (réglage « un son par site »).
+  const latestSite = orders.length ? siteOf(orders[orders.length - 1]) : null;
   useEffect(() => {
     if (!ringing || !unlocked) return;
-    const s = alarmSettings;
+    const s = { ...alarmSettings, sound: soundForSite(alarmSettings, latestSite) };
     let count = 1;
     playAlarmSound(s);
     const t = window.setInterval(() => {
@@ -142,7 +144,7 @@ export default function NewOrderAlarm() {
       playAlarmSound(s);
     }, (s.duration + 1.5) * 1000);
     return () => window.clearInterval(t);
-  }, [ringing, unlocked, orders.length, alarmSettings]);
+  }, [ringing, unlocked, orders.length, alarmSettings, latestSite]);
 
   useEffect(() => {
     if (!active) return;

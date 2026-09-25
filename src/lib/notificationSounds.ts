@@ -84,6 +84,15 @@ export interface AlarmSettings {
   volume: number; // 0-100
   duration: number; // seconds per ring (1-5)
   repetitions: number; // 0 = until acknowledged
+  /** Son distinct par site (admins des 2 sites). */
+  perSite?: boolean;
+  siteSounds?: { conches?: AlarmSoundId; beaumont?: AlarmSoundId };
+}
+
+/** Son à jouer pour un site donné selon les réglages. */
+export function soundForSite(s: AlarmSettings, site: 'conches' | 'beaumont' | null): AlarmSoundId {
+  if (s.perSite && site && s.siteSounds?.[site]) return s.siteSounds[site]!;
+  return s.sound;
 }
 export const ALARM_SOUNDS: { id: AlarmSoundId; label: string; group: string }[] = [
   { id: 'siren', label: 'Sirène', group: 'Urgents' },

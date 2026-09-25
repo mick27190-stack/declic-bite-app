@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { useAdmin } from '@/contexts/AdminContext';
 import {
   Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -40,6 +42,23 @@ export default function AlarmSettingsCard() {
     return Array.from(map.entries());
   }, []);
 
+  const { isSuperAdmin, isSiteAdminConches, isSiteAdminBeaumont, isSecondaryAdminConches, isSecondaryAdminBeaumont } = useAdmin();
+  const dualSite = isSuperAdmin || ((isSiteAdminConches || isSecondaryAdminConches) && (isSiteAdminBeaumont || isSecondaryAdminBeaumont));
+
+  const soundSelect = (id: string, value: AlarmSoundId, onChange: (v: AlarmSoundId) => void) => (
+    <Select value={value} onValueChange={(v) => onChange(v as AlarmSoundId)}>
+      <SelectTrigger id={id} className="min-h-11"><SelectValue /></SelectTrigger>
+      <SelectContent>
+        {groups.map(([group, items]) => (
+          <SelectGroup key={group}>
+            <SelectLabel>{group}</SelectLabel>
+            {items.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
+          </SelectGroup>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -49,20 +68,34 @@ export default function AlarmSettingsCard() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
-        <div className="space-y-2">
-          <Label htmlFor="alarm-sound">Son de l'alerte</Label>
-          <Select value={s.sound} onValueChange={(v) => update({ sound: v as AlarmSoundId })}>
-            <SelectTrigger id="alarm-sound" className="min-h-11"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {groups.map(([group, items]) => (
-                <SelectGroup key={group}>
-                  <SelectLabel>{group}</SelectLabel>
-                  {items.map((o) => <SelectItem key={o.id} value={o.id}>{o.label}</SelectItem>)}
-                </SelectGroup>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {dualSite && (
+          <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+            <Label htmlFor="alarm-per-site" className="leading-snug">Un son différent par site</Label>
+            <Switch id="alarm-per-site" checked={!!s.perSite} onCheckedChange={(v) => update({ perSite: v })} />
+          </div>
+        )}
+
+        {dualSite && s.perSite ? (
+          (['conches', 'beaumont'] as const).map((site) => {
+            const value = s.siteSounds?.[site] ?? s.sound;
+            return (
+              <div key={site} className="space-y-2">
+                <Label htmlFor={`alarm-sound-${site}`}>Son de l'alerte — {site === 'conches' ? 'Conches' : 'Beaumont'}</Label>
+                <div className="flex gap-2">
+                  <div className="flex-1">{soundSelect(`alarm-sound-${site}`, value, (v) => update({ siteSounds: { ...s.siteSounds, [site]: v } }))}</div>
+                  <Button type="button" variant="outline" className="min-h-11" aria-label={`Écouter le son de ${site}`} onClick={() => { initNotificationSounds(); playAlarmSound({ ...s, sound: value }); }}>
+                    <Play className="h-4 w-4" aria-hidden="true" />
+                  </Button>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="alarm-sound">Son de l'alerte</Label>
+            {soundSelect('alarm-sound', s.sound, (v) => update({ sound: v }))}
+          </div>
+        )}
 
         <div className="space-y-2">
           <Label id="alarm-volume-label">Volume : {s.volume} %</Label>
