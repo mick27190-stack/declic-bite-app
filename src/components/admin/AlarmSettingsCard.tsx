@@ -57,7 +57,7 @@ export default function AlarmSettingsCard() {
     if (t.includes('mpeg') || t.includes('mp3')) return 'MP3';
     if (t.includes('wav')) return 'WAV';
     if (t.includes('ogg')) return 'OGG';
-    if (t.includes('mp4') || t.includes('aac') || t.includes('m4a')) return 'M4A';
+    if (t.includes('mp4') || t.includes('aac') || t.includes('m4a')) return 'MP4';
     if (t.includes('flac')) return 'FLAC';
     const sub = t.split('/')[1];
     return sub ? sub.toUpperCase() : 'Audio';
@@ -175,7 +175,7 @@ export default function AlarmSettingsCard() {
               const ok = await tryPlayCustomSound(value, s.volume);
               if (!ok) {
                 playAlarmSound(s);
-                toast.error("Ce lien n'est pas un fichier audio lisible. Utilisez un lien direct vers un .mp3 (ou importez le fichier). Sirène de secours jouée.");
+                toast.error("Ce lien n'est pas un fichier audio lisible. Utilisez un lien direct vers un .mp3 ou .mp4 (ou importez le fichier). Sirène de secours jouée.");
               }
             }}
           >
