@@ -158,7 +158,7 @@ export default function AlarmSettingsCard() {
           </Select>
         </div>
 
-        <Button type="button" variant="outline" className="min-h-11" onClick={() => { initNotificationSounds(); playAlarmSound(s); }}>
+        <Button type="button" variant="outline" className="min-h-11" onClick={() => { initNotificationSounds(); playAlarmSound(s, customSoundForSite(s, null)); }}>
           <Play className="h-4 w-4 mr-2" aria-hidden="true" /> Écouter
         </Button>
         <p className="text-xs text-muted-foreground">
