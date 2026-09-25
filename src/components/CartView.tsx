@@ -25,7 +25,9 @@ import { useLoyaltyPreview } from '@/hooks/useLoyalty';
 import {
   getCutoffButtonLabel,
   getCutoffWarningMinutesRemaining,
+  lastOrderMinutes,
 } from '@/lib/orderCutoff';
+import { formatWindows, minutesToHuman } from '@/lib/openingHours';
 
 
 export function CartView() {
@@ -70,9 +72,10 @@ export function CartView() {
     isClosed,
     cutoff,
     closedMessage,
-
+    serviceWindow,
+    windows,
   } = useOrderingStatus();
-  const warningMinutes = getCutoffWarningMinutesRemaining(now);
+  const warningMinutes = getCutoffWarningMinutesRemaining(now, serviceWindow);
 
 
 
@@ -122,7 +125,7 @@ export function CartView() {
     if (orderType === 'livraison' && !pickupTime) return false;
     // Mirror the backend rule: the delivery slot must be on the 18h45 → 22h00
     // grid and never before max(now + 45 min avec 8 min de grâce, 18h45).
-    if (orderType === 'livraison' && !validateDeliverySlot(pickupTime, now).valid) return false;
+    if (orderType === 'livraison' && !validateDeliverySlot(pickupTime, now, serviceWindow).valid) return false;
     if (orderType === 'livraison' && cutoff.isDeliveryCutoff) return false;
 
     if (belowMinimum) return false;
@@ -167,7 +170,7 @@ export function CartView() {
     if (orderType === 'livraison') {
       // Re-check against the live Paris clock right before sending, so a slot
       // that expired while the cart was open is caught here and not by the API.
-      const slotCheck = validateDeliverySlot(pickupTime, new Date());
+      const slotCheck = validateDeliverySlot(pickupTime, new Date(), serviceWindow);
       if (!slotCheck.valid) {
         toast({
           title: 'Créneau de livraison indisponible',
@@ -450,19 +453,19 @@ export function CartView() {
                 </>
               ) : cutoff.isCutoffWarning && warningMinutes !== null ? (
                 <span className="flex flex-col items-center justify-center gap-0.5">
-                  <span>Commandes jusqu’à 21h15</span>
+                  <span>Commandes jusqu’à {minutesToHuman(lastOrderMinutes(serviceWindow))}</span>
                   <span className="text-xs sm:text-sm opacity-90 font-normal">
                     encore {warningMinutes} min
                   </span>
                 </span>
               ) : (
-                getCutoffButtonLabel(cutoff, { orderType, canCheckout: canCheckout() }) ??
+                getCutoffButtonLabel(cutoff, { orderType, canCheckout: canCheckout() }, serviceWindow) ??
                 (manualClosure ? (
                   closureTitle(manualClosure.closure_type === 'site' ? 'site' : 'orders')
                 ) : isMonday ? (
-                  'Fermé le lundi'
+                  'Fermé aujourd’hui'
                 ) : isOutsideHours ? (
-                  'Ouvert de 18h à 22h'
+                  `Ouvert ${formatWindows(windows)}`
                 ) : !selectedRestaurant ? (
                   'Choisissez un restaurant'
                 ) : !user ? (

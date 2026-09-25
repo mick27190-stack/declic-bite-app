@@ -16,7 +16,27 @@ import { preloadHeroMedia, heroPosterUrl } from '@/lib/heroPreload';
 import wordmarkAsset from '@/assets/declic-wordmark.png.asset.json';
 import deliveryScooterUrl from '@/assets/delivery-scooter.png';
 
+import { useOpeningHours } from '@/hooks/useOpeningHours';
+import { formatWindows, parisDayOfWeek } from '@/lib/openingHours';
+
 const heroPoster = heroPosterUrl;
+
+/** Badge horaires : plages du jour, ou mention par site s'ils diffèrent. */
+function TodayHoursBadge() {
+  const { getWindows } = useOpeningHours();
+  const dow = parisDayOfWeek(new Date());
+  const conches = formatWindows(getWindows('conches', dow));
+  const beaumont = formatWindows(getWindows('beaumont', dow));
+
+  if (conches === beaumont) {
+    return <span className="text-sm text-foreground">{conches}</span>;
+  }
+  return (
+    <span className="text-sm text-foreground">
+      Conches {conches} · Beaumont {beaumont}
+    </span>
+  );
+}
 
 
 
@@ -262,7 +282,7 @@ export default function LandingPage() {
             <div className="flex flex-wrap justify-center gap-3 mb-10">
               <div className="glass-button px-4 py-2 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-primary" />
-                <span className="text-sm text-foreground">18h - 22h</span>
+                <TodayHoursBadge />
               </div>
               <div className="glass-button px-4 py-2 flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-primary" />

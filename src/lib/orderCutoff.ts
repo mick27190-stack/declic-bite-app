@@ -1,22 +1,39 @@
-// Pure helpers for evening order cut-offs (Europe/Paris).
-// - Delivery is refused from 21h17 (last accepted at 21h16, honoured on the
-//   22h00 delivery slot).
-// - Take-away is refused from 21h17 (last order accepted at 21h16, honoured
-//   on the 21h30 pickup slot).
-// - From 21h00 to 21h15 the CTA button shows a warning so customers know the
-//   last accepted order is at 21h15.
-// Extracted so the exact button labels and alert copy can be unit-tested
-// at the 21h16 and 21h17 boundaries.
+// Pure helpers for the end-of-service order cut-offs (Europe/Paris).
+// Les bornes sont dérivées de la plage de service en cours (paramétrable par
+// établissement). Pour la plage historique 18h-22h, on retrouve exactement :
+//  - alerte à partir de 21h00, dernière commande à 21h15, coupure à 21h17.
 
 import { parisMinutes } from './pickupSlots';
+import { DEFAULT_WINDOW, ServiceWindow, minutesToHuman } from './openingHours';
 
-export const DELIVERY_CUTOFF_MINUTES = 21 * 60 + 17; // 21:17
-export const TAKEAWAY_CUTOFF_MINUTES = 21 * 60 + 17; // 21:17
-export const CUTOFF_WARNING_START_MINUTES = 21 * 60; // 21:00
-export const CUTOFF_WARNING_END_MINUTES = 21 * 60 + 15; // 21:15
+// Offsets relatifs à l'heure de fermeture de la plage.
+const CUTOFF_OFFSET = 43; // fermeture - 43 min => 21h17
+const LAST_ORDER_OFFSET = 45; // fermeture - 45 min => 21h15
+const WARNING_START_OFFSET = 60; // fermeture - 60 min => 21h00
+
+export const DELIVERY_CUTOFF_MINUTES = 21 * 60 + 17; // 21:17 (plage par défaut)
+export const TAKEAWAY_CUTOFF_MINUTES = 21 * 60 + 17;
+export const CUTOFF_WARNING_START_MINUTES = 21 * 60;
+export const CUTOFF_WARNING_END_MINUTES = 21 * 60 + 15;
+
+export function cutoffMinutes(win: ServiceWindow = DEFAULT_WINDOW): number {
+  return win.end - CUTOFF_OFFSET;
+}
+export function lastOrderMinutes(win: ServiceWindow = DEFAULT_WINDOW): number {
+  return win.end - LAST_ORDER_OFFSET;
+}
+export function warningStartMinutes(win: ServiceWindow = DEFAULT_WINDOW): number {
+  return win.end - WARNING_START_OFFSET;
+}
 
 export const CUTOFF_ALERT_MESSAGE =
   'Commandes fermées pour la livraison et pour les commandes à emporter à partir de 21h17. Revenez demain à 18h00.';
+
+export function cutoffAlertMessage(win: ServiceWindow = DEFAULT_WINDOW): string {
+  return `Commandes fermées pour la livraison et pour les commandes à emporter à partir de ${minutesToHuman(
+    cutoffMinutes(win),
+  )}.`;
+}
 
 export const BUTTON_LABEL_TAKEAWAY_CLOSED = 'Commandes fermées';
 export const BUTTON_LABEL_TAKEAWAY_HINT =
@@ -33,52 +50,58 @@ export type CutoffState = {
 /**
  * Returns whether the delivery/takeaway cut-offs apply at the given instant.
  * `isClosed` short-circuits: when the shop is already closed for another
- * reason (Monday, outside 18-22h, manual closure) the cut-offs do not apply.
+ * reason (jour de fermeture, hors horaires, fermeture manuelle) the cut-offs
+ * do not apply.
  */
 export function getCutoffState(
   now: Date = new Date(),
   isClosed = false,
+  win: ServiceWindow = DEFAULT_WINDOW,
 ): CutoffState {
   if (isClosed) {
     return { isDeliveryCutoff: false, isTakeawayCutoff: false, isCutoffWarning: false };
   }
   const m = parisMinutes(now);
+  const cutoff = cutoffMinutes(win);
   return {
-    isDeliveryCutoff: m >= DELIVERY_CUTOFF_MINUTES,
-    isTakeawayCutoff: m >= TAKEAWAY_CUTOFF_MINUTES,
-    isCutoffWarning: m >= CUTOFF_WARNING_START_MINUTES && m <= CUTOFF_WARNING_END_MINUTES,
+    isDeliveryCutoff: m >= cutoff,
+    isTakeawayCutoff: m >= cutoff,
+    isCutoffWarning: m >= warningStartMinutes(win) && m <= lastOrderMinutes(win),
   };
 }
 
 /**
- * Minutes remaining until the 21h15 last-order deadline, when the current
- * Paris time is between 21h00 and 21h15 inclusive. Returns `null` outside the
- * warning window. Used for the real-time countdown on the CTA button.
+ * Minutes remaining until the last-order deadline, when the current Paris time
+ * sits in the warning window. Returns `null` outside it.
  */
-export function getCutoffWarningMinutesRemaining(now: Date = new Date()): number | null {
+export function getCutoffWarningMinutesRemaining(
+  now: Date = new Date(),
+  win: ServiceWindow = DEFAULT_WINDOW,
+): number | null {
   const m = parisMinutes(now);
-  if (m < CUTOFF_WARNING_START_MINUTES || m > CUTOFF_WARNING_END_MINUTES) {
+  if (m < warningStartMinutes(win) || m > lastOrderMinutes(win)) {
     return null;
   }
-  return Math.max(0, CUTOFF_WARNING_END_MINUTES - m);
+  return Math.max(0, lastOrderMinutes(win) - m);
 }
 
 /**
  * Label to show inside the "Commander" button given the cut-off state.
- * Returns `null` when the cut-offs do not force a specific label — the
- * caller can then fall back to its normal label logic.
  */
 export function getCutoffButtonLabel(
   state: CutoffState,
   opts: { orderType: 'emporter' | 'livraison'; canCheckout: boolean },
+  win: ServiceWindow = DEFAULT_WINDOW,
 ): string | null {
   if (state.isTakeawayCutoff) return BUTTON_LABEL_TAKEAWAY_CLOSED;
   if (state.isDeliveryCutoff) {
     if (opts.orderType === 'emporter' && opts.canCheckout) {
       return BUTTON_LABEL_ORDER_NOW;
     }
-    return BUTTON_LABEL_TAKEAWAY_HINT;
+    return `commandes à emporter possibles jusqu'à ${minutesToHuman(cutoffMinutes(win) - 1)}`;
   }
-  if (state.isCutoffWarning) return BUTTON_LABEL_CUTOFF_WARNING;
+  if (state.isCutoffWarning) {
+    return `Commandes possibles jusqu’à ${minutesToHuman(lastOrderMinutes(win))} max`;
+  }
   return null;
 }

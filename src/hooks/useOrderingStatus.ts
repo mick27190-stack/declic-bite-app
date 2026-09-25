@@ -1,56 +1,57 @@
 import { useCart } from '@/contexts/CartContext';
 import { useActiveClosures } from '@/hooks/useRestaurantClosures';
-import { useLiveParisTime } from '@/hooks/useLiveParisTime';
 import { useOrderTestMode } from '@/hooks/useOrderTestMode';
+import { useCurrentServiceWindow } from '@/hooks/useOpeningHours';
 import { getCutoffState } from '@/lib/orderCutoff';
-
+import { DAY_LABELS, minutesToHuman, nextWindowToday } from '@/lib/openingHours';
 
 /**
  * Single source of truth for the customer-facing "commandes fermées" state.
- * Shared by the menu, the cart and the checkout so every screen shows the same
- * message at the same instant, updating live at each minute boundary.
+ * Les horaires sont ceux configurés pour l'établissement sélectionné
+ * (jusqu'à deux plages de service par jour).
  */
 export function useOrderingStatus() {
-  const now = useLiveParisTime();
   const { selectedRestaurant } = useCart();
   const { getClosureForSite } = useActiveClosures();
   const { isTestModeActive } = useOrderTestMode();
+  const { now, nowMinutes, dow, site, windows, reference, active, getWindows } =
+    useCurrentServiceWindow();
 
-  const parisWeekday = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Europe/Paris',
-    weekday: 'short',
-  }).format(now);
-  const isMonday = parisWeekday === 'Mon' && !isTestModeActive;
-  const isSunday = parisWeekday === 'Sun';
+  // Jour de fermeture hebdomadaire du site (aucune plage configurée).
+  const isDayClosed = windows.length === 0 && !isTestModeActive;
+  const isMonday = isDayClosed;
+  const isSunday = dow === 0;
 
-  const currentHour = Number(
-    new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Paris',
-      hour: '2-digit',
-      hour12: false,
-    }).format(now),
-  );
-  const isOutsideHours = (currentHour < 18 || currentHour >= 22) && !isTestModeActive;
+  const isOutsideHours = !active && !isTestModeActive;
 
   const manualClosure = selectedRestaurant ? getClosureForSite(selectedRestaurant.name) : null;
-  const isClosed = isMonday || isOutsideHours || !!manualClosure;
-  // En mode test, les cut-offs du soir sont neutralisés eux aussi : seule une
+  const isClosed = isDayClosed || isOutsideHours || !!manualClosure;
+  // En mode test, les cut-offs de fin de service sont neutralisés : seule une
   // fermeture / un blocage manuel du site continue de s'appliquer.
-  const cutoff = getCutoffState(now, isClosed || isTestModeActive);
+  const cutoff = getCutoffState(now, isClosed || isTestModeActive, active ?? reference);
 
-  // "Commandes fermées" banner: shown once the evening cut-off has passed, or
-  // when the shop is closed for the day (Monday / outside 18h-22h).
   const isOrderingClosed = isClosed || cutoff.isTakeawayCutoff || cutoff.isDeliveryCutoff;
 
-  // Reopening wording: Monday and Sunday evening both point to Tuesday 18h,
-  // an early-morning/afternoon visit points to the same day.
-  const reopenLabel = isMonday || (isSunday && !isOutsideHours) || (isSunday && currentHour >= 18)
-    ? 'mardi'
-    : isOutsideHours && currentHour < 18
-      ? "aujourd'hui"
-      : 'demain';
+  // Prochaine ouverture : plage suivante du jour, sinon premier jour ouvert.
+  const upcomingToday = nextWindowToday(windows, nowMinutes);
+  let reopenLabel: string;
+  if (upcomingToday) {
+    reopenLabel = `aujourd'hui à partir de ${minutesToHuman(upcomingToday.start)}`;
+  } else {
+    let found: string | null = null;
+    for (let i = 1; i <= 7 && !found; i++) {
+      const d = (dow + i) % 7;
+      const w = getWindows(site, d);
+      if (w.length > 0) {
+        found = `${i === 1 ? 'demain' : DAY_LABELS[d].toLowerCase()} à partir de ${minutesToHuman(
+          w[0].start,
+        )}`;
+      }
+    }
+    reopenLabel = found ?? 'prochainement';
+  }
 
-  const closedMessage = `Les commandes à emporter et en livraison sont fermées. Revenez ${reopenLabel} à partir de 18h00.`;
+  const closedMessage = `Les commandes à emporter et en livraison sont fermées. Revenez ${reopenLabel}.`;
 
   return {
     now,
@@ -63,6 +64,8 @@ export function useOrderingStatus() {
     isOrderingClosed,
     closedMessage,
     isTestModeActive,
+    serviceWindow: active ?? reference,
+    windows,
+    reopenLabel,
   };
 }
-
