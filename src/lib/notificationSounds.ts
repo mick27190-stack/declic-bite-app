@@ -79,6 +79,14 @@ export type AlarmSoundId =
   | 'siren' | 'chime' | 'bell' | 'beep'
   | 'whistle' | 'crystal'
   | 'melody' | 'sleigh' | 'doorbell' | 'harp';
+
+/** Métadonnées d'un fichier audio personnalisé importé (nom, format, taille). */
+export interface CustomSoundMeta {
+  name?: string;
+  type?: string;
+  size?: number;
+}
+
 export interface AlarmSettings {
   sound: AlarmSoundId;
   volume: number; // 0-100
@@ -90,6 +98,9 @@ export interface AlarmSettings {
   /** Fichier audio personnalisé (URL). Secours automatique sur le son généré si illisible. */
   customSoundUrl?: string;
   siteCustomSoundUrls?: { conches?: string; beaumont?: string };
+  /** Métadonnées du fichier importé (nom, format, taille) — propre à l'appareil. */
+  customSoundMeta?: CustomSoundMeta | null;
+  siteCustomSoundMeta?: { conches?: CustomSoundMeta | null; beaumont?: CustomSoundMeta | null };
 }
 
 /** Son à jouer pour un site donné selon les réglages. */
@@ -102,6 +113,11 @@ export function soundForSite(s: AlarmSettings, site: 'conches' | 'beaumont' | nu
 export function customSoundForSite(s: AlarmSettings, site: 'conches' | 'beaumont' | null): string | null {
   if (s.perSite && site && s.siteCustomSoundUrls?.[site]) return s.siteCustomSoundUrls[site]!;
   return s.customSoundUrl || null;
+}
+/** Métadonnées du fichier personnalisé pour un site donné, si définies. */
+export function customSoundMetaForSite(s: AlarmSettings, site: 'conches' | 'beaumont' | null): CustomSoundMeta | null {
+  if (s.perSite && site && s.siteCustomSoundMeta?.[site]) return s.siteCustomSoundMeta[site]!;
+  return s.customSoundMeta || null;
 }
 export const ALARM_SOUNDS: { id: AlarmSoundId; label: string; group: string }[] = [
   { id: 'siren', label: 'Sirène', group: 'Urgents' },
