@@ -1,5 +1,5 @@
 import { useMemo, useState, type ChangeEvent } from 'react';
-import { Volume2, Play, Upload } from 'lucide-react';
+import { Volume2, Play, Upload, RefreshCw, Trash2, Music2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,7 @@ import {
   ALARM_SOUNDS,
   AlarmSettings,
   AlarmSoundId,
+  CustomSoundMeta,
   getAlarmSettings,
   initNotificationSounds,
   playAlarmSound,
@@ -50,7 +51,23 @@ export default function AlarmSettingsCard() {
 
   const MAX_AUDIO_SIZE = 2 * 1024 * 1024; // 2 Mo — stocké sur l'appareil
 
-  const pickAudioFile = (onChange: (v: string) => void) => async (e: ChangeEvent<HTMLInputElement>) => {
+  const formatAudioLabel = (type: string) => {
+    const t = (type || 'audio').toLowerCase();
+    if (t.includes('mpeg') || t.includes('mp3')) return 'MP3';
+    if (t.includes('wav')) return 'WAV';
+    if (t.includes('ogg')) return 'OGG';
+    if (t.includes('mp4') || t.includes('aac') || t.includes('m4a')) return 'M4A';
+    if (t.includes('flac')) return 'FLAC';
+    const sub = t.split('/')[1];
+    return sub ? sub.toUpperCase() : 'Audio';
+  };
+
+  const audioSizeLabel = (bytes: number) =>
+    bytes >= 1024 * 1024
+      ? `${(bytes / 1048576).toFixed(1).replace('.', ',')} Mo`
+      : `${Math.max(1, Math.round(bytes / 1024))} Ko`;
+
+  const pickAudioFile = (onChange: (v: string, meta: CustomSoundMeta) => void) => async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
@@ -64,37 +81,53 @@ export default function AlarmSettingsCard() {
     }
     const reader = new FileReader();
     reader.onload = () => {
-      onChange(String(reader.result));
+      onChange(String(reader.result), { name: file.name, type: file.type, size: file.size });
       toast.success('Son personnalisé enregistré sur cet appareil');
     };
     reader.onerror = () => toast.error("Impossible de lire le fichier audio");
     reader.readAsDataURL(file);
   };
 
-  const customUrlInput = (id: string, value: string, onChange: (v: string) => void, site?: 'conches' | 'beaumont') => (
-    <div className="space-y-1">
-      <Label htmlFor={id} className="text-sm font-normal text-muted-foreground">
-        Son personnalisé (fichier audio ou lien, optionnel)
-      </Label>
-      <div className="flex gap-2">
-        <Input
-          id={id}
-          type="url"
-          inputMode="url"
-          placeholder="https://…/mon-son.mp3"
-          value={value.startsWith('data:') ? '' : value}
-          onChange={(e) => onChange(e.target.value.trim())}
-          className="min-h-11 flex-1"
-        />
-        <Button
-          type="button"
-          variant="outline"
-          className="min-h-11 shrink-0"
-          aria-label={site ? `Importer un fichier audio pour ${site}` : 'Importer un fichier audio'}
-          onClick={() => document.getElementById(`${id}-file`)?.click()}
-        >
-          <Upload className="h-4 w-4" aria-hidden="true" />
-        </Button>
+  const customUrlInput = (
+    id: string,
+    value: string,
+    onChange: (v: string | null, meta: CustomSoundMeta | null) => void,
+    meta: CustomSoundMeta | null,
+    site?: 'conches' | 'beaumont',
+  ) => {
+    const isFile = value.startsWith('data:');
+    const importFile = () => document.getElementById(`${id}-file`)?.click();
+    const clear = () => onChange(null, null);
+    const infoLabel = isFile
+      ? [meta?.name || 'Fichier audio', formatAudioLabel(meta?.type ?? ''), meta?.size ? audioSizeLabel(meta.size) : null].filter(Boolean).join(' · ')
+      : (() => { try { return `Lien externe · ${new URL(value).hostname}`; } catch { return 'Lien externe'; } })();
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={id} className="text-sm font-normal text-muted-foreground">
+          Son personnalisé (fichier audio ou lien, optionnel)
+        </Label>
+        {!isFile && (
+          <div className="flex gap-2">
+            <Input
+              id={id}
+              type="url"
+              inputMode="url"
+              placeholder="https://…/mon-son.mp3"
+              value={value}
+              onChange={(e) => onChange(e.target.value.trim(), null)}
+              className="min-h-11 flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="min-h-11 shrink-0"
+              aria-label={site ? `Importer un fichier audio pour ${site}` : 'Importer un fichier audio'}
+              onClick={importFile}
+            >
+              <Upload className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </div>
+        )}
         <input
           id={`${id}-file`}
           type="file"
@@ -102,27 +135,50 @@ export default function AlarmSettingsCard() {
           className="hidden"
           onChange={pickAudioFile(onChange)}
         />
+        {value && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-2">
+            <Music2 className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate text-xs text-foreground" title={infoLabel}>{infoLabel}</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-h-9 shrink-0"
+              aria-label={site ? `Remplacer le fichier audio de ${site}` : 'Remplacer le fichier audio'}
+              onClick={importFile}
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-1" aria-hidden="true" /> Remplacer
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="min-h-9 shrink-0 text-destructive hover:text-destructive"
+              aria-label={site ? `Supprimer le fichier audio de ${site}` : 'Supprimer le fichier audio'}
+              onClick={clear}
+            >
+              <Trash2 className="h-3.5 w-3.5 mr-1" aria-hidden="true" /> Supprimer
+            </Button>
+          </div>
+        )}
+        {value && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="min-h-11"
+            aria-label={site ? `Écouter le son personnalisé de ${site}` : 'Écouter le son personnalisé'}
+            onClick={() => { initNotificationSounds(); playAlarmSound(s, value); }}
+          >
+            <Play className="h-4 w-4 mr-2" aria-hidden="true" /> Écouter le fichier
+          </Button>
+        )}
+        <p className="text-xs text-muted-foreground">
+          Si le fichier est supprimé, inaccessible ou illisible sur cet appareil, la sirène générée prend automatiquement le relais.
+        </p>
       </div>
-      {value.startsWith('data:') && (
-        <p className="text-xs text-foreground">Fichier audio importé sur cet appareil.</p>
-      )}
-      <p className="text-xs text-muted-foreground">
-        Si le fichier est supprimé, inaccessible ou illisible sur cet appareil, la sirène générée prend automatiquement le relais.
-      </p>
-      {value && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="min-h-11"
-          aria-label={site ? `Écouter le son personnalisé de ${site}` : 'Écouter le son personnalisé'}
-          onClick={() => { initNotificationSounds(); playAlarmSound(s, value); }}
-        >
-          <Play className="h-4 w-4 mr-2" aria-hidden="true" /> Écouter le fichier
-        </Button>
-      )}
-    </div>
-  );
+    );
+  };
 
   const soundSelect = (id: string, value: AlarmSoundId, onChange: (v: AlarmSoundId) => void) => (
     <Select value={value} onValueChange={(v) => onChange(v as AlarmSoundId)}>
@@ -169,7 +225,11 @@ export default function AlarmSettingsCard() {
                 {customUrlInput(
                   `alarm-custom-${site}`,
                   s.siteCustomSoundUrls?.[site] ?? '',
-                  (v) => update({ siteCustomSoundUrls: { ...s.siteCustomSoundUrls, [site]: v || undefined } }),
+                  (v, meta) => update({
+                    siteCustomSoundUrls: { ...s.siteCustomSoundUrls, [site]: v || undefined },
+                    siteCustomSoundMeta: { ...s.siteCustomSoundMeta, [site]: meta ?? undefined },
+                  }),
+                  s.siteCustomSoundMeta?.[site] ?? null,
                   site,
                 )}
               </div>
@@ -179,7 +239,12 @@ export default function AlarmSettingsCard() {
           <div className="space-y-2">
             <Label htmlFor="alarm-sound">Son de l'alerte</Label>
             {soundSelect('alarm-sound', s.sound, (v) => update({ sound: v }))}
-            {customUrlInput('alarm-custom', s.customSoundUrl ?? '', (v) => update({ customSoundUrl: v || undefined }))}
+            {customUrlInput(
+              'alarm-custom',
+              s.customSoundUrl ?? '',
+              (v, meta) => update({ customSoundUrl: v || undefined, customSoundMeta: meta ?? undefined }),
+              s.customSoundMeta ?? null,
+            )}
           </div>
         )}
 
