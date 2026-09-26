@@ -38,7 +38,8 @@ export default function NewOrderAlarm() {
   const { user } = useAuth();
   const { isSuperAdmin, isSiteAdminConches, isSiteAdminBeaumont, isSecondaryAdminConches, isSecondaryAdminBeaumont } =
     useAdmin();
-  const onAdmin = pathname.startsWith('/admin');
+  // Alarme active sur toutes les pages pour un compte admin (pas seulement /admin).
+  const onAdmin = !pathname.startsWith('/livreur');
 
   const [prefs, setPrefs] = useState({ conches: true, beaumont: true });
   const [orders, setOrders] = useState<PendingOrder[]>([]);
@@ -189,7 +190,7 @@ export default function NewOrderAlarm() {
           aria-live="assertive"
           className="fixed top-0 inset-x-0 z-[60] bg-destructive text-destructive-foreground shadow-lg"
         >
-          <div className="container mx-auto px-4 py-3 space-y-2">
+          <div className="container mx-auto px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] space-y-2">
             <div className="flex flex-wrap items-center gap-2 font-bold text-lg">
               <BellRing className="h-6 w-6 animate-pulse" />
               {orders.length > 1 ? `${orders.length} nouvelles commandes !` : 'Nouvelle commande !'}
