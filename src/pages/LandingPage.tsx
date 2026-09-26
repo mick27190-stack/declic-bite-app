@@ -1,3 +1,4 @@
+import { openCookiePreferences } from '@/lib/cookieConsent';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ChevronRight, MapPin, Clock, Store, ExternalLink, AlertTriangle, Pizza } from 'lucide-react';
