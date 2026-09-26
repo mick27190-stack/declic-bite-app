@@ -171,12 +171,13 @@ Deno.test({
         .eq("id", inserted.id);
       assert(statusErr, "customer must not set status to completed");
 
-      // Allowed: respond to delivery proposal.
+      // Delivery-proposal response goes through the respond-to-delivery-time
+      // edge function only; a direct write is refused.
       const { error: respErr } = await customer.client
         .from("orders")
         .update({ delivery_response: "accepted" })
         .eq("id", inserted.id);
-      assertEquals(respErr, null, "customer may set delivery_response");
+      assert(respErr, "customer must not write delivery_response directly");
 
       // Allowed: cancel their own order.
       const { error: cancelErr } = await customer.client
@@ -187,6 +188,99 @@ Deno.test({
     } finally {
       await cleanupUser(admin, customer.id);
       await cleanupUser(admin, other.id);
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Delivery time proposed by the site admin must be immutable for the customer
+// ---------------------------------------------------------------------------
+
+Deno.test("anon cannot modify a proposed delivery time via the API", async () => {
+  const sb = anonClient();
+  const { data, error } = await sb
+    .from("orders")
+    .update({ delivery_time_proposed: new Date().toISOString() })
+    .not("id", "is", null)
+    .select("id");
+  assert(error || !data || data.length === 0, "anon must not update any order");
+});
+
+Deno.test({
+  name: "customer cannot modify the delivery time proposed by the admin (direct API)",
+  ignore: !HAS_SERVICE_ROLE,
+  fn: async () => {
+    const admin = serviceClient();
+    const customer = await createTestUser(admin, "proposal");
+    try {
+      const requested = new Date(Date.now() + 60 * 60_000).toISOString();
+      const proposed = new Date(Date.now() + 90 * 60_000).toISOString();
+
+      // Seed a delivery order carrying an admin proposal (service role).
+      const { data: order, error: seedErr } = await admin
+        .from("orders")
+        .insert({
+          ...baseOrder(customer.id),
+          order_type: "delivery",
+          delivery_address: { street: "1 rue Test", city: "Conches", postal_code: "27190" },
+          delivery_time_requested: requested,
+          delivery_time_proposed: proposed,
+          delivery_estimate: "20:30",
+        })
+        .select()
+        .single();
+      assertEquals(seedErr, null, `seed failed: ${seedErr?.message}`);
+
+      const tampered = new Date(Date.now() + 10 * 60_000).toISOString();
+      const attempts: Record<string, unknown>[] = [
+        { delivery_time_proposed: tampered },
+        { delivery_time_proposed: null },
+        { delivery_time_confirmed: tampered },
+        { delivery_time_requested: tampered },
+        { delivery_estimate: "18:00" },
+        { delivery_response: "accepted", delivery_time_confirmed: tampered },
+        { delivery_time_proposed: tampered, status: "cancelled" },
+      ];
+      for (const patch of attempts) {
+        const { error } = await customer.client
+          .from("orders")
+          .update(patch)
+          .eq("id", order.id);
+        assert(error, `customer patch must be rejected: ${JSON.stringify(patch)}`);
+      }
+
+      // Raw REST call (bypassing supabase-js) is rejected too.
+      const token = (customer.client as unknown as { rest: { headers: Record<string, string> } })
+        .rest.headers["Authorization"];
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/orders?id=eq.${order.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            apikey: ANON_KEY,
+            Authorization: token,
+            "Content-Type": "application/json",
+            Prefer: "return=representation",
+          },
+          body: JSON.stringify({ delivery_time_proposed: tampered }),
+        },
+      );
+      const body = await res.text();
+      assert(!res.ok, `raw PATCH must fail, got ${res.status}: ${body}`);
+
+      // Value in the database is unchanged.
+      const { data: after } = await admin
+        .from("orders")
+        .select("delivery_time_proposed, delivery_time_confirmed, delivery_time_requested, delivery_response, delivery_estimate")
+        .eq("id", order.id)
+        .single();
+      assertEquals(new Date(after!.delivery_time_proposed).toISOString(), proposed);
+      assertEquals(new Date(after!.delivery_time_requested).toISOString(), requested);
+      assertEquals(after!.delivery_time_confirmed, null);
+      assertEquals(after!.delivery_response, null);
+      assertEquals(after!.delivery_estimate, "20:30");
+    } finally {
+      await cleanupUser(admin, customer.id);
     }
   },
 });
