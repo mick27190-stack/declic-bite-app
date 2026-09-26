@@ -716,6 +716,7 @@ export type Database = {
       }
       menu_item_overrides: {
         Row: {
+          allergenes: string[]
           base_price: number | null
           capacity: string | null
           category: string | null
@@ -730,6 +731,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allergenes?: string[]
           base_price?: number | null
           capacity?: string | null
           category?: string | null
@@ -744,6 +746,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allergenes?: string[]
           base_price?: number | null
           capacity?: string | null
           category?: string | null

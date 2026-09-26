@@ -344,6 +344,13 @@
       "when": 1790447323583,
       "tag": "0048_lock_delivery_proposal_fields_for_customers",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1790453423443,
+      "tag": "0049_add_allergenes_menu_overrides",
+      "breakpoints": true
     }
   ]
 }
