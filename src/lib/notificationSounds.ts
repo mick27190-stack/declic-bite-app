@@ -10,7 +10,7 @@
 let sharedCtx: AudioContext | null = null;
 
 function getAudioContext(): AudioContext | null {
-  if (sharedCtx) return sharedCtx;
+  if (sharedCtx && sharedCtx.state !== 'closed') return sharedCtx;
   try {
     // iOS : lit sur le canal « média » (volume principal, ignore le mode silencieux).
     try { const as = (navigator as any).audioSession; if (as) as.type = 'playback'; } catch {}
@@ -21,6 +21,17 @@ function getAudioContext(): AudioContext | null {
   }
 }
 
+/** Joue un buffer silencieux : débloque l'audio sur iOS/Safari. */
+function primeContext(ctx: AudioContext) {
+  try {
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+  } catch {}
+}
+
 /**
  * Must be called once from a user gesture (click / touch / keydown) so the
  * browser allows audio playback later, even when it's triggered asynchronously
@@ -29,19 +40,25 @@ function getAudioContext(): AudioContext | null {
 export function initNotificationSounds() {
   const ctx = getAudioContext();
   if (!ctx) return;
-  if (ctx.state === 'suspended') {
-    ctx.resume().catch(() => {});
-  }
+  // 'suspended' ou 'interrupted' (Safari après verrouillage / arrière-plan)
+  if (ctx.state !== 'running') ctx.resume().catch(() => {});
+  primeContext(ctx);
 }
 
 function playTone(frequencies: number[], durations: number[], volume = 0.3, type: OscillatorType = 'sine') {
   const ctx = getAudioContext();
   if (!ctx) return;
 
-  // Make sure the context is running (it can get suspended again on mobile).
-  if (ctx.state === 'suspended') {
-    ctx.resume().catch(() => {});
+  // Contexte suspendu/interrompu : on relance puis on joue une fois prêt.
+  if (ctx.state !== 'running') {
+    primeContext(ctx);
+    ctx.resume().then(() => scheduleTone(ctx, frequencies, durations, volume, type)).catch(() => {});
+    return;
   }
+  scheduleTone(ctx, frequencies, durations, volume, type);
+}
+
+function scheduleTone(ctx: AudioContext, frequencies: number[], durations: number[], volume: number, type: OscillatorType) {
 
   // Compresseur + gain de sortie : son nettement plus fort sans saturation.
   const comp = ctx.createDynamicsCompressor();
