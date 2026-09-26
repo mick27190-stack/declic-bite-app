@@ -330,6 +330,13 @@
       "when": 1790446462769,
       "tag": "0046_fix_chat_conversation_sync_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1790446962407,
+      "tag": "0047_admins_read_delivery_tokens",
+      "breakpoints": true
     }
   ]
 }
