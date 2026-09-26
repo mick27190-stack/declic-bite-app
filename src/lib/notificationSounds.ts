@@ -12,6 +12,8 @@ let sharedCtx: AudioContext | null = null;
 function getAudioContext(): AudioContext | null {
   if (sharedCtx) return sharedCtx;
   try {
+    // iOS : lit sur le canal « média » (volume principal, ignore le mode silencieux).
+    try { const as = (navigator as any).audioSession; if (as) as.type = 'playback'; } catch {}
     sharedCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
     return sharedCtx;
   } catch {
@@ -41,8 +43,16 @@ function playTone(frequencies: number[], durations: number[], volume = 0.3, type
     ctx.resume().catch(() => {});
   }
 
+  // Compresseur + gain de sortie : son nettement plus fort sans saturation.
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -24; comp.knee.value = 6; comp.ratio.value = 12;
+  comp.attack.value = 0.002; comp.release.value = 0.1;
+  const master = ctx.createGain();
+  master.gain.value = 2.5;
+  comp.connect(master);
+  master.connect(ctx.destination);
   const gainNode = ctx.createGain();
-  gainNode.connect(ctx.destination);
+  gainNode.connect(comp);
 
   let startTime = ctx.currentTime;
 
@@ -236,7 +246,7 @@ function playFallbackAlarm(settings: AlarmSettings) {
   const f: number[] = [];
   const d: number[] = [];
   for (let i = 0; i < n; i++) { f.push(...p.f); d.push(...p.d); }
-  const vol = Math.max(0.001, Math.min(1, settings.volume / 100) * 0.6);
+  const vol = Math.max(0.001, Math.min(1, settings.volume / 100));
   playTone(f.map((x) => x || 1), d, vol, p.type);
 }
 
@@ -258,7 +268,7 @@ export function playAlarmSound(settings: AlarmSettings = getAlarmSettings(), cus
   const f: number[] = [];
   const d: number[] = [];
   for (let i = 0; i < n; i++) { f.push(...p.f); d.push(...p.d); }
-  const vol = Math.max(0.001, Math.min(1, settings.volume / 100) * 0.6);
+  const vol = Math.max(0.001, Math.min(1, settings.volume / 100));
   // Frequency 0 = silence gap
   playTone(f.map((x) => x || 1), d, vol, p.type);
 }
