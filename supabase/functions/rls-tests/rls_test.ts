@@ -42,6 +42,7 @@ interface TestUser {
   email: string;
   password: string;
   client: SupabaseClient;
+  accessToken: string;
 }
 
 async function createTestUser(
@@ -71,7 +72,7 @@ async function createTestUser(
       headers: { Authorization: `Bearer ${session.session.access_token}` },
     },
   });
-  return { id: data.user.id, email, password, client };
+  return { id: data.user.id, email, password, client, accessToken: session.session.access_token };
 }
 
 async function cleanupUser(admin: SupabaseClient, userId: string) {
@@ -250,8 +251,7 @@ Deno.test({
       }
 
       // Raw REST call (bypassing supabase-js) is rejected too.
-      const token = (customer.client as unknown as { rest: { headers: Record<string, string> } })
-        .rest.headers["Authorization"];
+      const token = `Bearer ${customer.accessToken}`;
       const res = await fetch(
         `${SUPABASE_URL}/rest/v1/orders?id=eq.${order.id}`,
         {
