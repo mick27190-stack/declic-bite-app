@@ -85,15 +85,24 @@ export default function NewOrderAlarm() {
     const keep = (o: PendingOrder) => shouldRing(o) && allowed.has(siteOf(o) ?? '');
     let cancelled = false;
 
-    supabase
-      .from('orders')
-      .select('id, site, restaurant, created_at, status, capture_status, acquittee_le')
-      .is('acquittee_le', null)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: true })
-      .then(({ data }) => {
-        if (!cancelled && data) setOrders((data as PendingOrder[]).filter(keep));
-      });
+    const load = () =>
+      supabase
+        .from('orders')
+        .select('id, site, restaurant, created_at, status, capture_status, acquittee_le')
+        .is('acquittee_le', null)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true })
+        .then(({ data }) => {
+          if (!cancelled && data) setOrders((data as PendingOrder[]).filter(keep));
+        });
+    load();
+    // Filet de sécurité : le temps réel se coupe quand le téléphone se verrouille
+    // ou que l'app passe en arrière-plan → on resynchronise au retour et toutes les 15 s.
+    const poll = window.setInterval(load, 15000);
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', load);
+    window.addEventListener('online', load);
 
     const upsert = (row: PendingOrder) =>
       setOrders((prev) => {
@@ -113,6 +122,10 @@ export default function NewOrderAlarm() {
 
     return () => {
       cancelled = true;
+      window.clearInterval(poll);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', load);
+      window.removeEventListener('online', load);
       supabase.removeChannel(channel);
     };
   }, [active, sitesKey]);
