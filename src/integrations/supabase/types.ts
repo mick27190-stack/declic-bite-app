@@ -1479,6 +1479,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      remind_unacked_orders: { Args: never; Returns: undefined }
       request_invoice: { Args: { _order_id: string }; Returns: Json }
       resolve_customer_address: { Args: { _user_id: string }; Returns: string }
       restaurant_to_site: { Args: { _restaurant: string }; Returns: string }
