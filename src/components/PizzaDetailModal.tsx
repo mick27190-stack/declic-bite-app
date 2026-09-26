@@ -114,6 +114,14 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
                 {pizza.ingredients.join(' • ')}
               </p>
             )}
+            {pizza.allergenes && pizza.allergenes.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                Allergènes : {pizza.allergenes.join(', ')}
+              </p>
+            )}
+            <a href="/allergenes" className="inline-block text-xs text-muted-foreground underline underline-offset-2 mt-1">
+              Informations allergènes
+            </a>
           </div>
 
           {/* Bambino Pizza Choice */}

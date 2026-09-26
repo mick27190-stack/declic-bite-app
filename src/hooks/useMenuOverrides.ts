@@ -13,6 +13,7 @@ export interface MenuOverride {
   is_custom?: boolean | null;
   base_price?: number | null;
   sort_order?: number | null;
+  allergenes?: string[] | null;
 }
 
 type OverrideMap = Record<string, MenuOverride>;
@@ -58,6 +59,7 @@ export function applyOverride(pizza: Pizza, o?: MenuOverride): Pizza {
     category,
     image: o.image_url || pizza.image,
     basePrice: o.base_price ?? pizza.basePrice,
+    allergenes: o.allergenes ?? pizza.allergenes ?? [],
   };
 }
 
@@ -76,6 +78,7 @@ export function customToPizza(o: MenuOverride): Pizza {
     basePrice: o.base_price ?? 0,
     category,
     isAvailable: true,
+    allergenes: o.allergenes ?? [],
     // Même architecture que les pizzas/paninis/bambinos existants :
     // tailles (sauf bambino), base tomate/crème et suppléments à 1 €,
     // sauf boissons (rien).

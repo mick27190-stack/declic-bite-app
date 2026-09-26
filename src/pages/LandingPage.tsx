@@ -340,6 +340,28 @@ export default function LandingPage() {
           >
             Politique de confidentialité
           </Link>
+          <span className="text-muted-foreground/40" aria-hidden="true">•</span>
+          <Link
+            to="/allergenes"
+            className="text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
+          >
+            Allergènes
+          </Link>
+          <span className="text-muted-foreground/40" aria-hidden="true">•</span>
+          <Link
+            to="/politique-cookies"
+            className="text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
+          >
+            Politique de cookies
+          </Link>
+          <span className="text-muted-foreground/40" aria-hidden="true">•</span>
+          <button
+            type="button"
+            onClick={openCookiePreferences}
+            className="text-muted-foreground hover:text-primary transition-colors underline-offset-2 hover:underline"
+          >
+            Gérer mes cookies
+          </button>
         </nav>
         <p className="text-xs text-muted-foreground">
           © 2026 Déclic Pizza • Conches & Beaumont

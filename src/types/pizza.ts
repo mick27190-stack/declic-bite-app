@@ -9,6 +9,7 @@ export interface Pizza {
   basePrice: number;
   category: ProductCategory;
   isAvailable: boolean;
+  allergenes?: string[];
   hasSize?: boolean;
   hasBase?: boolean;
   hasSupplements?: boolean;

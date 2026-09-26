@@ -44,6 +44,9 @@ import { useEffect } from "react";
 import { initNotificationSounds } from "@/lib/notificationSounds";
 import ConsentUpdateDialog from "@/components/ConsentUpdateDialog";
 import NewOrderAlarm from "@/components/admin/NewOrderAlarm";
+import CookieConsentBanner from "@/components/CookieConsentBanner";
+import PolitiqueCookiesPage from "./pages/PolitiqueCookiesPage";
+import AllergenesPage from "./pages/AllergenesPage";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +87,7 @@ const App = () => {
             <BrowserRouter>
               <ConsentUpdateDialog />
               <NewOrderAlarm />
+              <CookieConsentBanner />
               <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/menu" element={<MenuPage />} />
@@ -118,6 +122,8 @@ const App = () => {
                 <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
                 <Route path="/cgv" element={<CGVPage />} />
                 <Route path="/confidentialite" element={<ConfidentialitePage />} />
+                <Route path="/politique-cookies" element={<PolitiqueCookiesPage />} />
+                <Route path="/allergenes" element={<AllergenesPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

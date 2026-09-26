@@ -1,3 +1,4 @@
+import { ALLERGENS } from '@/lib/allergens';
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -67,6 +68,7 @@ export default function AdminMenuPage() {
     isAvailable: true,
     image: '',
     basePrice: '',
+    allergenes: [] as string[],
   });
 
 
@@ -93,6 +95,7 @@ export default function AdminMenuPage() {
         isAvailable: pizza.isAvailable,
         image: pizza.image ?? '',
         basePrice: pizza.basePrice ? String(pizza.basePrice) : '',
+        allergenes: pizza.allergenes ?? [],
       });
     } else {
       setEditingPizza(null);
@@ -105,6 +108,7 @@ export default function AdminMenuPage() {
         isAvailable: true,
         image: '',
         basePrice: '',
+        allergenes: [],
       });
     }
     setIsDialogOpen(true);
@@ -157,6 +161,7 @@ export default function AdminMenuPage() {
         category: formData.category,
         capacity: formData.category === 'boissons' ? (formData.capacity || null) : null,
         image_url: formData.image || null,
+        allergenes: formData.allergenes,
         base_price: !isPizzaCat && !isNaN(priceValue) ? priceValue : undefined,
         ...(creating ? { is_custom: true } : {}),
       });
@@ -468,6 +473,27 @@ export default function AdminMenuPage() {
                   onChange={(e) => setFormData(prev => ({ ...prev, ingredients: e.target.value }))}
                   placeholder="Tomate, Mozzarella, Basilic"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>Allergènes</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {ALLERGENS.map((a) => (
+                    <label key={a} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="accent-primary h-4 w-4"
+                        checked={formData.allergenes.includes(a)}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          allergenes: e.target.checked
+                            ? [...prev.allergenes, a]
+                            : prev.allergenes.filter((x) => x !== a),
+                        }))}
+                      />
+                      <span className="capitalize">{a}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="category">Catégorie</Label>
