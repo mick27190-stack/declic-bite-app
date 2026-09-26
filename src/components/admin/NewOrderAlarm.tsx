@@ -201,46 +201,48 @@ export default function NewOrderAlarm() {
         <div
           role="alert"
           aria-live="assertive"
-          className="fixed top-0 inset-x-0 z-[60] bg-destructive text-destructive-foreground shadow-lg"
+          className="fixed inset-x-0 top-1/2 -translate-y-1/2 z-[60] px-4 pointer-events-none"
         >
-          <div className="container mx-auto px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] space-y-2">
-            <div className="flex flex-wrap items-center gap-2 font-bold text-lg">
-              <BellRing className="h-6 w-6 animate-pulse" />
-              {orders.length > 1 ? `${orders.length} nouvelles commandes !` : 'Nouvelle commande !'}
-              {!unlocked && (
-                <Button size="sm" variant="secondary" className="ml-auto min-h-11" onClick={enableSound}>
-                  <Volume2 className="h-4 w-4 mr-2" /> Activer le son
-                </Button>
-              )}
+          <div className="mx-auto max-w-md bg-destructive text-destructive-foreground rounded-2xl shadow-2xl pointer-events-auto">
+            <div className="px-4 py-4 space-y-2">
+              <div className="flex flex-wrap items-center gap-2 font-bold text-lg">
+                <BellRing className="h-6 w-6 animate-pulse" />
+                {orders.length > 1 ? `${orders.length} nouvelles commandes !` : 'Nouvelle commande !'}
+                {!unlocked && (
+                  <Button size="sm" variant="secondary" className="ml-auto min-h-11" onClick={enableSound}>
+                    <Volume2 className="h-4 w-4 mr-2" /> Activer le son
+                  </Button>
+                )}
+              </div>
+              <ul className="space-y-2 max-h-[40vh] overflow-y-auto">
+                {orders.map((o) => {
+                  const s = siteOf(o);
+                  return (
+                    <li key={o.id} className="flex items-center gap-3 rounded-lg bg-background/15 px-3 py-2">
+                      <span className="font-bold">
+                        #{o.id.slice(0, 8).toUpperCase()} — {s ? SITE_LABEL[s] : o.restaurant}
+                      </span>
+                      <span className="text-sm opacity-90">
+                        {new Date(o.created_at).toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          timeZone: 'Europe/Paris',
+                        })}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="ml-auto min-h-11 font-bold"
+                        onClick={() => acknowledge(o.id)}
+                        aria-label={`J'ai vu la commande ${o.id.slice(0, 8)}`}
+                      >
+                        J'ai vu <Check className="h-4 w-4 ml-1" />
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
-            <ul className="space-y-2 max-h-[40vh] overflow-y-auto">
-              {orders.map((o) => {
-                const s = siteOf(o);
-                return (
-                  <li key={o.id} className="flex items-center gap-3 rounded-lg bg-background/15 px-3 py-2">
-                    <span className="font-bold">
-                      #{o.id.slice(0, 8).toUpperCase()} — {s ? SITE_LABEL[s] : o.restaurant}
-                    </span>
-                    <span className="text-sm opacity-90">
-                      {new Date(o.created_at).toLocaleTimeString('fr-FR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        timeZone: 'Europe/Paris',
-                      })}
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="ml-auto min-h-11 font-bold"
-                      onClick={() => acknowledge(o.id)}
-                      aria-label={`J'ai vu la commande ${o.id.slice(0, 8)}`}
-                    >
-                      J'ai vu <Check className="h-4 w-4 ml-1" />
-                    </Button>
-                  </li>
-                );
-              })}
-            </ul>
           </div>
         </div>
       )}
