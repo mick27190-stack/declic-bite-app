@@ -153,6 +153,8 @@ export default function MenuPage() {
           })}
         </div>
 
+        <p className="text-center text-xs text-muted-foreground mt-6"><a href="/allergenes" className="underline underline-offset-2">Informations sur les allergènes</a></p>
+
         {filteredPizzas.length === 0 && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Aucune pizza trouvée</p>
