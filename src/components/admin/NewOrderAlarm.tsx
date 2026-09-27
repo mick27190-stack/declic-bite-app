@@ -166,7 +166,10 @@ export default function NewOrderAlarm() {
     if (!active) return;
     setUnlocked(isAudioUnlocked());
     const t = window.setInterval(() => setUnlocked(isAudioUnlocked()), 1500);
-    return () => window.clearInterval(t);
+    // Retour de l'arrière-plan / déverrouillage : l'audio peut être suspendu.
+    const onVis = () => { if (document.visibilityState === 'visible') setUnlocked(isAudioUnlocked()); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { window.clearInterval(t); document.removeEventListener('visibilitychange', onVis); };
   }, [active]);
 
   const enableSound = () => {
@@ -185,7 +188,8 @@ export default function NewOrderAlarm() {
       initNotificationSounds();
       window.setTimeout(() => setUnlocked(isAudioUnlocked()), 200);
     };
-    const evs = ['pointerdown', 'touchstart', 'keydown'] as const;
+    // iOS/Android : seuls touchend/click/pointerup comptent comme geste audio valide.
+    const evs = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'] as const;
     evs.forEach((e) => window.addEventListener(e, onGesture, opts));
     return () => evs.forEach((e) => window.removeEventListener(e, onGesture, opts));
   }, [active, adminOpen, unlocked]);
