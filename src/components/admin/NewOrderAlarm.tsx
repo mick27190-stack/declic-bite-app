@@ -189,6 +189,22 @@ export default function NewOrderAlarm() {
     evs.forEach((e) => window.addEventListener(e, onGesture, opts));
     return () => evs.forEach((e) => window.removeEventListener(e, onGesture, opts));
   }, [active, adminOpen, unlocked]);
+
+  const acknowledge = useCallback(
+    async (id: string) => {
+      const by = user?.phone || user?.email || user?.id || null;
+      const { error } = await supabase.rpc('acknowledge_order', { _order_id: id, _by: by });
+      if (error) console.warn('Acquittement impossible:', error.message);
+      // Retrait local immédiat ; les autres onglets sont synchronisés par l'événement UPDATE.
+      else setOrders((prev) => prev.filter((o) => o.id !== id));
+    },
+    [user],
+  );
+
+  if (!active) return null;
+
+  return (
+    <>
       {ringing && (
         <div
           role="alert"
