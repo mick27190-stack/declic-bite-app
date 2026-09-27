@@ -318,23 +318,24 @@ export default function LandingPage() {
         )}
       </main>
 
-      {/* Badges Facebook officiels */}
-      <div className="relative z-10 flex items-center justify-center gap-3 pb-2 px-4">
+      {/* Icônes Facebook officielles */}
+      <div className="relative z-10 flex items-center justify-center gap-6 pb-2 px-4">
         {[
-          { label: 'Facebook Conches', href: 'https://www.facebook.com/share/1EPFVhb9Ar/?mibextid=wwXIfr' },
-          { label: 'Facebook Beaumont', href: 'https://www.facebook.com/share/1F8RnDsjsX/?mibextid=wwXIfr' },
+          { label: 'Conches', href: 'https://www.facebook.com/share/1EPFVhb9Ar/?mibextid=wwXIfr' },
+          { label: 'Beaumont', href: 'https://www.facebook.com/share/1F8RnDsjsX/?mibextid=wwXIfr' },
         ].map((badge) => (
           <a
             key={badge.href}
             href={badge.href}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg bg-[#1877F2] px-3.5 py-2 text-white shadow-md transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+            className="group flex items-center gap-2"
           >
-            <svg viewBox="0 0 36 36" className="h-5 w-5 shrink-0" fill="currentColor" aria-hidden="true">
-              <path d="M25 23l.8-5.2h-5V14.4c0-1.4.7-2.8 2.9-2.8h2.2V7.2S23.8 6.9 21.9 6.9c-4 0-6.6 2.4-6.6 6.9v4H10.6V23h4.7v11.3a17.5 17.5 0 0 0 5.5 0V23H25z" />
+            <svg viewBox="0 0 36 36" className="h-7 w-7 shrink-0 transition-transform duration-200 group-hover:-translate-y-0.5" aria-hidden="true">
+              <circle cx="18" cy="18" r="18" fill="#1877F2" />
+              <path fill="#FFFFFF" d="M24.7 23.2l.9-5.8h-5.5v-3.8c0-1.6.8-3.1 3.2-3.1h2.5V5.8s-2.3-.4-4.4-.4c-4.5 0-7.4 2.7-7.4 7.7v4.3H8.9v5.8h5.1v14a17.8 17.8 0 0 0 4-.4V23.2h6.7z" />
             </svg>
-            <span className="text-sm font-semibold leading-none">{badge.label}</span>
+            <span className="text-xs text-muted-foreground transition-colors group-hover:text-foreground">{badge.label}</span>
           </a>
         ))}
       </div>
