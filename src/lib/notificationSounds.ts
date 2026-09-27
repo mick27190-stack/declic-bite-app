@@ -37,12 +37,36 @@ function primeContext(ctx: AudioContext) {
  * browser allows audio playback later, even when it's triggered asynchronously
  * (e.g. from a realtime event).
  */
+const SILENT_WAV =
+  'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+let sharedAudio: HTMLAudioElement | null = null;
+let sharedAudioUnlocked = false;
+function getSharedAudio(): HTMLAudioElement {
+  if (!sharedAudio) {
+    sharedAudio = new Audio();
+    sharedAudio.setAttribute('playsinline', '');
+    (sharedAudio as any).playsInline = true;
+  }
+  return sharedAudio;
+}
+
 export function initNotificationSounds() {
   const ctx = getAudioContext();
-  if (!ctx) return;
-  // 'suspended' ou 'interrupted' (Safari après verrouillage / arrière-plan)
-  if (ctx.state !== 'running') ctx.resume().catch(() => {});
-  primeContext(ctx);
+  if (ctx) {
+    // 'suspended' ou 'interrupted' (Safari après verrouillage / arrière-plan)
+    if (ctx.state !== 'running') ctx.resume().catch(() => {});
+    primeContext(ctx);
+  }
+  // Déverrouille aussi l'élément audio des sons importés (iOS/Android).
+  if (!sharedAudioUnlocked) {
+    try {
+      const a = getSharedAudio();
+      a.src = SILENT_WAV;
+      a.muted = true;
+      a.play().then(() => { a.pause(); a.muted = false; sharedAudioUnlocked = true; })
+        .catch(() => { a.muted = false; });
+    } catch {}
+  }
 }
 
 function playTone(frequencies: number[], durations: number[], volume = 0.3, type: OscillatorType = 'sine') {
@@ -238,7 +262,10 @@ export function tryPlayCustomSound(rawUrl: string, volume: number): Promise<bool
       if (!settled) { settled = true; resolve(ok); }
     };
     try {
-      const audio = new Audio();
+      // Élément partagé, déverrouillé lors d'un geste (iOS/Android refusent
+      // la lecture d'un nouvel élément audio hors geste utilisateur).
+      const audio = getSharedAudio();
+      audio.pause();
       audio.preload = 'auto';
       audio.volume = Math.max(0, Math.min(1, volume / 100));
       audio.onerror = () => done(false);
