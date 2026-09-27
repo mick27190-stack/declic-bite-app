@@ -57,6 +57,10 @@ export default function NewOrderAlarm() {
   const active = onAdmin && !!user && sites.length > 0;
   const sitesKey = sites.join(',');
 
+  // Tablettes en boutique : l'écran ne se met pas en veille tant qu'un admin
+  // est connecté (wake lock natif, relancé au retour au premier plan).
+  useWakeLock(active);
+
   useEffect(() => {
     if (!onAdmin || !user) return;
     supabase
