@@ -321,8 +321,8 @@ export default function LandingPage() {
       {/* Icônes Facebook officielles */}
       <div className="relative z-10 flex items-center justify-center gap-6 pb-2 px-4">
         {[
-          { label: 'Conches', href: 'https://www.facebook.com/Delicepiza' },
-          { label: 'Beaumont', href: 'https://www.facebook.com/DeclicPizzaBeaumont' },
+          { label: 'Conches', href: 'https://www.facebook.com/Delicepiza', iconRight: false },
+          { label: 'Beaumont', href: 'https://www.facebook.com/DeclicPizzaBeaumont', iconRight: true },
         ].map((badge) => (
           <a
             key={badge.href}
@@ -331,11 +331,19 @@ export default function LandingPage() {
             rel="noopener noreferrer"
             className="group flex items-center gap-2"
           >
-            <svg viewBox="0 0 36 36" className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:-translate-y-0.5" aria-hidden="true">
-              <circle cx="18" cy="18" r="18" fill="#1877F2" />
-              <path fill="#FFFFFF" d="M24.7 23.2l.9-5.8h-5.5v-3.8c0-1.6.8-3.1 3.2-3.1h2.5V5.8s-2.3-.4-4.4-.4c-4.5 0-7.4 2.7-7.4 7.7v4.3H8.9v5.8h5.1v14a17.8 17.8 0 0 0 4-.4V23.2h6.7z" />
-            </svg>
+            {!badge.iconRight && (
+              <svg viewBox="0 0 36 36" className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:-translate-y-0.5" aria-hidden="true">
+                <circle cx="18" cy="18" r="18" fill="#1877F2" />
+                <path fill="#FFFFFF" d="M24.7 23.2l.9-5.8h-5.5v-3.8c0-1.6.8-3.1 3.2-3.1h2.5V5.8s-2.3-.4-4.4-.4c-4.5 0-7.4 2.7-7.4 7.7v4.3H8.9v5.8h5.1v14a17.8 17.8 0 0 0 4-.4V23.2h6.7z" />
+              </svg>
+            )}
             <span className="text-xs text-muted-foreground transition-colors group-hover:text-foreground">{badge.label}</span>
+            {badge.iconRight && (
+              <svg viewBox="0 0 36 36" className="h-5 w-5 shrink-0 transition-transform duration-200 group-hover:-translate-y-0.5" aria-hidden="true">
+                <circle cx="18" cy="18" r="18" fill="#1877F2" />
+                <path fill="#FFFFFF" d="M24.7 23.2l.9-5.8h-5.5v-3.8c0-1.6.8-3.1 3.2-3.1h2.5V5.8s-2.3-.4-4.4-.4c-4.5 0-7.4 2.7-7.4 7.7v4.3H8.9v5.8h5.1v14a17.8 17.8 0 0 0 4-.4V23.2h6.7z" />
+              </svg>
+            )}
           </a>
         ))}
       </div>
