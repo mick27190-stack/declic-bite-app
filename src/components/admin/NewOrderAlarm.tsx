@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { initNotificationSounds, isAudioUnlocked, playAlarmSound, getAlarmSettings, soundForSite, customSoundForSite, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
+import { useSiteActivityBadges } from '@/hooks/useOpeningHours';
 
 type Site = 'conches' | 'beaumont';
 interface PendingOrder {
@@ -173,6 +174,22 @@ export default function NewOrderAlarm() {
     window.setTimeout(() => setUnlocked(isAudioUnlocked()), 200);
   };
 
+  // Activation automatique : pendant une plage d'ouverture d'un site administré,
+  // le premier toucher/clic/touche n'importe où dans l'app déverrouille le son
+  // (les navigateurs exigent un geste utilisateur).
+  const { adminOpen } = useSiteActivityBadges(sites, null);
+  useEffect(() => {
+    if (!active || !adminOpen || unlocked) return;
+    const opts = { capture: true, passive: true } as AddEventListenerOptions;
+    const onGesture = () => {
+      initNotificationSounds();
+      window.setTimeout(() => setUnlocked(isAudioUnlocked()), 200);
+    };
+    const evs = ['pointerdown', 'touchstart', 'keydown'] as const;
+    evs.forEach((e) => window.addEventListener(e, onGesture, opts));
+    return () => evs.forEach((e) => window.removeEventListener(e, onGesture, opts));
+  }, [active, adminOpen, unlocked]);
+
   const acknowledge = useCallback(
     async (id: string) => {
       const by = user?.phone || user?.email || user?.id || null;
@@ -188,15 +205,6 @@ export default function NewOrderAlarm() {
 
   return (
     <>
-      {!unlocked && !ringing && (
-        <Button
-          onClick={enableSound}
-          className="fixed bottom-4 right-4 z-[60] min-h-11 shadow-lg"
-          aria-label="Activer les alertes sonores"
-        >
-          <Volume2 className="h-4 w-4 mr-2" /> Activer les alertes sonores
-        </Button>
-      )}
       {ringing && (
         <div
           role="alert"
