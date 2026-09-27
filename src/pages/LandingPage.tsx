@@ -1,7 +1,7 @@
 import { openCookiePreferences } from '@/lib/cookieConsent';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, Store, ExternalLink, AlertTriangle, Pizza } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, Store, ExternalLink, AlertTriangle, Pizza, Facebook } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
 import { UserBadge } from '@/components/UserBadge';
@@ -317,6 +317,38 @@ export default function LandingPage() {
           </div>
         )}
       </main>
+
+      {/* Badges Facebook */}
+      <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 pb-2 px-4">
+        <a
+          href="https://www.facebook.com/share/1EPFVhb9Ar/?mibextid=wwXIfr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="glass-card px-4 py-2.5 flex items-center gap-2.5 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 group"
+        >
+          <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0 shadow-glow group-hover:scale-110 transition-transform duration-300">
+            <Facebook className="w-4 h-4 text-primary-foreground" />
+          </span>
+          <span className="text-sm font-semibold text-foreground">
+            Facebook Conches
+          </span>
+          <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+        </a>
+        <a
+          href="https://www.facebook.com/share/1F8RnDsjsX/?mibextid=wwXIfr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="glass-card px-4 py-2.5 flex items-center gap-2.5 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 group"
+        >
+          <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0 shadow-glow group-hover:scale-110 transition-transform duration-300">
+            <Facebook className="w-4 h-4 text-primary-foreground" />
+          </span>
+          <span className="text-sm font-semibold text-foreground">
+            Facebook Beaumont
+          </span>
+          <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+        </a>
+      </div>
 
       {/* Footer */}
       <footer className="relative z-10 text-center py-6 px-4 space-y-3">
