@@ -321,8 +321,8 @@ export default function LandingPage() {
       {/* Icônes Facebook officielles */}
       <div className="relative z-10 flex items-center justify-center gap-6 pb-2 px-4">
         {[
-          { label: 'Conches', href: 'https://www.facebook.com/share/1EPFVhb9Ar/?mibextid=wwXIfr' },
-          { label: 'Beaumont', href: 'https://www.facebook.com/share/1F8RnDsjsX/?mibextid=wwXIfr' },
+          { label: 'Conches', href: 'https://www.facebook.com/Delicepiza' },
+          { label: 'Beaumont', href: 'https://www.facebook.com/DeclicPizzaBeaumont' },
         ].map((badge) => (
           <a
             key={badge.href}
