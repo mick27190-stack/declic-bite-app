@@ -7,6 +7,7 @@ import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { initNotificationSounds, isAudioUnlocked, playAlarmSound, getAlarmSettings, soundForSite, customSoundForSite, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
 import { useSiteActivityBadges } from '@/hooks/useOpeningHours';
+import { useWakeLock } from '@/hooks/useWakeLock';
 
 type Site = 'conches' | 'beaumont';
 interface PendingOrder {
@@ -55,6 +56,10 @@ export default function NewOrderAlarm() {
   }, [isSuperAdmin, isSiteAdminConches, isSiteAdminBeaumont, isSecondaryAdminConches, isSecondaryAdminBeaumont, prefs]);
   const active = onAdmin && !!user && sites.length > 0;
   const sitesKey = sites.join(',');
+
+  // Tablettes en boutique : l'écran ne se met pas en veille tant qu'un admin
+  // est connecté (wake lock natif, relancé au retour au premier plan).
+  useWakeLock(active);
 
   useEffect(() => {
     if (!onAdmin || !user) return;
