@@ -35,7 +35,7 @@ export default function CookieConsentBanner() {
   return (
     <div role="dialog" aria-label="Gestion des cookies" className="fixed inset-x-0 bottom-0 z-[60] p-3 sm:p-4">
       <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl p-4 sm:p-5 space-y-3">
-        <h2 className="font-display text-xl text-foreground">🍪 Gestion des cookies</h2>
+        <h2 className="font-display text-xl text-foreground">Gestion des cookies</h2>
         {!custom ? (
           <>
             <p className="text-sm text-muted-foreground">
