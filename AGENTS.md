@@ -1,0 +1,1 @@
+- Keep the administration Settings section order in browser localStorage with stable section IDs; this preserves each administrator's layout without changing shared operational settings or access rules.

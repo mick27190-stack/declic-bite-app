@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical, Power, Wallet, Bell } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical, Power, Wallet, Bell, ArrowUpDown, Check, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import NotificationBell from '@/components/admin/NotificationBell';
 import AlarmSettingsCard from '@/components/admin/AlarmSettingsCard';
@@ -25,6 +25,9 @@ import OpeningHoursCard from '@/components/admin/OpeningHoursCard';
 import { useOrderTestMode } from '@/hooks/useOrderTestMode';
 import { toast } from '@/hooks/use-toast';
 
+const SETTINGS_ORDER_KEY = 'admin_settings_section_order';
+const DEFAULT_SECTIONS = ['test', 'wallets', 'notifications', 'alarm', 'hours', 'closure', 'active-closures'] as const;
+type SectionId = typeof DEFAULT_SECTIONS[number];
 
 export default function AdminSettingsPage() {
   const navigate = useNavigate();
@@ -43,6 +46,34 @@ export default function AdminSettingsPage() {
   const [walletSubmitting, setWalletSubmitting] = useState(false);
   type WalletRow = { domain: string; registered?: boolean; apple_pay?: string | null; google_pay?: string | null; error?: string };
   const [walletReport, setWalletReport] = useState<Record<string, WalletRow[] | { error: string }> | null>(null);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [dragged, setDragged] = useState<SectionId | null>(null);
+  const [sectionOrder, setSectionOrder] = useState<SectionId[]>(() => {
+    try {
+      const stored: unknown = JSON.parse(localStorage.getItem(SETTINGS_ORDER_KEY) ?? '[]');
+      if (Array.isArray(stored)) {
+        const valid = stored.filter((id): id is SectionId => DEFAULT_SECTIONS.includes(id as SectionId));
+        return [...new Set(valid), ...DEFAULT_SECTIONS.filter((id) => !valid.includes(id))];
+      }
+    } catch { /* local storage may be unavailable */ }
+    return [...DEFAULT_SECTIONS];
+  });
+
+  const persistSectionOrder = (next: SectionId[]) => {
+    setSectionOrder(next);
+    try { localStorage.setItem(SETTINGS_ORDER_KEY, JSON.stringify(next)); } catch { /* keep current session order */ }
+  };
+
+  const moveSection = (id: SectionId, target: SectionId, visible: SectionId[]) => {
+    if (id === target) return;
+    const reordered = [...visible];
+    const from = reordered.indexOf(id);
+    const to = reordered.indexOf(target);
+    if (from < 0 || to < 0) return;
+    reordered.splice(to, 0, reordered.splice(from, 1)[0]);
+    let index = 0;
+    persistSectionOrder(sectionOrder.map((entry) => visible.includes(entry) ? reordered[index++] : entry));
+  };
 
   const registerWalletDomains = async () => {
     setWalletSubmitting(true);
@@ -218,6 +249,12 @@ export default function AdminSettingsPage() {
     return site.charAt(0).toUpperCase() + site.slice(1);
   };
 
+  const visibleSections = sectionOrder.filter((id) => {
+    if (id === 'test' || id === 'wallets') return isSuperAdmin;
+    if (id === 'notifications') return (isSuperAdmin || isSiteAdminConches) && (isSuperAdmin || isSiteAdminBeaumont);
+    return true;
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
@@ -236,9 +273,18 @@ export default function AdminSettingsPage() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
-        {/* Mode test : ouverture temporaire hors horaires (super admin) */}
-        {isSuperAdmin && (
-          <Card className={isTestModeActive ? 'border-amber-500/50 bg-amber-500/5' : undefined}>
+        <div className="flex justify-end gap-2">
+          {reorderMode && (
+            <Button variant="ghost" size="sm" onClick={() => persistSectionOrder([...DEFAULT_SECTIONS])}>Réinitialiser</Button>
+          )}
+          <Button variant={reorderMode ? 'default' : 'outline'} size="sm" onClick={() => setReorderMode((value) => !value)}>
+            {reorderMode ? <><Check className="h-4 w-4 mr-2" /> Terminé</> : <><ArrowUpDown className="h-4 w-4 mr-2" /> Réorganiser</>}
+          </Button>
+        </div>
+        {visibleSections.map((id, index) => {
+          const sections: Record<SectionId, React.ReactNode> = {
+            'test': (
+              <Card className={isTestModeActive ? 'border-amber-500/50 bg-amber-500/5' : undefined}>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <FlaskConical className="h-5 w-5 text-amber-600" />
@@ -309,10 +355,9 @@ export default function AdminSettingsPage() {
               )}
             </CardContent>
           </Card>
-        )}
-
-        {isSuperAdmin && (
-          <Card>
+            ),
+            'wallets': (
+              <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Wallet className="h-5 w-5 text-primary" />
@@ -361,11 +406,9 @@ export default function AdminSettingsPage() {
 
             </CardContent>
           </Card>
-        )}
-
-        {/* Alertes par site, propres au compte connecté — visible uniquement si admin des deux sites */}
-        {(isSuperAdmin || isSiteAdminConches) && (isSuperAdmin || isSiteAdminBeaumont) && (
-          <Card>
+            ),
+            'notifications': (
+              <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Bell className="h-5 w-5 text-primary" />
@@ -406,15 +449,15 @@ export default function AdminSettingsPage() {
               )}
             </CardContent>
           </Card>
-        )}
-
-        <AlarmSettingsCard />
-
-        <OpeningHoursCard />
-
-        {/* Add new closure */}
-
-        <Card>
+            ),
+            'alarm': (
+              <AlarmSettingsCard />
+            ),
+            'hours': (
+              <OpeningHoursCard />
+            ),
+            'closure': (
+              <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <ShieldAlert className="h-5 w-5 text-destructive" />
@@ -490,9 +533,9 @@ export default function AdminSettingsPage() {
             </Button>
           </CardContent>
         </Card>
-
-        {/* Active closures */}
-        <Card>
+            ),
+            'active-closures': (
+              <Card>
           <CardHeader>
             <CardTitle className="text-lg">Blocages en cours</CardTitle>
           </CardHeader>
@@ -558,6 +601,41 @@ export default function AdminSettingsPage() {
             )}
           </CardContent>
         </Card>
+            ),
+          };
+          return (
+            <div
+              key={id}
+              onDragOver={(event) => { if (reorderMode && dragged) event.preventDefault(); }}
+              onDrop={(event) => {
+                event.preventDefault();
+                if (dragged) moveSection(dragged, id, visibleSections);
+                setDragged(null);
+              }}
+              className={reorderMode ? 'border border-primary/40 rounded-lg p-2' : undefined}
+            >
+              {reorderMode && (
+                <div className="flex items-center justify-between gap-2 pb-2">
+                  <div
+                    draggable
+                    onDragStart={(event) => { event.dataTransfer.effectAllowed = 'move'; setDragged(id); }}
+                    onDragEnd={() => setDragged(null)}
+                    className="flex items-center gap-2 px-2 text-sm text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
+                    aria-label="Glisser pour déplacer"
+                  >
+                    <GripVertical className="h-5 w-5" />
+                    <span>Déplacer</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button variant="outline" size="icon" className="h-11 w-11" aria-label="Monter" disabled={index === 0} onClick={() => moveSection(id, visibleSections[index - 1], visibleSections)}><ChevronUp className="h-4 w-4" /></Button>
+                    <Button variant="outline" size="icon" className="h-11 w-11" aria-label="Descendre" disabled={index === visibleSections.length - 1} onClick={() => moveSection(id, visibleSections[index + 1], visibleSections)}><ChevronDown className="h-4 w-4" /></Button>
+                  </div>
+                </div>
+              )}
+              {sections[id]}
+            </div>
+          );
+        })}
       </main>
     </div>
   );
