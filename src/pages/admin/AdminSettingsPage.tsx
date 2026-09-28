@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical, Power, Wallet, Bell } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, ShieldAlert, Calendar, FlaskConical, Power, Wallet, Bell, ArrowUpDown, Check, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import NotificationBell from '@/components/admin/NotificationBell';
 import AlarmSettingsCard from '@/components/admin/AlarmSettingsCard';
@@ -25,6 +25,9 @@ import OpeningHoursCard from '@/components/admin/OpeningHoursCard';
 import { useOrderTestMode } from '@/hooks/useOrderTestMode';
 import { toast } from '@/hooks/use-toast';
 
+const SETTINGS_ORDER_KEY = 'admin_settings_section_order';
+const DEFAULT_SECTIONS = ['test', 'wallets', 'notifications', 'alarm', 'hours', 'closure', 'active-closures'] as const;
+type SectionId = typeof DEFAULT_SECTIONS[number];
 
 export default function AdminSettingsPage() {
   const navigate = useNavigate();
@@ -43,6 +46,34 @@ export default function AdminSettingsPage() {
   const [walletSubmitting, setWalletSubmitting] = useState(false);
   type WalletRow = { domain: string; registered?: boolean; apple_pay?: string | null; google_pay?: string | null; error?: string };
   const [walletReport, setWalletReport] = useState<Record<string, WalletRow[] | { error: string }> | null>(null);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [dragged, setDragged] = useState<SectionId | null>(null);
+  const [sectionOrder, setSectionOrder] = useState<SectionId[]>(() => {
+    try {
+      const stored: unknown = JSON.parse(localStorage.getItem(SETTINGS_ORDER_KEY) ?? '[]');
+      if (Array.isArray(stored)) {
+        const valid = stored.filter((id): id is SectionId => DEFAULT_SECTIONS.includes(id as SectionId));
+        return [...new Set(valid), ...DEFAULT_SECTIONS.filter((id) => !valid.includes(id))];
+      }
+    } catch { /* local storage may be unavailable */ }
+    return [...DEFAULT_SECTIONS];
+  });
+
+  const persistSectionOrder = (next: SectionId[]) => {
+    setSectionOrder(next);
+    try { localStorage.setItem(SETTINGS_ORDER_KEY, JSON.stringify(next)); } catch { /* keep current session order */ }
+  };
+
+  const moveSection = (id: SectionId, target: SectionId, visible: SectionId[]) => {
+    if (id === target) return;
+    const reordered = [...visible];
+    const from = reordered.indexOf(id);
+    const to = reordered.indexOf(target);
+    if (from < 0 || to < 0) return;
+    reordered.splice(to, 0, reordered.splice(from, 1)[0]);
+    let index = 0;
+    persistSectionOrder(sectionOrder.map((entry) => visible.includes(entry) ? reordered[index++] : entry));
+  };
 
   const registerWalletDomains = async () => {
     setWalletSubmitting(true);
