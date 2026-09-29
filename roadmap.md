@@ -9,4 +9,4 @@
 
 - [x] Retirer les boutons Accepter/Refuser de l'administration
 - [x] Réserver la réponse au client depuis son profil ou son e-mail
-- [ ] Vérifier le bandeau administrateur et la protection côté serveur
+- [x] Vérifier le bandeau administrateur et la protection côté serveur
