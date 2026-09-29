@@ -514,7 +514,12 @@ export function useUserOrders() {
 
       setOrders(prev => prev.map(o =>
         o.id === orderId
-          ? { ...o, delivery_response: response }
+          ? {
+              ...o,
+              delivery_response: response,
+              status: response === 'accepted' ? 'confirmed' : 'cancelled',
+              order_status: response === 'accepted' ? 'confirmed' : 'cancelled',
+            }
           : o
       ));
 

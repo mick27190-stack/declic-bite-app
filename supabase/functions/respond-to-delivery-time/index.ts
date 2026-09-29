@@ -51,12 +51,13 @@ Deno.serve(async (req) => {
           console.error('Stripe cancel failed (continuing):', (e as Error).message);
         }
       }
-      await sb.from('orders').update({
+      const { error: updErr } = await sb.from('orders').update({
         delivery_response: 'refused',
         order_status: 'cancelled',
         capture_status: 'cancelled',
         status: 'cancelled',
       }).eq('id', order.id);
+      if (updErr) throw new Error(`Annulation de la commande impossible : ${updErr.message}`);
       await sendOrderCancelledEmail(sb, order.id, 'delivery_time_refused');
     }
 
