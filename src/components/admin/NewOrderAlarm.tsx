@@ -150,7 +150,9 @@ export default function NewOrderAlarm() {
   // Son du site de la commande la plus récente (réglage « un son par site »).
   const latestSite = orders.length ? siteOf(orders[orders.length - 1]) : null;
   useEffect(() => {
-    if (!ringing || !unlocked) return;
+    // On tente de sonner même si le déverrouillage n'est pas confirmé :
+    // certains navigateurs (appli installée, ordinateur) l'autorisent déjà.
+    if (!ringing) return;
     const s = { ...alarmSettings, sound: soundForSite(alarmSettings, latestSite) };
     const customUrl = customSoundForSite(alarmSettings, latestSite);
     let count = 1;

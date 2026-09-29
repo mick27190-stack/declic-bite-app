@@ -311,6 +311,51 @@ function playFallbackAlarm(settings: AlarmSettings) {
 }
 
 /**
+ * Rend un motif de sonnerie en fichier WAV (blob) pour le jouer via l'élément
+ * audio partagé : contrairement au Web Audio, il n'est pas coupé par le mode
+ * silencieux de l'iPhone et reste audible après verrouillage/arrière-plan.
+ */
+const wavCache = new Map<string, string>();
+function patternToWavUrl(f: number[], d: number[], type: OscillatorType): string | null {
+  const key = `${type}|${f.join(',')}|${d.join(',')}`;
+  const hit = wavCache.get(key);
+  if (hit) return hit;
+  try {
+    const rate = 22050;
+    const segs = f.map((freq, i) => ({ freq, len: Math.floor((d[i] || 0.15) * rate) }));
+    const total = segs.reduce((a, s) => a + s.len, 0);
+    const buf = new ArrayBuffer(44 + total * 2);
+    const v = new DataView(buf);
+    const w = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + total * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    w(36, 'data'); v.setUint32(40, total * 2, true);
+    let off = 44;
+    for (const s of segs) {
+      for (let n = 0; n < s.len; n++) {
+        const t = n / rate;
+        const ph = (t * s.freq) % 1;
+        let x = type === 'square' ? (ph < 0.5 ? 1 : -1)
+          : type === 'triangle' ? 1 - 4 * Math.abs(ph - 0.5)
+          : type === 'sawtooth' ? 2 * ph - 1
+          : Math.sin(2 * Math.PI * ph);
+        if (s.freq <= 1) x = 0;
+        // Enveloppe (attaque/décroissance courtes, évite les clics).
+        const env = Math.min(1, n / 200, (s.len - n) / 400);
+        v.setInt16(off, Math.max(-1, Math.min(1, x * env * 0.9)) * 32767, true);
+        off += 2;
+      }
+    }
+    const url = URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+    wavCache.set(key, url);
+    return url;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Kitchen alarm — plays one ring using the configured sound, volume and duration.
  * Si un fichier personnalisé est configuré mais supprimé, inaccessible ou
  * incompatible avec l'appareil, le son généré (sirène) prend le relais.
@@ -329,10 +374,18 @@ export function playAlarmSound(settings: AlarmSettings = getAlarmSettings(), cus
   const d: number[] = [];
   for (let i = 0; i < n; i++) { f.push(...p.f); d.push(...p.d); }
   const vol = Math.max(0.001, Math.min(1, settings.volume / 100));
-  // Frequency 0 = silence gap
-  playTone(f.map((x) => x || 1), d, vol, p.type);
+  const tones = f.map((x) => x || 1);
+  // 1) Élément audio (ignore le mode silencieux iOS) ; 2) Web Audio en secours.
+  const wav = patternToWavUrl(tones, d, p.type);
+  if (wav) {
+    tryPlayCustomSound(wav, settings.volume).then((ok) => {
+      if (!ok) playTone(tones, d, vol, p.type);
+    });
+    return;
+  }
+  playTone(tones, d, vol, p.type);
 }
 
 export function isAudioUnlocked(): boolean {
-  return sharedCtx?.state === 'running';
+  return sharedCtx?.state === 'running' || sharedAudioUnlocked;
 }
