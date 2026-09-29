@@ -41,6 +41,8 @@ const SILENT_WAV =
   'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
 let sharedAudio: HTMLAudioElement | null = null;
 let sharedAudioUnlocked = false;
+/** Lecture muette de déverrouillage en cours (évite les appels concurrents). */
+let audioUnlockPromise: Promise<void> | null = null;
 /** Invalide les rappels de déverrouillage en attente (évite les courses). */
 let audioToken = 0;
 function getSharedAudio(): HTMLAudioElement {
@@ -60,20 +62,22 @@ export function initNotificationSounds() {
     primeContext(ctx);
   }
   // Déverrouille aussi l'élément audio des sons importés (iOS/Android).
-  if (!sharedAudioUnlocked) {
-    // Marqué tout de suite : plusieurs gestes (pointerup + click) ne doivent
-    // pas lancer des lectures muettes concurrentes qui s'interrompraient.
-    sharedAudioUnlocked = true;
+  if (!sharedAudioUnlocked && !audioUnlockPromise) {
     try {
       const a = getSharedAudio();
       const myToken = ++audioToken;
       a.src = SILENT_WAV;
       a.muted = true;
-      a.play().then(() => {
+      // Le drapeau n'est posé qu'en cas de succès : si le navigateur bloque la
+      // lecture (appel hors geste, ex. retour au premier plan), le prochain
+      // toucher réessaiera au lieu de considérer l'audio déverrouillé à tort.
+      audioUnlockPromise = a.play().then(() => {
         // Ne coupe la lecture muette que si personne n'a chargé autre chose entre-temps.
         if (myToken === audioToken && a.src === SILENT_WAV) a.pause();
         a.muted = false;
-      }).catch(() => { a.muted = false; });
+        sharedAudioUnlocked = true;
+      }).catch(() => { a.muted = false; })
+        .finally(() => { audioUnlockPromise = null; });
     } catch {}
   }
 }
