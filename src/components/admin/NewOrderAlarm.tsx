@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { initNotificationSounds, isAudioUnlocked, playAlarmSound, getAlarmSettings, soundForSite, customSoundForSite, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
-import { useSiteActivityBadges } from '@/hooks/useOpeningHours';
 import { useWakeLock } from '@/hooks/useWakeLock';
 
 type Site = 'conches' | 'beaumont';
@@ -182,12 +181,11 @@ export default function NewOrderAlarm() {
     window.setTimeout(() => setUnlocked(isAudioUnlocked()), 200);
   };
 
-  // Activation automatique : pendant une plage d'ouverture d'un site administré,
-  // le premier toucher/clic/touche n'importe où dans l'app déverrouille le son
-  // (les navigateurs exigent un geste utilisateur).
-  const { adminOpen } = useSiteActivityBadges(sites, null);
+  // Activation automatique : dès qu'un admin est connecté (à n'importe quelle
+  // heure, y compris avant le service), le premier toucher/clic/touche n'importe
+  // où dans l'app déverrouille le son (les navigateurs exigent un geste utilisateur).
   useEffect(() => {
-    if (!active || !adminOpen || unlocked) return;
+    if (!active || unlocked) return;
     const opts = { capture: true, passive: true } as AddEventListenerOptions;
     const onGesture = () => {
       initNotificationSounds();
@@ -197,7 +195,8 @@ export default function NewOrderAlarm() {
     const evs = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'] as const;
     evs.forEach((e) => window.addEventListener(e, onGesture, opts));
     return () => evs.forEach((e) => window.removeEventListener(e, onGesture, opts));
-  }, [active, adminOpen, unlocked]);
+  }, [active, unlocked]);
+
 
   const acknowledge = useCallback(
     async (id: string) => {
