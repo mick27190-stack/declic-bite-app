@@ -10,8 +10,8 @@ import { mockBackend, installFakeSession, TEST_USER_ID, type BackendRecorder } f
  *   2. Passage au statut « Annulée » → libération de la pré-autorisation
  *      (`cancel-order`) sans PATCH direct du statut.
  *   3. Si la capture échoue, le statut n'est PAS modifié en base.
- *   4. Contre-proposition d'horaire livraison : confirmation / refus au nom du
- *      client via `respond-to-delivery-time`.
+ *   4. Contre-proposition d'horaire livraison : l'administration voit l'attente
+ *      et le téléphone, mais ne peut pas répondre au nom du client.
  *
  * Backend, auth et rôles sont simulés (voir helpers/mockBackend).
  */
@@ -153,7 +153,7 @@ test.describe("Back-office — livraison et contre-proposition d'horaire", () =>
     delivery_time_proposed: "2026-08-11T18:45:00.000Z",
   });
 
-  test("affiche l'attente de réponse client avec le téléphone joignable", async ({
+  test("affiche l'attente et le téléphone, sans réponse au nom du client", async ({
     page,
     baseURL,
   }) => {
@@ -164,42 +164,8 @@ test.describe("Back-office — livraison et contre-proposition d'horaire", () =>
     await expect(
       page.locator('a[href="tel:+33600000000"]').last(),
     ).toBeVisible();
-
-
-  });
-
-  test("« Confirmer au nom du client » déclenche la capture via respond-to-delivery-time", async ({
-    page,
-    baseURL,
-  }) => {
-    const base = baseURL ?? "http://localhost:8080";
-    const recorder = await openAdminOrders(page, base, [deliveryOrder]);
-
-    await page.getByRole("button", { name: /confirmer au nom du client/i }).click();
-
-    await expect.poll(() => recorder.countCalls("respond-to-delivery-time")).toBe(1);
-    expect(recorder.lastCall("respond-to-delivery-time")?.body).toMatchObject({
-      order_id: deliveryOrder.id,
-      response: "accepted",
-    });
-    await expect(page.getByText(/Horaire confirmé/i).first()).toBeVisible();
-  });
-
-  test("« Refuser au nom du client » annule la pré-autorisation", async ({
-    page,
-    baseURL,
-  }) => {
-    const base = baseURL ?? "http://localhost:8080";
-    const recorder = await openAdminOrders(page, base, [deliveryOrder]);
-
-    await page.getByRole("button", { name: /refuser au nom du client/i }).click();
-
-    await expect.poll(() => recorder.countCalls("respond-to-delivery-time")).toBe(1);
-    expect(recorder.lastCall("respond-to-delivery-time")?.body).toMatchObject({
-      order_id: deliveryOrder.id,
-      response: "refused",
-    });
-    await expect(page.getByText(/Horaire refusé/i).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /confirmer au nom du client/i })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /refuser au nom du client/i })).toHaveCount(0);
   });
 
   test("« Livrée » capture aussi le paiement pour une commande en livraison", async ({
