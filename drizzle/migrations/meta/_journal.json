@@ -358,6 +358,13 @@
       "when": 1790706439809,
       "tag": "0050_always_notify_site_admins_delivery_response",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1790707392493,
+      "tag": "0051_restore_site_hours_gate_delivery_response",
+      "breakpoints": true
     }
   ]
 }
