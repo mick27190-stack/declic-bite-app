@@ -41,6 +41,8 @@ const SILENT_WAV =
   'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
 let sharedAudio: HTMLAudioElement | null = null;
 let sharedAudioUnlocked = false;
+/** Invalide les rappels de déverrouillage en attente (évite les courses). */
+let audioToken = 0;
 function getSharedAudio(): HTMLAudioElement {
   if (!sharedAudio) {
     sharedAudio = new Audio();
@@ -59,12 +61,19 @@ export function initNotificationSounds() {
   }
   // Déverrouille aussi l'élément audio des sons importés (iOS/Android).
   if (!sharedAudioUnlocked) {
+    // Marqué tout de suite : plusieurs gestes (pointerup + click) ne doivent
+    // pas lancer des lectures muettes concurrentes qui s'interrompraient.
+    sharedAudioUnlocked = true;
     try {
       const a = getSharedAudio();
+      const myToken = ++audioToken;
       a.src = SILENT_WAV;
       a.muted = true;
-      a.play().then(() => { a.pause(); a.muted = false; sharedAudioUnlocked = true; })
-        .catch(() => { a.muted = false; });
+      a.play().then(() => {
+        // Ne coupe la lecture muette que si personne n'a chargé autre chose entre-temps.
+        if (myToken === audioToken && a.src === SILENT_WAV) a.pause();
+        a.muted = false;
+      }).catch(() => { a.muted = false; });
     } catch {}
   }
 }
@@ -265,6 +274,9 @@ export function tryPlayCustomSound(rawUrl: string, volume: number): Promise<bool
       // Élément partagé, déverrouillé lors d'un geste (iOS/Android refusent
       // la lecture d'un nouvel élément audio hors geste utilisateur).
       const audio = getSharedAudio();
+      // Invalide le déverrouillage muet éventuellement encore en cours :
+      // sinon son rappel couperait cette lecture (course init/lecture).
+      audioToken++;
       audio.pause();
       audio.preload = 'auto';
       audio.volume = Math.max(0, Math.min(1, volume / 100));
