@@ -10,3 +10,4 @@
 - [x] Retirer les boutons Accepter/Refuser de l'administration
 - [x] Réserver la réponse au client depuis son profil ou son e-mail
 - [x] Vérifier le bandeau administrateur et la protection côté serveur
+- [x] Confirmer les statuts Acceptée/Refusée et la notification push aux admins du site
