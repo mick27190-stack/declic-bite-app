@@ -1,1 +1,2 @@
 - Keep the administration Settings section order in browser localStorage with stable section IDs; this preserves each administrator's layout without changing shared operational settings or access rules.
+- Only the order owner may answer a proposed delivery time through `respond-to-delivery-time`; email token responses remain separate, preventing administrators from answering for customers.
