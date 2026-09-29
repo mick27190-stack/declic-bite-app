@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
 import { initNotificationSounds, isAudioUnlocked, playAlarmSound, getAlarmSettings, soundForSite, customSoundForSite, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
-import { useSiteActivityBadges } from '@/hooks/useOpeningHours';
 import { useWakeLock } from '@/hooks/useWakeLock';
 
 type Site = 'conches' | 'beaumont';
