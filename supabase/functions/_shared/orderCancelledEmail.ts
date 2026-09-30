@@ -43,7 +43,7 @@ function generateToken(): string {
 }
 
 // deno-lint-ignore no-explicit-any
-function formatItems(
+export function formatItems(
   items: any,
   // deno-lint-ignore no-explicit-any
   unitPrices?: number[],
@@ -54,8 +54,9 @@ function formatItems(
     const name = it?.pizza?.name ?? it?.name ?? 'Article';
     const quantity = Number(it?.quantity ?? 1);
     const parts: string[] = [];
-    if (it?.size?.name) parts.push(String(it.size.name));
-    if (it?.base) parts.push(`Base ${it.base}`);
+    const isDrink = it?.pizza?.category === 'boissons' || it?.category === 'boissons';
+    if (!isDrink && it?.size?.name) parts.push(String(it.size.name));
+    if (!isDrink && it?.base) parts.push(`Base ${it.base}`);
     // deno-lint-ignore no-explicit-any
     const sups = Array.isArray(it?.supplements) ? it.supplements.map((s: any) => s?.name).filter(Boolean) : [];
     if (sups.length) parts.push(`Suppléments : ${sups.join(', ')}`);
