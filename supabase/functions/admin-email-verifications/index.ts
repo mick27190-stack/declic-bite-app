@@ -30,8 +30,9 @@ Deno.serve(async (req) => {
     const { data: c } = await createClient(url, anon).auth.getClaims(jwt)
     const callerId = c?.claims?.sub as string | undefined
     if (!callerId) return json({ error: 'Unauthorized' }, 401)
-    const { data: isSuper } = await admin.rpc('is_super_admin', { _user_id: callerId })
-    if (!isSuper) return json({ error: 'Réservé aux Super Admins' }, 403)
+    const { data: roles } = await admin.from('user_roles').select('role')
+      .eq('user_id', callerId).in('role', ['super_admin', 'secondary_super_admin'])
+    if (!roles?.length) return json({ error: 'Réservé aux Super Admins' }, 403)
 
     const body = await req.json().catch(() => ({}))
     const action = String(body.action ?? 'list')
