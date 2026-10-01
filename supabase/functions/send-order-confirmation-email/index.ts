@@ -15,13 +15,6 @@ const TEMPLATE_NAME = 'order-confirmed';
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { 'Content-Type': 'application/json' } });
 
-function claimsRole(token: string): string | null {
-  try {
-    const p = token.split('.')[1].replaceAll('-', '+').replaceAll('_', '/');
-    return JSON.parse(atob(p.padEnd(Math.ceil(p.length / 4) * 4, '='))).role ?? null;
-  } catch { return null; }
-}
-
 const euros = (n: number) => `${n.toFixed(2).replace('.', ',')}€`;
 
 function parisTime(v: string | null | undefined): string | undefined {
@@ -33,10 +26,9 @@ function parisTime(v: string | null | undefined): string | undefined {
 }
 
 Deno.serve(async (req) => {
-  const auth = req.headers.get('Authorization') ?? '';
-  if (!auth.startsWith('Bearer ') || claimsRole(auth.slice(7).trim()) !== 'service_role') {
-    return json({ error: 'Forbidden' }, 403);
-  }
+  // Appel interne sans clé (pg_net). Sûr : envoi unique, uniquement au
+  // propriétaire d'une commande déjà confirmée (réservation atomique).
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   let orderId = '';
   let recipientEmail = '';

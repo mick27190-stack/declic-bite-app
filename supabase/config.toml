@@ -23,3 +23,6 @@ project_id = "tzamsbbpygevsdvugdbv"
     verify_jwt = true
   [functions.handle-sms-unsubscribe]
     verify_jwt = false
+
+[functions.send-order-confirmation-email]
+verify_jwt = false
