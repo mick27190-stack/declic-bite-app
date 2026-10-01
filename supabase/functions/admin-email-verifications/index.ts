@@ -156,6 +156,16 @@ Deno.serve(async (req) => {
       return json({ ok: true, status: 'sent', message: 'Nouveau lien de validation envoyé.' })
     }
 
+    if (action === 'delete') {
+      const email = String(body.email ?? '').trim().toLowerCase()
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: 'Adresse invalide' }, 400)
+      if (findUser(email)) return json({ error: 'Ce compte existe encore : suppression réservée aux comptes supprimés' }, 400)
+      const { error } = await admin.from('email_send_log').delete()
+        .in('template_name', ['email_change', 'signup']).ilike('recipient_email', email)
+      if (error) throw error
+      return json({ ok: true })
+    }
+
     return json({ error: 'Action inconnue' }, 400)
   } catch (e) {
     console.error('admin-email-verifications:', (e as Error).message)
