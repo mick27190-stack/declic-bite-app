@@ -913,6 +913,7 @@ export type Database = {
           acquittee_le: string | null
           acquittee_par: string | null
           capture_status: string | null
+          confirmation_email_sent_at: string | null
           created_at: string
           delivery_address: Json | null
           delivery_estimate: string | null
@@ -940,6 +941,7 @@ export type Database = {
           acquittee_le?: string | null
           acquittee_par?: string | null
           capture_status?: string | null
+          confirmation_email_sent_at?: string | null
           created_at?: string
           delivery_address?: Json | null
           delivery_estimate?: string | null
@@ -967,6 +969,7 @@ export type Database = {
           acquittee_le?: string | null
           acquittee_par?: string | null
           capture_status?: string | null
+          confirmation_email_sent_at?: string | null
           created_at?: string
           delivery_address?: Json | null
           delivery_estimate?: string | null
