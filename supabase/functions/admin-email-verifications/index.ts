@@ -48,12 +48,21 @@ Deno.serve(async (req) => {
       allUsers.find((u) => (u.email ?? '').toLowerCase() === email)
 
     if (action === 'list') {
+      // Limité à 1000 lignes par requête : on part des échecs, puis on lit
+      // l'historique complet des seules adresses concernées.
+      const { data: failedRows, error: fErr } = await admin
+        .from('email_send_log').select('recipient_email')
+        .in('template_name', ['email_change', 'signup']).in('status', FAILED).limit(1000)
+      if (fErr) throw fErr
+      const emails = [...new Set((failedRows ?? []).map((r: U) => String(r.recipient_email)))]
+      if (!emails.length) return json({ items: [] })
       const { data: rows, error } = await admin
         .from('email_send_log')
         .select('message_id, template_name, recipient_email, status, error_message, created_at')
         .in('template_name', ['email_change', 'signup'])
+        .in('recipient_email', emails)
         .order('created_at', { ascending: false })
-        .limit(5000)
+        .limit(1000)
       if (error) throw error
       // Dernier statut par message, puis dernier e-mail par destinataire.
       const latestByMsg = new Map<string, U>()
