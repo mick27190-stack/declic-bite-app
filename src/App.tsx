@@ -29,6 +29,7 @@ import AdminOrderHistoryPage from "./pages/admin/AdminOrderHistoryPage";
 import AdminCompanyInfoPage from "./pages/admin/AdminCompanyInfoPage";
 import AdminInvoicesPage from "./pages/admin/AdminInvoicesPage";
 import AdminLoyaltyPage from "./pages/admin/AdminLoyaltyPage";
+import AdminEmailVerificationsPage from "./pages/admin/AdminEmailVerificationsPage";
 import LoyaltyCardPage from "./pages/LoyaltyCardPage";
 import AdminConsentsPage from "./pages/admin/AdminConsentsPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
