@@ -365,6 +365,13 @@
       "when": 1790707392493,
       "tag": "0051_restore_site_hours_gate_delivery_response",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1790884777115,
+      "tag": "0052_order_confirmation_email",
+      "breakpoints": true
     }
   ]
 }

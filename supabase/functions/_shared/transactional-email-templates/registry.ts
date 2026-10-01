@@ -6,6 +6,7 @@ import { template as invoice } from './invoice.tsx'
 import { template as passwordChanged } from './password-changed.tsx'
 import { template as accountDeleted } from './account-deleted.tsx'
 import { template as orderCancelled } from './order-cancelled.tsx'
+import { template as orderConfirmed } from './order-confirmed.tsx'
 
 export interface TemplateEntry {
   // deno-lint-ignore no-explicit-any
@@ -22,4 +23,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'password-changed': passwordChanged,
   'account-deleted': accountDeleted,
   'order-cancelled': orderCancelled,
+  'order-confirmed': orderConfirmed,
 }
