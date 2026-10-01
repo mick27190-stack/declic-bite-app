@@ -115,6 +115,7 @@ const App = () => {
                 <Route path="/admin/invoices" element={<AdminInvoicesPage />} />
                 <Route path="/admin/consents" element={<AdminConsentsPage />} />
                 <Route path="/admin/loyalty" element={<AdminLoyaltyPage />} />
+                <Route path="/admin/email-verifications" element={<AdminEmailVerificationsPage />} />
                 <Route path="/loyalty" element={<LoyaltyCardPage />} />
                 <Route path="/dev/cutoff-preview" element={<CutoffPreviewPage />} />
                 <Route path="/unsubscribe" element={<UnsubscribePage />} />
