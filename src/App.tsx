@@ -29,6 +29,7 @@ import AdminOrderHistoryPage from "./pages/admin/AdminOrderHistoryPage";
 import AdminCompanyInfoPage from "./pages/admin/AdminCompanyInfoPage";
 import AdminInvoicesPage from "./pages/admin/AdminInvoicesPage";
 import AdminLoyaltyPage from "./pages/admin/AdminLoyaltyPage";
+import AdminEmailVerificationsPage from "./pages/admin/AdminEmailVerificationsPage";
 import LoyaltyCardPage from "./pages/LoyaltyCardPage";
 import AdminConsentsPage from "./pages/admin/AdminConsentsPage";
 import OrderConfirmationPage from "./pages/OrderConfirmationPage";
@@ -115,6 +116,7 @@ const App = () => {
                 <Route path="/admin/invoices" element={<AdminInvoicesPage />} />
                 <Route path="/admin/consents" element={<AdminConsentsPage />} />
                 <Route path="/admin/loyalty" element={<AdminLoyaltyPage />} />
+                <Route path="/admin/email-verifications" element={<AdminEmailVerificationsPage />} />
                 <Route path="/loyalty" element={<LoyaltyCardPage />} />
                 <Route path="/dev/cutoff-preview" element={<CutoffPreviewPage />} />
                 <Route path="/unsubscribe" element={<UnsubscribePage />} />

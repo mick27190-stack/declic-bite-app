@@ -24,7 +24,8 @@ import {
   ChevronUp,
   ChevronDown,
   Check,
-  ArrowUpDown
+  ArrowUpDown,
+  MailWarning
 
 
 } from 'lucide-react';
@@ -186,6 +187,13 @@ export default function AdminDashboard() {
       description: 'Programmes de fidélité et progression des clients',
       icon: Gift,
       href: '/admin/loyalty',
+      show: isSuperAdmin
+    },
+    {
+      title: 'Validations e-mail',
+      description: 'Liens de validation en échec et renvoi',
+      icon: MailWarning,
+      href: '/admin/email-verifications',
       show: isSuperAdmin
     }
   ];
