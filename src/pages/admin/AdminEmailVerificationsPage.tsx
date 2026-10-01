@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, MailWarning, RefreshCw, Send } from 'lucide-react';
+import { ArrowLeft, Loader2, MailWarning, RefreshCw, Send, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -69,6 +69,19 @@ export default function AdminEmailVerificationsPage() {
     load();
   };
 
+  const remove = async (email: string) => {
+    if (!window.confirm(`Supprimer l'échec pour ${email} de la liste ?`)) return;
+    setSending(email);
+    const { data, error } = await supabase.functions.invoke('admin-email-verifications', { body: { action: 'delete', email } });
+    setSending(null);
+    if (error || data?.error) {
+      toast({ title: 'Suppression impossible', description: data?.error ?? error?.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Élément supprimé' });
+    load();
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
@@ -114,6 +127,12 @@ export default function AdminEmailVerificationsPage() {
                   </p>
                   {it.error && <p className="text-xs text-muted-foreground">Motif : {it.error}</p>}
                 </div>
+                {it.state === 'unknown' ? (
+                  <Button variant="destructive" onClick={() => remove(it.email)} disabled={sending === it.email} className="shrink-0">
+                    {sending === it.email ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                    Supprimer
+                  </Button>
+                ) : (
                 <Button
                   onClick={() => resend(it.email)}
                   disabled={sending === it.email || it.state !== 'pending'}
@@ -122,6 +141,7 @@ export default function AdminEmailVerificationsPage() {
                   {sending === it.email ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Send className="h-4 w-4 mr-2" />}
                   Renvoyer le lien
                 </Button>
+                )}
               </CardContent>
             </Card>
           ))
