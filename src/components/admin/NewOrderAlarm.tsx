@@ -155,16 +155,9 @@ export default function NewOrderAlarm() {
     if (!ringing) return;
     const s = { ...alarmSettings, sound: soundForSite(alarmSettings, latestSite) };
     const customUrl = customSoundForSite(alarmSettings, latestSite);
-    let count = 1;
+    // Boucle sans limite tant qu'au moins une commande n'est pas acquittée (« J'ai vu »).
     playAlarmSound(s, customUrl);
-    const t = window.setInterval(() => {
-      if (s.repetitions > 0 && count >= s.repetitions) {
-        window.clearInterval(t);
-        return;
-      }
-      count++;
-      playAlarmSound(s, customUrl);
-    }, (s.duration + 1.5) * 1000);
+    const t = window.setInterval(() => playAlarmSound(s, customUrl), (s.duration + 1.5) * 1000);
     return () => window.clearInterval(t);
   }, [ringing, unlocked, orders.length, alarmSettings, latestSite]);
 

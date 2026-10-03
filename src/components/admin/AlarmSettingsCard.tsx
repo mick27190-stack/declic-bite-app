@@ -267,21 +267,11 @@ export default function AlarmSettingsCard() {
           <Slider aria-labelledby="alarm-duration-label" min={1} max={5} step={1} value={[s.duration]} onValueChange={([v]) => update({ duration: v })} />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="alarm-reps">Nombre de répétitions</Label>
-          <Select value={String(s.repetitions)} onValueChange={(v) => update({ repetitions: Number(v) })}>
-            <SelectTrigger id="alarm-reps" className="min-h-11"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {REPETITION_OPTIONS.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
         <Button type="button" variant="outline" className="min-h-11" onClick={() => { initNotificationSounds(); playAlarmSound(s, customSoundForSite(s, null)); }}>
           <Play className="h-4 w-4 mr-2" aria-hidden="true" /> Écouter
         </Button>
         <p className="text-xs text-muted-foreground">
-          Réglages propres à cet appareil : chaque poste peut avoir son propre son. La bannière reste affichée jusqu'à « J'ai vu ✓ », même après la dernière répétition.
+          Réglages propres à cet appareil : chaque poste peut avoir son propre son. L'alarme sonne en boucle jusqu'à l'appui sur « J'ai vu ✓ ».
         </p>
       </CardContent>
     </Card>
