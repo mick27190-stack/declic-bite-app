@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useChatClosure } from '@/hooks/useChatClosure';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 function formatReadAt(iso: string): string {
   const d = new Date(iso);
   const today = new Date();
@@ -199,7 +200,11 @@ export default function CustomerChat() {
     setInput('');
     forceScrollRef.current = true;
     scrollToBottom('smooth');
-    await sendMessage(msg);
+    const ok = await sendMessage(msg);
+    if (!ok) {
+      setInput(msg);
+      toast({ title: "Message non envoyé", description: "Vérifiez votre connexion puis réessayez.", variant: "destructive" });
+    }
   };
 
   const needsRestaurant = user && profile && !selectedRestaurant && !profile.preferred_restaurant;

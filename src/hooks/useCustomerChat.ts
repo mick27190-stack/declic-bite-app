@@ -15,6 +15,9 @@ export function useCustomerChat() {
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  // Site of the customer's latest existing conversation, used when no
+  // restaurant is selected (e.g. the restaurant wrote first).
+  const [fallbackSite, setFallbackSite] = useState<'conches' | 'beaumont' | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const messagesRef = useRef<ChatMessage[]>([]);
   useEffect(() => { messagesRef.current = messages; }, [messages]);
@@ -38,9 +41,9 @@ export function useCustomerChat() {
   // then fall back to the customer's preferred restaurant from their profile.
   const resolveSite = useCallback((): 'conches' | 'beaumont' | null => {
     const source = selectedRestaurant?.id ?? selectedRestaurant?.name ?? profile?.preferred_restaurant;
-    if (!source) return null;
+    if (!source) return fallbackSite;
     return source.toLowerCase().includes('beaumont') ? 'beaumont' : 'conches';
-  }, [selectedRestaurant, profile?.preferred_restaurant]);
+  }, [selectedRestaurant, profile?.preferred_restaurant, fallbackSite]);
 
   // Lookup existing conversation for current user (do NOT create).
   const lookupConversation = useCallback(async () => {
@@ -155,11 +158,11 @@ export function useCustomerChat() {
 
   // Send message. Keep the closure guard here as the final protection so
   // programmatic callers cannot bypass the disabled chat controls.
-  const sendMessage = useCallback(async (content: string) => {
-    if (!user || isChatBlocked || !content.trim()) return;
+  const sendMessage = useCallback(async (content: string): Promise<boolean> => {
+    if (!user || isChatBlocked || !content.trim()) return false;
 
     const site = resolveSite();
-    if (!site) return;
+    if (!site) { console.error('[chat] no site resolved'); return false; }
 
     let convId = conversationId;
     if (!convId) {
@@ -168,15 +171,17 @@ export function useCustomerChat() {
     if (!convId) {
       convId = await createConversation();
     }
-    if (!convId) return;
+    if (!convId) { console.error('[chat] no conversation'); return false; }
 
-    await supabase.from('chat_messages').insert({
+    const { error: insErr } = await supabase.from('chat_messages').insert({
       conversation_id: convId,
       sender_id: user.id,
       sender_type: 'customer',
       content,
       site,
     });
+    if (insErr) { console.error('[chat] send failed:', insErr); return false; }
+    return true;
 
     // L'aperçu de la conversation (last_message, last_message_at) et la
     // ré-affichage côté admin sont mis à jour côté serveur par un trigger.
@@ -184,6 +189,25 @@ export function useCustomerChat() {
   }, [user, isChatBlocked, conversationId, lookupConversation, createConversation, resolveSite]);
 
   // Init & realtime
+  // No restaurant selected: reuse the customer's most recent conversation site.
+  useEffect(() => {
+    if (!user) { setFallbackSite(null); return; }
+    let cancelled = false;
+    supabase
+      .from('chat_conversations')
+      .select('site')
+      .eq('customer_id', user.id)
+      .order('last_message_at', { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const s = data?.site;
+        setFallbackSite(s === 'beaumont' || s === 'conches' ? s : 'conches');
+      });
+    return () => { cancelled = true; };
+  }, [user]);
+
   useEffect(() => {
     if (!user || !resolveSite()) {
       setLoading(false);
