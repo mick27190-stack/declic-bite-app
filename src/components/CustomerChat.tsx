@@ -199,7 +199,11 @@ export default function CustomerChat() {
     setInput('');
     forceScrollRef.current = true;
     scrollToBottom('smooth');
-    await sendMessage(msg);
+    const ok = await sendMessage(msg);
+    if (!ok) {
+      setInput(msg);
+      toast({ title: "Message non envoyé", description: "Vérifiez votre connexion puis réessayez.", variant: "destructive" });
+    }
   };
 
   const needsRestaurant = user && profile && !selectedRestaurant && !profile.preferred_restaurant;
