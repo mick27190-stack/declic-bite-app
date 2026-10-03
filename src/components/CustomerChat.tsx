@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/contexts/CartContext';
 import { useChatClosure } from '@/hooks/useChatClosure';
 import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 function formatReadAt(iso: string): string {
   const d = new Date(iso);
   const today = new Date();
