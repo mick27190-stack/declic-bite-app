@@ -207,7 +207,10 @@ export default function CustomerChat() {
     }
   };
 
-  const needsRestaurant = user && profile && !selectedRestaurant && !profile.preferred_restaurant;
+  // Block the chat when no site can be resolved (no selected restaurant, no
+  // preferred restaurant, no prior conversation): sending would risk landing
+  // on the wrong site without notifying the right admin.
+  const needsRestaurant = user && !resolvedSite;
 
   return (
     <>
