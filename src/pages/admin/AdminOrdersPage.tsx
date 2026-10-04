@@ -328,6 +328,17 @@ export default function AdminOrdersPage() {
 
     // Toute annulation passe par l'Edge Function (même une commande déjà
     // encaissée) : elle libère Stripe si besoin et envoie l'e-mail au client.
+    // Une commande confirmée (paiement encaissé) ne peut plus être annulée
+    // par erreur depuis le sélecteur : l'option est masquée, et on bloque
+    // aussi ici par sécurité.
+    if (newStatus === 'cancelled' && order?.status !== 'pending') {
+      toast({
+        title: 'Annulation impossible',
+        description: 'Cette commande est déjà confirmée : elle ne peut plus être annulée.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (!!order?.stripe_payment_intent_id && newStatus === 'cancelled') {
       await invokeStripeAction(orderId, 'cancel-order', 'Pré-autorisation Stripe annulée');
       return;
@@ -602,7 +613,9 @@ export default function AdminOrdersPage() {
                             {order.order_type === 'livraison' && (
                               <SelectItem value="delivered">Livrée</SelectItem>
                             )}
-                            <SelectItem value="cancelled">Annulée</SelectItem>
+                            {order.status === 'pending' && (
+                              <SelectItem value="cancelled">Annulée</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                         <Button
