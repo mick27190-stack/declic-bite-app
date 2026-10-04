@@ -63,7 +63,7 @@ export default function CustomerChat() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, loading, sendMessage, markMessagesRead } = useCustomerChat();
+  const { messages, loading, sendMessage, markMessagesRead, site: resolvedSite } = useCustomerChat();
   const { isOnline } = useAdminPresenceWatch();
   const chatSite = selectedRestaurant?.id ?? selectedRestaurant?.name ?? profile?.preferred_restaurant;
   const {
@@ -207,7 +207,10 @@ export default function CustomerChat() {
     }
   };
 
-  const needsRestaurant = user && profile && !selectedRestaurant && !profile.preferred_restaurant;
+  // Block the chat when no site can be resolved (no selected restaurant, no
+  // preferred restaurant, no prior conversation): sending would risk landing
+  // on the wrong site without notifying the right admin.
+  const needsRestaurant = user && !resolvedSite;
 
   return (
     <>
@@ -256,7 +259,7 @@ export default function CustomerChat() {
           ) : needsRestaurant ? (
             <div className="flex-1 flex flex-col items-center justify-center p-6 gap-4 text-center">
               <p className="text-sm text-muted-foreground">
-                Veuillez d'abord sélectionner votre restaurant dans votre profil pour démarrer une conversation.
+                Pour nous écrire, choisissez d'abord votre restaurant (Conches ou Beaumont) sur la page d'accueil ou dans votre profil, afin que votre message arrive au bon établissement.
               </p>
               <Button onClick={() => navigate('/profile')} size="sm">
                 Mon profil
