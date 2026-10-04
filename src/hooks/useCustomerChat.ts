@@ -203,7 +203,11 @@ export function useCustomerChat() {
       .then(({ data }) => {
         if (cancelled) return;
         const s = data?.site;
-        setFallbackSite(s === 'beaumont' || s === 'conches' ? s : 'conches');
+        // No default site: a customer with no selected/preferred restaurant and
+        // no prior conversation must explicitly pick a site before chatting,
+        // otherwise the message could land on the wrong site without the right
+        // admin being notified.
+        setFallbackSite(s === 'beaumont' || s === 'conches' ? s : null);
       });
     return () => { cancelled = true; };
   }, [user]);

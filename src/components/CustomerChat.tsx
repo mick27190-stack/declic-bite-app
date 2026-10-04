@@ -63,7 +63,7 @@ export default function CustomerChat() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, loading, sendMessage, markMessagesRead } = useCustomerChat();
+  const { messages, loading, sendMessage, markMessagesRead, site: resolvedSite } = useCustomerChat();
   const { isOnline } = useAdminPresenceWatch();
   const chatSite = selectedRestaurant?.id ?? selectedRestaurant?.name ?? profile?.preferred_restaurant;
   const {
