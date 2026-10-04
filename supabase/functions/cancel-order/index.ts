@@ -14,7 +14,7 @@ Deno.serve(async (req) => {
     const sb = serviceClient();
     const { data: order, error } = await sb
       .from('orders')
-      .select('id, user_id, restaurant, site, order_status, stripe_payment_intent_id, capture_status')
+      .select('id, user_id, restaurant, site, status, order_status, stripe_payment_intent_id, capture_status')
       .eq('id', orderId)
       .single();
     if (error || !order) throw new Error('Commande introuvable');
