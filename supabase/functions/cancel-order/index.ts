@@ -27,7 +27,14 @@ Deno.serve(async (req) => {
       order.user_id === userId &&
       order.capture_status !== 'captured' &&
       (order.order_status === null || order.order_status === 'pending_confirmation');
-    if (!ownerMayCancel) await requireAdminForSite(req, site);
+    if (!ownerMayCancel) {
+      await requireAdminForSite(req, site);
+      // Une commande déjà confirmée (paiement encaissé) ne peut plus être
+      // annulée par un admin : protection contre une annulation par erreur.
+      if (order.capture_status === 'captured' || (order.status && order.status !== 'pending')) {
+        throw new Error('Cette commande est déjà confirmée : elle ne peut plus être annulée.');
+      }
+    }
 
     // Motif d'annulation (pour l'e-mail client) : fourni par la page de paiement,
     // sinon déduit de l'appelant.
