@@ -290,7 +290,7 @@ export function tryPlayCustomSound(rawUrl: string, volume: number): Promise<bool
       audio.src = url;
       audio
         .play()
-        .then(() => { window.clearTimeout(timeout); done(true); })
+        .then(() => { window.clearTimeout(timeout); sharedAudioUnlocked = true; done(true); })
         .catch((e) => { window.clearTimeout(timeout); console.warn('Son personnalisé illisible:', e?.message || e); done(false); });
     } catch {
       done(false);

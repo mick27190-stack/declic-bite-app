@@ -171,26 +171,47 @@ export default function NewOrderAlarm() {
     return () => { window.clearInterval(t); document.removeEventListener('visibilitychange', onVis); };
   }, [active]);
 
-  const enableSound = () => {
-    initNotificationSounds();
-    window.setTimeout(() => setUnlocked(isAudioUnlocked()), 200);
-  };
+  // Au geste : si une alarme est en cours, on lance la sonnerie DIRECTEMENT dans
+  // le geste (seule façon fiable sur iOS/Android de déverrouiller l'élément audio
+  // qui la joue) ; sinon déverrouillage muet classique.
+  const ringRef = { ringing, alarmSettings, latestSite };
+  const ringRefLatest = useRef(ringRef);
+  ringRefLatest.current = ringRef;
+  const unlockFromGesture = useCallback(() => {
+    const r = ringRefLatest.current;
+    if (r.ringing) {
+      const ctx = initNotificationSoundsCtxOnly();
+      void ctx;
+      playAlarmSound(
+        { ...r.alarmSettings, sound: soundForSite(r.alarmSettings, r.latestSite) },
+        customSoundForSite(r.alarmSettings, r.latestSite),
+      );
+    } else {
+      initNotificationSounds();
+    }
+    window.setTimeout(() => setUnlocked(isAudioUnlocked()), 300);
+    window.setTimeout(() => setUnlocked(isAudioUnlocked()), 1200);
+  }, []);
 
-  // Activation automatique : dès qu'un admin est connecté (à n'importe quelle
-  // heure, y compris avant le service), le premier toucher/clic/touche n'importe
-  // où dans l'app déverrouille le son (les navigateurs exigent un geste utilisateur).
+  const enableSound = () => unlockFromGesture();
+
+  // Activation automatique : le premier toucher/clic/touche n'importe où dans
+  // l'app déverrouille le son (les navigateurs exigent un geste utilisateur).
   useEffect(() => {
     if (!active || unlocked) return;
     const opts = { capture: true, passive: true } as AddEventListenerOptions;
+    let last = 0;
     const onGesture = () => {
-      initNotificationSounds();
-      window.setTimeout(() => setUnlocked(isAudioUnlocked()), 200);
+      const now = Date.now();
+      if (now - last < 400) return; // un seul déclenchement par toucher
+      last = now;
+      unlockFromGesture();
     };
     // iOS/Android : seuls touchend/click/pointerup comptent comme geste audio valide.
-    const evs = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'click', 'keydown'] as const;
+    const evs = ['touchend', 'pointerup', 'click', 'keydown'] as const;
     evs.forEach((e) => window.addEventListener(e, onGesture, opts));
     return () => evs.forEach((e) => window.removeEventListener(e, onGesture, opts));
-  }, [active, unlocked]);
+  }, [active, unlocked, unlockFromGesture]);
 
 
   const acknowledge = useCallback(
