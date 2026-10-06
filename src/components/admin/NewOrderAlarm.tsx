@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { BellRing, Check, Volume2 } from 'lucide-react';
+import { BellRing, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
@@ -192,7 +192,6 @@ export default function NewOrderAlarm() {
     window.setTimeout(() => setUnlocked(isAudioUnlocked()), 1200);
   }, []);
 
-  const enableSound = () => unlockFromGesture();
 
   // Activation automatique : le premier toucher/clic/touche n'importe où dans
   // l'app déverrouille le son (les navigateurs exigent un geste utilisateur).
@@ -233,11 +232,6 @@ export default function NewOrderAlarm() {
               <div className="flex flex-wrap items-center gap-2 font-bold text-lg">
                 <BellRing className="h-6 w-6 animate-pulse" />
                 {orders.length > 1 ? `${orders.length} nouvelles commandes !` : 'Nouvelle commande !'}
-                {!unlocked && (
-                  <Button size="sm" variant="secondary" className="ml-auto min-h-11" onClick={enableSound}>
-                    <Volume2 className="h-4 w-4 mr-2" /> Activer le son
-                  </Button>
-                )}
               </div>
               <ul className="space-y-2 max-h-[40vh] overflow-y-auto">
                 {orders.map((o) => {
