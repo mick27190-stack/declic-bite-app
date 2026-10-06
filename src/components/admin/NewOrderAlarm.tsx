@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { BellRing, Check, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAdmin } from '@/contexts/AdminContext';
 import { Button } from '@/components/ui/button';
-import { initNotificationSounds, isAudioUnlocked, playAlarmSound, getAlarmSettings, soundForSite, customSoundForSite, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
+import { initNotificationSounds, initNotificationSoundsCtxOnly, isAudioUnlocked, playAlarmSound, getAlarmSettings, soundForSite, customSoundForSite, ALARM_SETTINGS_EVENT } from '@/lib/notificationSounds';
 import { useWakeLock } from '@/hooks/useWakeLock';
 
 type Site = 'conches' | 'beaumont';
@@ -180,8 +180,7 @@ export default function NewOrderAlarm() {
   const unlockFromGesture = useCallback(() => {
     const r = ringRefLatest.current;
     if (r.ringing) {
-      const ctx = initNotificationSoundsCtxOnly();
-      void ctx;
+      initNotificationSoundsCtxOnly();
       playAlarmSound(
         { ...r.alarmSettings, sound: soundForSite(r.alarmSettings, r.latestSite) },
         customSoundForSite(r.alarmSettings, r.latestSite),
@@ -200,13 +199,7 @@ export default function NewOrderAlarm() {
   useEffect(() => {
     if (!active || unlocked) return;
     const opts = { capture: true, passive: true } as AddEventListenerOptions;
-    let last = 0;
-    const onGesture = () => {
-      const now = Date.now();
-      if (now - last < 400) return; // un seul déclenchement par toucher
-      last = now;
-      unlockFromGesture();
-    };
+    const onGesture = () => unlockFromGesture();
     // iOS/Android : seuls touchend/click/pointerup comptent comme geste audio valide.
     const evs = ['touchend', 'pointerup', 'click', 'keydown'] as const;
     evs.forEach((e) => window.addEventListener(e, onGesture, opts));

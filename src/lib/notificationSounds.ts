@@ -54,6 +54,12 @@ function getSharedAudio(): HTMLAudioElement {
   return sharedAudio;
 }
 
+/** Relance seulement le contexte Web Audio (sans toucher à l'élément audio partagé). */
+export function initNotificationSoundsCtxOnly() {
+  const ctx = getAudioContext();
+  if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {});
+}
+
 export function initNotificationSounds() {
   const ctx = getAudioContext();
   if (ctx) {
