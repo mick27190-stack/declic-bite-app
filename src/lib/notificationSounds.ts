@@ -54,6 +54,12 @@ function getSharedAudio(): HTMLAudioElement {
   return sharedAudio;
 }
 
+/** Relance seulement le contexte Web Audio (sans toucher à l'élément audio partagé). */
+export function initNotificationSoundsCtxOnly() {
+  const ctx = getAudioContext();
+  if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {});
+}
+
 export function initNotificationSounds() {
   const ctx = getAudioContext();
   if (ctx) {
@@ -290,7 +296,7 @@ export function tryPlayCustomSound(rawUrl: string, volume: number): Promise<bool
       audio.src = url;
       audio
         .play()
-        .then(() => { window.clearTimeout(timeout); done(true); })
+        .then(() => { window.clearTimeout(timeout); sharedAudioUnlocked = true; done(true); })
         .catch((e) => { window.clearTimeout(timeout); console.warn('Son personnalisé illisible:', e?.message || e); done(false); });
     } catch {
       done(false);
