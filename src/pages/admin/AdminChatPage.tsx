@@ -94,7 +94,7 @@ function ConversationItem({
           </div>
           {(conversation.unread_count ?? 0) > 0 && (
             <Badge className="text-[10px] bg-amber-500 hover:bg-amber-500 text-white">
-              Nouveau message
+              Nouveau
             </Badge>
           )}
         </div>
