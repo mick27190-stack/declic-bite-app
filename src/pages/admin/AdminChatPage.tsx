@@ -316,7 +316,7 @@ export default function AdminChatPage() {
                     />
                   ))
                 )}
-              </ScrollArea>
+              </div>
             </CardContent>
           </Card>
 
