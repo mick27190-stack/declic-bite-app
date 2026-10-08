@@ -71,10 +71,10 @@ function ConversationItem({
               <AlertDialogTrigger asChild>
                 <button
                   onClick={(e) => e.stopPropagation()}
-                  className="min-h-11 min-w-11 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  className="min-h-11 min-w-11 flex items-center justify-center rounded-md text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors"
                   aria-label="Supprimer la conversation"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-5 w-5" />
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent onClick={(e) => e.stopPropagation()}>
