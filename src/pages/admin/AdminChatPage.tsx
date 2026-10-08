@@ -300,7 +300,7 @@ export default function AdminChatPage() {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <ScrollArea className="h-[min(50vh,500px)] md:h-[500px]">
+              <div className="h-[min(50vh,500px)] md:h-[500px] overflow-y-auto overflow-x-hidden">
                 {conversations.length === 0 ? (
                   <div className="p-4 text-center text-muted-foreground">
                     Aucune conversation
