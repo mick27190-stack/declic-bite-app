@@ -19,7 +19,6 @@ import deliveryScooterUrl from '@/assets/delivery-scooter.png';
 
 import { useOpeningHours, useSiteActivityBadges } from '@/hooks/useOpeningHours';
 import { formatWindows, parisDayOfWeek } from '@/lib/openingHours';
-import { restaurants } from '@/data/pizzas';
 
 const heroPoster = heroPosterUrl;
 
@@ -28,8 +27,16 @@ function TodayHoursBadge() {
   const { getWindows } = useOpeningHours();
   const dow = parisDayOfWeek(new Date());
   const conches = formatWindows(getWindows('conches', dow));
+  const beaumont = formatWindows(getWindows('beaumont', dow));
 
-  return <span className="text-sm text-foreground">{conches}</span>;
+  if (conches === beaumont) {
+    return <span className="text-sm text-foreground">{conches}</span>;
+  }
+  return (
+    <span className="text-sm text-foreground">
+      Conches {conches} · Beaumont {beaumont}
+    </span>
+  );
 }
 
 
@@ -142,10 +149,7 @@ export default function LandingPage() {
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 relative z-10">
         {!showRestaurantSelector && closures.length > 0 && (
           <div className="w-full max-w-md mb-8 space-y-3">
-            {/* Ne montrer que les fermetures des établissements encore proposés (site 'all' ou existant). */}
-            {closures
-              .filter((closure) => closure.site === 'all' || restaurants.some((r) => r.id === closure.site))
-              .map((closure) => {
+            {closures.map((closure) => {
               const type = closure.closure_type === 'site' ? 'site' : 'orders';
               const label = `${closureTitle(type)}${closure.site !== 'all' ? ` — ${siteLabel(closure.site)}` : ''}`;
               return (
@@ -318,6 +322,7 @@ export default function LandingPage() {
       <div className="relative z-10 flex items-center justify-center gap-6 pb-2 px-4">
         {[
           { label: 'Conches', href: 'https://www.facebook.com/Delicepiza', iconRight: false },
+          { label: 'Beaumont', href: 'https://www.facebook.com/DeclicPizzaBeaumont', iconRight: true },
         ].map((badge) => (
           <a
             key={badge.href}
@@ -390,7 +395,7 @@ export default function LandingPage() {
           </button>
         </nav>
         <p className="text-xs text-muted-foreground">
-          © 2026 Déclic Pizza • Conches-en-Ouche
+          © 2026 Déclic Pizza • Conches & Beaumont
         </p>
       </footer>
     </div>
