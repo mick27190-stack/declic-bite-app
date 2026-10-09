@@ -318,7 +318,6 @@ export default function LandingPage() {
       <div className="relative z-10 flex items-center justify-center gap-6 pb-2 px-4">
         {[
           { label: 'Conches', href: 'https://www.facebook.com/Delicepiza', iconRight: false },
-          { label: 'Beaumont', href: 'https://www.facebook.com/DeclicPizzaBeaumont', iconRight: true },
         ].map((badge) => (
           <a
             key={badge.href}
@@ -391,7 +390,7 @@ export default function LandingPage() {
           </button>
         </nav>
         <p className="text-xs text-muted-foreground">
-          © 2026 Déclic Pizza • Conches & Beaumont
+          © 2026 Déclic Pizza • Conches-en-Ouche
         </p>
       </footer>
     </div>
