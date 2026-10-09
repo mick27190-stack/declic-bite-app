@@ -484,13 +484,6 @@ export const restaurants: Restaurant[] = [
     phone: '02.32.38.41.77',
     hours: 'Mar-Dim: 18h-22h',
   },
-  {
-    id: 'beaumont',
-    name: 'Déclic Pizza Beaumont',
-    address: '66 Rue Saint Nicolas, 27170 Beaumont-le-Roger',
-    phone: '02.27.19.74.52',
-    hours: 'Mar-Dim: 18h-22h',
-  },
 ];
 
 export const categories = [
