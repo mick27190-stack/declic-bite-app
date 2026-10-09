@@ -3,7 +3,6 @@ import { CartItem, Restaurant, OrderType } from '@/types/pizza';
 import { PIZZA_CATEGORIES } from '@/lib/promo';
 import { getPizzaSizePrice, getNonPizzaPrice, getPairPromoForSize, computePairPromoLineTotal, getRawSizePrice } from '@/lib/pricing';
 import { usePricing } from '@/contexts/PricingContext';
-import { restaurants } from '@/data/pizzas';
 
 const STORAGE_KEY = 'declic-cart-state';
 
@@ -11,22 +10,13 @@ function loadPersistedState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const state = JSON.parse(raw) as {
+    return JSON.parse(raw) as {
       items?: CartItem[];
       selectedRestaurant?: Restaurant | null;
       orderType?: OrderType;
       pickupTime?: string | null;
       deliveryAddress?: DeliveryAddress | null;
     };
-    // Si l'établissement mémorisé n'existe plus, on repart proprement :
-    // panier vidé et restaurant désélectionné.
-    if (
-      state.selectedRestaurant &&
-      !restaurants.some((r) => r.id === state.selectedRestaurant!.id)
-    ) {
-      return { ...state, items: [], selectedRestaurant: null };
-    }
-    return state;
   } catch {
     return null;
   }
