@@ -26,11 +26,13 @@ const siteOf = (o: { site: string | null; restaurant: string }): Site | null => 
   return null;
 };
 
-/** Une commande « sonne » tant qu'elle est en attente, non acquittée et pas en cours/échec de paiement. */
+/** Une commande « sonne » uniquement une fois le paiement autorisé par la banque
+ *  (jamais à l'arrivée du client sur la page de paiement), tant qu'elle est en
+ *  attente et non acquittée. */
 const shouldRing = (o: PendingOrder) =>
   !o.acquittee_le &&
   o.status === 'pending' &&
-  !['pending', 'failed', 'canceled', 'cancelled'].includes(o.capture_status ?? '');
+  ['authorized', 'captured'].includes(o.capture_status ?? '');
 
 const SITE_LABEL: Record<Site, string> = { conches: 'Conches', beaumont: 'Beaumont' };
 
