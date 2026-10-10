@@ -304,7 +304,7 @@ export default function LandingPage() {
                 <img
                   src={vendingLogoAsset.url}
                   alt="Logo Distri'Déclic Pizza Conches"
-                  className="w-14 h-14 shrink-0 object-contain drop-shadow-[0_4px_14px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-110"
+                  className="w-20 h-20 shrink-0 object-contain drop-shadow-[0_4px_14px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-110"
                 />
                 <div className="text-left flex-1">
                   <h3 className="text-lg font-display font-bold text-primary">
