@@ -4,7 +4,7 @@ export default function CGVPage() {
   return (
     <LegalLayout
       title="Conditions générales de vente"
-      intro={<p>Déclic Pizza — Dernière mise à jour : 04/09/2026</p>}
+      intro={<p>Déclic Pizza — Dernière mise à jour : 10/10/2026</p>}
     >
       <LegalH2>Article 1 — Objet et identification des vendeurs</LegalH2>
       <LegalP>
@@ -328,7 +328,45 @@ export default function CGVPage() {
         saisis.
       </LegalP>
 
-      <LegalH2>Article 15 — Modification des CGV</LegalH2>
+      <LegalH2>Article 15 — Distributeur automatique Déclic Pizza</LegalH2>
+      <LegalP>
+        <strong className="font-semibold text-foreground">15.1.</strong> Un
+        distributeur automatique de pizzas « Déclic Pizza » est installé à Bel'O Jet,
+        27190 Conches. Il est accessible 24h/24, y compris en dehors des horaires
+        d'ouverture des établissements. Les produits achetés au distributeur doivent
+        être retirés sur place : ils ne font l'objet d'aucune livraison.
+      </LegalP>
+      <LegalP>
+        <strong className="font-semibold text-foreground">15.2.</strong> Les ventes
+        conclues via ce distributeur sont réalisées par l'exploitant de Déclic Pizza
+        Conches (Thierry Dupont), seul vendeur des produits qui y sont proposés. Les
+        produits disponibles, les prix et les conditions de paiement sont ceux affichés
+        sur le distributeur au moment de l'achat. Les achats effectués au distributeur
+        sont distincts des commandes passées sur le Site declicpizza.fr.
+      </LegalP>
+      <LegalP>
+        <strong className="font-semibold text-foreground">15.3. Contact en cas de
+        problème.</strong> Pour tout problème rencontré avec le distributeur (somme
+        débitée sans produit remis, produit non conforme ou manquant, distributeur en
+        panne, demande de remboursement, etc.), le Client doit contacter Déclic Pizza
+        Conches au{' '}
+        <a
+          href="tel:+33232384177"
+          className="text-primary underline hover:text-primary/80"
+        >
+          02 32 38 41 77
+        </a>
+        , en indiquant la date et l'heure de l'achat ainsi que, le cas échéant, le
+        ticket ou la référence remis par le distributeur.
+      </LegalP>
+      <LegalP>
+        <strong className="font-semibold text-foreground">15.4.</strong> Le droit de
+        rétractation n'est pas applicable aux produits achetés au distributeur, pour les
+        mêmes motifs que ceux visés à l'article 8. Les réclamations relatives au
+        distributeur sont traitées selon la procédure décrite à l'article 10.
+      </LegalP>
+
+      <LegalH2>Article 16 — Modification des CGV</LegalH2>
       <LegalP>
         Les CGV applicables sont celles en vigueur à la date de la commande.
       </LegalP>
