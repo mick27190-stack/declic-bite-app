@@ -1,7 +1,7 @@
 import { openCookiePreferences } from '@/lib/cookieConsent';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ChevronRight, MapPin, Clock, Store, ExternalLink, AlertTriangle, Pizza } from 'lucide-react';
+import { ChevronRight, MapPin, Clock, ExternalLink, AlertTriangle, Pizza } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { RestaurantSelector } from '@/components/RestaurantSelector';
 import { UserBadge } from '@/components/UserBadge';
@@ -16,6 +16,7 @@ import { Restaurant } from '@/types/pizza';
 import { preloadHeroMedia, heroPosterUrl } from '@/lib/heroPreload';
 import wordmarkAsset from '@/assets/declic-wordmark.png.asset.json';
 import deliveryScooterUrl from '@/assets/delivery-scooter.png';
+import vendingLogoAsset from '@/assets/distri-declic-conches.png.asset.json';
 
 import { useOpeningHours, useSiteActivityBadges } from '@/hooks/useOpeningHours';
 import { formatWindows, parisDayOfWeek } from '@/lib/openingHours';
@@ -300,9 +301,11 @@ export default function LandingPage() {
                 rel="noopener noreferrer"
                 className="w-full glass-card p-5 flex items-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 border border-border/50 group"
               >
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shrink-0 shadow-glow group-hover:scale-110 transition-transform duration-300">
-                  <Store className="w-7 h-7 text-primary-foreground" />
-                </div>
+                <img
+                  src={vendingLogoAsset.url}
+                  alt="Logo Distri'Déclic Pizza Conches"
+                  className="w-14 h-14 shrink-0 object-contain drop-shadow-[0_4px_14px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-110"
+                />
                 <div className="text-left flex-1">
                   <h3 className="text-lg font-display font-bold text-primary">
                     Distributeur Déclic Pizza - Conches
