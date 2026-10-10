@@ -308,7 +308,7 @@ export default function LandingPage() {
                 />
                 <div className="text-left flex-1">
                   <h3 className="text-lg font-display font-bold text-primary">
-                    Distributeur Déclic Pizza - Conches
+                    Distributeur Déclic Pizza -&nbsp;Conches
                   </h3>
                   <p className="text-sm text-muted-foreground">
                     Disponible 24h/24 • Commandez en ligne
