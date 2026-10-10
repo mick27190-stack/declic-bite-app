@@ -94,6 +94,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const setRestaurant = (restaurant: Restaurant) => {
+    // Changing site invalidates the delivery address validated for the other site.
+    if (selectedRestaurant?.id !== restaurant.id) {
+      setDeliveryAddressState(null);
+    }
     setSelectedRestaurant(restaurant);
   };
 
