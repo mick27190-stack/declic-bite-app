@@ -8,7 +8,7 @@ const order = {
   restaurant: 'beaumont',
   created_at: new Date().toISOString(),
   status: 'pending',
-  capture_status: 'requires_capture',
+  capture_status: 'authorized',
   acquittee_le: null,
 };
 
