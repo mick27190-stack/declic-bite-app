@@ -756,7 +756,7 @@ export default function AdminOrderHistoryPage() {
                           key={order.id}
                           className="rounded-md border bg-background"
                         >
-                          <div className="flex items-center justify-between gap-3 p-3 text-sm">
+                          <div className="flex flex-col gap-3 p-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                             <div className="min-w-0">
                               <p className="font-medium truncate">
                                 #{order.id.slice(0, 8)}
@@ -776,7 +776,7 @@ export default function AdminOrderHistoryPage() {
                                 </a>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
                               <Badge className={`${statusColors[order.status]} text-white`}>
                                 {statusLabels[order.status]}
                               </Badge>
