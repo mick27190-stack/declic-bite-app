@@ -4,7 +4,7 @@ export default function CGVPage() {
   return (
     <LegalLayout
       title="Conditions générales de vente"
-      intro={<p>Déclic Pizza — Dernière mise à jour : 10/10/2026</p>}
+      intro={<p>Déclic Pizza — Dernière mise à jour : 14/10/2026</p>}
     >
       <LegalH2>Article 1 — Objet et identification des vendeurs</LegalH2>
       <LegalP>
@@ -20,7 +20,7 @@ export default function CGVPage() {
       <LegalEntity
         name="Déclic Pizza Conches"
         lines={[
-          'Exploitant : Thierry DUPONT, Entrepreneur individuel (artisan)',
+          'Exploitant : Déclic Pizza Conches, Entrepreneur individuel (artisan)',
           'SIREN : 452 109 002 — SIRET : 452 109 002 00033',
           'Adresse : 1 Place Carnot, 27190 Conches-en-Ouche',
           'Code APE : 5610C — Restauration de type rapide',
@@ -32,7 +32,7 @@ export default function CGVPage() {
       <LegalEntity
         name="Déclic Pizza Beaumont"
         lines={[
-          'Exploitant : Flora DUPONT, Entrepreneur individuel',
+          'Exploitant : Déclic Pizza Beaumont, Entrepreneur individuel',
           'SIREN : 505 301 192 — SIRET : 505 301 192 00033',
           'Adresse : 66 Rue Saint Nicolas, 27170 Beaumont-le-Roger',
           'Code APE : 5610C — Restauration de type rapide',
@@ -266,7 +266,7 @@ export default function CGVPage() {
       <LegalList
         items={[
           <>
-            Déclic Pizza Conches (Thierry Dupont) : téléphone 02 32 38 41 77 — chat
+            Déclic Pizza Conches : téléphone 02 32 38 41 77 — chat
             disponible sur le Site — e-mail{' '}
             <a
               href="mailto:declicpizza@gmail.com"
@@ -276,7 +276,7 @@ export default function CGVPage() {
             </a>
           </>,
           <>
-            Déclic Pizza Beaumont (Flora Dupont) : téléphone 02 27 19 74 52 — chat
+            Déclic Pizza Beaumont : téléphone 02 27 19 74 52 — chat
             disponible sur le Site — e-mail{' '}
             <a
               href="mailto:declicpizza@gmail.com"
@@ -339,7 +339,7 @@ export default function CGVPage() {
       <LegalP>
         <strong className="font-semibold text-foreground">15.2.</strong> Les ventes
         conclues via ce distributeur sont réalisées par l'exploitant de Déclic Pizza
-        Conches (Thierry Dupont), seul vendeur des produits qui y sont proposés. Les
+        Conches, seul vendeur des produits qui y sont proposés. Les
         produits disponibles, les prix et les conditions de paiement sont ceux affichés
         sur le distributeur au moment de l'achat. Les achats effectués au distributeur
         sont distincts des commandes passées sur le Site declicpizza.fr.
