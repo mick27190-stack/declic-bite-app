@@ -305,8 +305,17 @@ export default function LandingPage() {
                   const isAndroid = /Android/i.test(ua);
                   if (isIOS) {
                     e.preventDefault();
-                    // L'App Store propose « Ouvrir » si l'app est déjà installée
-                    window.location.href = 'https://apps.apple.com/fr/app/smart-pizza/id1603849374';
+                    // Option 2 : on tente d'ouvrir l'app directement ; si elle n'est
+                    // pas installée, l'App Store s'ouvre après ~1,5 s sans message d'erreur.
+                    const appStoreUrl = 'https://apps.apple.com/fr/app/smart-pizza/id1603849374';
+                    const fallback = window.setTimeout(() => {
+                      window.location.href = appStoreUrl;
+                    }, 1500);
+                    const cancelFallback = () => window.clearTimeout(fallback);
+                    // Si l'app s'ouvre, la page passe en arrière-plan : on annule le repli.
+                    document.addEventListener('visibilitychange', cancelFallback, { once: true });
+                    window.addEventListener('pagehide', cancelFallback, { once: true });
+                    window.location.href = 'smartpizza://';
                   } else if (isAndroid) {
                     e.preventDefault();
                     // Ouvre l'app si installée, sinon Google Play automatiquement
