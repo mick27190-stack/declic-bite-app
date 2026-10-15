@@ -173,31 +173,30 @@ serve(async (req) => {
     const addressLocation = geocodeData.results[0].geometry.location;
     console.log(`Address coordinates: ${addressLocation.lat}, ${addressLocation.lng}`);
 
-    // Step 2: Compute driving distance via Routes API (computeRouteMatrix)
-    let matrixData;
+    // Step 2: Compute driving routes (with alternatives) and keep the SHORTEST
+    // one in kilometers — Google defaults to the fastest route, which often
+    // detours via main roads and overstates the real distance.
+    let routesData;
     try {
-      const matrixResult = await gatewayFetch(
-        '/routes/distanceMatrix/v2:computeRouteMatrix',
+      const routesResult = await gatewayFetch(
+        '/routes/directions/v2:computeRoutes',
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Goog-FieldMask': 'originIndex,destinationIndex,distanceMeters,duration,condition',
+            'X-Goog-FieldMask': 'routes.distanceMeters,routes.duration',
           },
           body: JSON.stringify({
-            origins: [{
-              waypoint: { location: { latLng: { latitude: restaurantCoords.lat, longitude: restaurantCoords.lng } } },
-            }],
-            destinations: [{
-              waypoint: { location: { latLng: { latitude: addressLocation.lat, longitude: addressLocation.lng } } },
-            }],
+            origin: { location: { latLng: { latitude: restaurantCoords.lat, longitude: restaurantCoords.lng } } },
+            destination: { location: { latLng: { latitude: addressLocation.lat, longitude: addressLocation.lng } } },
             travelMode: 'DRIVE',
+            computeAlternativeRoutes: true,
           }),
         },
         lovableApiKey,
         connectionKeys,
       );
-      matrixData = matrixResult.data;
+      routesData = routesResult.data;
     } catch (error) {
       console.error(`Routes gateway error: ${error instanceof Error ? error.message : String(error)}`);
       return new Response(
@@ -205,15 +204,23 @@ serve(async (req) => {
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    const element = Array.isArray(matrixData) ? matrixData[0] : matrixData;
 
-    if (!element || element.condition !== 'ROUTE_EXISTS' || typeof element.distanceMeters !== 'number') {
-      console.error(`No route found: ${JSON.stringify(element)}`);
+    const routes: Array<{ distanceMeters?: number; duration?: string }> =
+      Array.isArray(routesData?.routes) ? routesData.routes : [];
+    const validRoutes = routes
+      .filter((r) => r && typeof r.duration === 'string')
+      .map((r) => ({ distanceMeters: typeof r.distanceMeters === 'number' ? r.distanceMeters : 0, duration: r.duration as string }));
+
+    if (validRoutes.length === 0) {
+      console.error(`No route found: ${JSON.stringify(routesData)}`);
       return new Response(
         JSON.stringify({ isInZone: false, error: 'Itinéraire non trouvé', distanceKm: null }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    const element = validRoutes.reduce((best, r) => (r.distanceMeters < best.distanceMeters ? r : best));
+    console.log(`Routes considered: ${validRoutes.map((r) => r.distanceMeters).join(', ')} m → shortest ${element.distanceMeters} m`);
 
     const distanceMeters = element.distanceMeters;
     const distanceKm = distanceMeters / 1000;
