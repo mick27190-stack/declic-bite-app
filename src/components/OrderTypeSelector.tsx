@@ -2,7 +2,7 @@ import { Truck, ShoppingBag } from 'lucide-react';
 import { OrderType } from '@/types/pizza';
 
 interface OrderTypeSelectorProps {
-  value: OrderType;
+  value: OrderType | null;
   onChange: (type: OrderType) => void;
   deliveryDisabled?: boolean;
   takeawayDisabled?: boolean;

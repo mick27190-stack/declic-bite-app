@@ -19,6 +19,7 @@ import { validateDeliverySlot } from '@/lib/pickupSlots';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 import { StripePaymentDialog } from '@/components/StripePaymentDialog';
 import { useLoyaltyPreview } from '@/hooks/useLoyalty';
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog';
 
 
 
@@ -36,6 +37,9 @@ export function CartView() {
   const { toast } = useToast();
   const { createOrder } = useOrders({ autoFetch: false });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Aucun mode pré-sélectionné : le client doit choisir explicitement.
+  const [typeChosen, setTypeChosen] = useState(false);
+  const [confirmTakeaway, setConfirmTakeaway] = useState(false);
   // Commande créée en base, en attente de la pré-autorisation bancaire.
   const [pendingPayment, setPendingPayment] = useState<{
     orderId: string;
@@ -113,11 +117,12 @@ export function CartView() {
   }, 0);
   const belowMinimum = needsMinimum && pizzaEquivalents < 2;
   // Address not yet validated for the selected delivery site.
-  const needsAddress = orderType === 'livraison' && !deliveryAddress;
+  const needsAddress = typeChosen && orderType === 'livraison' && !deliveryAddress;
 
   const canCheckout = () => {
     if (isClosed) return false;
     if (items.length === 0) return false;
+    if (!typeChosen) return false;
     if (!selectedRestaurant) return false;
     if (orderType === 'emporter' && !pickupTime) return false;
     if (orderType === 'emporter' && cutoff.isTakeawayCutoff) return false;
@@ -246,8 +251,12 @@ export function CartView() {
       {/* Order Type Selection */}
       <div className="glass-card p-4">
         <OrderTypeSelector 
-          value={orderType} 
-          onChange={setOrderType}
+          value={typeChosen ? orderType : null}
+          onChange={(t) => {
+            if (t === 'emporter') { setConfirmTakeaway(true); return; }
+            setOrderType(t);
+            setTypeChosen(true);
+          }}
           disabled={isClosed}
           takeawayDisabled={cutoff.isTakeawayCutoff}
           deliveryDisabled={cutoff.isDeliveryCutoff}
@@ -256,7 +265,7 @@ export function CartView() {
 
 
       {/* Delivery Flow */}
-      {orderType === 'livraison' && (
+      {typeChosen && orderType === 'livraison' && (
         <div className="glass-card p-4">
           <DeliveryZoneChecker 
             disabled={isClosed}
@@ -277,7 +286,7 @@ export function CartView() {
       )}
 
       {/* Delivery time selection */}
-      {orderType === 'livraison' && deliveryAddress && !isClosed && (
+      {typeChosen && orderType === 'livraison' && deliveryAddress && !isClosed && (
         <div className="glass-card p-4">
           <DeliveryTimeSelector
             value={pickupTime}
@@ -320,7 +329,7 @@ export function CartView() {
 
 
       {/* Pickup Flow */}
-      {orderType === 'emporter' && !cutoff.isTakeawayCutoff && (
+      {typeChosen && orderType === 'emporter' && !cutoff.isTakeawayCutoff && (
         <div className="glass-card p-4">
           <PickupTimeSelector 
             value={pickupTime}
@@ -468,6 +477,8 @@ export function CartView() {
                   `Ouvert ${formatWindows(windows)}`
                 ) : !selectedRestaurant ? (
                   'Choisissez un restaurant'
+                ) : !typeChosen ? (
+                  'Choisissez emporter ou livraison'
                 ) : !user ? (
                   'Se connecter pour commander'
                 ) : orderType === 'livraison' && !deliveryAddress ? (
@@ -486,6 +497,29 @@ export function CartView() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={confirmTakeaway} onOpenChange={setConfirmTakeaway}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>🛍️ Retrait au restaurant</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vous choisissez de venir récupérer vous-même votre commande au restaurant {selectedRestaurant?.name ?? 'Déclic Pizza'}.
+              Si vous préférez être livré à domicile, choisissez la livraison.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              disabled={cutoff.isDeliveryCutoff}
+              onClick={() => { setOrderType('livraison'); setTypeChosen(true); }}
+            >
+              Choisir la livraison
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => { setOrderType('emporter'); setTypeChosen(true); }}>
+              Je viens au restaurant
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Pré-autorisation bancaire (capture différée) */}
       <StripePaymentDialog
