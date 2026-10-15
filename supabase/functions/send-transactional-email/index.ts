@@ -99,10 +99,25 @@ Deno.serve(async (req) => {
   }
   const isAdmin = (rolesRows ?? []).some((r: { role: string }) => ADMIN_ROLES.has(r.role))
   if (!isAdmin) {
-    return new Response(
-      JSON.stringify({ error: 'Forbidden' }),
-      { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
+    // Exception : un client peut recevoir SA facture, uniquement à l'adresse
+    // e-mail de son propre profil (bouton « Demander une facture »).
+    let allowed = false
+    try {
+      const peek = await req.clone().json()
+      const tpl = peek.templateName || peek.template_name
+      const to = String(peek.recipientEmail || peek.recipient_email || '').trim().toLowerCase()
+      if (tpl === 'invoice' && to) {
+        const { data: prof } = await adminAuthClient
+          .from('profiles').select('email').eq('user_id', callerId).maybeSingle()
+        allowed = (prof?.email ?? '').trim().toLowerCase() === to
+      }
+    } catch { allowed = false }
+    if (!allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
   }
 
 

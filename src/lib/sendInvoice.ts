@@ -121,11 +121,8 @@ export async function generateAndSendInvoice(
       },
     },
   });
-  if (mailErr) throw mailErr;
-
-  // Enregistrement dans la section « Factures » de l'admin.
-  // Passe par une fonction serveur : le client comme l'admin peuvent ainsi
-  // archiver la facture, quelles que soient les permissions de la table.
+  // Enregistrement dans la section « Factures » de l'admin, même si l'e-mail
+  // échoue, pour que l'admin puisse toujours la retrouver et la renvoyer.
   const { error: recErr } = await supabase.rpc('record_invoice', {
     _order_id: order.id,
     _invoice_number: reference,
@@ -136,6 +133,7 @@ export async function generateAndSendInvoice(
     _customer_phone: profile?.phone ?? (order as any).customer_phone ?? null,
   });
   if (recErr) console.warn('Failed to record invoice:', recErr);
+  if (mailErr) throw mailErr;
 
 
   return { invoiceNumber: reference, email, totalTTC, isInvoice };
