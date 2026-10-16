@@ -41,7 +41,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
   
   const { addItem } = useCart();
   usePricing();
-  const { manualClosure, isOrderingClosed } = useOrderingStatus();
+  const { manualClosure, isOrderingClosed, isDayClosed, dayClosedLabel } = useOrderingStatus();
   const { toast } = useToast();
   const isOrderingBlocked = isOrderingClosed || !!manualClosure;
 
@@ -300,7 +300,7 @@ export function PizzaDetailModal({ pizza, onClose }: PizzaDetailModalProps) {
             </div>
           ) : isOrderingClosed ? (
             <Button variant="hero" size="xl" className="w-full" disabled>
-              Commandes fermées
+              {isDayClosed ? dayClosedLabel : 'Commandes fermées'}
             </Button>
           ) : (
             <Button

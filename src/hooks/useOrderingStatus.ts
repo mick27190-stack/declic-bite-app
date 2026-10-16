@@ -56,6 +56,8 @@ export function useOrderingStatus() {
   return {
     now,
     isMonday,
+    isDayClosed,
+    dayClosedLabel: `Fermé le ${DAY_LABELS[dow].toLowerCase()}`,
     isSunday,
     isOutsideHours,
     manualClosure,
