@@ -71,6 +71,7 @@ export function CartView() {
   const {
     now,
     isMonday,
+    dayClosedLabel,
     isOutsideHours,
     manualClosure,
     isClosed,
@@ -468,6 +469,7 @@ export function CartView() {
                   </span>
                 </span>
               ) : (
+                (isMonday && !manualClosure ? dayClosedLabel : null) ??
                 getCutoffButtonLabel(cutoff, { orderType, canCheckout: canCheckout() }, serviceWindow) ??
                 (manualClosure ? (
                   closureTitle(manualClosure.closure_type === 'site' ? 'site' : 'orders')
