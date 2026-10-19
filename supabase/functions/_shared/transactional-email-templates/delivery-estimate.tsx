@@ -20,6 +20,7 @@ interface DeliveryEstimateProps {
   estimatedTime?: string
   acceptUrl?: string
   refuseUrl?: string
+  orderType?: string
 }
 
 const DeliveryEstimateEmail = ({
@@ -28,21 +29,25 @@ const DeliveryEstimateEmail = ({
   estimatedTime,
   acceptUrl,
   refuseUrl,
+  orderType,
 }: DeliveryEstimateProps) => {
   const greeting = customerName ? `Bonsoir ${customerName},` : 'Bonsoir,'
+  const pickup = orderType === 'emporter'
+  const kind = pickup ? 'retrait' : 'livraison'
   return (
     <Html lang="fr" dir="ltr">
       <Head />
-      <Preview>Nouvel horaire de livraison proposé — merci de confirmer</Preview>
+      <Preview>{`Nouvel horaire de ${kind} proposé — merci de confirmer`}</Preview>
       <Body style={main}>
         <Container style={container}>
           <Heading style={brand}>🍕 Déclic Pizza</Heading>
           <Text style={text}>{greeting}</Text>
           <Text style={text}>
-            Malheureusement nos disponibilités de livraison ne nous permettent pas
-            de livrer votre commande à l’heure que vous souhaitez
+            {pickup
+              ? 'Malheureusement nos disponibilités en cuisine ne nous permettent pas de préparer votre commande pour l’heure de retrait que vous souhaitez'
+              : 'Malheureusement nos disponibilités de livraison ne nous permettent pas de livrer votre commande à l’heure que vous souhaitez'}
             {requestedTime ? ` (${requestedTime})` : ''}, nous vous proposons un
-            nouvel horaire de livraison estimé
+            nouvel horaire de {kind} estimé
             {estimatedTime ? ` : ${estimatedTime}` : ''}.
           </Text>
           <Text style={text}>
