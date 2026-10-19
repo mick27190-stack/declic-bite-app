@@ -183,7 +183,7 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
       try {
         const { data: order } = await supabase
           .from('orders')
-          .select('user_id, pickup_time')
+          .select('user_id, pickup_time, order_type')
           .eq('id', orderId)
           .single();
 
@@ -217,6 +217,7 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
                 idempotencyKey: `delivery-estimate-${orderId}-${estimate}`,
                 templateData: {
                   customerName: fullName || undefined,
+                  orderType: order.order_type,
                   requestedTime: order.pickup_time || undefined,
                   estimatedTime: estimate,
                   acceptUrl: acceptTok ? `${base}?token=${acceptTok}` : undefined,
@@ -232,7 +233,7 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
 
       toast({
         title: 'Horaire envoyé',
-        description: `Horaire de livraison proposé : ${estimate}`,
+        description: `Nouvel horaire proposé : ${estimate}`,
       });
     } catch (error) {
       console.error('Error setting delivery estimate:', error);

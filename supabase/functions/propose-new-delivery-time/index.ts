@@ -19,7 +19,8 @@ Deno.serve(async (req) => {
       .eq('id', orderId)
       .single();
     if (error || !order) throw new Error('Commande introuvable');
-    if (order.order_type !== 'livraison') throw new Error('Réservé aux commandes en livraison');
+    if (order.order_type !== 'livraison' && order.order_type !== 'emporter') throw new Error('Type de commande non pris en charge');
+    const isPickup = order.order_type === 'emporter';
 
     const site = resolveSite(order.site ?? order.restaurant);
     await requireAdminForSite(req, site);
@@ -38,8 +39,8 @@ Deno.serve(async (req) => {
     // Notification push au client (send_push_on_notification la relaie en FCM)
     await sb.from('notifications').insert({
       user_id: order.user_id,
-      title: 'Nouvel horaire de livraison proposé',
-      body: `Le restaurant vous propose une livraison à ${proposedTime}. Touchez pour accepter ou refuser.`,
+      title: isPickup ? 'Nouvel horaire de retrait proposé' : 'Nouvel horaire de livraison proposé',
+      body: `Le restaurant vous propose ${isPickup ? 'un retrait' : 'une livraison'} à ${proposedTime}. Touchez pour accepter ou refuser.`,
       type: 'new_order',
       reference_id: order.id,
       site,

@@ -63,7 +63,7 @@ function DeliveryEstimateControl({
   return (
     <div className="mt-4 border-t pt-3 space-y-2">
       <p className="text-sm font-medium flex items-center gap-1">
-        <Clock className="h-4 w-4" /> Horaire de livraison estimé
+        <Clock className="h-4 w-4" /> {order.order_type === 'emporter' ? 'Proposer un nouvel horaire de retrait' : 'Horaire de livraison estimé'}
       </p>
       {awaiting && (
         <div className="rounded-md border border-yellow-500/50 bg-yellow-500/10 p-3 space-y-1.5">
@@ -590,7 +590,7 @@ export default function AdminOrdersPage() {
                         <Badge variant="secondary">
                           {order.order_type === 'livraison' ? '🚗 Livraison' : '🏪 À emporter'}
                         </Badge>
-                        {order.order_type === 'livraison' && isAwaitingCustomerResponse(order) && (
+                        {isAwaitingCustomerResponse(order) && (
                           <Badge variant="outline" className="border-yellow-500 text-yellow-700 dark:text-yellow-400">
                             ⏳ Réponse client en attente
                           </Badge>
@@ -729,7 +729,7 @@ export default function AdminOrdersPage() {
 
 
 
-                    {order.order_type === 'livraison' && (
+                    {(order.order_type === 'livraison' || order.order_type === 'emporter') && (
 
                       <DeliveryEstimateControl
                         order={order}
