@@ -187,7 +187,7 @@ function CurrentOrders() {
             const isCancelled = order.status === 'cancelled';
             const awaitingResponse =
               !isCancelled &&
-              order.order_type === 'livraison' &&
+              (order.order_type === 'livraison' || order.order_type === 'emporter') &&
               !!order.delivery_estimate &&
               !order.delivery_response;
 
@@ -274,11 +274,11 @@ function CurrentOrders() {
                   </p>
                 )}
 
-                {order.order_type === 'livraison' && order.delivery_estimate && (
+                {order.delivery_estimate && (
                   <div className="mt-2 p-2 rounded-md bg-primary/5 border border-primary/20">
                     <p className="text-sm flex items-center gap-1.5">
                       <Clock className="w-4 h-4 text-primary" />
-                      Nouvel horaire proposé par le restaurant : <strong>{order.delivery_estimate}</strong>
+                      {order.order_type === 'emporter' ? 'Nouvel horaire de retrait proposé' : 'Nouvel horaire proposé par le restaurant'} : <strong>{order.delivery_estimate}</strong>
                     </p>
 
                     {awaitingResponse && (
