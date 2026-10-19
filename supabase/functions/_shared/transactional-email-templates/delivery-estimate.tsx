@@ -72,7 +72,7 @@ const DeliveryEstimateEmail = ({
             l’application.
           </Text>
           <Text style={text}>
-            Vous pouvez également ACCEPTER ou REFUSER le nouvel horaire de livraison estimé via ce mail.
+            Vous pouvez également ACCEPTER ou REFUSER le nouvel horaire de {kind} estimé via ce mail.
           </Text>
           <Text style={text}>
             En cas de <strong>REFUS</strong> de votre part, votre commande sera
@@ -92,8 +92,8 @@ const DeliveryEstimateEmail = ({
 
 export const template = {
   component: DeliveryEstimateEmail,
-  subject: 'Nouvel horaire de livraison proposé — Déclic Pizza',
-  displayName: 'Nouvel horaire de livraison',
+  subject: (d: Record<string, unknown>) => d?.orderType === 'emporter' ? 'Nouvel horaire de retrait proposé — Déclic Pizza' : 'Nouvel horaire de livraison proposé — Déclic Pizza',
+  displayName: 'Nouvel horaire de livraison / retrait',
   previewData: {
     customerName: 'Jean Dupont',
     requestedTime: '20:00',
