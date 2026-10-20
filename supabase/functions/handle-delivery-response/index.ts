@@ -1,6 +1,8 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { cancelPaymentIntent, capturePaymentIntent, resolveSite } from '../_shared/stripe.ts'
+import { assignInvoiceNumber } from '../_shared/invoiceNumber.ts'
+import { sendOrderCancelledEmail } from '../_shared/orderCancelledEmail.ts'
 
 
 const APP_URL = 'https://declicpizza.fr'
@@ -44,7 +46,7 @@ Deno.serve(async (req) => {
   // Load current order state
   const { data: order } = await supabase
     .from('orders')
-    .select('id, delivery_response, status, restaurant, site, stripe_payment_intent_id, capture_status, delivery_time_proposed')
+    .select('id, delivery_response, status, restaurant, site, stripe_payment_intent_id, capture_status, delivery_time_proposed, invoice_number')
     .eq('id', tok.order_id)
     .maybeSingle()
 
@@ -72,11 +74,21 @@ Deno.serve(async (req) => {
     if (accepted) return redirect('error', order.id)
   }
 
+  let invoiceNumber: string | null = null
+  if (accepted) {
+    try {
+      invoiceNumber = await assignInvoiceNumber(supabase, site, order.invoice_number)
+    } catch (e) {
+      console.error('Invoice number assignment failed:', (e as Error).message)
+    }
+  }
+
   const { error: updErr } = await supabase
     .from('orders')
     .update(
       accepted
         ? {
+            ...(invoiceNumber ? { invoice_number: invoiceNumber } : {}),
             delivery_response: 'accepted',
             delivery_time_confirmed: order.delivery_time_proposed ?? new Date().toISOString(),
             order_status: 'confirmed',
@@ -97,6 +109,14 @@ Deno.serve(async (req) => {
     return redirect('error', tok.order_id)
   }
 
+
+  if (!accepted) {
+    try {
+      await sendOrderCancelledEmail(supabase, order.id, 'delivery_time_refused')
+    } catch (e) {
+      console.error('Cancellation email failed:', (e as Error).message)
+    }
+  }
 
   // Mark all tokens for this order used
   await supabase.from('delivery_response_tokens')
