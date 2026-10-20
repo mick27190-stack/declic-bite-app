@@ -4,7 +4,7 @@ export default function CGVPage() {
   return (
     <LegalLayout
       title="Conditions générales de vente"
-      intro={<p>Déclic Pizza — Dernière mise à jour : 14/10/2026</p>}
+      intro={<p>Déclic Pizza — Dernière mise à jour : 20/10/2026</p>}
     >
       <LegalH2>Article 1 — Objet et identification des vendeurs</LegalH2>
       <LegalP>
@@ -104,13 +104,17 @@ export default function CGVPage() {
         la commande, sous réserve de confirmation par l'établissement (voir Article 6).
       </LegalP>
       <LegalP>
-        <strong className="font-semibold text-foreground">4.4. Créneau de livraison :</strong>{' '}
-        le créneau indiqué par le Client lors de la commande est une proposition
-        transmise à l'établissement. L'établissement peut, si nécessaire, proposer un
-        créneau différent ; dans ce cas, le Client est recontacté directement
-        (téléphone, SMS ou message via le Site) afin de convenir d'un nouveau créneau.
-        La commande n'est considérée comme définitivement planifiée qu'après cette
-        confirmation.
+        <strong className="font-semibold text-foreground">4.4. Créneau de livraison ou horaire de retrait :</strong>{' '}
+        le créneau ou l'horaire de retrait indiqué par le Client lors de la commande
+        est une proposition transmise à l'établissement. Cette règle s'applique de la
+        même façon aux commandes en livraison et aux commandes à emporter.
+        L'établissement peut, si nécessaire, proposer un créneau ou un horaire de
+        retrait différent ; dans ce cas, le Client est recontacté directement
+        (téléphone, SMS, message via le Site ou e-mail comportant un lien à usage
+        unique lui permettant d'accepter ou de refuser) afin de convenir d'un nouvel
+        horaire. La commande n'est considérée comme définitivement planifiée qu'après
+        l'acceptation de cette proposition par le Client. À défaut d'acceptation, la
+        commande est annulée et aucune somme n'est débitée.
       </LegalP>
 
       <LegalH2>Article 5 — Paiement</LegalH2>
