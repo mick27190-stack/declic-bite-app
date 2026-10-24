@@ -1316,6 +1316,36 @@ export type Database = {
         }
         Relationships: []
       }
+      verification_delivery_monitor_state: {
+        Row: {
+          checked_until: string
+          id: number
+        }
+        Insert: {
+          checked_until?: string
+          id: number
+        }
+        Update: {
+          checked_until?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      verification_delivery_observations: {
+        Row: {
+          observed_at: string
+          outcome_key: string
+        }
+        Insert: {
+          observed_at?: string
+          outcome_key: string
+        }
+        Update: {
+          observed_at?: string
+          outcome_key?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1484,6 +1514,10 @@ export type Database = {
           _total_ttc: number
         }
         Returns: undefined
+      }
+      record_verification_delivery_outcome: {
+        Args: { outcome: Json }
+        Returns: boolean
       }
       remind_unacked_orders: { Args: never; Returns: undefined }
       request_invoice: { Args: { _order_id: string }; Returns: Json }

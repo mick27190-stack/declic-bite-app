@@ -379,6 +379,13 @@
       "when": 1790886515573,
       "tag": "0053_notify_super_admins_email_verification_failure",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1792862210131,
+      "tag": "0054_decouple_verification_failure_alerts",
+      "breakpoints": true
     }
   ]
 }
