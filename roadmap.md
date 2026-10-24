@@ -16,4 +16,4 @@
 
 - [x] Détacher les alertes Super Admins des mécanismes de relance des e-mails sans les perdre
 - [x] Tester les alertes et la conservation des échecs de validation
-- [ ] Relancer la mise à jour après le consentement requis
+- [x] Conserver la version actuelle : relance refusée par l'utilisateur
