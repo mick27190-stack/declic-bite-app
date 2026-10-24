@@ -11,3 +11,9 @@
 - [x] Réserver la réponse au client depuis son profil ou son e-mail
 - [x] Vérifier le bandeau administrateur et la protection côté serveur
 - [x] Confirmer les statuts Acceptée/Refusée et la notification push aux admins du site
+
+# Mise à jour des e-mails
+
+- [x] Détacher les alertes Super Admins des mécanismes de relance des e-mails sans les perdre
+- [x] Tester les alertes et la conservation des échecs de validation
+- [ ] Relancer la mise à jour après le consentement requis
