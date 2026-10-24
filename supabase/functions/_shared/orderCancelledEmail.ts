@@ -1,12 +1,7 @@
 /// <reference types="npm:@types/react@18.3.1" />
 
-import * as React from 'npm:react@18.3.1';
-import { renderAsync } from 'npm:@react-email/components@0.0.22';
-import { TEMPLATES } from './transactional-email-templates/registry.ts';
+import { sendAndLog } from './sendAndLog.ts';
 
-const SITE_NAME = 'Declic-Pizza-app';
-const SENDER_DOMAIN = 'notify.declicpizza.fr';
-const FROM_DOMAIN = 'notify.declicpizza.fr';
 const TEMPLATE_NAME = 'order-cancelled';
 
 export type CancellationReason =
@@ -34,12 +29,6 @@ const CAPTURED_PAYMENT_NOTICE =
 
 function euros(n: number): string {
   return `${n.toFixed(2).replace('.', ',')}€`;
-}
-
-function generateToken(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 // deno-lint-ignore no-explicit-any
@@ -130,35 +119,6 @@ export async function sendOrderCancelledEmail(
     }
     if (!recipientEmail) return;
 
-    const normalizedEmail = recipientEmail.toLowerCase();
-    const { data: suppressed } = await sb
-      .from('suppressed_emails')
-      .select('id')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
-    if (suppressed) return;
-
-    let unsubscribeToken: string;
-    const { data: existingToken } = await sb
-      .from('email_unsubscribe_tokens')
-      .select('token, used_at')
-      .eq('email', normalizedEmail)
-      .maybeSingle();
-    if (existingToken && !existingToken.used_at) {
-      unsubscribeToken = existingToken.token as string;
-    } else {
-      unsubscribeToken = generateToken();
-      await sb
-        .from('email_unsubscribe_tokens')
-        .upsert({ token: unsubscribeToken, email: normalizedEmail }, { onConflict: 'email', ignoreDuplicates: true });
-      const { data: stored } = await sb
-        .from('email_unsubscribe_tokens')
-        .select('token')
-        .eq('email', normalizedEmail)
-        .maybeSingle();
-      if (stored?.token) unsubscribeToken = stored.token as string;
-    }
-
     const orderDate = new Intl.DateTimeFormat('fr-FR', {
       timeZone: 'Europe/Paris',
       dateStyle: 'short',
@@ -198,52 +158,7 @@ export async function sendOrderCancelledEmail(
       total: euros(Number(order.total_price ?? 0)),
     };
 
-    const template = TEMPLATES[TEMPLATE_NAME];
-    if (!template) return;
-
-    const html = await renderAsync(React.createElement(template.component, templateData));
-    const plainText = await renderAsync(React.createElement(template.component, templateData), {
-      plainText: true,
-    });
-    const subject =
-      typeof template.subject === 'function' ? template.subject(templateData) : template.subject;
-
-    const messageId = crypto.randomUUID();
-    await sb.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: TEMPLATE_NAME,
-      recipient_email: recipientEmail,
-      status: 'pending',
-      metadata: { order_id: orderId, reason },
-    });
-
-    const { error: enqueueError } = await sb.rpc('enqueue_email', {
-      queue_name: 'transactional_emails',
-      payload: {
-        message_id: messageId,
-        to: recipientEmail,
-        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-        sender_domain: SENDER_DOMAIN,
-        subject,
-        html,
-        text: plainText,
-        purpose: 'transactional',
-        label: TEMPLATE_NAME,
-        idempotency_key: `order-cancelled:${orderId}`,
-        unsubscribe_token: unsubscribeToken,
-        queued_at: new Date().toISOString(),
-      },
-    });
-    if (enqueueError) {
-      await sb.from('email_send_log').insert({
-        message_id: messageId,
-        template_name: TEMPLATE_NAME,
-        recipient_email: recipientEmail,
-        status: 'failed',
-        error_message: enqueueError.message ?? 'Failed to enqueue email',
-        metadata: { order_id: orderId, reason },
-      });
-    }
+    await sendAndLog(sb, TEMPLATE_NAME, recipientEmail, templateData, `order-cancelled:${orderId}`, { order_id: orderId, reason });
   } catch (e) {
     console.error('sendOrderCancelledEmail failed:', (e as Error).message);
   }

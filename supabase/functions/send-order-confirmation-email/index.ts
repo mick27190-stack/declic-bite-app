@@ -1,15 +1,10 @@
 /// <reference types="npm:@types/react@18.3.1" />
 // Déclenchée par le trigger orders (status -> confirmed) via pg_net.
 // Ne bloque jamais la confirmation : toute erreur est journalisée.
-import * as React from 'npm:react@18.3.1';
-import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts';
+import { sendAndLog } from '../_shared/sendAndLog.ts';
 import { formatItems } from '../_shared/orderCancelledEmail.ts';
 
-const SITE_NAME = 'Declic-Pizza-app';
-const SENDER_DOMAIN = 'notify.declicpizza.fr';
-const FROM_DOMAIN = 'notify.declicpizza.fr';
 const TEMPLATE_NAME = 'order-confirmed';
 
 const json = (b: unknown, status = 200) =>
@@ -56,22 +51,6 @@ Deno.serve(async (req) => {
       recipientEmail = u?.user?.email ?? '';
     }
     if (!recipientEmail) { console.warn('order-confirmed: no email', orderId); return json({ skipped: 'no_email' }); }
-    const normalized = recipientEmail.toLowerCase();
-
-    const { data: suppressed } = await sb.from('suppressed_emails').select('id').eq('email', normalized).maybeSingle();
-    if (suppressed) return json({ skipped: 'suppressed' });
-
-    let token: string | undefined;
-    const { data: tok } = await sb.from('email_unsubscribe_tokens').select('token, used_at').eq('email', normalized).maybeSingle();
-    if (tok && !tok.used_at) token = tok.token;
-    else {
-      const b = new Uint8Array(32); crypto.getRandomValues(b);
-      token = Array.from(b).map((x) => x.toString(16).padStart(2, '0')).join('');
-      await sb.from('email_unsubscribe_tokens').upsert({ token, email: normalized }, { onConflict: 'email', ignoreDuplicates: true });
-      const { data: s } = await sb.from('email_unsubscribe_tokens').select('token').eq('email', normalized).maybeSingle();
-      if (s?.token) token = s.token;
-    }
-
     let unitPrices: number[] | undefined;
     try {
       const { data: lines } = await sb.rpc('compute_order_line_prices', { _items: order.items, _now: order.created_at });
@@ -95,25 +74,9 @@ Deno.serve(async (req) => {
       total: euros(Number(order.total_price ?? 0)),
     };
 
-    const t = TEMPLATES[TEMPLATE_NAME];
-    const html = await renderAsync(React.createElement(t.component, data));
-    const text = await renderAsync(React.createElement(t.component, data), { plainText: true });
-    const subject = typeof t.subject === 'function' ? t.subject(data) : t.subject;
-
-    const messageId = crypto.randomUUID();
-    await sb.from('email_send_log').insert({
-      message_id: messageId, template_name: TEMPLATE_NAME, recipient_email: recipientEmail,
-      status: 'pending', metadata: { order_id: orderId },
-    });
-    const { error } = await sb.rpc('enqueue_email', {
-      queue_name: 'transactional_emails',
-      payload: {
-        message_id: messageId, to: recipientEmail, from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-        sender_domain: SENDER_DOMAIN, subject, html, text, purpose: 'transactional', label: TEMPLATE_NAME,
-        idempotency_key: `order-confirmed:${orderId}`, unsubscribe_token: token, queued_at: new Date().toISOString(),
-      },
-    });
-    if (error) throw new Error(`enqueue failed: ${error.message}`);
+    const r = await sendAndLog(sb, TEMPLATE_NAME, recipientEmail, data, `order-confirmed:${orderId}`, { order_id: orderId });
+    if (r.outcome === 'suppressed') return json({ skipped: 'suppressed' });
+    if (r.outcome === 'failed') { console.error('send-order-confirmation-email failed:', orderId, r.error); return json({ error: r.error }, 500); }
     return json({ ok: true });
   } catch (e) {
     const msg = (e as Error).message;

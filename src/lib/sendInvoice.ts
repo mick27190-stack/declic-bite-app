@@ -106,7 +106,7 @@ export async function generateAndSendInvoice(
   if (signErr || !signed?.signedUrl) throw signErr ?? new Error('URL indisponible');
 
 
-  const { error: mailErr } = await supabase.functions.invoke('send-transactional-email', {
+  const { error: mailErr } = await supabase.functions.invoke('send-app-email', {
     body: {
       templateName: 'invoice',
       recipientEmail: email,

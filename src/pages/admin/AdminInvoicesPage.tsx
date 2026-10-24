@@ -235,7 +235,7 @@ export default function AdminInvoicesPage() {
       if (signErr || !signed?.signedUrl) throw signErr ?? new Error('URL indisponible');
 
       const orderDate = new Date(inv.sent_at).toLocaleDateString('fr-FR');
-      const { error: mailErr } = await supabase.functions.invoke('send-transactional-email', {
+      const { error: mailErr } = await supabase.functions.invoke('send-app-email', {
         body: {
           templateName: 'invoice',
           recipientEmail: inv.recipient_email,

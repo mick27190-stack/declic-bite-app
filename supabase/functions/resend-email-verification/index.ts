@@ -4,16 +4,9 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
 import { EmailChangeEmail } from '../_shared/email-templates/email-change.tsx'
+import { sendRenderedAndLog } from '../_shared/sendAndLog.ts'
 
 const SITE_NAME = 'Déclic Pizza'
-const SENDER_DOMAIN = 'notify.declicpizza.fr'
-const FROM_DOMAIN = 'notify.declicpizza.fr'
-
-function generateToken(): string {
-  const bytes = new Uint8Array(32)
-  crypto.getRandomValues(bytes)
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
-}
 
 const json = (payload: Record<string, unknown>, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -198,72 +191,21 @@ Deno.serve(async (req) => {
     const component = kind === 'email_change' ? EmailChangeEmail : SignupEmail
     const html = await renderAsync(React.createElement(component, templateProps))
     const text = await renderAsync(React.createElement(component, templateProps), { plainText: true })
-    const messageId = crypto.randomUUID()
     const templateName = kind === 'email_change' ? 'email_change' : 'signup'
-
-    const normalizedEmail = targetEmail.toLowerCase()
-    let unsubscribeToken = generateToken()
-    const { data: existingToken } = await admin
-      .from('email_unsubscribe_tokens')
-      .select('token, used_at')
-      .eq('email', normalizedEmail)
-      .maybeSingle()
-
-    if (existingToken && !existingToken.used_at) {
-      unsubscribeToken = existingToken.token as string
-    } else {
-      await admin
-        .from('email_unsubscribe_tokens')
-        .upsert(
-          { token: unsubscribeToken, email: normalizedEmail },
-          { onConflict: 'email', ignoreDuplicates: true },
-        )
-      const { data: storedToken } = await admin
-        .from('email_unsubscribe_tokens')
-        .select('token')
-        .eq('email', normalizedEmail)
-        .maybeSingle()
-      if (storedToken?.token) unsubscribeToken = storedToken.token as string
-    }
-
-    await admin.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: templateName,
-      recipient_email: targetEmail,
-      status: 'pending',
+    const r = await sendRenderedAndLog(admin, {
+      label: templateName,
+      to: targetEmail,
+      subject: kind === 'email_change' ? 'Confirmez votre nouvelle adresse email' : 'Confirmez votre adresse email',
+      html,
+      text,
+      idempotencyKey: `verify-${callerId}-${targetEmail}-${Date.now()}`,
     })
-
-    const { error: enqueueError } = await admin.rpc('enqueue_email', {
-      queue_name: 'auth_emails',
-      payload: {
-        message_id: messageId,
-        to: targetEmail,
-        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-        sender_domain: SENDER_DOMAIN,
-        subject: kind === 'email_change' ? 'Confirmez votre nouvelle adresse email' : 'Confirmez votre adresse email',
-        html,
-        text,
-        purpose: 'transactional',
-        label: templateName,
-        idempotency_key: `verify-${callerId}-${targetEmail}-${Date.now()}`,
-        unsubscribe_token: unsubscribeToken,
-        queued_at: new Date().toISOString(),
-      },
-    })
-
-    if (enqueueError) {
-      console.error('manual verification enqueue failed:', enqueueError.message)
-      await admin.from('email_send_log').insert({
-        message_id: messageId,
-        template_name: templateName,
-        recipient_email: targetEmail,
-        status: 'failed',
-        error_message: 'Failed to enqueue manual verification email',
-      })
+    if (r.outcome !== 'sent') {
+      console.error('manual verification send failed:', r.outcome, r.error)
       return { ok: false, message: "Impossible d'envoyer le lien de vérification" }
     }
 
-    console.log('Manual verification email enqueued', { templateName, email: targetEmail })
+    console.log('Manual verification email sent', { templateName, email: targetEmail })
     return { ok: true, message: null }
   }
 

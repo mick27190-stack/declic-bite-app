@@ -7,15 +7,7 @@ project_id = "tzamsbbpygevsdvugdbv"
     verify_jwt = false
   [functions.places-autocomplete]
     verify_jwt = false
-  [functions.process-email-queue]
-    verify_jwt = true
-  [functions.send-transactional-email]
-    verify_jwt = true
   [functions.preview-transactional-email]
-    verify_jwt = false
-  [functions.handle-email-unsubscribe]
-    verify_jwt = false
-  [functions.handle-email-suppression]
     verify_jwt = false
   [functions.handle-delivery-response]
     verify_jwt = false
@@ -26,3 +18,6 @@ project_id = "tzamsbbpygevsdvugdbv"
 
 [functions.send-order-confirmation-email]
 verify_jwt = false
+
+[functions.send-app-email]
+verify_jwt = true

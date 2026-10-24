@@ -4,12 +4,11 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
 import { EmailChangeEmail } from '../_shared/email-templates/email-change.tsx'
+import { sendRenderedAndLog } from '../_shared/sendAndLog.ts'
 
 // Super Admin : liste des e-mails de validation d'adresse en échec et
 // renvoi d'un nouveau lien de validation au client concerné.
 const SITE_NAME = 'Déclic Pizza'
-const SENDER_DOMAIN = 'notify.declicpizza.fr'
-const FROM_DOMAIN = 'notify.declicpizza.fr'
 const REDIRECT = 'https://declicpizza.fr/auth/confirm'
 const FAILED = ['dlq', 'failed', 'bounced']
 
@@ -120,39 +119,14 @@ Deno.serve(async (req) => {
       const html = await renderAsync(React.createElement(comp as U, props))
       const text = await renderAsync(React.createElement(comp as U, props), { plainText: true })
 
-      let token: string
-      const { data: t } = await admin.from('email_unsubscribe_tokens').select('token, used_at').eq('email', email).maybeSingle()
-      if (t && !t.used_at) token = t.token
-      else {
-        const b = new Uint8Array(32); crypto.getRandomValues(b)
-        token = Array.from(b).map((x) => x.toString(16).padStart(2, '0')).join('')
-        await admin.from('email_unsubscribe_tokens').upsert({ token, email }, { onConflict: 'email', ignoreDuplicates: true })
-        const { data: s } = await admin.from('email_unsubscribe_tokens').select('token').eq('email', email).maybeSingle()
-        if (s?.token) token = s.token
-      }
-
-      const messageId = crypto.randomUUID()
-      await admin.from('email_send_log').insert({
-        message_id: messageId, template_name: kind, recipient_email: email, status: 'pending',
+      const r = await sendRenderedAndLog(admin, {
+        label: kind, to: email,
+        subject: isChange ? 'Confirmez votre nouvelle adresse email' : 'Confirmez votre adresse email',
+        html, text,
+        idempotencyKey: `admin-verify-${u.id}-${email}-${Date.now()}`,
         metadata: { resent_by_admin: callerId },
       })
-      const { error: qErr } = await admin.rpc('enqueue_email', {
-        queue_name: 'auth_emails',
-        payload: {
-          message_id: messageId, to: email, from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`, sender_domain: SENDER_DOMAIN,
-          subject: isChange ? 'Confirmez votre nouvelle adresse email' : 'Confirmez votre adresse email',
-          html, text, purpose: 'transactional', label: kind,
-          idempotency_key: `admin-verify-${u.id}-${email}-${Date.now()}`,
-          unsubscribe_token: token, queued_at: new Date().toISOString(),
-        },
-      })
-      if (qErr) {
-        await admin.from('email_send_log').insert({
-          message_id: messageId, template_name: kind, recipient_email: email, status: 'failed',
-          error_message: qErr.message.slice(0, 1000),
-        })
-        throw new Error("Impossible d'envoyer le lien")
-      }
+      if (r.outcome !== 'sent') throw new Error("Impossible d'envoyer le lien")
       return json({ ok: true, status: 'sent', message: 'Nouveau lien de validation envoyé.' })
     }
 
