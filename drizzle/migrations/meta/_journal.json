@@ -393,6 +393,13 @@
       "when": 1792862302283,
       "tag": "0055_fix_verification_alert_reference_type",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1792862339889,
+      "tag": "0056_allow_verification_failure_notifications",
+      "breakpoints": true
     }
   ]
 }
