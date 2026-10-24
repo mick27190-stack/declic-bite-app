@@ -52,10 +52,7 @@ function parseJwtClaims(token: string): Record<string, unknown> | null {
   }
 }
 
-// Transport-only: record the final outcome and move the message. Super Admin
-// verification alerts are owned by monitor-verification-delivery, which reads
-// outcomes independently (and uses listEmailLogs after the email update).
-// Retry counters below tune transport only; no application alert depends on them.
+// Move a message to the dead letter queue and log the reason.
 async function moveToDlq(
   supabase: ReturnType<typeof createClient>,
   queue: string,
