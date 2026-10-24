@@ -400,6 +400,13 @@
       "when": 1792862339889,
       "tag": "0056_allow_verification_failure_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1792862357288,
+      "tag": "0057_support_global_verification_alert_scope",
+      "breakpoints": true
     }
   ]
 }
