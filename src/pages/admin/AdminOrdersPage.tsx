@@ -243,10 +243,6 @@ export default function AdminOrdersPage() {
     const archived = (history || []).reduce((sum, r: any) => sum + (r.order_count || 0), 0);
     setArchivedCount(archived);
     setLiveCount(live ?? 0);
-    // If the local list drifted from the DB (e.g. after a delete), resync it.
-    if (typeof live === 'number' && live !== orders.length) {
-      refetch();
-    }
   };
 
   useEffect(() => {
@@ -278,7 +274,7 @@ export default function AdminOrdersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orders.length]);
 
-  const totalOrdersCount = archivedCount + (liveCount ?? orders.length);
+  const totalOrdersCount = archivedCount + orders.length;
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
