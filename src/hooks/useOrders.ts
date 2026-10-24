@@ -32,7 +32,9 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
   const [loading, setLoading] = useState(autoFetch);
   const { toast } = useToast();
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = useCallback(async (opts?: unknown) => {
+    // Resynchronisation en arrière-plan : pas de message d'erreur si le réseau hoquette.
+    const silent = typeof opts === 'object' && opts !== null && (opts as { silent?: boolean }).silent === true;
     try {
       const { data: rawData, error } = await supabase
         .from('orders')
@@ -77,11 +79,13 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
       setOrders(transformedOrders);
     } catch (error) {
       console.error('Error fetching orders:', error);
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de charger les commandes',
-        variant: 'destructive'
-      });
+      if (!silent) {
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de charger les commandes',
+          variant: 'destructive'
+        });
+      }
     } finally {
       setLoading(false);
     }
