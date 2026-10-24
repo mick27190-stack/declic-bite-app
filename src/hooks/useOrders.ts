@@ -210,7 +210,7 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
             const acceptTok = tokens?.find(t => t.action === 'accepted')?.token;
             const refuseTok = tokens?.find(t => t.action === 'refused')?.token;
 
-            await supabase.functions.invoke('send-transactional-email', {
+            await supabase.functions.invoke('send-app-email', {
               body: {
                 templateName: 'delivery-estimate',
                 recipientEmail: email,
