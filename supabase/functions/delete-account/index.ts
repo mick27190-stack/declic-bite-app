@@ -1,19 +1,8 @@
-import * as React from 'npm:react@18.3.1'
-import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
-import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
+import { sendAndLog } from '../_shared/sendAndLog.ts'
 
-const SITE_NAME = 'Declic-Pizza-app'
-const SENDER_DOMAIN = 'notify.declicpizza.fr'
-const FROM_DOMAIN = 'notify.declicpizza.fr'
 const TEMPLATE_NAME = 'account-deleted'
-
-function generateToken(): string {
-  const bytes = new Uint8Array(32)
-  crypto.getRandomValues(bytes)
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')
-}
 
 // Deletes the AUTHENTICATED caller's own account and queues a confirmation
 // email to their on-file address. Recipient/user id come from the verified
@@ -80,84 +69,16 @@ Deno.serve(async (req) => {
   // deletion on email issues (bounce, suppression, missing address, etc.).
   if (recipientEmail) {
     try {
-      const template = TEMPLATES[TEMPLATE_NAME]
       const nowParis = new Intl.DateTimeFormat('fr-FR', {
         timeZone: 'Europe/Paris',
         dateStyle: 'full',
         timeStyle: 'short',
       }).format(new Date())
       const deletedAt = `${nowParis} (heure de Paris)`
-      const templateData = { customerName, deletedAt }
-      const messageId = crypto.randomUUID()
       const idempotencyKey = `account-deleted:${callerId}:${Math.floor(Date.now() / 1000)}`
-      const normalizedEmail = recipientEmail.toLowerCase()
-
-      const { data: suppressed } = await supabase
-        .from('suppressed_emails')
-        .select('id')
-        .eq('email', normalizedEmail)
-        .maybeSingle()
-
-      if (!suppressed && template) {
-        let unsubscribeToken: string
-        const { data: existingToken } = await supabase
-          .from('email_unsubscribe_tokens')
-          .select('token, used_at')
-          .eq('email', normalizedEmail)
-          .maybeSingle()
-        if (existingToken && !existingToken.used_at) {
-          unsubscribeToken = existingToken.token as string
-        } else {
-          unsubscribeToken = generateToken()
-          await supabase
-            .from('email_unsubscribe_tokens')
-            .upsert(
-              { token: unsubscribeToken, email: normalizedEmail },
-              { onConflict: 'email', ignoreDuplicates: true },
-            )
-          const { data: stored } = await supabase
-            .from('email_unsubscribe_tokens')
-            .select('token')
-            .eq('email', normalizedEmail)
-            .maybeSingle()
-          if (stored?.token) unsubscribeToken = stored.token as string
-        }
-
-        const html = await renderAsync(React.createElement(template.component, templateData))
-        const plainText = await renderAsync(
-          React.createElement(template.component, templateData),
-          { plainText: true },
-        )
-        const resolvedSubject =
-          typeof template.subject === 'function' ? template.subject(templateData) : template.subject
-
-        await supabase.from('email_send_log').insert({
-          message_id: messageId,
-          template_name: TEMPLATE_NAME,
-          recipient_email: recipientEmail,
-          status: 'pending',
-        })
-
-        await supabase.rpc('enqueue_email', {
-          queue_name: 'transactional_emails',
-          payload: {
-            message_id: messageId,
-            to: recipientEmail,
-            from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-            sender_domain: SENDER_DOMAIN,
-            subject: resolvedSubject,
-            html,
-            text: plainText,
-            purpose: 'transactional',
-            label: TEMPLATE_NAME,
-            idempotency_key: idempotencyKey,
-            unsubscribe_token: unsubscribeToken,
-            queued_at: new Date().toISOString(),
-          },
-        })
-      }
+      await sendAndLog(supabase, TEMPLATE_NAME, recipientEmail, { customerName, deletedAt }, idempotencyKey)
     } catch (err) {
-      console.error('account-deleted email enqueue failed:', err)
+      console.error('account-deleted email send failed:', err)
     }
   }
 
