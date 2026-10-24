@@ -1,12 +1,7 @@
 /// <reference types="npm:@types/react@18.3.1" />
 
-import * as React from 'npm:react@18.3.1';
-import { renderAsync } from 'npm:@react-email/components@0.0.22';
-import { TEMPLATES } from './transactional-email-templates/registry.ts';
+import { sendAndLog } from './sendAndLog.ts';
 
-const SITE_NAME = 'Declic-Pizza-app';
-const SENDER_DOMAIN = 'notify.declicpizza.fr';
-const FROM_DOMAIN = 'notify.declicpizza.fr';
 const TEMPLATE_NAME = 'order-cancelled';
 
 export type CancellationReason =
@@ -34,12 +29,6 @@ const CAPTURED_PAYMENT_NOTICE =
 
 function euros(n: number): string {
   return `${n.toFixed(2).replace('.', ',')}€`;
-}
-
-function generateToken(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 // deno-lint-ignore no-explicit-any
