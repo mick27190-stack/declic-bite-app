@@ -386,6 +386,13 @@
       "when": 1792862210131,
       "tag": "0054_decouple_verification_failure_alerts",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1792862302283,
+      "tag": "0055_fix_verification_alert_reference_type",
+      "breakpoints": true
     }
   ]
 }
