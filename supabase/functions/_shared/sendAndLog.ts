@@ -17,8 +17,9 @@ export async function sendAndLog(
   to: string,
   templateData: Record<string, unknown>,
   idempotencyKey: string,
+  metadata?: Record<string, unknown>,
 ): Promise<{ outcome: SendOutcome; error?: string }> {
-  const base = { message_id: null, template_name: templateName, recipient_email: to }
+  const base = { message_id: null, template_name: templateName, recipient_email: to, ...(metadata ? { metadata } : {}) }
   try {
     const r = await sendTemplateEmail(templateName, to, { templateData, idempotencyKey })
     if (r.sent) {
