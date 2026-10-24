@@ -253,9 +253,14 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
   useEffect(() => {
     if (!autoFetch) return;
     fetchOrders();
+    let disposed = false;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    let retryTimer: number | undefined;
+    const resync = () => { if (!disposed) void fetchOrders({ silent: true }); };
 
-    const channel = supabase
-      .channel('orders-changes')
+    const connect = () => {
+    channel = supabase
+      .channel(`orders-changes-${Math.random().toString(36).slice(2)}`)
       .on(
         'postgres_changes',
         {
@@ -334,10 +339,39 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (disposed) return;
+        if (status === 'SUBSCRIBED') {
+          // (Re)connexion : on rattrape ce qui a pu être manqué pendant la coupure.
+          resync();
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          // Canal tombé (veille, réseau) : on le relance automatiquement.
+          window.clearTimeout(retryTimer);
+          retryTimer = window.setTimeout(() => {
+            if (disposed) return;
+            if (channel) supabase.removeChannel(channel);
+            connect();
+          }, 3000);
+        }
+      });
+    };
+    connect();
+
+    // Filet de sécurité : réveil de l'écran, retour sur l'onglet, réseau revenu, et toutes les 15 s.
+    const onVisible = () => { if (document.visibilityState === 'visible') resync(); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', resync);
+    window.addEventListener('online', resync);
+    const poll = window.setInterval(() => { if (document.visibilityState === 'visible') resync(); }, 15000);
 
     return () => {
-      supabase.removeChannel(channel);
+      disposed = true;
+      window.clearTimeout(retryTimer);
+      window.clearInterval(poll);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', resync);
+      window.removeEventListener('online', resync);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [autoFetch, fetchOrders, toast]);
 
