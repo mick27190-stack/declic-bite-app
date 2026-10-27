@@ -41,7 +41,7 @@ function ConversationItem({
       role="button"
       tabIndex={0}
       aria-pressed={isSelected}
-      className={`p-4 border-b border-border/50 cursor-pointer hover:bg-muted/50 transition-colors ${
+      className={`min-w-0 p-4 border-b border-border/50 cursor-pointer hover:bg-muted/50 transition-colors ${
         isSelected ? 'bg-muted' : ''
       }`}
       onClick={onSelect}
@@ -52,30 +52,37 @@ function ConversationItem({
         }
       }}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-1 basis-36 items-center gap-2">
+          <div className="w-10 h-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
             <User className="h-5 w-5 text-primary" />
           </div>
-          <div>
-            <p className="font-medium">{conversation.customer_name || 'Client'}</p>
+          <div className="min-w-0">
+            <p className="font-medium break-words">{conversation.customer_name || 'Client'}</p>
             <p className="text-xs text-muted-foreground">{conversation.customer_phone || ''}</p>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          <div className="flex items-center gap-1">
-            <Badge variant="outline" className="text-xs capitalize">
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="shrink-0 text-xs capitalize">
               {conversation.site}
             </Badge>
+            {(conversation.unread_count ?? 0) > 0 && (
+              <Badge className="shrink-0 text-[10px]">Nouveau</Badge>
+            )}
+          </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <button
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={(e) => e.stopPropagation()}
-                  className="min-h-11 min-w-11 flex items-center justify-center rounded-md text-destructive/80 hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  className="h-11 w-11 shrink-0 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
                   aria-label="Supprimer la conversation"
+                  title="Supprimer la conversation"
                 >
                   <Trash2 className="h-5 w-5" />
-                </button>
+                </Button>
               </AlertDialogTrigger>
               <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                 <AlertDialogHeader>
@@ -91,12 +98,6 @@ function ConversationItem({
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </div>
-          {(conversation.unread_count ?? 0) > 0 && (
-            <Badge className="text-[10px] bg-amber-500 hover:bg-amber-500 text-white">
-              Nouveau
-            </Badge>
-          )}
         </div>
       </div>
       {conversation.last_message && (
@@ -134,7 +135,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
           isAdmin ? 'bg-primary text-primary-foreground' : 'bg-muted'
         }`}
       >
-        <p>{message.content}</p>
+        <p className="break-words [overflow-wrap:anywhere]">{message.content}</p>
         <p className={`text-xs mt-1 flex items-center gap-1 flex-wrap ${isAdmin ? 'text-primary-foreground/70 justify-end' : 'text-muted-foreground'}`}>
           {new Date(message.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
           {isAdmin ? (
@@ -271,11 +272,11 @@ export default function AdminChatPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate('/admin')} aria-label="Retour à l’administration">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <div>
+            <div className="min-w-0">
               <h1 className="text-xl font-bold text-primary">Chat Clients</h1>
               <p className="text-sm text-muted-foreground">Communiquer avec vos clients</p>
             </div>
@@ -287,9 +288,9 @@ export default function AdminChatPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:h-[calc(100vh-200px)]">
           {/* Conversations list */}
-          <Card className="md:col-span-1">
+          <Card className="min-w-0 md:col-span-1">
             <CardHeader>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="text-lg">Conversations</CardTitle>
                 {refreshing && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -321,16 +322,16 @@ export default function AdminChatPage() {
           </Card>
 
           {/* Chat window */}
-          <Card className="md:col-span-2">
+          <Card className="min-w-0 md:col-span-2">
             {selectedConversation ? (
               <>
                 <CardHeader className="border-b">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="w-10 h-10 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
                       <User className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
-                      <CardTitle className="text-lg">{selectedConversation.customer_name || 'Client'}</CardTitle>
+                    <div className="min-w-0">
+                      <CardTitle className="text-lg break-words">{selectedConversation.customer_name || 'Client'}</CardTitle>
                       <p className="text-sm text-muted-foreground">{selectedConversation.customer_phone}</p>
                     </div>
                   </div>
@@ -371,7 +372,7 @@ export default function AdminChatPage() {
                       placeholder="Tapez votre message..."
                       onKeyDown={(e) => e.key === 'Enter' && handleSend()}
                     />
-                    <Button onClick={handleSend} size="icon" aria-label="Envoyer le message">
+                    <Button onClick={handleSend} size="icon" className="shrink-0" aria-label="Envoyer le message">
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
