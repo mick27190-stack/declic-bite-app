@@ -407,6 +407,13 @@
       "when": 1792862357288,
       "tag": "0057_support_global_verification_alert_scope",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1793600629889,
+      "tag": "0058_add_lightweight_order_history_view",
+      "breakpoints": true
     }
   ]
 }
