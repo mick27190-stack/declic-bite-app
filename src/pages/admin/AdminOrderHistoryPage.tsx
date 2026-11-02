@@ -46,6 +46,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import OrderTicket, { OrderTicketData } from '@/components/OrderTicket';
 import { useCompanyInfo, resolveCompanyForRestaurant } from '@/hooks/useCompanyInfo';
+import { fetchOrderHistoryRows } from '@/lib/orderHistory';
 
 interface HistoryOrder {
   id: string;
@@ -287,6 +288,7 @@ export default function AdminOrderHistoryPage() {
 
   const [weeks, setWeeks] = useState<HistoryWeek[]>([]);
   const [loading, setLoading] = useState(true);
+  const [historyError, setHistoryError] = useState(false);
   const [siteFilter, setSiteFilter] = useState<SiteFilter>('all');
   const [orderTypeFilter, setOrderTypeFilter] = useState<OrderTypeFilter>('all');
   const [periodFilter, setPeriodFilter] = useState<PeriodFilter>('all');
@@ -425,23 +427,10 @@ export default function AdminOrderHistoryPage() {
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('order_history')
-      .select('*')
-      .order('week_start', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching order history:', error);
-      toast({
-        title: 'Erreur',
-        description: "Impossible de charger l'historique des commandes",
-        variant: 'destructive',
-      });
-      setLoading(false);
-      return;
-    }
-
-    const rows = (data || []) as unknown as (HistoryWeek & { site?: string })[];
+    setHistoryError(false);
+    try {
+    const data = await fetchOrderHistoryRows();
+    const rows = data as unknown as (HistoryWeek & { site?: string })[];
 
     // History is now archived per site (one row per week and per site).
     // Merge the rows of a same week so the UI keeps showing one card per week.
@@ -504,8 +493,17 @@ export default function AdminOrderHistoryPage() {
     }));
 
     setWeeks(enriched);
-
+    } catch (error) {
+      setHistoryError(true);
+      console.error('Error fetching order history:', error);
+      toast({
+        title: 'Erreur',
+        description: "Impossible de charger l'historique des commandes",
+        variant: 'destructive',
+      });
+    } finally {
     setLoading(false);
+    }
   }, [toast]);
 
 
@@ -517,8 +515,8 @@ export default function AdminOrderHistoryPage() {
   }, [user, canManageOrders, authLoading, adminLoading, navigate]);
 
   useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+    if (user && canManageOrders && !authLoading && !adminLoading) fetchHistory();
+  }, [fetchHistory, user, canManageOrders, authLoading, adminLoading]);
 
   if (authLoading || adminLoading) {
     return (
@@ -676,6 +674,11 @@ export default function AdminOrderHistoryPage() {
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : historyError ? (
+          <div className="py-12 text-center space-y-4">
+            <p className="text-destructive">Impossible de charger l’historique des commandes.</p>
+            <Button variant="outline" onClick={fetchHistory}><RefreshCw className="h-4 w-4 mr-2" />Réessayer</Button>
           </div>
         ) : filteredWeeks.length === 0 ? (
           <Card>
