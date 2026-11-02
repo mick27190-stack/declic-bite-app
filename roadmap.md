@@ -20,5 +20,5 @@
 
 # Historique des commandes administrateur
 
-- [ ] Corriger le chargement des archives sans modifier les commandes
-- [ ] Vérifier les semaines archivées, leurs détails et les filtres avec un compte administrateur
+- [x] Corriger le chargement des archives sans modifier les commandes
+- [x] Vérifier les semaines archivées, leurs détails et les filtres avec un compte administrateur
