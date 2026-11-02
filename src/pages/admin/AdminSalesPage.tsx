@@ -121,7 +121,7 @@ export default function AdminSalesPage() {
       const sinceDay = since.toISOString().slice(0, 10);
       const untilDay = until.toISOString().slice(0, 10);
       const archiveReq = supabase
-        .from('order_history')
+        .from('order_history_readable')
         .select('orders, week_start, week_end')
         .lte('week_start', untilDay)
         .gte('week_end', sinceDay);

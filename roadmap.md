@@ -17,3 +17,8 @@
 - [x] Détacher les alertes Super Admins des mécanismes de relance des e-mails sans les perdre
 - [x] Tester les alertes et la conservation des échecs de validation
 - [x] Conserver la version actuelle : relance refusée par l'utilisateur
+
+# Historique des commandes administrateur
+
+- [x] Corriger le chargement des archives sans modifier les commandes
+- [x] Vérifier les semaines archivées, leurs détails et les filtres avec un compte administrateur

@@ -1348,7 +1348,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      order_history_readable: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          order_count: number | null
+          orders: Json | null
+          site: string | null
+          total_revenue: number | null
+          week_end: string | null
+          week_start: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          order_count?: number | null
+          orders?: never
+          site?: string | null
+          total_revenue?: number | null
+          week_end?: string | null
+          week_start?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          order_count?: number | null
+          orders?: never
+          site?: string | null
+          total_revenue?: number | null
+          week_end?: string | null
+          week_start?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       __rls_probe: { Args: never; Returns: string }
