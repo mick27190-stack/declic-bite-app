@@ -150,7 +150,9 @@ export function DeliveryZoneChecker({ onValidAddress, disabled }: DeliveryZoneCh
               <p className={`font-semibold ${result.isInZone ? 'text-green-600' : 'text-red-600'}`}>
                 {result.isInZone 
                   ? 'Livraison disponible !' 
-                  : 'Vous êtes hors zone de livraison'}
+                  : (result as { incomplete?: boolean }).incomplete
+                    ? 'Adresse incomplète'
+                    : 'Vous êtes hors zone de livraison'}
               </p>
               {result.error ? (
                 <p className="text-sm text-muted-foreground mt-1">{result.error}</p>
