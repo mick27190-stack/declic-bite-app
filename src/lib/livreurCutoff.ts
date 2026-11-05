@@ -11,12 +11,10 @@ export const LIVREUR_RESET_HOUR = 5;
 export function livreurServiceStart(now: Date = new Date()): Date {
   const civil = parisCivilDate(now);
   // Décalage Paris - UTC à cet instant (gère l'heure d'été/hiver).
-  const offsetMs = civil.getTime() - Math.floor(now.getTime() / 1000) * 1000 + (now.getTime() % 1000) - now.getTime() % 1000;
   const realOffset = Date.UTC(
     civil.getFullYear(), civil.getMonth(), civil.getDate(),
     civil.getHours(), civil.getMinutes(), civil.getSeconds(),
   ) - Math.floor(now.getTime() / 1000) * 1000;
-  void offsetMs;
   const day = new Date(civil);
   if (civil.getHours() < LIVREUR_RESET_HOUR) day.setDate(day.getDate() - 1);
   const resetWall = Date.UTC(day.getFullYear(), day.getMonth(), day.getDate(), LIVREUR_RESET_HOUR, 0, 0);

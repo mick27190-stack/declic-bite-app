@@ -11,6 +11,7 @@ import { statusLabels, statusColors } from '@/types/order';
 import { supabase } from '@/integrations/supabase/client';
 import { useOpeningHours } from '@/hooks/useOpeningHours';
 import { parisMinutes } from '@/lib/pickupSlots';
+import { isVisibleForLivreur } from '@/lib/livreurCutoff';
 import { parisDayOfWeek, minutesToHuman, ServiceWindow } from '@/lib/openingHours';
 
 // Marge après la dernière plage : le livreur finit ses livraisons du soir.
@@ -49,6 +50,12 @@ export default function LivreurOrdersPage() {
     return () => clearInterval(interval);
   }, [getWindows, livreurSite]);
   const windowOpen = windowInfo.open;
+  // Rafraîchi chaque minute pour que la remise à zéro de 5h00 s'applique sans recharger.
+  const [nowTick, setNowTick] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNowTick(new Date()), 60 * 1000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !adminLoading) {
@@ -74,6 +81,7 @@ export default function LivreurOrdersPage() {
       o.order_type === 'livraison' &&
       o.status !== 'delivered' &&
       o.status !== 'cancelled' &&
+      isVisibleForLivreur(o.created_at, nowTick) &&
       matchesLivreurSite(o.restaurant),
   );
 
