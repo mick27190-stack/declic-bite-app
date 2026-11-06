@@ -113,7 +113,7 @@ export function useOrders(options: { autoFetch?: boolean } = {}) {
           user_id: user.id,
           restaurant: orderData.restaurant,
           order_type: orderData.order_type,
-          items: orderData.items as unknown as any,
+          items: stripItemImages(orderData.items) as unknown as any,
           total_price: orderData.total_price,
           pickup_time: orderData.pickup_time || null,
           delivery_address: orderData.delivery_address || null,

@@ -14,6 +14,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
 import { PIZZA_CATEGORIES } from '@/lib/promo';
 
+/** Retire les photos (inutiles hors panier) des lignes de commande. */
+export function stripItemImages<T = any>(items: T[] | null | undefined): T[] {
+  return (items ?? []).map((item: any) => {
+    if (!item?.pizza || !('image' in item.pizza)) return item;
+    const { image: _image, ...pizza } = item.pizza;
+    return { ...item, pizza };
+  });
+}
+
 export interface OrderLinePrice {
   /** Prix unitaire du produit, hors suppléments. */
   unitBase: number;
@@ -55,7 +64,7 @@ export async function fetchOrderLinePrices(
   if (!Array.isArray(items) || items.length === 0) return [];
   try {
     const { data, error } = await supabase.rpc('compute_order_line_prices' as any, {
-      _items: items as any,
+      _items: stripItemImages(items) as any,
       _now: at.toISOString(),
     });
     if (error || !Array.isArray(data) || data.length !== items.length) return fallback;
