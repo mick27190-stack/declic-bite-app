@@ -8,6 +8,7 @@ import { useLiveParisTime } from '@/hooks/useLiveParisTime';
 import { useOpeningHours, restaurantToSite } from '@/hooks/useOpeningHours';
 import {
   activeWindow,
+  DAY_LABELS,
   formatWindows,
   minutesToHuman,
   nextWindowToday,
@@ -54,8 +55,8 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
             : 'Fermé pour ce soir';
 
 
-        if (closure) {
-          const isSiteClosed = closure.closure_type === 'site';
+        if (closure || isDayClosed) {
+          const isSiteClosed = closure?.closure_type === 'site';
           return (
             <div
               key={restaurant.id}
@@ -70,10 +71,14 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
                 <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-destructive">
-                    {closureTitle(isSiteClosed ? 'site' : 'orders')}
+                    {closure
+                      ? closureTitle(isSiteClosed ? 'site' : 'orders')
+                      : `Fermé le ${DAY_LABELS[dow].toLowerCase()}`}
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {closureMessage(isSiteClosed ? 'site' : 'orders', closure.reason)}
+                    {closure
+                      ? closureMessage(isSiteClosed ? 'site' : 'orders', closure.reason)
+                      : "Le restaurant est fermé aujourd'hui. Les commandes reprendront au prochain jour d'ouverture."}
                   </p>
                 </div>
               </div>
