@@ -458,13 +458,14 @@ export function useUserOrders() {
     };
 
     // Subscribe to user's order updates
-    let channel: ReturnType<typeof supabase.channel>;
+    let channel: ReturnType<typeof supabase.channel> | undefined;
+    let cancelled = false;
 
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
+      if (!user || cancelled) return;
 
       channel = supabase
-        .channel('user-orders-changes')
+        .channel(`user-orders-changes-${Math.random().toString(36).slice(2)}`)
         .on(
           'postgres_changes',
           {
@@ -538,6 +539,7 @@ export function useUserOrders() {
     });
 
     return () => {
+      cancelled = true;
       if (channel) supabase.removeChannel(channel);
     };
   }, [toast]);
