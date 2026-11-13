@@ -112,7 +112,7 @@ export function DeliveryZoneChecker({ onValidAddress, disabled }: DeliveryZoneCh
           value={address}
           onChange={handleAddressChange}
           onPlaceSelect={handlePlaceSelect}
-          placeholder="Entrez votre adresse complète"
+          placeholder="Votre adresse complète (N° et nom de rue)"
           disabled={disabled || !selectedRestaurant || isChecking}
           className="flex-1"
         />

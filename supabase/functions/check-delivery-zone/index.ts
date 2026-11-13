@@ -170,22 +170,19 @@ serve(async (req) => {
       );
     }
 
-    // Reject vague results (commune or postal code only): the driver needs a
-    // street (with number) or a named lieu-dit / hameau.
+    // Reject vague results: commune, postal code or lieu-dit / hameau only.
+    // The driver needs a street number AND a street name.
     const top = geocodeData.results[0];
     const comps: Array<{ types?: string[] }> = top.address_components || [];
     const hasComp = (t: string) => comps.some((c) => c.types?.includes(t));
-    const types: string[] = top.types || [];
-    const precise =
-      hasComp('route') || hasComp('street_number') || hasComp('premise') ||
-      hasComp('neighborhood') || hasComp('sublocality') ||
-      types.some((t) => ['street_address', 'premise', 'subpremise', 'route', 'establishment', 'point_of_interest', 'neighborhood', 'colloquial_area'].includes(t));
+    const mentionsLieuDit = /\blieu[\s-]?dit\b|\blieux[\s-]?dits\b|(^|[\s,])l\.?d\.?([\s,]|$)|\bhameau\b/i.test(trimmedAddress);
+    const precise = !mentionsLieuDit && hasComp('street_number') && hasComp('route');
     if (!precise) {
       return new Response(
         JSON.stringify({
           isInZone: false,
           incomplete: true,
-          error: 'Adresse incomplète : indiquez votre numéro et nom de rue (ou lieu-dit) pour que le livreur puisse vous trouver.',
+          error: 'Adresse incomplète : les lieux-dits ne sont pas acceptés. Indiquez votre numéro et nom de rue pour que le livreur puisse vous trouver.',
           distanceKm: null,
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
