@@ -538,7 +538,7 @@ export default function AdminOrderHistoryPage() {
               <h1 className="text-xl font-bold text-primary flex items-center gap-2">
                 <History className="h-5 w-5" /> Historique des commandes
               </h1>
-              <p className="text-sm text-muted-foreground">Archivé chaque lundi à 3h00</p>
+              <p className="text-sm text-muted-foreground">Archivé chaque mardi à 3h00</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -691,7 +691,7 @@ export default function AdminOrderHistoryPage() {
               </p>
               <p className="text-sm mt-1">
                 {weeks.length === 0
-                  ? 'Les commandes seront archivées automatiquement chaque lundi à 3h00.'
+                  ? 'Les commandes seront archivées automatiquement chaque mardi à 3h00.'
                   : 'Essayez un autre site ou vérifiez plus tard.'}
               </p>
             </CardContent>

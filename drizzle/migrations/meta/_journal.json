@@ -414,6 +414,13 @@
       "when": 1793600629889,
       "tag": "0058_add_lightweight_order_history_view",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1794547553421,
+      "tag": "0059_move_weekly_archive_to_tuesday",
+      "breakpoints": true
     }
   ]
 }
