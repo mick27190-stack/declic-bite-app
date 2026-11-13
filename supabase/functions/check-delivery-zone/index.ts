@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { hasCompleteStreetAddress } from './addressValidation.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -173,10 +174,7 @@ serve(async (req) => {
     // Reject vague results: commune, postal code or lieu-dit / hameau only.
     // The driver needs a street number AND a street name.
     const top = geocodeData.results[0];
-    const comps: Array<{ types?: string[] }> = top.address_components || [];
-    const hasComp = (t: string) => comps.some((c) => c.types?.includes(t));
-    const mentionsLieuDit = /\blieu[\s-]?dit\b|\blieux[\s-]?dits\b|(^|[\s,])l\.?d\.?([\s,]|$)|\bhameau\b/i.test(trimmedAddress);
-    const precise = !mentionsLieuDit && hasComp('street_number') && hasComp('route');
+    const precise = hasCompleteStreetAddress(top.address_components);
     if (!precise) {
       return new Response(
         JSON.stringify({
