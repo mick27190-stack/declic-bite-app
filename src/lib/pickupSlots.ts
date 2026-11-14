@@ -9,11 +9,13 @@ export const MIN_LEAD_MINUTES = 15; // minimum delay before the first available 
 /** Marge entre l'ouverture et le premier créneau proposé. */
 export const OPENING_LEAD_MINUTES = 45;
 /** Marge entre le dernier retrait et la fermeture. */
-export const TAKEAWAY_CLOSING_MARGIN = 30;
+export const TAKEAWAY_CLOSING_MARGIN = 35;
+/** Intervalle entre deux créneaux de retrait à emporter. */
+export const TAKEAWAY_SLOT_INTERVAL = 20;
 
 // Bornes historiques (plage 18h-22h), conservées pour compatibilité.
 export const FIRST_SLOT_MINUTES = 18 * 60 + 45; // 18:45
-export const LAST_SLOT_MINUTES = 21 * 60 + 30; // 21:30
+export const LAST_SLOT_MINUTES = 21 * 60 + 25; // 21:25
 
 export function pickupFirstSlot(win: ServiceWindow = DEFAULT_WINDOW): number {
   return win.start + OPENING_LEAD_MINUTES;
@@ -55,6 +57,13 @@ export function parisMinutes(now: Date = new Date()): number {
 
 // Fenêtre de fin de service à emporter : sur les 15 dernières minutes avant la
 // coupure, seul le dernier créneau reste sélectionnable.
+/** Premier créneau de retrait (grille de 20 min depuis le premier) respectant le délai minimum. */
+export function earliestPickupMinutes(nowMinutes: number, first: number = FIRST_SLOT_MINUTES): number {
+  const target = nowMinutes + MIN_LEAD_MINUTES;
+  if (target <= first) return first;
+  return first + Math.ceil((target - first) / TAKEAWAY_SLOT_INTERVAL) * TAKEAWAY_SLOT_INTERVAL;
+}
+
 function lateTakeawayStart(win: ServiceWindow): number {
   return pickupLastSlot(win) - 15;
 }
@@ -73,17 +82,17 @@ export function computePickupSlotsFromMinutes(
     return [minutesToLabel(last)];
   }
 
-  const earliestAllowed = earliestAllowedMinutes(nowMinutes);
+  const earliestAllowed = earliestPickupMinutes(nowMinutes, first);
 
   const times: string[] = [];
-  for (let m = first; m <= last; m += SLOT_INTERVAL) {
+  for (let m = first; m <= last; m += TAKEAWAY_SLOT_INTERVAL) {
     if (earliestAllowed > first && m < earliestAllowed) continue;
     times.push(minutesToLabel(m));
   }
 
   // Outside service hours, fall back to the full slot list for the next service.
   if (times.length === 0) {
-    for (let m = first; m <= last; m += SLOT_INTERVAL) {
+    for (let m = first; m <= last; m += TAKEAWAY_SLOT_INTERVAL) {
       times.push(minutesToLabel(m));
     }
   }
@@ -111,10 +120,10 @@ export function computePickupSlotOptionsFromMinutes(
   const last = pickupLastSlot(win);
   const inLateWindow =
     nowMinutes >= lateTakeawayStart(win) && nowMinutes < lateTakeawayCutoff(win);
-  const earliestAllowed = earliestAllowedMinutes(nowMinutes);
+  const earliestAllowed = earliestPickupMinutes(nowMinutes, first);
 
   const slots: PickupSlot[] = [];
-  for (let m = first; m <= last; m += SLOT_INTERVAL) {
+  for (let m = first; m <= last; m += TAKEAWAY_SLOT_INTERVAL) {
     const disabled = inLateWindow
       ? m !== last
       : earliestAllowed > first && m < earliestAllowed;
