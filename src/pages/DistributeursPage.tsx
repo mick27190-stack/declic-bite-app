@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Clock } from 'lucide-react';
 import distriGenericAsset from '@/assets/distri-declic-generic.png.asset.json';
+import brayLogoAsset from '@/assets/distri-declic-bray.png.asset.json';
 import conchesLogoAsset from '@/assets/distri-declic-conches.png.asset.json';
 
 const ACTIVE = [
   { id: 'conches', title: 'Conches en Ouche', place: "Bel'O Jet", address: "Bel'O Jet, 27190 Conches en Ouche", logo: conchesLogoAsset.url },
-  { id: 'bray', title: 'Bray', place: "Rue de l'église", address: "30, rue de l'église, 27170 Bray", logo: distriGenericAsset.url },
+  { id: 'bray', title: 'Bray', place: "Rue de l'église", address: "30, rue de l'église, 27170 Bray", logo: brayLogoAsset.url },
 ];
 
 const SOON = [
@@ -48,14 +49,14 @@ export default function DistributeursPage() {
 
         <div className="space-y-5">
           {ACTIVE.map((d) => (
-            <div key={d.id} className="glass-card border border-border/50 p-5">
+            <div key={d.id} className="glass-card border border-border/50 p-4">
               <div className="flex items-center gap-4">
-                <img src={d.logo} alt={`Distributeur ${d.title}`} className="w-24 h-24 shrink-0 rounded-full object-contain border-2 border-vending/40 p-1" />
+                <img src={d.logo} alt={`Distributeur ${d.title}`} className="w-16 h-16 shrink-0 rounded-full object-contain border-2 border-vending/40 p-1" />
                 <div className="min-w-0">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-vending/20 px-3 py-0.5 text-xs font-semibold text-foreground">
                     <span className="w-2 h-2 rounded-full bg-vending" /> En service
                   </span>
-                  <h2 className="mt-1 text-2xl font-display font-bold text-foreground leading-tight">{d.title}</h2>
+                  <h2 className="mt-1 text-xl font-display font-bold text-foreground leading-tight">{d.title}</h2>
                   <p className="text-sm text-muted-foreground">{d.place}</p>
                 </div>
               </div>
@@ -86,12 +87,12 @@ export default function DistributeursPage() {
           ))}
 
           {SOON.map((s) => (
-            <div key={s.id} className="rounded-2xl border-2 border-dashed border-primary/40 bg-card/40 p-5">
+            <div key={s.id} className="rounded-2xl border-2 border-dashed border-primary/40 bg-card/40 p-4">
               <div className="flex items-center gap-4">
-                <div className="w-24 h-24 shrink-0 rounded-full bg-muted flex items-center justify-center text-5xl font-display font-bold text-primary">?</div>
+                <div className="w-16 h-16 shrink-0 rounded-full bg-muted flex items-center justify-center text-3xl font-display font-bold text-primary">?</div>
                 <div className="min-w-0">
                   <span className="inline-block rounded-full bg-primary/15 px-3 py-0.5 text-xs font-semibold text-primary">Bientôt</span>
-                  <h2 className="mt-1 text-2xl font-display font-bold text-foreground leading-tight">Prochaine ouverture</h2>
+                  <h2 className="mt-1 text-xl font-display font-bold text-foreground leading-tight">Prochaine ouverture</h2>
                   <p className="text-sm text-muted-foreground">{s.subtitle}</p>
                 </div>
               </div>
