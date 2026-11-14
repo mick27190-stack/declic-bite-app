@@ -16,7 +16,7 @@ import { Restaurant } from '@/types/pizza';
 import { preloadHeroMedia, heroPosterUrl } from '@/lib/heroPreload';
 import wordmarkAsset from '@/assets/declic-wordmark.png.asset.json';
 import deliveryScooterUrl from '@/assets/delivery-scooter.png';
-import vendingLogoAsset from '@/assets/distri-declic-conches.png.asset.json';
+import distriGenericAsset from '@/assets/distri-declic-generic.png.asset.json';
 
 import { useOpeningHours, useSiteActivityBadges } from '@/hooks/useOpeningHours';
 import { formatWindows, parisDayOfWeek } from '@/lib/openingHours';
@@ -295,45 +295,23 @@ export default function LandingPage() {
             <RestaurantSelector onSelect={handleRestaurantSelect} onViewMenu={handleViewMenuOnly} />
             
             <div className="mt-8 w-full max-w-md mx-auto">
-              <a
-                href="https://application.smart-machine.fr/"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => {
-                  const ua = navigator.userAgent;
-                  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-                  const isAndroid = /Android/i.test(ua);
-                  if (isIOS) {
-                    e.preventDefault();
-                    // Ouverture directe de la fiche App Store (bouton « Ouvrir » si l'app est installée).
-                    // Pas de schéma personnalisé : Safari afficherait « adresse non valide ».
-                    window.location.href = 'https://apps.apple.com/fr/app/smart-pizza/id1603849374';
-                  } else if (isAndroid) {
-                    e.preventDefault();
-                    // Ouvre l'app si installée, sinon Google Play automatiquement
-                    window.location.href =
-                      'intent://#Intent;package=com.apitech.smart_pizza;S.browser_fallback_url=' +
-                      encodeURIComponent('https://play.google.com/store/apps/details?id=com.apitech.smart_pizza') +
-                      ';end';
-                  }
-                }}
+              <Link
+                to="/distributeurs"
                 className="w-full glass-card p-5 flex items-center gap-4 transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 border border-border/50 group"
               >
                 <img
-                  src={vendingLogoAsset.url}
-                  alt="Logo Distri'Déclic Pizza Conches"
+                  src={distriGenericAsset.url}
+                  alt="Logo Distri'Déclic Pizza"
                   className="w-20 h-20 shrink-0 object-contain drop-shadow-[0_4px_14px_rgba(0,0,0,0.55)] transition-transform duration-300 group-hover:scale-110"
                 />
                 <div className="text-left flex-1">
                   <h3 className="text-lg font-display font-bold text-primary">
-                    Distributeur Déclic Pizza - Conches
+                    Nos distributeurs Distri'Declic Pizza
                   </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Disponible 24h/24 • Commandez en ligne
-                  </p>
+                  <p className="text-sm text-muted-foreground">Disponibles 24h/24</p>
                 </div>
-                <ExternalLink className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
-              </a>
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+              </Link>
             </div>
           </div>
         )}

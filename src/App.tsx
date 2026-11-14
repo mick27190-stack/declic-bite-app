@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { PricingProvider } from "@/contexts/PricingContext";
 import LandingPage from "./pages/LandingPage";
+import DistributeursPage from "./pages/DistributeursPage";
 import MenuPage from "./pages/MenuPage";
 import CartPage from "./pages/CartPage";
 import ContactPage from "./pages/ContactPage";
@@ -91,6 +92,7 @@ const App = () => {
               <CookieConsentBanner />
               <Routes>
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/distributeurs" element={<DistributeursPage />} />
                 <Route path="/menu" element={<MenuPage />} />
                 <Route path="/cart" element={<CartPage />} />
                 <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
