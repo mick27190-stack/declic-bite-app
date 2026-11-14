@@ -18,6 +18,8 @@
 
     /* Warm Orange Primary */
     --primary: 25 95% 53%;
+    --vending: 92 40% 46%;
+    --vending-foreground: 0 0% 100%;
     --primary-foreground: 20 15% 8%;
 
     /* Deep Red Secondary */
