@@ -1,14 +1,17 @@
-# Retirer les réponses client de l’administration
+# Carte « Nos distributeurs Distri'Declic Pizza » + page dédiée
 
-## Résultat attendu
-- Dans les commandes administrateur, conserver uniquement le bandeau « En attente de réponse du client », l’horaire proposé, l’horaire demandé et le numéro de téléphone.
-- Retirer les boutons « Confirmer au nom du client » et « Refuser au nom du client ».
-- Conserver les boutons « Accepter » et « Refuser » dans le profil client et dans l’e-mail reçu.
+## Page de sélection du site
+- Remplacer le logo « Conches » de la carte distributeur par le nouveau logo généraliste Distri'Déclic Pizza (fond blanc retiré, même taille ~80 px).
+- Titre de la carte : « Nos distributeurs Distri'Declic Pizza ».
+- Sous-titre court conservé (ex. « Disponibles 24h/24 »), icône flèche remplacée par un chevron.
+- Le toucher de la carte ouvre la nouvelle page `/distributeurs` (plus d'ouverture directe de l'app).
 
-## Protection
-- Refuser côté serveur toute réponse provenant d’un administrateur, même par appel direct.
-- Autoriser uniquement le propriétaire de la commande à répondre depuis son profil ; les liens uniques de l’e-mail restent traités par leur mécanisme sécurisé existant.
+## Nouvelle page « Nos distributeurs »
+- Bouton Retour, titre, grand logo généraliste.
+- Une carte : la carte Conches actuelle (logo Conches, « Distributeur Déclic Pizza - Conches », Disponible 24h/24 • Commandez en ligne), avec exactement le comportement actuel : iPhone → App Store Smart Pizza, Android → app/Google Play, ordinateur → site Smart Machine.
+- Structure prête pour ajouter d'autres distributeurs plus tard.
 
-## Vérification
-- Mettre à jour le test de l’espace administrateur pour vérifier l’absence des deux boutons et l’absence d’appel de réponse.
-- Vérifier que l’application compile et que le bandeau d’attente reste visible.
+## Technique
+- Logo importé via lovable-assets (détouré).
+- Nouvelle page `src/pages/DistributeursPage.tsx` + route dans App.tsx ; logique de redirection déplacée depuis LandingPage.tsx sans changement.
+- Rien d'autre modifié.
