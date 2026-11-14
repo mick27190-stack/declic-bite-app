@@ -142,7 +142,10 @@ Deno.serve(async (req) => {
               body,
               reference_id: String(referenceId),
             },
+            // High urgency + TTL: tells Apple/Google push services to wake a
+            // sleeping iPhone immediately instead of batching the message.
             webpush: {
+              headers: { Urgency: "high", TTL: "3600" },
               fcm_options: { link: "/" },
             },
           },

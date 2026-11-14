@@ -31,7 +31,13 @@ messaging.onBackgroundMessage((payload) => {
     badge: "/icon-192.png?v=1ccba9db",
     tag: payload.data?.reference_id || undefined,
     data: payload.data || {},
+    renotify: true,
+    requireInteraction: true,
+    silent: false,
+    vibrate: [300, 150, 300, 150, 300],
+    timestamp: Date.now(),
   };
+  if (!options.tag) options.tag = "declic-" + Date.now();
   self.registration.showNotification(title, options);
 });
 
