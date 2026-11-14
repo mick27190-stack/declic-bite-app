@@ -51,7 +51,7 @@ export default function DistributeursPage() {
           {ACTIVE.map((d) => (
             <div key={d.id} className="glass-card border border-border/50 p-4">
               <div className="flex items-center gap-4">
-                <img src={d.logo} alt={`Distributeur ${d.title}`} className="w-16 h-16 shrink-0 rounded-full object-contain border-2 border-vending/40 p-1" />
+                <img src={d.logo} alt={`Distributeur ${d.title}`} className="w-20 h-20 shrink-0 rounded-full object-contain border-2 border-vending/40 p-1" />
                 <div className="min-w-0">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-vending/20 px-3 py-0.5 text-xs font-semibold text-foreground">
                     <span className="w-2 h-2 rounded-full bg-vending" /> En service
@@ -89,7 +89,7 @@ export default function DistributeursPage() {
           {SOON.map((s) => (
             <div key={s.id} className="rounded-2xl border-2 border-dashed border-primary/40 bg-card/40 p-4">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 shrink-0 rounded-full bg-muted flex items-center justify-center text-3xl font-display font-bold text-primary">?</div>
+                <div className="w-20 h-20 shrink-0 rounded-full bg-muted flex items-center justify-center text-3xl font-display font-bold text-primary">?</div>
                 <div className="min-w-0">
                   <span className="inline-block rounded-full bg-primary/15 px-3 py-0.5 text-xs font-semibold text-primary">Bientôt</span>
                   <h2 className="mt-1 text-xl font-display font-bold text-foreground leading-tight">Prochaine ouverture</h2>
