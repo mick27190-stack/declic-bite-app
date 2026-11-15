@@ -38,9 +38,9 @@ export default function MenuPage() {
     <div className="min-h-screen pb-24">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:py-2">
           {/* Restaurant & Back */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 sm:mb-2">
             <button
               onClick={() => navigate('/')}
               className="flex min-h-11 items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
@@ -59,12 +59,12 @@ export default function MenuPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-display font-bold text-foreground mb-4">
+          <h1 className="text-2xl sm:text-xl font-display font-bold text-foreground mb-4 sm:mb-2">
             Nos Pizzas 🍕
           </h1>
 
           {/* Search */}
-          <div className="relative mb-4">
+          <div className="relative mb-4 sm:mb-2">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <input
               type="text"
@@ -72,7 +72,7 @@ export default function MenuPage() {
               placeholder="Rechercher une pizza..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-12 pl-12 pr-4 bg-muted rounded-xl border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+              className="w-full h-12 sm:h-10 pl-12 pr-4 bg-muted rounded-xl border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
             />
           </div>
 
@@ -81,7 +81,7 @@ export default function MenuPage() {
             <button
               onClick={() => setSelectedCategory('all')}
               aria-pressed={selectedCategory === 'all'}
-              className={`flex-shrink-0 min-h-11 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`flex-shrink-0 min-h-11 sm:min-h-9 px-4 py-2 sm:py-1 rounded-full text-sm font-medium transition-all ${
                 selectedCategory === 'all'
                   ? 'bg-primary text-primary-foreground shadow-glow'
                   : 'bg-muted text-foreground hover:bg-muted/80'
@@ -94,7 +94,7 @@ export default function MenuPage() {
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
                 aria-pressed={selectedCategory === category.id}
-                className={`flex-shrink-0 min-h-11 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                className={`flex-shrink-0 min-h-11 sm:min-h-9 px-4 py-2 sm:py-1 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                   selectedCategory === category.id
                     ? 'bg-primary text-primary-foreground shadow-glow'
                     : 'bg-muted text-foreground hover:bg-muted/80'
