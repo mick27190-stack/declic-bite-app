@@ -56,6 +56,20 @@ describe('order cut-off constants', () => {
 });
 
 describe('getCutoffState — boundary behavior', () => {
+  const sundayWindow = { start: 18 * 60, end: 21 * 60 + 30 };
+  it('autorise le retrait le dimanche à 21h04 mais pas à 21h05', () => {
+    const before = getCutoffState(new Date('2026-11-15T20:04:59Z'), false, sundayWindow);
+    expect(before.isTakeawayCutoff).toBe(false);
+    expect(before.isDeliveryCutoff).toBe(true);
+    expect(getCutoffState(new Date('2026-11-15T20:05:00Z'), false, sundayWindow).isTakeawayCutoff).toBe(true);
+  });
+  it('préserve la coupure de livraison du dimanche à 20h47', () => {
+    expect(getCutoffState(new Date('2026-11-15T19:46:00Z'), false, sundayWindow).isDeliveryCutoff).toBe(false);
+    expect(getCutoffState(new Date('2026-11-15T19:47:00Z'), false, sundayWindow).isDeliveryCutoff).toBe(true);
+  });
+  it('ne prolonge pas la limite à emporter des autres jours', () => {
+    expect(getCutoffState(new Date('2026-11-17T20:04:00Z'), false, sundayWindow).isTakeawayCutoff).toBe(true);
+  });
   it('20h59 Paris: no cut-off, no warning', () => {
     const s = getCutoffState(parisDate(20, 59));
     expect(s.isDeliveryCutoff).toBe(false);

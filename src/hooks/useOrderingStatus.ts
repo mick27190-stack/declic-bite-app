@@ -30,7 +30,7 @@ export function useOrderingStatus() {
   // fermeture / un blocage manuel du site continue de s'appliquer.
   const cutoff = getCutoffState(now, isClosed || isTestModeActive, active ?? reference);
 
-  const isOrderingClosed = isClosed || cutoff.isTakeawayCutoff || cutoff.isDeliveryCutoff;
+  const isOrderingClosed = isClosed || (cutoff.isTakeawayCutoff && cutoff.isDeliveryCutoff);
 
   // Prochaine ouverture : plage suivante du jour, sinon premier jour ouvert.
   const upcomingToday = nextWindowToday(windows, nowMinutes);

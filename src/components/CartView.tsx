@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useOrderingStatus } from '@/hooks/useOrderingStatus';
 import { OrdersClosedBanner } from '@/components/OrdersClosedBanner';
 import { getPizzaSizePrice, getNonPizzaPrice } from '@/lib/pricing';
-import { validateDeliverySlot } from '@/lib/pickupSlots';
+import { validateDeliverySlot, isSundayPickupExtension } from '@/lib/pickupSlots';
 import { closureMessage, closureTitle } from '@/lib/closureMessages';
 import { StripePaymentDialog } from '@/components/StripePaymentDialog';
 import { useLoyaltyPreview } from '@/hooks/useLoyalty';
@@ -28,7 +28,7 @@ import {
   getCutoffWarningMinutesRemaining,
   lastOrderMinutes,
 } from '@/lib/orderCutoff';
-import { formatWindows, minutesToHuman } from '@/lib/openingHours';
+import { formatWindows, minutesToHuman, parisDayOfWeek } from '@/lib/openingHours';
 
 
 export function CartView() {
@@ -461,7 +461,8 @@ export function CartView() {
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                   Envoi en cours...
                 </>
-              ) : cutoff.isCutoffWarning && warningMinutes !== null ? (
+              ) : cutoff.isCutoffWarning && warningMinutes !== null &&
+                !(orderType === 'emporter' && isSundayPickupExtension(serviceWindow, parisDayOfWeek(now))) ? (
                 <span className="flex flex-col items-center justify-center gap-0.5">
                   <span>Commandes jusqu’à {minutesToHuman(lastOrderMinutes(serviceWindow))}</span>
                   <span className="text-xs sm:text-sm opacity-90 font-normal">

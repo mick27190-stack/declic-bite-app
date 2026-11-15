@@ -1,3 +1,8 @@
+# Retrait du dimanche à 21h05
+
+- [x] Autoriser le dernier retrait jusqu'à son début dans le panier et le contrôle d'enregistrement
+- [x] Vérifier les bornes, les horaires inchangés et les autres types de commandes
+
 # Accessibilité
 
 - [x] Corriger les noms accessibles, libellés et états des contrôles clients

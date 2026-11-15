@@ -421,6 +421,13 @@
       "when": 1794547553421,
       "tag": "0059_move_weekly_archive_to_tuesday",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1794771223082,
+      "tag": "0060_sunday_pickup_until_slot_start",
+      "breakpoints": true
     }
   ]
 }

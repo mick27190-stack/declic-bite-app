@@ -2,7 +2,12 @@
 // Les bornes sont dérivées de la plage de service en cours (paramétrable par
 // établissement dans l'administration) : par défaut 18h00 – 22h00.
 
-import { DEFAULT_WINDOW, ServiceWindow, minutesToHuman } from './openingHours';
+import { DEFAULT_WINDOW, ServiceWindow, minutesToHuman, parisDayOfWeek } from './openingHours';
+
+/** Exception limitée au dernier retrait du service du dimanche 18h–21h30. */
+export function isSundayPickupExtension(win: ServiceWindow, dow: number): boolean {
+  return dow === 0 && win.start === 18 * 60 && win.end === 21 * 60 + 30;
+}
 
 export const SLOT_INTERVAL = 15; // minutes
 export const MIN_LEAD_MINUTES = 15; // minimum delay before the first available slot
@@ -72,18 +77,19 @@ export function earliestPickupMinutes(nowMinutes: number, first: number = FIRST_
 function lateTakeawayStart(win: ServiceWindow): number {
   return pickupLastSlot(win) - 15;
 }
-function lateTakeawayCutoff(win: ServiceWindow): number {
-  return pickupLastSlot(win) - 13;
+function lateTakeawayCutoff(win: ServiceWindow, dow: number): number {
+  return pickupLastSlot(win) - (isSundayPickupExtension(win, dow) ? 0 : 13);
 }
 
 export function computePickupSlotsFromMinutes(
   nowMinutes: number,
   win: ServiceWindow = DEFAULT_WINDOW,
+  dow: number = -1,
 ): string[] {
   const first = pickupFirstSlot(win);
   const last = pickupLastSlot(win);
 
-  if (nowMinutes >= lateTakeawayStart(win) && nowMinutes < lateTakeawayCutoff(win)) {
+  if (nowMinutes >= lateTakeawayStart(win) && nowMinutes < lateTakeawayCutoff(win, dow)) {
     return [minutesToLabel(last)];
   }
 
@@ -109,7 +115,7 @@ export function computePickupSlots(
   now: Date = new Date(),
   win: ServiceWindow = DEFAULT_WINDOW,
 ): string[] {
-  return computePickupSlotsFromMinutes(parisMinutes(now), win);
+  return computePickupSlotsFromMinutes(parisMinutes(now), win, parisDayOfWeek(now));
 }
 
 export interface PickupSlot {
@@ -120,11 +126,12 @@ export interface PickupSlot {
 export function computePickupSlotOptionsFromMinutes(
   nowMinutes: number,
   win: ServiceWindow = DEFAULT_WINDOW,
+  dow: number = -1,
 ): PickupSlot[] {
   const first = pickupFirstSlot(win);
   const last = pickupLastSlot(win);
   const inLateWindow =
-    nowMinutes >= lateTakeawayStart(win) && nowMinutes < lateTakeawayCutoff(win);
+    nowMinutes >= lateTakeawayStart(win) && nowMinutes < lateTakeawayCutoff(win, dow);
   const earliestAllowed = earliestPickupMinutes(nowMinutes, first);
 
   const slots: PickupSlot[] = [];
@@ -141,7 +148,7 @@ export function computePickupSlotOptions(
   now: Date = new Date(),
   win: ServiceWindow = DEFAULT_WINDOW,
 ): PickupSlot[] {
-  return computePickupSlotOptionsFromMinutes(parisMinutes(now), win);
+  return computePickupSlotOptionsFromMinutes(parisMinutes(now), win, parisDayOfWeek(now));
 }
 
 // ---------------- Delivery slots ----------------

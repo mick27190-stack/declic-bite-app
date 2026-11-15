@@ -7,3 +7,4 @@
 - Une commande confirmée (capture_status captured ou statut au-delà de pending) ne peut plus être annulée : l’option « Annulée » est masquée dans AdminOrdersPage et cancel-order refuse côté serveur ; seule une commande encore « En attente » est annulable.
 - App emails send directly through the managed email API via `_shared/sendAndLog.ts`, which also appends the outcome to `email_send_log` so the Super Admin verification alert trigger and history views keep working; browser-triggered invoice and delivery-time emails go through the role-checked `send-app-email` function, never a generic sender.
 - Validate delivery address completeness using the function-local `addressValidation.ts` helper and structured geocoding components; raw-word bans can reject legitimate street names.
+- Scope late pickup exceptions by Paris weekday and service window in both slot selection and order-insert validation; keep delivery cutoffs and opening-hour settings independent.

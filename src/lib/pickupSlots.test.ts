@@ -236,6 +236,26 @@ describe("validateDeliverySlotFromMinutes (mirrors the backend rule)", () => {
 });
 
 describe("dimanche (fermeture 21h30)", () => {
+  const sundayWindow = { start: 18 * 60, end: 21 * 60 + 30 };
+
+  it("garde 21h05 sélectionnable de 20h50 à 21h04 le dimanche", () => {
+    for (let minute = at(20, 50); minute < at(21, 5); minute++) {
+      expect(computePickupSlotsFromMinutes(minute, sundayWindow, 0)).toEqual(["21:05"]);
+      expect(computePickupSlotOptionsFromMinutes(minute, sundayWindow, 0).filter(s => !s.disabled))
+        .toEqual([{ time: "21:05", disabled: false }]);
+    }
+  });
+
+  it("désactive 21h05 dès le début du créneau le dimanche", () => {
+    expect(computePickupSlotOptionsFromMinutes(at(21, 5), sundayWindow, 0)
+      .find(s => s.time === "21:05")?.disabled).toBe(true);
+  });
+
+  it("ne prolonge pas le retrait des autres jours", () => {
+    expect(computePickupSlotOptionsFromMinutes(at(21, 4), sundayWindow, 2)
+      .find(s => s.time === "21:05")?.disabled).toBe(true);
+  });
+
   it("propose 21h05 comme dernier créneau à emporter", () => {
     const slots = computePickupSlotsFromMinutes(18 * 60, { start: 18 * 60, end: 21 * 60 + 30 });
     expect(slots[slots.length - 1]).toBe("21:05");

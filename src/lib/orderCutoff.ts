@@ -3,8 +3,8 @@
 // établissement). Pour la plage historique 18h-22h, on retrouve exactement :
 //  - alerte à partir de 21h00, dernière commande à 21h15, coupure à 21h17.
 
-import { parisMinutes } from './pickupSlots';
-import { DEFAULT_WINDOW, ServiceWindow, minutesToHuman } from './openingHours';
+import { parisMinutes, isSundayPickupExtension, pickupLastSlot } from './pickupSlots';
+import { DEFAULT_WINDOW, ServiceWindow, minutesToHuman, parisDayOfWeek } from './openingHours';
 
 // Offsets relatifs à l'heure de fermeture de la plage.
 const CUTOFF_OFFSET = 43; // fermeture - 43 min => 21h17
@@ -45,6 +45,7 @@ export type CutoffState = {
   isDeliveryCutoff: boolean;
   isTakeawayCutoff: boolean;
   isCutoffWarning: boolean;
+  isSundayPickupExtended?: boolean;
 };
 
 /**
@@ -63,10 +64,14 @@ export function getCutoffState(
   }
   const m = parisMinutes(now);
   const cutoff = cutoffMinutes(win);
+  const takeawayCutoff = isSundayPickupExtension(win, parisDayOfWeek(now))
+    ? pickupLastSlot(win)
+    : cutoff;
   return {
     isDeliveryCutoff: m >= cutoff,
-    isTakeawayCutoff: m >= cutoff,
+    isTakeawayCutoff: m >= takeawayCutoff,
     isCutoffWarning: m >= warningStartMinutes(win) && m <= lastOrderMinutes(win),
+    isSundayPickupExtended: isSundayPickupExtension(win, parisDayOfWeek(now)),
   };
 }
 
@@ -93,6 +98,12 @@ export function getCutoffButtonLabel(
   opts: { orderType: 'emporter' | 'livraison'; canCheckout: boolean },
   win: ServiceWindow = DEFAULT_WINDOW,
 ): string | null {
+  if (opts.orderType === 'emporter' && state.isTakeawayCutoff) return BUTTON_LABEL_TAKEAWAY_CLOSED;
+  // Le dimanche, la livraison peut être fermée alors que le retrait reste ouvert.
+  if (!state.isTakeawayCutoff && state.isSundayPickupExtended) {
+    if (opts.orderType === 'emporter') return null;
+    if (state.isDeliveryCutoff) return BUTTON_LABEL_TAKEAWAY_CLOSED;
+  }
   if (state.isTakeawayCutoff) return BUTTON_LABEL_TAKEAWAY_CLOSED;
   if (state.isDeliveryCutoff) {
     if (opts.orderType === 'emporter' && opts.canCheckout) {
