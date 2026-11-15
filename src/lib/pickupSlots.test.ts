@@ -234,3 +234,10 @@ describe("validateDeliverySlotFromMinutes (mirrors the backend rule)", () => {
     expect(validateDeliverySlot("18:45", utc).valid).toBe(true);
   });
 });
+
+describe("dimanche (fermeture 21h30)", () => {
+  it("propose 21h05 comme dernier créneau à emporter", () => {
+    const slots = computePickupSlotsFromMinutes(18 * 60, { start: 18 * 60, end: 21 * 60 + 30 });
+    expect(slots[slots.length - 1]).toBe("21:05");
+  });
+});

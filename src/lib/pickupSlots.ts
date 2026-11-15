@@ -22,7 +22,12 @@ export function pickupFirstSlot(win: ServiceWindow = DEFAULT_WINDOW): number {
 }
 
 export function pickupLastSlot(win: ServiceWindow = DEFAULT_WINDOW): number {
-  return win.end - TAKEAWAY_CLOSING_MARGIN;
+  // Dernier créneau = plus grand créneau de la grille de 20 min se terminant
+  // au moins 25 min avant la fermeture (22h00 → 21h25, 21h30 → 21h05).
+  const first = pickupFirstSlot(win);
+  const limit = win.end - 25;
+  if (limit < first) return win.end - TAKEAWAY_CLOSING_MARGIN;
+  return first + Math.floor((limit - first) / TAKEAWAY_SLOT_INTERVAL) * TAKEAWAY_SLOT_INTERVAL;
 }
 
 function minutesToLabel(m: number): string {
