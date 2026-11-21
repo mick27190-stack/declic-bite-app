@@ -332,25 +332,27 @@ export default function CGVPage() {
         saisis.
       </LegalP>
 
-      <LegalH2>Article 15 — Distributeur automatique Déclic Pizza</LegalH2>
+      <LegalH2>Article 15 — Distributeurs automatiques Distri'Déclic Pizza</LegalH2>
       <LegalP>
-        <strong className="font-semibold text-foreground">15.1.</strong> Un
-        distributeur automatique de pizzas « Déclic Pizza » est installé à Bel'O Jet,
-        27190 Conches. Il est accessible 24h/24, y compris en dehors des horaires
-        d'ouverture des établissements. Les produits achetés au distributeur doivent
-        être retirés sur place : ils ne font l'objet d'aucune livraison.
+        <strong className="font-semibold text-foreground">15.1.</strong> Des
+        distributeurs automatiques de pizzas « Distri'Déclic Pizza » sont installés à
+        Bel'O Jet, 27190 Conches (« Distri'Déclic Pizza Conches ») et au 30 rue de
+        l'Église, 27170 Bray (« Distri'Déclic Pizza Bray »). Ils sont accessibles
+        24h/24, y compris en dehors des horaires d'ouverture des établissements. Les
+        produits achetés au distributeur doivent être retirés sur place : ils ne font
+        l'objet d'aucune livraison.
       </LegalP>
       <LegalP>
         <strong className="font-semibold text-foreground">15.2.</strong> Les ventes
-        conclues via ce distributeur sont réalisées par l'exploitant de Déclic Pizza
-        Conches, seul vendeur des produits qui y sont proposés. Les
+        conclues via ces distributeurs sont réalisées par l'exploitant de Déclic Pizza,
+        seul vendeur des produits qui y sont proposés. Les
         produits disponibles, les prix et les conditions de paiement sont ceux affichés
         sur le distributeur au moment de l'achat. Les achats effectués au distributeur
         sont distincts des commandes passées sur le Site declicpizza.fr.
       </LegalP>
       <LegalP>
         <strong className="font-semibold text-foreground">15.3. Contact en cas de
-        problème.</strong> Pour tout problème rencontré avec le distributeur (somme
+        problème.</strong> Pour tout problème rencontré avec un distributeur (somme
         débitée sans produit remis, produit non conforme ou manquant, distributeur en
         panne, demande de remboursement, etc.), le Client doit contacter Déclic Pizza
         Conches au{' '}
@@ -360,8 +362,17 @@ export default function CGVPage() {
         >
           02 32 38 41 77
         </a>
+        {' '}ou par email à{' '}
+        <a
+          href="mailto:declicpizza@gmail.com"
+          className="text-primary underline hover:text-primary/80"
+        >
+          declicpizza@gmail.com
+        </a>
         , en indiquant la date et l'heure de l'achat ainsi que, le cas échéant, le
-        ticket ou la référence remis par le distributeur.
+        ticket ou la référence remis par le distributeur. En cas de problème sur un
+        distributeur, le gérant reçoit une notification lui indiquant le problème du
+        distributeur.
       </LegalP>
       <LegalP>
         <strong className="font-semibold text-foreground">15.4.</strong> Le droit de
