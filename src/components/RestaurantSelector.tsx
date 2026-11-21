@@ -32,11 +32,12 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
   const nowMinutes = parisMinutes(now);
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-4">
+    <div className="w-full max-w-md mx-auto">
       <h2 className="text-2xl font-display font-bold text-center text-foreground mb-6">
         Choisissez votre restaurant
       </h2>
 
+      <div className="grid grid-cols-1 gap-4 auto-rows-fr">
       {restaurants.map((restaurant, index) => {
         const closure = getClosureForSite(restaurant.id || restaurant.name);
         const telHref = `tel:${restaurant.phone.replace(/[^0-9+]/g, '')}`;
@@ -144,6 +145,7 @@ export function RestaurantSelector({ onSelect, onViewMenu }: RestaurantSelectorP
           </button>
         );
       })}
+      </div>
     </div>
   );
 }
